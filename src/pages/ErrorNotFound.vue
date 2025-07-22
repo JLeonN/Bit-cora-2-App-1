@@ -11,7 +11,7 @@
         text-color="blue"
         unelevated
         to="/"
-        label="Inicioo"
+        label="Inicio"
         no-caps
       />
     </div>
