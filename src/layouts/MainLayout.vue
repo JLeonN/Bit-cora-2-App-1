@@ -1,15 +1,26 @@
 <template>
-  <div>
+  <div class="fondo-app texto-principal">
     <q-layout view="lHh Lpr lff">
-      <q-header elevated class="bg-cyan-8">
+      <q-header elevated class="bg-primario-oscuro texto-principal">
         <q-toolbar>
           <q-toolbar-title>Bitácora 2</q-toolbar-title>
           <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
         </q-toolbar>
       </q-header>
-      <q-drawer v-model="drawer" show-if-above :width="200" :breakpoint="400">
+
+      <q-drawer
+        v-model="drawer"
+        show-if-above
+        :width="200"
+        :breakpoint="400"
+        class="bg-superficie texto-principal"
+      >
         <q-scroll-area
-          style="height: calc(100% - 150px); margin-top: 150px; border-right: 1px solid #ddd"
+          style="
+            height: calc(100% - 150px);
+            margin-top: 150px;
+            border-right: 1px solid var(--color-borde);
+          "
         >
           <q-list padding>
             <!-- Inicio -->
@@ -54,7 +65,7 @@
           src="https://cdn.quasar.dev/img/material.png"
           style="height: 150px"
         >
-          <div class="absolute-bottom bg-transparent">
+          <div class="absolute-bottom bg-transparent texto-secundario">
             <q-avatar size="56px" class="q-mb-sm">
               <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
             </q-avatar>
@@ -63,7 +74,8 @@
           </div>
         </q-img>
       </q-drawer>
-      <q-page-container>
+
+      <q-page-container class="fondo-app texto-principal">
         <router-view></router-view>
       </q-page-container>
     </q-layout>

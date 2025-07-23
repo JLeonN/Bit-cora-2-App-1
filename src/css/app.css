@@ -1,1 +1,41 @@
-/* app global css */
+:root {
+  --color-fondo: #121214; /* Fondo principal */
+  --color-superficie: #1c1c20; /* Cartas / contenedores */
+  --color-texto-principal: #f5f5f5; /* Texto principal */
+  --color-texto-secundario: #b4b4be; /* Texto secundario */
+
+  --color-primario: #1e88e5; /* Azul principal */
+  --color-primario-claro: #64b5f6;
+  --color-primario-oscuro: #1565c0;
+
+  --color-acento: #03a9f4; /* Azul acento (botones, enlaces) */
+  --color-borde: #3c3c46; /* Bordes suaves */
+
+  --color-error: #f44336; /* Rojo para errores */
+  --color-exito: #4caf50; /* Verde para éxito */
+}
+
+body {
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+}
+button {
+  background-color: var(--color-acento);
+  color: var(--color-texto-principal);
+  border: 1px solid var(--color-borde);
+}
+.fondo-app {
+  background-color: var(--color-fondo);
+}
+.bg-superficie {
+  background-color: var(--color-superficie);
+}
+.bg-primario-oscuro {
+  background-color: var(--color-primario-oscuro);
+}
+.texto-principal {
+  color: var(--color-texto-principal);
+}
+.texto-secundario {
+  color: var(--color-texto-secundario);
+}
