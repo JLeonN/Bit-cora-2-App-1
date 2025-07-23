@@ -54,7 +54,7 @@
             <!-- Otro 3 -->
             <q-item clickable v-ripple to="/Otro_3">
               <q-item-section avatar>
-                <q-icon name="drafts" />
+                <IconCar :stroke="1.25" size="24" />
               </q-item-section>
               <q-item-section> Otro 3 </q-item-section>
             </q-item>
@@ -84,6 +84,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { IconCar } from '@tabler/icons-vue'
 
 const drawer = ref(false)
 </script>
