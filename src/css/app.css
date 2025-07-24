@@ -40,3 +40,124 @@ button {
   color: var(--color-texto-secundario);
 }
 /* -------------------------------------------------------------------------- */
+
+/* Tabla Pedidos */
+.contenedor-tabla {
+  background-color: var(--color-superficie);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+  max-width: 900px;
+  margin: 20px auto;
+}
+.titulo-tabla {
+  text-align: center;
+  color: var(--color-primario);
+  margin-bottom: 16px;
+}
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.tabla th,
+.tabla td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+  color: var(--color-texto-principal);
+}
+.tabla th {
+  color: var(--color-primario-claro);
+}
+.acciones {
+  display: flex;
+  gap: 12px;
+}
+.icono-accion {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.icono-accion:hover {
+  transform: scale(1.2);
+}
+.icono-editar {
+  color: var(--color-acento);
+}
+.icono-borrar {
+  color: var(--color-error);
+}
+.formulario {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.formulario input {
+  padding: 8px;
+  border: 1px solid var(--color-borde);
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 6px;
+}
+.formulario button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+/* -------------------------------------------------------------------------- */
+/* Modal */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-contenido {
+  background-color: var(--color-superficie);
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+.modal-titulo {
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  color: var(--color-texto-principal);
+}
+.modal-campo {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+.modal-campo label {
+  margin-bottom: 0.5rem;
+  color: var(--color-texto-secundario);
+}
+.modal-campo input {
+  padding: 0.5rem;
+  border: 1px solid var(--color-borde);
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 4px;
+}
+.modal-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.modal-botones button {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-acento);
+  color: var(--color-texto-principal);
+  border: 1px solid var(--color-borde);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.modal-botones button:hover {
+  background-color: var(--color-primario);
+}
+/* -------------------------------------------------------------------------- */

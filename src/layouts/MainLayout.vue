@@ -23,19 +23,12 @@
           "
         >
           <q-list padding>
-            <!-- Inicio -->
-            <q-item clickable v-ripple to="/">
+            <!-- Tabla pedidos -->
+            <q-item clickable v-ripple to="/TablaPedidos">
               <q-item-section avatar>
-                <q-icon name="inbox" />
+                <IconTableRow stroke="{1}" />
               </q-item-section>
-              <q-item-section> Inicio </q-item-section>
-            </q-item>
-            <!-- Otro -->
-            <q-item clickable v-ripple to="/Inicio">
-              <q-item-section avatar>
-                <q-icon name="send" />
-              </q-item-section>
-              <q-item-section> Inicio </q-item-section>
+              <q-item-section>Tabla pedidos</q-item-section>
             </q-item>
             <!-- Otro 1 -->
             <q-item clickable v-ripple to="/Otro_1">
@@ -85,6 +78,7 @@
 <script setup>
 import { ref } from 'vue'
 import { IconCar } from '@tabler/icons-vue'
+import { IconTableRow } from '@tabler/icons-vue'
 
 const drawer = ref(false)
 </script>
