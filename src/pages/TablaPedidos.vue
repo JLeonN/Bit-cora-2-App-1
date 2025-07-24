@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-tabla">
-    <h2 class="titulo-tabla">Pedidos del Día</h2>
+    <h2 class="titulo-tabla">Pedidos</h2>
 
     <table class="tabla">
       <thead>
@@ -72,6 +72,13 @@ const indiceEditar = ref(null)
 const pedidoEliminar = ref({ numero: '', fecha: '' })
 const indiceEliminar = ref(null)
 
+function formatearFecha(fecha) {
+  const dia = fecha.getDate().toString().padStart(2, '0')
+  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0')
+  const anio = fecha.getFullYear()
+  return `${dia}/${mes}/${anio}`
+}
+
 // Abrir modal agregar
 function abrirModalAgregar() {
   mostrarModalAgregar.value = true
@@ -79,6 +86,8 @@ function abrirModalAgregar() {
 
 // Agregar pedido nuevo desde modal
 function agregarPedido(nuevoPedido) {
+  // Formateo la fecha aquí para asegurar que esté bien
+  nuevoPedido.fecha = formatearFecha(new Date())
   pedidos.value.push(nuevoPedido)
   mostrarModalAgregar.value = false
 }
