@@ -6,15 +6,20 @@
         ¿Estás seguro de que querés eliminar el pedido <strong>{{ pedido }}</strong
         >?
       </p>
-      <div class="modal-botones">
-        <button @click="$emit('cerrar')">Cancelar</button>
-        <button @click="$emit('confirmar')">Eliminar</button>
-      </div>
+
+      <DosBotones
+        textoCancelar="Cancelar"
+        textoEliminar="Eliminar"
+        @cancelar="$emit('cerrar')"
+        @eliminar="$emit('confirmar')"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
+import DosBotones from '../Botones/TresBotones.vue'
+
 defineProps({
   pedido: String,
 })

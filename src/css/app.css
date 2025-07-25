@@ -165,20 +165,4 @@ button {
   color: var(--color-texto-principal);
   border-radius: 4px;
 }
-.modal-botones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-.modal-botones button {
-  padding: 0.5rem 1rem;
-  background-color: var(--color-acento);
-  color: var(--color-texto-principal);
-  border: 1px solid var(--color-borde);
-  border-radius: 4px;
-  cursor: pointer;
-}
-.modal-botones button:hover {
-  background-color: var(--color-primario);
-}
 /* -------------------------------------------------------------------------- */

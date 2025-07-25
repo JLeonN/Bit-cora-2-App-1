@@ -6,16 +6,19 @@
         <label for="pedido">Nuevo número de pedido</label>
         <input id="pedido" type="text" v-model="pedidoEditado" />
       </div>
-      <div class="modal-botones">
-        <button @click="$emit('cerrar')">Cancelar</button>
-        <button @click="guardarCambios">Guardar</button>
-      </div>
+      <DosBotones
+        textoAceptar="Guardar"
+        textoCancelar="Cancelar"
+        @aceptar="guardarCambios"
+        @cancelar="$emit('cerrar')"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
+import DosBotones from '../Botones/TresBotones.vue'
 
 const props = defineProps({
   pedido: String,
