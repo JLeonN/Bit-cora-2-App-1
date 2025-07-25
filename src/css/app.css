@@ -104,6 +104,27 @@ button {
   border-radius: 6px;
   font-weight: bold;
 }
+/* Globito */
+.globito {
+  position: relative;
+  cursor: help;
+}
+.globito:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: 120%;
+  left: 0;
+  z-index: 10;
+  background-color: var(--color-texto-principal);
+  color: black;
+  padding: 0.75rem;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  white-space: normal;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
 /* -------------------------------------------------------------------------- */
 /* Modal */
 .modal-fondo {

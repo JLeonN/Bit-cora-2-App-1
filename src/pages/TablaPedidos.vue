@@ -13,7 +13,11 @@
       <tbody>
         <tr v-for="(pedido, indice) in pedidos" :key="indice">
           <td>{{ pedido.fecha }}</td>
-          <td>{{ pedido.numero }}</td>
+          <td>
+            <span class="globito" :title="pedido.numero">
+              {{ pedido.numero.slice(0, 15) }}<span v-if="pedido.numero.length > 15">...</span>
+            </span>
+          </td>
           <td class="acciones">
             <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
             <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(indice)" />

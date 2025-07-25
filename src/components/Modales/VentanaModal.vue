@@ -5,7 +5,7 @@
       <form @submit.prevent="enviarPedido">
         <div class="modal-campo">
           <label for="numeroPedido">Número de pedido</label>
-          <input id="numeroPedido" v-model="numeroPedido" type="number" required />
+          <input id="numeroPedido" v-model="numeroPedido" type="text" required />
         </div>
         <div class="modal-botones">
           <button type="submit">Agregar</button>
