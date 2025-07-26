@@ -63,7 +63,7 @@ import BotonFlotante from '../components/Botones/BotonFlotante.vue'
 import VentanaModal from '../components/Modales/VentanaModal.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
-import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
+import HistorialPedidos from 'src/pages/HistorialPedidos.vue'
 
 //  FUNCIONES DE BASE DE DATOS
 import {
