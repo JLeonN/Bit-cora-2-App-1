@@ -51,19 +51,33 @@
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
     />
+    <HistorialPedidos />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 
 import BotonFlotante from '../components/Botones/BotonFlotante.vue'
 import VentanaModal from '../components/Modales/VentanaModal.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
+import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
+
+//  FUNCIONES DE BASE DE DATOS
+import {
+  guardarPedidos,
+  obtenerPedidos,
+} from '../components/BaseDeDatos/usoAlmacenamientoPedidos.js'
 
 const pedidos = ref([])
+
+// Al iniciar el componente, cargo los pedidos guardados
+onMounted(async () => {
+  const datos = await obtenerPedidos()
+  pedidos.value = datos
+})
 
 // Estados para mostrar/ocultar modales
 const mostrarModalAgregar = ref(false)
@@ -90,9 +104,9 @@ function abrirModalAgregar() {
 
 // Agregar pedido nuevo desde modal
 function agregarPedido(nuevoPedido) {
-  // Formateo la fecha aquí para asegurar que esté bien
   nuevoPedido.fecha = formatearFecha(new Date())
   pedidos.value.push(nuevoPedido)
+  guardarPedidos(pedidos.value) // GUARDAR
   mostrarModalAgregar.value = false
 }
 
@@ -107,6 +121,7 @@ function abrirModalEditar(indice) {
 function guardarEdicion(nuevoNumero) {
   if (indiceEditar.value !== null) {
     pedidos.value[indiceEditar.value].numero = nuevoNumero
+    guardarPedidos(pedidos.value) // GUARDAR
   }
   mostrarModalEditar.value = false
 }
@@ -122,6 +137,7 @@ function abrirModalEliminar(indice) {
 function confirmarEliminacion() {
   if (indiceEliminar.value !== null) {
     pedidos.value.splice(indiceEliminar.value, 1)
+    guardarPedidos(pedidos.value) // GUARDAR
   }
   mostrarModalEliminar.value = false
 }

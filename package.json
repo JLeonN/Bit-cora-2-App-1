@@ -15,6 +15,7 @@
     "postinstall": "quasar prepare"
   },
   "dependencies": {
+    "@capacitor/storage": "^1.2.5",
     "@quasar/extras": "^1.16.4",
     "@tabler/icons-vue": "^3.34.1",
     "pinia": "^3.0.1",
