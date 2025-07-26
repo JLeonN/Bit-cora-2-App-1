@@ -28,7 +28,7 @@
               <q-item-section avatar>
                 <IconTableRow stroke="{1}" />
               </q-item-section>
-              <q-item-section>Tabla pedidos</q-item-section>
+              <q-item-section>Pedidos</q-item-section>
             </q-item>
             <!-- Otro 1 -->
             <q-item clickable v-ripple to="/Otro_1">
