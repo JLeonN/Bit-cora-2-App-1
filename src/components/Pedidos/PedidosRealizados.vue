@@ -60,7 +60,8 @@ const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
 
 onMounted(async () => {
-  pedidosRealizados.value = await obtenerPedidos()
+  const datos = await obtenerPedidos()
+  pedidosRealizados.value = datos.slice().reverse()
 })
 
 function abrirModalEditar(indice) {

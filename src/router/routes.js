@@ -7,6 +7,7 @@ const routes = [
       { path: '/historial', component: () => import('pages/HistorialPedidos.vue') },
       {
         path: '/pedidos-realizados',
+        name: 'PedidosRealizados',
         component: () => import('../components/Pedidos/PedidosRealizados.vue'),
       },
       { path: '/Otro_1', component: () => import('pages/Otro_1.vue') },

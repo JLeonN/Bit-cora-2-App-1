@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-historial">
-    <h2 class="titulo-historial">Historial de pedidos enviados</h2>
+    <h2 class="titulo-historial">Historial de pedidos</h2>
 
     <div
       v-for="(rango, indice) in historialDeRangos"
@@ -19,7 +19,7 @@
     </div>
 
     <p v-if="historialDeRangos.length === 0" class="texto-secundario" style="text-align: center">
-      No hay rangos enviados aún.
+      No hay pedidos aún.
     </p>
   </div>
 </template>
@@ -31,6 +31,7 @@ import { IconSend } from '@tabler/icons-vue'
 import {
   obtenerFechaUltimoEnvio,
   guardarFechaUltimoEnvio,
+  obtenerPedidos,
 } from 'components/BaseDeDatos/usoAlmacenamientoPedidos.js'
 
 const router = useRouter()
@@ -39,25 +40,40 @@ const historialDeRangos = ref([])
 
 function formatearFecha(fechaTexto) {
   const fecha = new Date(fechaTexto)
+  if (isNaN(fecha)) return 'Fecha inválida'
   const dia = String(fecha.getDate()).padStart(2, '0')
   const mes = String(fecha.getMonth() + 1).padStart(2, '0')
   const año = fecha.getFullYear()
   return `${dia}/${mes}/${año}`
 }
 
-async function cargarHistorial() {
+function obtenerFechaHoyISO() {
   const hoy = new Date()
-  const hoyFormateado = hoy.toISOString().split('T')[0]
+  return hoy.toISOString().split('T')[0]
+}
 
-  let fechaInicio = await obtenerFechaUltimoEnvio()
-  if (!fechaInicio) {
-    fechaInicio = '2025-07-01'
+async function cargarHistorial() {
+  const pedidos = await obtenerPedidos()
+  const hoyISO = obtenerFechaHoyISO()
+
+  if (!pedidos || pedidos.length === 0) {
+    const ultimaFecha = await obtenerFechaUltimoEnvio()
+    historialDeRangos.value = ultimaFecha
+      ? [{ inicio: ultimaFecha, fin: hoyISO, enviado: false }]
+      : []
+    return
   }
+
+  pedidos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+
+  const fechaUltimoEnvio = await obtenerFechaUltimoEnvio()
+  const fechaInicio = fechaUltimoEnvio || pedidos[0].fecha
+  const fechaFin = pedidos[pedidos.length - 1].fecha || hoyISO
 
   historialDeRangos.value = [
     {
       inicio: fechaInicio,
-      fin: hoyFormateado,
+      fin: fechaFin,
       enviado: false,
     },
   ]
@@ -66,13 +82,11 @@ async function cargarHistorial() {
 async function enviarRango(rango) {
   rango.enviado = true
   await guardarFechaUltimoEnvio(rango.fin)
-  cargarHistorial()
-  console.log('Rango enviado y guardado:', rango)
+  await cargarHistorial()
 }
 
 function verDetalleRango(rango) {
-  console.log('Ver detalle del rango:', rango)
-  router.push({ name: 'PedidosRealizados', query: rango })
+  router.push({ name: 'PedidosRealizados', query: { inicio: rango.inicio, fin: rango.fin } })
 }
 
 onMounted(() => {
@@ -80,6 +94,7 @@ onMounted(() => {
 })
 </script>
 
+<!------------------------ CSS ------------------------>
 <style scoped>
 .contenedor-historial {
   padding: 1rem;
