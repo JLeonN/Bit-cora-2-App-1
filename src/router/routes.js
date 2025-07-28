@@ -4,7 +4,7 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '/TablaPedidos', component: () => import('pages/TablaPedidos.vue') },
-      { path: '/historial', component: () => import('pages/HistorialPedidos.vue') },
+      { path: '/historial', component: () => import('components/Pedidos/HistorialPedidos.vue') },
       {
         path: '/pedidos-realizados',
         name: 'PedidosRealizados',
