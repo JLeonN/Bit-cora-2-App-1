@@ -7,14 +7,17 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "quasar dev",
+    "build": "quasar build",
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
-    "dev": "quasar dev",
-    "build": "quasar build",
+    "generar-apk": "quasar build && npx cap copy android && npx cap open android",
     "postinstall": "quasar prepare"
   },
   "dependencies": {
+    "@capacitor/android": "^3.9.0",
+    "@capacitor/cli": "^3.9.0",
     "@capacitor/storage": "^1.2.5",
     "@quasar/extras": "^1.16.4",
     "@tabler/icons-vue": "^3.34.1",

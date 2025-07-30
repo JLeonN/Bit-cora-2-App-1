@@ -1,0 +1,6 @@
+{
+  "appId": "bitacora.v2",
+  "appName": "Bitacora 2 App",
+  "webDir": "dist/spa",
+  "bundledWebRuntime": false
+}
