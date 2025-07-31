@@ -2,7 +2,7 @@
   <div class="fondo-app texto-principal">
     <q-layout view="lHh Lpr lff">
       <q-header elevated class="bg-primario-oscuro texto-principal">
-        <q-toolbar>
+        <q-toolbar class="barra-superior">
           <q-toolbar-title>Bitácora 2</q-toolbar-title>
           <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
         </q-toolbar>
@@ -71,6 +71,8 @@
       <q-page-container class="fondo-app texto-principal">
         <router-view></router-view>
       </q-page-container>
+      <!-- Botones de navegación flotantes -->
+      <BotonesNavegacion />
     </q-layout>
   </div>
 </template>
@@ -79,6 +81,7 @@
 import { ref } from 'vue'
 import { IconCar } from '@tabler/icons-vue'
 import { IconTableRow } from '@tabler/icons-vue'
+import BotonesNavegacion from 'components/Botones/BotonesNavegacion.vue'
 
 const drawer = ref(false)
 </script>

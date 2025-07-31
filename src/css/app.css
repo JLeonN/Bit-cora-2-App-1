@@ -40,6 +40,11 @@ button {
   color: var(--color-texto-secundario);
 }
 /* -------------------------------------------------------------------------- */
+/* Main Layout */
+.barra-superior {
+  margin-top: 16px;
+}
+/* -------------------------------------------------------------------------- */
 
 /* Tabla Pedidos */
 .contenedor-tabla {

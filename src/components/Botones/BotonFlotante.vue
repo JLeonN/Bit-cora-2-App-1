@@ -11,13 +11,13 @@ import { IconPlus } from '@tabler/icons-vue'
 <style scoped>
 .boton-flotante {
   position: fixed;
-  bottom: 20px;
+  bottom: 65px;
   right: 20px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
   border: none;
-  background-color: var(--color-acento);
+  background-color: var(--color-primario);
   color: var(--color-texto-principal);
   display: flex;
   align-items: center;
@@ -28,6 +28,6 @@ import { IconPlus } from '@tabler/icons-vue'
 }
 
 .boton-flotante:hover {
-  background-color: var(--color-primario);
+  background-color: var(--color-primario-oscuro);
 }
 </style>

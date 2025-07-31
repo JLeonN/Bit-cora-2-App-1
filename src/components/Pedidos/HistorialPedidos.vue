@@ -12,7 +12,7 @@
       <div class="info-rango">
         <p class="texto-rango">
           <!-- Formatea las fechas de inicio y fin para mostrarlas -->
-          Pedidos del {{ formatearFecha(rango.inicio) }} al {{ formatearFecha(rango.fin) }}
+          {{ formatearFecha(rango.inicio) }} al {{ formatearFecha(rango.fin) }}
         </p>
         <!-- Muestra el botón de enviar si el rango no ha sido enviado -->
         <span v-if="!rango.enviado" @click.stop="enviarRango(rango)" class="boton-enviar">
