@@ -61,11 +61,7 @@ import VentanaModal from '../components/Modales/VentanaModal.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
 import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
-
-import {
-  guardarPedidos,
-  obtenerPedidos,
-} from '../components/BaseDeDatos/usoAlmacenamientoPedidos.js'
+import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 
 const pedidos = ref([])
 

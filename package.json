@@ -13,12 +13,15 @@
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "generar-apk": "quasar build && npx cap copy android && npx cap open android",
-    "postinstall": "quasar prepare"
+    "postinstall": "quasar prepare",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android"
   },
   "dependencies": {
-    "@capacitor/android": "^3.9.0",
-    "@capacitor/cli": "^3.9.0",
-    "@capacitor/storage": "^1.2.5",
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/cli": "^7.4.2",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/preferences": "^7.0.1",
     "@quasar/extras": "^1.16.4",
     "@tabler/icons-vue": "^3.34.1",
     "pinia": "^3.0.1",

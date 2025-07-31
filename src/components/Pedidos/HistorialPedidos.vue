@@ -32,11 +32,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { IconSend } from '@tabler/icons-vue'
-// Se importan solo las funciones que se van a utilizar
-import {
-  guardarFechaUltimoEnvio,
-  obtenerPedidos,
-} from 'components/BaseDeDatos/usoAlmacenamientoPedidos.js'
+import { obtenerPedidos, guardarFechaUltimoEnvio } from '../BaseDeDatos/almacenamiento.js'
 
 const router = useRouter()
 const IconoEnviar = IconSend

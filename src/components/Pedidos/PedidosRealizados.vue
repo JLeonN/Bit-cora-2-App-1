@@ -49,7 +49,7 @@ import { ref, onMounted } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../Modales/ModalEliminarPedido.vue'
-import { obtenerPedidos, guardarPedidos } from '../BaseDeDatos/usoAlmacenamientoPedidos.js'
+import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
 
 const pedidosRealizados = ref([])
 const mostrarModalEditar = ref(false)
