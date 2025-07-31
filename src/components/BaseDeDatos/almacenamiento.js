@@ -1,12 +1,9 @@
+// archivo: almacenamiento.js
+import * as funcionesCapacitor from './usoAlmacenamientoCapacitor.js'
+import * as funcionesLocal from './usoAlmacenamientoPedidos.js'
+
 const usarCapacitor = true
-
-let funciones
-
-if (usarCapacitor) {
-  funciones = await import('./usoAlmacenamientoCapacitor.js')
-} else {
-  funciones = await import('./usoAlmacenamientoPedidos.js')
-}
+const funciones = usarCapacitor ? funcionesCapacitor : funcionesLocal
 
 export const {
   guardarPedidos,
