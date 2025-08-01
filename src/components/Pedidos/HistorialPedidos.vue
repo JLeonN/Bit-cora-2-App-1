@@ -25,6 +25,9 @@
     <p v-if="historialDeRangos.length === 0" class="texto-secundario" style="text-align: center">
       No hay pedidos aún.
     </p>
+
+    <!-- Componente que exporta a Excel cuando se actualiza el array -->
+    <ExportarPedidosExcel :pedidos="pedidosParaExportar" />
   </div>
 </template>
 
@@ -33,10 +36,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { IconSend } from '@tabler/icons-vue'
 import { obtenerPedidos, guardarFechaUltimoEnvio } from '../BaseDeDatos/almacenamiento.js'
+import ExportarPedidosExcel from './ExportarPedidosExcel.vue'
 
 const router = useRouter()
 const IconoEnviar = IconSend
 const historialDeRangos = ref([])
+
+// Agregar esta variable para almacenar pedidos que queremos exportar
+const pedidosParaExportar = ref([])
 
 /**
  * Parsea una fecha en formato 'dd/mm/yyyy' a un objeto Date.
@@ -124,6 +131,10 @@ async function enviarRango(rango) {
   // Se guarda la fecha en un formato estándar (ISO) para mayor compatibilidad.
   await guardarFechaUltimoEnvio(rango.fin.toISOString())
   await cargarHistorial()
+
+  // Cargar pedidos y asignar para exportar (disparará exportación en el componente)
+  const pedidos = await obtenerPedidos()
+  pedidosParaExportar.value = pedidos
 }
 
 /**
