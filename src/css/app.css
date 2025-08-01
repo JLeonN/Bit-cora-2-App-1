@@ -171,3 +171,48 @@ button {
   border-radius: 4px;
 }
 /* -------------------------------------------------------------------------- */
+/* Historial Pedidos */
+.contenedor-historial {
+  padding: 1rem;
+}
+.titulo-historial {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.tarjeta-rango {
+  background: var(--color-texto-secundario);
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tarjeta-rango:hover {
+  background: #f9f9f9;
+}
+.info-rango {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.texto-rango {
+  font-size: 1rem;
+  color: var(--color-superficie);
+  margin: 0;
+}
+.boton-enviar {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-primario-oscuro);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.boton-enviar:hover {
+  color: var(--color-primario-claro);
+}
+/* -------------------------------------------------------------------------- */
