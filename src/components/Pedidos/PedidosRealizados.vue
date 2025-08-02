@@ -61,6 +61,7 @@ const indiceEliminar = ref(null)
 
 onMounted(async () => {
   const datos = await obtenerPedidos()
+  // Se invierte la lista solo para la visualización, mostrando los más nuevos primero.
   pedidosRealizados.value = datos.slice().reverse()
 })
 
@@ -72,8 +73,11 @@ function abrirModalEditar(indice) {
 
 function guardarEdicion(nuevoNumero) {
   if (indiceEditar.value !== null) {
+    // Se actualiza el pedido en la lista local (que está invertida para la vista).
     pedidosRealizados.value[indiceEditar.value].numero = nuevoNumero
-    guardarPedidos(pedidosRealizados.value)
+    // Esto asegura que la base de datos mantenga un orden consistente.
+    const pedidosParaGuardar = [...pedidosRealizados.value].reverse()
+    guardarPedidos(pedidosParaGuardar)
   }
   mostrarModalEditar.value = false
 }
@@ -87,7 +91,8 @@ function abrirModalEliminar(indice) {
 function confirmarEliminacion() {
   if (indiceEliminar.value !== null) {
     pedidosRealizados.value.splice(indiceEliminar.value, 1)
-    guardarPedidos(pedidosRealizados.value)
+    const pedidosParaGuardar = [...pedidosRealizados.value].reverse()
+    guardarPedidos(pedidosParaGuardar)
   }
   mostrarModalEliminar.value = false
 }
