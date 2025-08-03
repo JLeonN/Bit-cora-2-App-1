@@ -36,7 +36,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { IconSend } from '@tabler/icons-vue'
 import { obtenerPedidos, guardarFechaUltimoEnvio } from '../BaseDeDatos/almacenamiento.js'
-import ExportarPedidosExcel from './ExportarPedidosExcel.vue'
+import ExportarPedidosExcel from './ExportarPedidosExcel.js'
 
 const router = useRouter()
 const IconoEnviar = IconSend

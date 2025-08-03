@@ -41,6 +41,13 @@
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
     />
+
+    <!-- Botones descargar y enviar -->
+    <BotonesDescargarEnviar @descargar="descargarPedidos" @enviar="enviarPedidos" />
+
+    <!-- Mensajes de notificación -->
+    <div v-if="mensajeExito" class="mensaje-exito">Archivo descargado correctamente</div>
+    <div v-if="mensajeError" class="mensaje-error">Ocurrió un error al descargar</div>
   </div>
 </template>
 
@@ -50,6 +57,8 @@ import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../Modales/ModalEliminarPedido.vue'
 import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
+import exportarExcel from './ExportarPedidosExcel'
+import BotonesDescargarEnviar from '../Botones/BotonesDescargarEnviar.vue'
 
 const pedidosRealizados = ref([])
 const mostrarModalEditar = ref(false)
@@ -58,10 +67,11 @@ const pedidoEditar = ref({ numero: '', fecha: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
 const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
+const mensajeExito = ref(false)
+const mensajeError = ref(false)
 
 onMounted(async () => {
   const datos = await obtenerPedidos()
-  // Se invierte la lista solo para la visualización, mostrando los más nuevos primero.
   pedidosRealizados.value = datos.slice().reverse()
 })
 
@@ -73,9 +83,7 @@ function abrirModalEditar(indice) {
 
 function guardarEdicion(nuevoNumero) {
   if (indiceEditar.value !== null) {
-    // Se actualiza el pedido en la lista local (que está invertida para la vista).
     pedidosRealizados.value[indiceEditar.value].numero = nuevoNumero
-    // Esto asegura que la base de datos mantenga un orden consistente.
     const pedidosParaGuardar = [...pedidosRealizados.value].reverse()
     guardarPedidos(pedidosParaGuardar)
   }
@@ -95,5 +103,16 @@ function confirmarEliminacion() {
     guardarPedidos(pedidosParaGuardar)
   }
   mostrarModalEliminar.value = false
+}
+
+async function descargarPedidos() {
+  try {
+    await exportarExcel(pedidosRealizados.value)
+    mensajeExito.value = true
+    setTimeout(() => (mensajeExito.value = false), 3000)
+  } catch {
+    mensajeError.value = true
+    setTimeout(() => (mensajeError.value = false), 3000)
+  }
 }
 </script>
