@@ -1,10 +1,16 @@
 <template>
   <div class="modal-fondo" @click.self="$emit('cerrar')">
-    <div class="modal-contenido">
+    <div :class="['modal-contenido', { activo: modalActivo }]">
       <h3 class="modal-titulo">Editar Pedido</h3>
       <div class="modal-campo">
         <label for="pedido">Nuevo número de pedido</label>
-        <input id="pedido" type="text" v-model="pedidoEditado" />
+        <input
+          id="pedido"
+          type="text"
+          v-model="pedidoEditado"
+          @focus="modalActivo = true"
+          @blur="modalActivo = false"
+        />
       </div>
       <DosBotones
         textoAceptar="Guardar"
@@ -26,6 +32,7 @@ const props = defineProps({
 const emit = defineEmits(['guardar', 'cerrar'])
 
 const pedidoEditado = ref(props.pedido)
+const modalActivo = ref(false)
 
 watch(
   () => props.pedido,

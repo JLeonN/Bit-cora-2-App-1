@@ -1,11 +1,18 @@
 <template>
   <div class="modal-fondo" @click.self="$emit('cerrar')">
-    <div class="modal-contenido">
+    <div :class="['modal-contenido', { activo: modalActivo }]">
       <h2 class="modal-titulo">Nuevo pedido</h2>
       <form @submit.prevent="enviarPedido">
         <div class="modal-campo">
           <label for="numeroPedido">Número de pedido</label>
-          <input id="numeroPedido" v-model="numeroPedido" type="text" required />
+          <input
+            id="numeroPedido"
+            v-model="numeroPedido"
+            type="text"
+            required
+            @focus="modalActivo = true"
+            @blur="modalActivo = false"
+          />
         </div>
         <DosBotones
           textoAceptar="Agregar"
@@ -25,6 +32,7 @@ import DosBotones from '../Botones/TresBotones.vue'
 const emit = defineEmits(['agregar-pedido', 'cerrar'])
 
 const numeroPedido = ref('')
+const modalActivo = ref(false)
 
 const enviarPedido = () => {
   const pedido = {

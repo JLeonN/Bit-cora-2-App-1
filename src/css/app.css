@@ -139,6 +139,7 @@ button {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 .modal-contenido {
   background-color: var(--color-superficie);
@@ -147,6 +148,7 @@ button {
   width: 90%;
   max-width: 400px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: margin-bottom 0.5s ease-in-out;
 }
 .modal-titulo {
   margin-bottom: 1rem;
@@ -168,6 +170,9 @@ button {
   background-color: var(--color-fondo);
   color: var(--color-texto-principal);
   border-radius: 4px;
+}
+.modal-contenido.activo {
+  margin-bottom: 8rem;
 }
 /* -------------------------------------------------------------------------- */
 /* Historial Pedidos */
