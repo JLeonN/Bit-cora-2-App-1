@@ -3,6 +3,7 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
+      { path: '/', component: () => import('../components/Inicio/PanelInicio.vue') },
       { path: '/TablaPedidos', component: () => import('pages/TablaPedidos.vue') },
       { path: '/historial', component: () => import('components/Pedidos/HistorialPedidos.vue') },
       {

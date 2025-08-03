@@ -30,27 +30,30 @@
               </q-item-section>
               <q-item-section>Pedidos</q-item-section>
             </q-item>
+
             <!-- Otro 1 -->
-            <q-item clickable v-ripple to="/Otro_1">
+            <!-- <q-item clickable v-ripple to="/Otro_1">
               <q-item-section avatar>
                 <q-icon name="send" />
               </q-item-section>
               <q-item-section> Otro 1 </q-item-section>
-            </q-item>
+            </q-item> -->
+
             <!-- Otro 2 -->
-            <q-item clickable v-ripple to="/Otro_2">
+            <!-- <q-item clickable v-ripple to="/Otro_2">
               <q-item-section avatar>
                 <q-icon name="drafts" />
               </q-item-section>
               <q-item-section> Otro 2 </q-item-section>
-            </q-item>
+            </q-item> -->
+
             <!-- Otro 3 -->
-            <q-item clickable v-ripple to="/Otro_3">
+            <!-- <q-item clickable v-ripple to="/Otro_3">
               <q-item-section avatar>
                 <IconCar :stroke="1.25" size="24" />
               </q-item-section>
               <q-item-section> Otro 3 </q-item-section>
-            </q-item>
+            </q-item> -->
           </q-list>
         </q-scroll-area>
         <q-img
@@ -79,7 +82,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { IconCar } from '@tabler/icons-vue'
+// import { IconCar } from '@tabler/icons-vue'
 import { IconTableRow } from '@tabler/icons-vue'
 import BotonesNavegacion from 'components/Botones/BotonesNavegacion.vue'
 

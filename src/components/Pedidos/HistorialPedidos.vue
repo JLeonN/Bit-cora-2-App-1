@@ -25,9 +25,6 @@
     <p v-if="historialDeRangos.length === 0" class="texto-secundario" style="text-align: center">
       No hay pedidos aún.
     </p>
-
-    <!-- Componente que exporta a Excel cuando se actualiza el array -->
-    <ExportarPedidosExcel :pedidos="pedidosParaExportar" />
   </div>
 </template>
 
@@ -36,7 +33,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { IconSend } from '@tabler/icons-vue'
 import { obtenerPedidos, guardarFechaUltimoEnvio } from '../BaseDeDatos/almacenamiento.js'
-import ExportarPedidosExcel from './ExportarPedidosExcel.js'
 
 const router = useRouter()
 const IconoEnviar = IconSend

@@ -45,7 +45,6 @@ button {
   margin-top: 16px;
 }
 /* -------------------------------------------------------------------------- */
-
 /* Tabla Pedidos */
 .contenedor-tabla {
   background-color: var(--color-superficie);
@@ -246,5 +245,58 @@ button {
     opacity: 0;
     transform: translateY(10px);
   }
+}
+/* -------------------------------------------------------------------------- */
+/* Panel inicio */
+.pagina-inicio {
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+.contenedor-botones {
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.boton-inicio {
+  background-color: var(--color-superficie);
+  color: var(--color-texto-principal);
+  border: 1px solid var(--color-borde);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 14px 20px;
+  border-radius: 10px;
+  text-transform: none;
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    transform 0.2s;
+}
+.boton-inicio:hover {
+  background-color: var(--color-primario-claro);
+  color: var(--color-texto-principal);
+  transform: translateY(-2px);
+}
+.boton-desactivado {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.boton-inicio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.icono-boton {
+  width: 20px;
+  height: 20px;
+  stroke: var(--color-texto-principal);
 }
 /* -------------------------------------------------------------------------- */
