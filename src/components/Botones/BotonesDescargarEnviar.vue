@@ -1,8 +1,8 @@
 <template>
   <div class="contenedor-botones">
-    <button class="boton-flotante" @click="$emit('descargar')" title="Descargar pedidos">
+    <!-- <button class="boton-flotante" @click="$emit('descargar')" title="Descargar pedidos">
       <IconDownload stroke="2" size="24" />
-    </button>
+    </button> -->
 
     <button class="boton-flotante" @click="$emit('enviar')" title="Enviar pedidos">
       <IconSend stroke="2" size="24" />
@@ -11,7 +11,10 @@
 </template>
 
 <script setup>
-import { IconDownload, IconSend } from '@tabler/icons-vue'
+import {
+  // IconDownload,
+  IconSend,
+} from '@tabler/icons-vue'
 </script>
 
 <style scoped>
