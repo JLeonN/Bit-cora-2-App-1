@@ -54,10 +54,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
+import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
+import { generarYGuardarExcelParaDescarga } from './ExportarPedidosExcel'
+import { generarYGuardarExcelTemporal } from './GeneraExcel/GeneraExcel.js'
 import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../Modales/ModalEliminarPedido.vue'
-import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
-import exportarExcel from './ExportarPedidosExcel'
 import BotonesDescargarEnviar from '../Botones/BotonesDescargarEnviar.vue'
 
 const pedidosRealizados = ref([])
@@ -107,11 +108,37 @@ function confirmarEliminacion() {
 
 async function descargarPedidos() {
   try {
-    await exportarExcel(pedidosRealizados.value)
+    await generarYGuardarExcelParaDescarga(pedidosRealizados.value)
     mensajeExito.value = true
     setTimeout(() => (mensajeExito.value = false), 3000)
   } catch {
     mensajeError.value = true
+    setTimeout(() => (mensajeError.value = false), 3000)
+  }
+}
+
+// Esta es la función para el botón "Enviar"
+async function enviarPedidos() {
+  try {
+    // 1. Llama a la función que genera el archivo en la caché del celular
+    const rutaDelArchivo = await generarYGuardarExcelTemporal(pedidosRealizados.value)
+
+    // 2. Si la ruta existe, significa que el archivo se creó correctamente
+    if (rutaDelArchivo) {
+      // Usamos tus mensajes existentes para dar feedback visual en el celular
+      mensajeExito.value = 'Archivo generado para enviar'
+      setTimeout(() => (mensajeExito.value = false), 3000)
+    } else {
+      // Si la función devuelve null, es que hubo un error
+      throw new Error('No se pudo generar el archivo para enviar.')
+    }
+  } catch (error) {
+    // <--- La dejas como estaba
+    // Variable para ver el detalle en la consola de depuración
+    console.error('Detalle del error al generar archivo:', error)
+
+    // Mensaje de error si algo falla
+    mensajeError.value = 'Error al preparar el archivo'
     setTimeout(() => (mensajeError.value = false), 3000)
   }
 }

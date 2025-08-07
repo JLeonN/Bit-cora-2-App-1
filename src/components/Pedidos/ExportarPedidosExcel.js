@@ -1,9 +1,7 @@
-// src/Utilidades/exportarExcel.js
-
 import * as XLSX from 'xlsx'
 
-export default function exportarExcel(pedidos) {
-  return new Promise((resolve, reject) => {
+export function generarYGuardarExcelParaDescarga(pedidos) {
+  return new Promise((resolver, rechazar) => {
     try {
       const datosParaExportar = pedidos.map((pedido) => ({
         Fecha: pedido.fecha,
@@ -16,9 +14,9 @@ export default function exportarExcel(pedidos) {
 
       XLSX.writeFile(libro, 'Pedidos Realizados.xlsx')
 
-      resolve()
+      resolver()
     } catch (error) {
-      reject(error)
+      rechazar(error)
     }
   })
 }

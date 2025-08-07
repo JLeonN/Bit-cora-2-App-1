@@ -21,6 +21,7 @@
     "@capacitor/android": "^7.4.2",
     "@capacitor/cli": "^7.4.2",
     "@capacitor/core": "^7.4.2",
+    "@capacitor/filesystem": "^7.1.4",
     "@capacitor/preferences": "^7.0.1",
     "@quasar/extras": "^1.16.4",
     "@tabler/icons-vue": "^3.34.1",
