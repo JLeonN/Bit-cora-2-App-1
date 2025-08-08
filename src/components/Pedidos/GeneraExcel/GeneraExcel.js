@@ -1,6 +1,25 @@
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
 
+function parsearFechaDDMMYYYY(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== 'string') return null
+  const partes = fechaStr.split('/')
+  if (partes.length !== 3) return null
+  const [dia, mes, anio] = partes.map(Number)
+  const fecha = new Date(anio, mes - 1, dia)
+  if (fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia) {
+    return fecha
+  }
+  return null
+}
+
+function formatearFechaParaNombreArchivo(fecha) {
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const anio = fecha.getFullYear()
+  return `${dia}-${mes}-${anio}`
+}
+
 export async function generarYGuardarExcelTemporal(pedidos) {
   if (!pedidos || pedidos.length === 0) {
     console.error('No se proporcionaron pedidos para generar el archivo.')
@@ -8,13 +27,34 @@ export async function generarYGuardarExcelTemporal(pedidos) {
   }
 
   try {
+    // Parsear fechas
+    const fechas = pedidos
+      .map((pedido) => parsearFechaDDMMYYYY(pedido.fecha))
+      .filter((fecha) => fecha !== null)
+
+    if (fechas.length === 0) {
+      console.error('No hay fechas válidas en los pedidos.')
+      return null
+    }
+
+    // Calcular fecha mínima y máxima
+    const fechaMin = new Date(Math.min(...fechas))
+    const fechaMax = new Date(Math.max(...fechas))
+
+    // Nombre archivo (sin barras)
+    const fechaMinNombre = formatearFechaParaNombreArchivo(fechaMin)
+    const fechaMaxNombre = formatearFechaParaNombreArchivo(fechaMax)
+
+    const nombreArchivo = `Pedidos del ${fechaMinNombre} al ${fechaMaxNombre}.xlsx`
+
+    // Generar Excel
     const hojaDeTrabajo = XLSX.utils.json_to_sheet(pedidos)
     const libroDeTrabajo = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, 'Pedidos')
 
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
 
-    const nombreArchivo = `Pedidos Realizados${new Date().getTime()}.xlsx`
+    // Guardar archivo temporalmente
     const resultadoEscritura = await Filesystem.writeFile({
       path: nombreArchivo,
       data: datosEnBase64,
@@ -23,7 +63,6 @@ export async function generarYGuardarExcelTemporal(pedidos) {
 
     console.log('Archivo guardado temporalmente en:', resultadoEscritura.uri)
 
-    // Devuelve ambos valores
     return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {
     console.error('Error al generar o guardar el archivo Excel:', error)
