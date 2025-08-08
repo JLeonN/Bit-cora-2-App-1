@@ -46,8 +46,8 @@
     <BotonesDescargarEnviar @descargar="descargarPedidos" @enviar="enviarPedidos" />
 
     <!-- Mensajes de notificación -->
-    <div v-if="mensajeExito" class="mensaje-exito">Archivo descargado correctamente</div>
-    <div v-if="mensajeError" class="mensaje-error">Ocurrió un error al descargar</div>
+    <div v-if="mensajeExito" class="mensaje-exito">{{ mensajeExito }}</div>
+    <div v-if="mensajeError" class="mensaje-error">{{ mensajeError }}</div>
   </div>
 </template>
 
@@ -57,6 +57,7 @@ import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
 import { generarYGuardarExcelParaDescarga } from './ExportarPedidosExcel'
 import { generarYGuardarExcelTemporal } from './GeneraExcel/GeneraExcel.js'
+import { compartirArchivo } from 'src/components/Logica/Envios/CompartirExcel.js'
 import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../Modales/ModalEliminarPedido.vue'
 import BotonesDescargarEnviar from '../Botones/BotonesDescargarEnviar.vue'
@@ -68,8 +69,8 @@ const pedidoEditar = ref({ numero: '', fecha: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
 const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
-const mensajeExito = ref(false)
-const mensajeError = ref(false)
+const mensajeExito = ref('')
+const mensajeError = ref('')
 
 onMounted(async () => {
   const datos = await obtenerPedidos()
@@ -109,37 +110,32 @@ function confirmarEliminacion() {
 async function descargarPedidos() {
   try {
     await generarYGuardarExcelParaDescarga(pedidosRealizados.value)
-    mensajeExito.value = true
-    setTimeout(() => (mensajeExito.value = false), 3000)
+    mensajeExito.value = 'Archivo descargado correctamente'
+    setTimeout(() => (mensajeExito.value = ''), 3000)
   } catch {
-    mensajeError.value = true
-    setTimeout(() => (mensajeError.value = false), 3000)
+    mensajeError.value = 'Ocurrió un error al descargar'
+    setTimeout(() => (mensajeError.value = ''), 3000)
   }
 }
 
-// Esta es la función para el botón "Enviar"
+// Botón "Enviar"
 async function enviarPedidos() {
   try {
-    // 1. Llama a la función que genera el archivo en la caché del celular
-    const rutaDelArchivo = await generarYGuardarExcelTemporal(pedidosRealizados.value)
+    // Generar el archivo temporal en el dispositivo
+    const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosRealizados.value)
 
-    // 2. Si la ruta existe, significa que el archivo se creó correctamente
-    if (rutaDelArchivo) {
-      // Usamos tus mensajes existentes para dar feedback visual en el celular
-      mensajeExito.value = 'Archivo generado para enviar'
-      setTimeout(() => (mensajeExito.value = false), 3000)
-    } else {
-      // Si la función devuelve null, es que hubo un error
-      throw new Error('No se pudo generar el archivo para enviar.')
+    if (!uri) {
+      throw new Error('No se generó el archivo correctamente.')
     }
-  } catch (error) {
-    // <--- La dejas como estaba
-    // Variable para ver el detalle en la consola de depuración
-    console.error('Detalle del error al generar archivo:', error)
+    // Compartir el archivo usando la lógica centralizada
+    await compartirArchivo(uri, nombreArchivo)
 
-    // Mensaje de error si algo falla
-    mensajeError.value = 'Error al preparar el archivo'
-    setTimeout(() => (mensajeError.value = false), 3000)
+    mensajeExito.value = 'Archivo generado y enviado correctamente'
+    setTimeout(() => (mensajeExito.value = ''), 3000)
+  } catch (error) {
+    console.error('Error al enviar el archivo:', error)
+    mensajeError.value = 'Error al preparar o enviar el archivo'
+    setTimeout(() => (mensajeError.value = ''), 3000)
   }
 }
 </script>

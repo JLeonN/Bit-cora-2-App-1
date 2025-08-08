@@ -23,6 +23,7 @@
     "@capacitor/core": "^7.4.2",
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/preferences": "^7.0.1",
+    "@capacitor/share": "^7.0.2",
     "@quasar/extras": "^1.16.4",
     "@tabler/icons-vue": "^3.34.1",
     "pinia": "^3.0.1",
