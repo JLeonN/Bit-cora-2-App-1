@@ -41,14 +41,20 @@ export async function generarYGuardarExcelTemporal(pedidos) {
     const fechaMin = new Date(Math.min(...fechas))
     const fechaMax = new Date(Math.max(...fechas))
 
-    // Nombre archivo (sin barras)
+    // Nombre archivo
     const fechaMinNombre = formatearFechaParaNombreArchivo(fechaMin)
     const fechaMaxNombre = formatearFechaParaNombreArchivo(fechaMax)
 
     const nombreArchivo = `Pedidos del ${fechaMinNombre} al ${fechaMaxNombre}.xlsx`
 
-    // Generar Excel
-    const hojaDeTrabajo = XLSX.utils.json_to_sheet(pedidos)
+    const datosParaHoja = pedidos.map((pedido) => {
+      return {
+        Fechas: pedido.fecha || 'Sin fecha',
+        Pedidos: pedido.numero || 'Sin número',
+      }
+    })
+    const hojaDeTrabajo = XLSX.utils.json_to_sheet(datosParaHoja)
+
     const libroDeTrabajo = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, 'Pedidos')
 
