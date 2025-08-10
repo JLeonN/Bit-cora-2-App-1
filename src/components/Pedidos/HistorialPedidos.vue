@@ -108,7 +108,6 @@ async function enviarRango(rango) {
       throw new Error('No hay pedidos para enviar.')
     }
 
-    // Generar archivo temporal igual que en PedidosRealizados
     const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidos)
 
     if (!uri) {
@@ -117,13 +116,8 @@ async function enviarRango(rango) {
 
     // Compartir archivo
     await compartirArchivo(uri, nombreArchivo)
-
-    // Podés agregar una notificación si querés, por ejemplo:
-    // alert('Archivo generado y enviado correctamente')
   } catch (error) {
     console.error('Error al enviar el archivo:', error)
-    // Podés agregar notificación de error si querés:
-    // alert('Error al preparar o enviar el archivo')
   }
 }
 
