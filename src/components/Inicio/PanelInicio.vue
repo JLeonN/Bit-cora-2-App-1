@@ -1,7 +1,7 @@
 <template>
   <q-page class="pagina-inicio">
     <div class="contenedor-botones">
-      <!-- Botón: Ir a pedidos -->
+      <!-- Botón: Ir a pedidos. -->
       <button class="boton-inicio" @click="irAPedidos">
         <IconTableRow class="icono-boton" />
         Mis pedidos
