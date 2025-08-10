@@ -33,41 +33,27 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { IconSend } from '@tabler/icons-vue'
 import { obtenerPedidos, guardarFechaUltimoEnvio } from '../BaseDeDatos/almacenamiento.js'
+import { generarYGuardarExcelTemporal } from './GeneraExcel/GeneraExcel.js'
+import { compartirArchivo } from 'src/components/Logica/Envios/CompartirExcel.js'
 
 const router = useRouter()
 const IconoEnviar = IconSend
 const historialDeRangos = ref([])
 
-// Agregar esta variable para almacenar pedidos que queremos exportar
-const pedidosParaExportar = ref([])
-
-/**
- * Parsea una fecha en formato 'dd/mm/yyyy' a un objeto Date.
- * Es crucial para que Javascript entienda correctamente las fechas de los pedidos.
- * @param {string} fechaStr - La fecha como string, ej: "27/07/2025".
- * @returns {Date|null} - El objeto Date correspondiente o null si el formato es inválido.
- */
 function parsearFechaDDMMYYYY(fechaStr) {
   if (!fechaStr || typeof fechaStr !== 'string') return null
   const partes = fechaStr.split('/')
   if (partes.length !== 3) return null
 
-  // Usamos new Date(año, mes - 1, día) porque los meses en Javascript van de 0 a 11.
   const [dia, mes, anio] = partes.map(Number)
   const fecha = new Date(anio, mes - 1, dia)
 
-  // Se valida que la fecha creada sea correcta (ej. no era "32/07/2025")
   if (fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia) {
     return fecha
   }
   return null
 }
 
-/**
- * Formatea un objeto Date o un string de fecha compatible a 'dd/mm/yyyy'.
- * @param {Date|string} fechaInput - El objeto Date o string a formatear.
- * @returns {string} - El string de la fecha formateada o "Fecha inválida".
- */
 function formatearFecha(fechaInput) {
   const fecha = fechaInput instanceof Date ? fechaInput : new Date(fechaInput)
   if (isNaN(fecha.getTime())) return 'Fecha inválida'
@@ -78,67 +64,70 @@ function formatearFecha(fechaInput) {
   return `${dia}/${mes}/${año}`
 }
 
-/**
- * Carga los pedidos, calcula el rango de fechas dinámicamente y actualiza la UI.
- */
 async function cargarHistorial() {
   const pedidos = await obtenerPedidos()
 
-  // Si no hay pedidos, simplemente dejamos el historial vacío.
   if (!pedidos || pedidos.length === 0) {
     historialDeRangos.value = []
     return
   }
 
-  // Ordenamos los pedidos por fecha para encontrar el más antiguo y el más nuevo.
   pedidos.sort((a, b) => {
     const fechaA = parsearFechaDDMMYYYY(a.fecha)
     const fechaB = parsearFechaDDMMYYYY(b.fecha)
-    // Si alguna fecha es inválida, no se altera el orden.
     if (!fechaA || !fechaB) return 0
     return fechaA.getTime() - fechaB.getTime()
   })
 
-  // Una vez ordenados, la primera fecha es la más antigua y la última es la más nueva.
   const fechaInicio = parsearFechaDDMMYYYY(pedidos[0].fecha)
   const fechaFin = parsearFechaDDMMYYYY(pedidos[pedidos.length - 1].fecha)
 
-  // Si las fechas son válidas, actualizamos el historial.
   if (fechaInicio && fechaFin) {
     historialDeRangos.value = [
       {
         inicio: fechaInicio,
         fin: fechaFin,
-        enviado: false, // Se mantiene por la estructura del botón "Enviar"
+        enviado: false,
       },
     ]
   } else {
-    // Si por alguna razón las fechas no se pudieron procesar, se limpia el historial.
     historialDeRangos.value = []
   }
 }
 
-/**
- * Maneja el evento de clic en el botón "Enviar".
- * @param {object} rango - El objeto de rango que se va a enviar.
- */
+// Función de envío adaptada de PedidosRealizados
 async function enviarRango(rango) {
-  rango.enviado = true
-  // Se guarda la fecha en un formato estándar (ISO) para mayor compatibilidad.
-  await guardarFechaUltimoEnvio(rango.fin.toISOString())
-  await cargarHistorial()
+  try {
+    rango.enviado = true
+    await guardarFechaUltimoEnvio(rango.fin.toISOString())
+    await cargarHistorial()
 
-  // Cargar pedidos y asignar para exportar (disparará exportación en el componente)
-  const pedidos = await obtenerPedidos()
-  pedidosParaExportar.value = pedidos
+    const pedidos = await obtenerPedidos()
+
+    if (!pedidos || pedidos.length === 0) {
+      throw new Error('No hay pedidos para enviar.')
+    }
+
+    // Generar archivo temporal igual que en PedidosRealizados
+    const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidos)
+
+    if (!uri) {
+      throw new Error('No se generó el archivo correctamente.')
+    }
+
+    // Compartir archivo
+    await compartirArchivo(uri, nombreArchivo)
+
+    // Podés agregar una notificación si querés, por ejemplo:
+    // alert('Archivo generado y enviado correctamente')
+  } catch (error) {
+    console.error('Error al enviar el archivo:', error)
+    // Podés agregar notificación de error si querés:
+    // alert('Error al preparar o enviar el archivo')
+  }
 }
 
-/**
- * Redirige a la vista de detalle para el rango de fechas seleccionado.
- * @param {object} rango - El objeto de rango seleccionado.
- */
 function verDetalleRango(rango) {
-  // Se pasan las fechas como YYYY-MM-DD a la siguiente ruta, que es más robusto.
   router.push({
     name: 'PedidosRealizados',
     query: {
@@ -148,7 +137,6 @@ function verDetalleRango(rango) {
   })
 }
 
-// Carga el historial de pedidos cuando el componente se monta.
 onMounted(() => {
   cargarHistorial()
 })
