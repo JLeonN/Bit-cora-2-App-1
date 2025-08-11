@@ -2,7 +2,7 @@
   <div class="contenedor-historial">
     <h2 class="titulo-historial">Historial de pedidos</h2>
 
-    <!-- Itera sobre los rangos de fechas y los muestra -->
+    <!-- Itera sobre los meses/años agrupados y los muestra -->
     <div
       v-for="(rango, indice) in historialDeRangos"
       :key="indice"
@@ -11,10 +11,10 @@
     >
       <div class="info-rango">
         <p class="texto-rango">
-          <!-- Formatea las fechas de inicio y fin para mostrarlas -->
-          {{ formatearFecha(rango.inicio) }} al {{ formatearFecha(rango.fin) }}
+          <!-- Solo el mes y año -->
+          {{ obtenerNombreMes(rango.mes) }} {{ rango.anio }}
         </p>
-        <!-- Muestra el botón de enviar si el rango no ha sido enviado -->
+        <!-- Botón de enviar -->
         <span v-if="!rango.enviado" @click.stop="enviarRango(rango)" class="boton-enviar">
           <IconoEnviar size="20" /> Enviar
         </span>
@@ -40,6 +40,7 @@ const router = useRouter()
 const IconoEnviar = IconSend
 const historialDeRangos = ref([])
 
+/* Convierte "DD/MM/YYYY" en un objeto Date válido */
 function parsearFechaDDMMYYYY(fechaStr) {
   if (!fechaStr || typeof fechaStr !== 'string') return null
   const partes = fechaStr.split('/')
@@ -54,16 +55,26 @@ function parsearFechaDDMMYYYY(fechaStr) {
   return null
 }
 
-function formatearFecha(fechaInput) {
-  const fecha = fechaInput instanceof Date ? fechaInput : new Date(fechaInput)
-  if (isNaN(fecha.getTime())) return 'Fecha inválida'
-
-  const dia = String(fecha.getDate()).padStart(2, '0')
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
-  const año = fecha.getFullYear()
-  return `${dia}/${mes}/${año}`
+/* Devuelve el nombre del mes */
+function obtenerNombreMes(numeroMes) {
+  const nombresMeses = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
+  ]
+  return nombresMeses[numeroMes] || 'Mes inválido'
 }
 
+/* Historial agrupando por MES y AÑO */
 async function cargarHistorial() {
   const pedidos = await obtenerPedidos()
 
@@ -72,6 +83,7 @@ async function cargarHistorial() {
     return
   }
 
+  // Ordena por fecha
   pedidos.sort((a, b) => {
     const fechaA = parsearFechaDDMMYYYY(a.fecha)
     const fechaB = parsearFechaDDMMYYYY(b.fecha)
@@ -79,36 +91,48 @@ async function cargarHistorial() {
     return fechaA.getTime() - fechaB.getTime()
   })
 
-  const fechaInicio = parsearFechaDDMMYYYY(pedidos[0].fecha)
-  const fechaFin = parsearFechaDDMMYYYY(pedidos[pedidos.length - 1].fecha)
+  // Objeto temporal para agrupar por mes/año
+  const agrupado = {}
 
-  if (fechaInicio && fechaFin) {
-    historialDeRangos.value = [
-      {
-        inicio: fechaInicio,
-        fin: fechaFin,
+  pedidos.forEach((pedido) => {
+    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
+    if (!fecha) return
+
+    const mes = fecha.getMonth()
+    const anio = fecha.getFullYear()
+    const clave = `${mes}-${anio}`
+
+    if (!agrupado[clave]) {
+      agrupado[clave] = {
+        mes,
+        anio,
+        pedidos: [],
         enviado: false,
-      },
-    ]
-  } else {
-    historialDeRangos.value = []
-  }
+      }
+    }
+    agrupado[clave].pedidos.push(pedido)
+  })
+
+  // Convertimos el objeto en array
+  historialDeRangos.value = Object.values(agrupado).sort((a, b) => {
+    if (a.anio === b.anio) {
+      return a.mes - b.mes
+    }
+    return a.anio - b.anio
+  })
 }
 
-// Función de envío adaptada de PedidosRealizados
+/* Enviar pedidos del mes/año seleccionado */
 async function enviarRango(rango) {
   try {
     rango.enviado = true
-    await guardarFechaUltimoEnvio(rango.fin.toISOString())
-    await cargarHistorial()
-
-    const pedidos = await obtenerPedidos()
-
-    if (!pedidos || pedidos.length === 0) {
-      throw new Error('No hay pedidos para enviar.')
+    // Guardamos la fecha del último envío (último pedido de ese mes)
+    const fechaUltima = parsearFechaDDMMYYYY(rango.pedidos[rango.pedidos.length - 1].fecha)
+    if (fechaUltima) {
+      await guardarFechaUltimoEnvio(fechaUltima.toISOString())
     }
-
-    const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidos)
+    // Generar Excel solo con pedidos de este mes
+    const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(rango.pedidos)
 
     if (!uri) {
       throw new Error('No se generó el archivo correctamente.')
@@ -116,17 +140,24 @@ async function enviarRango(rango) {
 
     // Compartir archivo
     await compartirArchivo(uri, nombreArchivo)
+    // Recargar historial
+    await cargarHistorial()
   } catch (error) {
     console.error('Error al enviar el archivo:', error)
   }
 }
 
+/* Ver detalle de pedidos de ese mes/año */
 function verDetalleRango(rango) {
+  // Sacar primer y último día del mes
+  const fechaInicio = parsearFechaDDMMYYYY(rango.pedidos[0].fecha)
+  const fechaFin = parsearFechaDDMMYYYY(rango.pedidos[rango.pedidos.length - 1].fecha)
+
   router.push({
     name: 'PedidosRealizados',
     query: {
-      inicio: rango.inicio.toISOString().split('T')[0],
-      fin: rango.fin.toISOString().split('T')[0],
+      inicio: fechaInicio.toISOString().split('T')[0],
+      fin: fechaFin.toISOString().split('T')[0],
     },
   })
 }
