@@ -53,6 +53,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
 import { generarYGuardarExcelParaDescarga } from './ExportarPedidosExcel'
@@ -62,6 +63,7 @@ import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../Modales/ModalEliminarPedido.vue'
 import BotonesDescargarEnviar from '../Botones/BotonesDescargarEnviar.vue'
 
+const route = useRoute()
 const pedidosRealizados = ref([])
 const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
@@ -72,8 +74,45 @@ const indiceEliminar = ref(null)
 const mensajeExito = ref('')
 const mensajeError = ref('')
 
+function parsearFechaDDMMYYYY(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== 'string') return null
+  const partes = fechaStr.split('/')
+  if (partes.length !== 3) return null
+
+  const [dia, mes, anio] = partes.map(Number)
+  // Se crea la fecha en UTC para consistencia.
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
+
+  if (
+    fecha.getUTCFullYear() === anio &&
+    fecha.getUTCMonth() === mes - 1 &&
+    fecha.getUTCDate() === dia
+  ) {
+    return fecha
+  }
+  return null
+}
+
 onMounted(async () => {
-  const datos = await obtenerPedidos()
+  let datos = await obtenerPedidos()
+
+  // Lógica de filtrado.
+  const { inicio, fin } = route.query
+
+  if (inicio && fin) {
+    const fechaInicio = new Date(inicio)
+    const fechaFin = new Date(fin)
+
+    datos = datos.filter((pedido) => {
+      const fechaPedido = parsearFechaDDMMYYYY(pedido.fecha)
+      if (!fechaPedido) return false
+      return (
+        fechaPedido.getTime() >= fechaInicio.getTime() &&
+        fechaPedido.getTime() <= fechaFin.getTime()
+      )
+    })
+  }
+
   pedidosRealizados.value = datos.slice().reverse()
 })
 

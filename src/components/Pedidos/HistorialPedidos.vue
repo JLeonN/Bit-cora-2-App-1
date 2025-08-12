@@ -47,9 +47,14 @@ function parsearFechaDDMMYYYY(fechaStr) {
   if (partes.length !== 3) return null
 
   const [dia, mes, anio] = partes.map(Number)
-  const fecha = new Date(anio, mes - 1, dia)
+  // CAMBIO: Se ajusta la creación de la fecha para asegurar que sea en UTC y evitar problemas de zona horaria.
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
 
-  if (fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia) {
+  if (
+    fecha.getUTCFullYear() === anio &&
+    fecha.getUTCMonth() === mes - 1 &&
+    fecha.getUTCDate() === dia
+  ) {
     return fecha
   }
   return null
@@ -98,8 +103,8 @@ async function cargarHistorial() {
     const fecha = parsearFechaDDMMYYYY(pedido.fecha)
     if (!fecha) return
 
-    const mes = fecha.getMonth()
-    const anio = fecha.getFullYear()
+    const mes = fecha.getUTCMonth() // Usamos getUTCMonth para consistencia
+    const anio = fecha.getUTCFullYear() // Usamos getUTCFullYear para consistencia
     const clave = `${mes}-${anio}`
 
     if (!agrupado[clave]) {
@@ -149,13 +154,14 @@ async function enviarRango(rango) {
 
 /* Ver detalle de pedidos de ese mes/año */
 function verDetalleRango(rango) {
-  // Sacar primer y último día del mes
-  const fechaInicio = parsearFechaDDMMYYYY(rango.pedidos[0].fecha)
-  const fechaFin = parsearFechaDDMMYYYY(rango.pedidos[rango.pedidos.length - 1].fecha)
+  // CAMBIO: Se calcula el primer y último día del mes del rango para asegurar que se incluye todo el mes.
+  const fechaInicio = new Date(Date.UTC(rango.anio, rango.mes, 1))
+  const fechaFin = new Date(Date.UTC(rango.anio, rango.mes + 1, 0)) // El día 0 del siguiente mes es el último día del mes actual.
 
   router.push({
     name: 'PedidosRealizados',
     query: {
+      // Se convierte a formato YYYY-MM-DD
       inicio: fechaInicio.toISOString().split('T')[0],
       fin: fechaFin.toISOString().split('T')[0],
     },
