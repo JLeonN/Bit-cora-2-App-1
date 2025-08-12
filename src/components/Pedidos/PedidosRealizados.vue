@@ -122,11 +122,19 @@ function abrirModalEditar(indice) {
   mostrarModalEditar.value = true
 }
 
-function guardarEdicion(nuevoNumero) {
+async function guardarEdicion(nuevoNumero) {
   if (indiceEditar.value !== null) {
-    pedidosRealizados.value[indiceEditar.value].numero = nuevoNumero
-    const pedidosParaGuardar = [...pedidosRealizados.value].reverse()
-    guardarPedidos(pedidosParaGuardar)
+    const pedidoModificado = pedidoEditar.value
+    const todosLosPedidos = await obtenerPedidos()
+    const indiceEnListaCompleta = todosLosPedidos.findIndex(
+      (p) => p.numero === pedidoModificado.numero && p.fecha === pedidoModificado.fecha,
+    )
+
+    if (indiceEnListaCompleta !== -1) {
+      todosLosPedidos[indiceEnListaCompleta].numero = nuevoNumero
+      await guardarPedidos(todosLosPedidos)
+      pedidosRealizados.value[indiceEditar.value].numero = nuevoNumero
+    }
   }
   mostrarModalEditar.value = false
 }
@@ -137,11 +145,15 @@ function abrirModalEliminar(indice) {
   mostrarModalEliminar.value = true
 }
 
-function confirmarEliminacion() {
+async function confirmarEliminacion() {
   if (indiceEliminar.value !== null) {
+    const pedidoAEliminar = pedidosRealizados.value[indiceEliminar.value]
+    let todosLosPedidos = await obtenerPedidos()
+    todosLosPedidos = todosLosPedidos.filter(
+      (p) => p.numero !== pedidoAEliminar.numero || p.fecha !== pedidoAEliminar.fecha,
+    )
+    await guardarPedidos(todosLosPedidos)
     pedidosRealizados.value.splice(indiceEliminar.value, 1)
-    const pedidosParaGuardar = [...pedidosRealizados.value].reverse()
-    guardarPedidos(pedidosParaGuardar)
   }
   mostrarModalEliminar.value = false
 }
