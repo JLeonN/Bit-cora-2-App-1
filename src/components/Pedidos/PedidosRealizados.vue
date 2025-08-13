@@ -1,7 +1,9 @@
 <template>
   <div class="contenedor-tabla">
-    <h2 class="titulo-tabla">Pedidos realizados</h2>
-
+    <div class="encabezado-pedidos">
+      <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
+      <p class="texto-secundario">{{ pedidosRealizados.length }} pedidos</p>
+    </div>
     <table class="tabla">
       <thead>
         <tr>
@@ -52,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
@@ -92,6 +94,35 @@ function parsearFechaDDMMYYYY(fechaStr) {
   }
   return null
 }
+
+const etiquetaMes = computed(() => {
+  const { inicio, fin } = route.query
+  if (inicio && fin) {
+    const partes = String(inicio).split('-')
+    if (partes.length >= 2) {
+      const anio = partes[0]
+      const mes = parseInt(partes[1], 10)
+      const nombresMes = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre',
+      ]
+      if (mes >= 1 && mes <= 12) {
+        return ` ${nombresMes[mes - 1]} ${anio}`
+      }
+    }
+  }
+  return ''
+})
 
 onMounted(async () => {
   let datos = await obtenerPedidos()

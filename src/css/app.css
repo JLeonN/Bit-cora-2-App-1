@@ -58,6 +58,13 @@ button {
   text-align: center;
   color: var(--color-primario);
   margin-bottom: 16px;
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 0;
+}
+.texto-secundario {
+  font-size: 0.95rem;
+  color: var(--color-texto-secundario);
 }
 .tabla {
   width: 100%;
