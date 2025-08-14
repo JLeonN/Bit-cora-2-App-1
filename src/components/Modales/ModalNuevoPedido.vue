@@ -11,9 +11,11 @@
               id="numeroPedido"
               v-model="numeroPedido"
               type="text"
-              required
+              :placeholder="textoPlaceholder"
               @focus="modalActivo = true"
               @blur="modalActivo = false"
+              @input="restablecerPlaceholder"
+              :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
             />
             <!-- Botón de cámara -->
             <button type="button" class="boton-camara" @click="abrirCamara">
@@ -43,14 +45,38 @@ const emit = defineEmits(['agregar-pedido', 'cerrar'])
 
 const numeroPedido = ref('')
 const modalActivo = ref(false)
+const mostrarError = ref(false)
+const animarError = ref(false)
+const textoPlaceholder = ref('Número de pedido')
 
 const enviarPedido = () => {
+  if (!numeroPedido.value.trim()) {
+    mostrarError.value = true
+    textoPlaceholder.value = 'Debes escribir un número de pedido'
+
+    // Activar animación
+    animarError.value = true
+    setTimeout(() => {
+      animarError.value = false
+    }, 500)
+
+    return
+  }
+
   const pedido = {
-    numero: numeroPedido.value,
+    numero: numeroPedido.value.trim(),
     fecha: new Date().toISOString().split('T')[0],
   }
+
   numeroPedido.value = ''
+  mostrarError.value = false
+  textoPlaceholder.value = 'Número de pedido'
   emit('agregar-pedido', pedido)
+}
+
+const restablecerPlaceholder = () => {
+  mostrarError.value = false
+  textoPlaceholder.value = 'Número de pedido'
 }
 
 const abrirCamara = async () => {

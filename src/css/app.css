@@ -181,6 +181,35 @@ button {
 .modal-contenido.activo {
   margin-bottom: 8rem;
 }
+/* Mensaje de error en el input */
+.input-error {
+  border-color: var(--color-error);
+}
+.input-error::placeholder {
+  color: var(--color-error);
+  opacity: 1;
+}
+@keyframes sacudida {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
+  }
+}
+.animar-error {
+  animation: sacudida 0.5s;
+}
 /* Botón de cámara */
 .campo-con-boton {
   display: flex;
