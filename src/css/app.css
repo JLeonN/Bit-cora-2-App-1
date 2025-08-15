@@ -228,6 +228,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: none;
+  border: none;
 }
 .boton-camara svg {
   display: block;

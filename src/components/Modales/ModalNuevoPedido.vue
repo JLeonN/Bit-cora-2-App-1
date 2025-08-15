@@ -18,9 +18,7 @@
               :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
             />
             <!-- Botón de cámara -->
-            <button type="button" class="boton-camara" @click="abrirCamara">
-              <IconCamera :size="18" :stroke="1.5" />
-            </button>
+            <BotonCamara />
           </div>
         </div>
 
@@ -38,8 +36,7 @@
 <script setup>
 import { ref } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
-import { Camera, CameraResultType } from '@capacitor/camera'
-import { IconCamera } from '@tabler/icons-vue'
+import BotonCamara from '../Botones/BotonCamara.vue'
 
 const emit = defineEmits(['agregar-pedido', 'cerrar'])
 
@@ -52,14 +49,9 @@ const textoPlaceholder = ref('Número de pedido')
 const enviarPedido = () => {
   if (!numeroPedido.value.trim()) {
     mostrarError.value = true
-    textoPlaceholder.value = 'Debes escribir un número de pedido'
-
-    // Activar animación
+    textoPlaceholder.value = 'Escribí hermano'
     animarError.value = true
-    setTimeout(() => {
-      animarError.value = false
-    }, 500)
-
+    setTimeout(() => (animarError.value = false), 500)
     return
   }
 
@@ -77,18 +69,5 @@ const enviarPedido = () => {
 const restablecerPlaceholder = () => {
   mostrarError.value = false
   textoPlaceholder.value = 'Número de pedido'
-}
-
-const abrirCamara = async () => {
-  try {
-    const foto = await Camera.getPhoto({
-      quality: 80,
-      resultType: CameraResultType.Base64,
-    })
-    console.log('Foto tomada:', foto)
-    alert('Foto tomada con éxito')
-  } catch (error) {
-    console.error('Error al abrir la cámara', error)
-  }
 }
 </script>
