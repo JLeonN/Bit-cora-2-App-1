@@ -32,6 +32,8 @@
           @cancelar="$emit('cerrar')"
         />
       </form>
+      <!-- Modal de la cámara -->
+      <ModalCamara v-if="mostrarModalCamara" @cancelar="cerrarCamaraYVolver" />
     </div>
   </div>
 </template>
@@ -40,13 +42,15 @@
 import { ref } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
+import ModalCamara from './ModalCamara.vue'
 
-const emit = defineEmits(['agregar-pedido', 'cerrar', 'abrir-camara'])
+const emit = defineEmits(['agregar-pedido', 'cerrar'])
 const numeroPedido = ref('')
 const modalActivo = ref(false)
 const mostrarError = ref(false)
 const animarError = ref(false)
 const textoPlaceholder = ref('Número de pedido')
+const mostrarModalCamara = ref(false)
 
 // Enviar pedido nuevo
 const enviarPedido = () => {
@@ -75,8 +79,12 @@ const restablecerPlaceholder = () => {
   textoPlaceholder.value = 'Número de pedido'
 }
 
-// Dispara evento para abrir la cámara
+// Abrir cámara
 const abrirCamara = () => {
-  emit('abrir-camara')
+  mostrarModalCamara.value = true
+}
+// Cerrar cámara y volver al modal de pedido
+const cerrarCamaraYVolver = () => {
+  mostrarModalCamara.value = false
 }
 </script>
