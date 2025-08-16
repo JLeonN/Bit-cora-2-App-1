@@ -26,14 +26,18 @@
       </tbody>
     </table>
 
+    <!-- Botón flotante para abrir el modal de nuevo pedido -->
     <BotonFlotante @abrir-modal="abrirModalAgregar" />
 
-    <VentanaModal
+    <!-- Modal: Nuevo Pedido -->
+    <ModalNuevoPedido
       v-if="mostrarModalAgregar"
       @agregar-pedido="agregarPedido"
       @cerrar="mostrarModalAgregar = false"
+      @abrir-camara="abrirModalCamara"
     />
 
+    <!-- Modal: Editar Pedido -->
     <ModalEditarPedido
       v-if="mostrarModalEditar"
       :pedido="pedidoEditar.numero"
@@ -41,12 +45,16 @@
       @cerrar="mostrarModalEditar = false"
     />
 
+    <!-- Modal: Eliminar Pedido -->
     <ModalEliminarPedido
       v-if="mostrarModalEliminar"
       :pedido="pedidoEliminar.numero"
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
     />
+
+    <!-- Modal: Cámara -->
+    <ModalCamara v-if="mostrarModalCamara" @cerrar="mostrarModalCamara = false" />
 
     <HistorialPedidos />
   </div>
@@ -57,9 +65,10 @@ import { ref, computed, onMounted } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 
 import BotonFlotante from '../components/Botones/BotonFlotante.vue'
-import VentanaModal from '../components/Modales/ModalNuevoPedido.vue'
+import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
+import ModalCamara from '../components/Modales/ModalCamara.vue'
 import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 
@@ -77,6 +86,7 @@ onMounted(async () => {
 const mostrarModalAgregar = ref(false)
 const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
+const mostrarModalCamara = ref(false)
 
 const pedidoEditar = ref(null)
 const pedidoEliminar = ref(null)
@@ -125,5 +135,12 @@ function confirmarEliminacion() {
     guardarPedidos(pedidos.value)
   }
   mostrarModalEliminar.value = false
+}
+
+function abrirModalCamara() {
+  // cerrar modal nuevo pedido
+  mostrarModalAgregar.value = false
+  // abrir modal cámara
+  mostrarModalCamara.value = true
 }
 </script>

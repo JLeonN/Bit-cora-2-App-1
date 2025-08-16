@@ -18,10 +18,13 @@
               :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
             />
             <!-- Botón de cámara -->
-            <BotonCamara />
+            <button type="button" class="boton-camara" @click="abrirCamara">
+              <IconCamera stroke="{2}" />
+            </button>
           </div>
         </div>
 
+        <!-- Botones Aceptar / Cancelar -->
         <DosBotones
           textoAceptar="Agregar"
           textoCancelar="Cancelar"
@@ -36,16 +39,16 @@
 <script setup>
 import { ref } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
-import BotonCamara from '../Botones/BotonCamara.vue'
+import { IconCamera } from '@tabler/icons-vue'
 
-const emit = defineEmits(['agregar-pedido', 'cerrar'])
-
+const emit = defineEmits(['agregar-pedido', 'cerrar', 'abrir-camara'])
 const numeroPedido = ref('')
 const modalActivo = ref(false)
 const mostrarError = ref(false)
 const animarError = ref(false)
 const textoPlaceholder = ref('Número de pedido')
 
+// Enviar pedido nuevo
 const enviarPedido = () => {
   if (!numeroPedido.value.trim()) {
     mostrarError.value = true
@@ -66,8 +69,14 @@ const enviarPedido = () => {
   emit('agregar-pedido', pedido)
 }
 
+// Restablece placeholder normal
 const restablecerPlaceholder = () => {
   mostrarError.value = false
   textoPlaceholder.value = 'Número de pedido'
+}
+
+// Dispara evento para abrir la cámara
+const abrirCamara = () => {
+  emit('abrir-camara')
 }
 </script>
