@@ -33,7 +33,11 @@
         />
       </form>
       <!-- Modal de la cámara -->
-      <ModalCamara v-if="mostrarModalCamara" @cancelar="cerrarCamaraYVolver" />
+      <ModalCamara
+        v-if="mostrarModalCamara"
+        @cancelar="cerrarCamaraYVolver"
+        @codigo-detectado="onCodigoLeido"
+      />
     </div>
   </div>
 </template>
@@ -85,6 +89,12 @@ const abrirCamara = () => {
 }
 // Cerrar cámara y volver al modal de pedido
 const cerrarCamaraYVolver = () => {
+  mostrarModalCamara.value = false
+}
+
+// Recibe el código leído desde ModalCamara y lo pone en el input
+const onCodigoLeido = (codigo) => {
+  numeroPedido.value = codigo
   mostrarModalCamara.value = false
 }
 </script>
