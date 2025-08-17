@@ -6,10 +6,25 @@
       <div id="vista-camara" class="caja-camara"></div>
 
       <!-- Parte inferior en negro -->
+      <div v-if="ultimaCaptura" class="debug-captura">
+        <p class="texto-debug">📸 Última captura (debug):</p>
+        <img
+          :src="'data:image/jpeg;base64,' + ultimaCaptura"
+          alt="captura debug"
+          class="mini-captura"
+        />
+      </div>
+
+      <!-- Log en pantalla -->
+      <div class="debug-log">
+        <p v-for="(linea, index) in logLineas" :key="index">{{ linea }}</p>
+      </div>
+
+      <!-- Parte inferior -->
       <div class="caja-inferior">
         <!-- Botón usar código detectado -->
         <button class="boton-usar-codigo" :disabled="!codigoDetectado" @click="usarCodigo">
-          Usar código detectado: {{ codigoDetectado || '' }}
+          Usar código: {{ codigoDetectado || '' }}
         </button>
 
         <!-- Botón cancelar -->
@@ -21,87 +36,109 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import { BarcodeFormat, BrowserMultiFormatReader } from '@zxing/library'
+import { BarcodeFormat, BrowserMultiFormatReader, DecodeHintType } from '@zxing/library'
 import { CameraPreview } from '@capacitor-community/camera-preview'
 
 const emit = defineEmits(['cancelar', 'codigo-detectado'])
+
 const codigoDetectado = ref('')
+const ultimaCaptura = ref(null)
+const logLineas = ref([])
 
 let lector = null
 let escaneando = false
 
+// Función de log en pantalla
+function logDebug(mensaje) {
+  logLineas.value.push(mensaje)
+  if (logLineas.value.length > 12) {
+    logLineas.value.shift() // mantener últimas 12
+  }
+}
+
+// Inicializar cámara
 const iniciarCamara = async () => {
   try {
     await CameraPreview.start({
       parent: 'vista-camara',
-      position: 'rear', // Cámara trasera
+      position: 'rear',
       width: window.innerWidth,
       height: window.innerHeight / 2,
       x: 0,
       y: 0,
       toBack: false,
     })
+    logDebug('✅ Cámara iniciada correctamente')
     iniciarEscaneo()
   } catch (error) {
-    console.error('Error al iniciar la cámara:', error)
+    logDebug('❌ Error al iniciar la cámara: ' + error)
   }
 }
 
+// Detener cámara
 const detenerCamara = async () => {
   try {
     escaneando = false
     await CameraPreview.stop()
     if (lector) lector.reset()
+    logDebug('⏹ Cámara detenida')
   } catch (error) {
-    console.error('Error al detener la cámara:', error)
+    logDebug('❌ Error al detener la cámara: ' + error)
   }
 }
 
-// Escaneo en vivo SOLO de códigos de barra (no QR)
+// Escaneo en vivo
 const iniciarEscaneo = () => {
-  lector = new BrowserMultiFormatReader()
+  const sugerencias = new Map()
+  // 👉 Le pasamos TODOS los formatos soportados
+  sugerencias.set(DecodeHintType.POSSIBLE_FORMATS, Object.values(BarcodeFormat))
+
+  lector = new BrowserMultiFormatReader(sugerencias)
   escaneando = true
+  logDebug('🔎 Escaneo iniciado con todos los formatos disponibles')
   escanearFrame()
 }
 
 const escanearFrame = async () => {
   if (!escaneando) return
+
   try {
-    const result = await CameraPreview.capture({ quality: 60 })
-    const img = new window.Image()
-    img.src = 'data:image/jpeg;base64,' + result.value
-    img.onload = async () => {
+    const captura = await CameraPreview.capture({ quality: 70 })
+    ultimaCaptura.value = captura.value
+    logDebug('📸 Captura obtenida, tamaño base64: ' + captura.value.length)
+
+    // Crear imagen DOM a partir del base64
+    const imagen = new Image()
+    imagen.src = 'data:image/jpeg;base64,' + captura.value
+
+    imagen.onload = async () => {
       try {
-        // Solo formatos de barra comunes (no QR)
-        const codeResult = await lector.decodeFromImageElement(img, [
-          BarcodeFormat.CODE_128,
-          BarcodeFormat.CODE_39,
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.EAN_8,
-          BarcodeFormat.UPC_A,
-          BarcodeFormat.UPC_E,
-          BarcodeFormat.ITF,
-          BarcodeFormat.CODABAR,
-        ])
-        if (codeResult && codeResult.text) {
-          codigoDetectado.value = codeResult.text
+        logDebug('🔄 Intentando decodificar imagen...')
+        const resultado = await lector.decodeFromImageElement(imagen)
+        if (resultado && resultado.text) {
+          codigoDetectado.value = resultado.text
+          logDebug('✅ Código detectado: ' + resultado.text)
         } else {
           codigoDetectado.value = ''
+          logDebug('⚠️ No se detectó código en este frame')
         }
-      } catch {
+      } catch (e) {
+        logDebug('❌ Error en escaneo: ' + e.message)
         codigoDetectado.value = ''
       }
-      setTimeout(escanearFrame, 800)
     }
-  } catch {
-    setTimeout(escanearFrame, 1200)
+  } catch (e) {
+    logDebug('❌ Error al capturar frame: ' + e.message)
   }
+
+  setTimeout(escanearFrame, 1000) // cada 1 segundo
 }
 
-// Usar código detectado y enviarlo al modal principal
+// Usar código detectado
 const usarCodigo = () => {
   if (codigoDetectado.value) {
     emit('codigo-detectado', codigoDetectado.value)
+    logDebug('📤 Código enviado: ' + codigoDetectado.value)
     codigoDetectado.value = ''
   }
 }
@@ -125,7 +162,6 @@ onBeforeUnmount(() => {
   align-items: center;
   z-index: 999;
 }
-
 .modal-camara {
   display: flex;
   flex-direction: column;
@@ -133,18 +169,15 @@ onBeforeUnmount(() => {
   height: 100vh;
   background: black;
 }
-
 .caja-camara {
   width: 100%;
-  height: 60vh;
+  height: 50vh;
   background: black;
   overflow: hidden;
-  border-radius: 0;
 }
-
 .caja-inferior {
   width: 100%;
-  height: 40vh;
+  height: 20vh;
   background: black;
   display: flex;
   flex-direction: column;
@@ -152,7 +185,28 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
 }
-
+.debug-captura {
+  background: #111;
+  padding: 6px;
+  text-align: center;
+}
+.mini-captura {
+  max-width: 80%;
+  max-height: 150px;
+  border: 1px solid #444;
+}
+.debug-log {
+  background: #222;
+  color: #0f0;
+  font-size: 12px;
+  padding: 6px;
+  height: 10vh;
+  overflow-y: auto;
+}
+.texto-debug {
+  color: #ccc;
+  font-size: 12px;
+}
 .boton-cancelar {
   padding: 12px 24px;
   font-size: 16px;
@@ -161,13 +215,7 @@ onBeforeUnmount(() => {
   background: #e53935;
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
 }
-
-.boton-cancelar:hover {
-  background: #c62828;
-}
-
 .boton-usar-codigo {
   padding: 12px 24px;
   font-size: 16px;
@@ -176,15 +224,9 @@ onBeforeUnmount(() => {
   background: #43a047;
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
 }
-
 .boton-usar-codigo:disabled {
   background: #666;
   cursor: not-allowed;
-}
-
-.boton-usar-codigo:hover:enabled {
-  background: #2e7d32;
 }
 </style>
