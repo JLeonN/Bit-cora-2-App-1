@@ -3,16 +3,15 @@
   <div class="modal-fondo" @click.self="$emit('cancelar')">
     <div class="modal-camara">
       <!-- Caja de la cámara -->
-      <div id="vista-camara" class="caja-camara"></div>
+      <div id="vista-camara" class="caja-camara">
+        <!-- NUEVO: video embebido -->
+        <video id="video-camara" autoplay playsinline></video>
+      </div>
 
       <!-- Parte inferior en negro -->
       <div v-if="ultimaCaptura" class="debug-captura">
         <p class="texto-debug">📸 Última captura (debug):</p>
-        <img
-          :src="'data:image/jpeg;base64,' + ultimaCaptura"
-          alt="captura debug"
-          class="mini-captura"
-        />
+        <img :src="ultimaCaptura" alt="captura debug" class="mini-captura" />
       </div>
 
       <!-- Log en pantalla -->
@@ -36,8 +35,12 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import { BarcodeFormat, BrowserMultiFormatReader, DecodeHintType } from '@zxing/library'
-import { CameraPreview } from '@capacitor-community/camera-preview'
+import {
+  BarcodeFormat,
+  BrowserMultiFormatReader,
+  DecodeHintType,
+  NotFoundException,
+} from '@zxing/library'
 
 const emit = defineEmits(['cancelar', 'codigo-detectado'])
 
@@ -46,92 +49,96 @@ const ultimaCaptura = ref(null)
 const logLineas = ref([])
 
 let lector = null
-let escaneando = false
+let controlesLectura = null
 
 // Función de log en pantalla
 function logDebug(mensaje) {
   logLineas.value.push(mensaje)
   if (logLineas.value.length > 12) {
-    logLineas.value.shift() // mantener últimas 12
+    logLineas.value.shift()
   }
 }
 
-// Inicializar cámara
+// Inicializar cámara + escaneo
 const iniciarCamara = async () => {
   try {
-    await CameraPreview.start({
-      parent: 'vista-camara',
-      position: 'rear',
-      width: window.innerWidth,
-      height: window.innerHeight / 2,
-      x: 0,
-      y: 0,
-      toBack: false,
-    })
-    logDebug('✅ Cámara iniciada correctamente')
-    iniciarEscaneo()
+    // Le pasamos TODOS los formatos soportados
+    const sugerencias = new Map()
+    sugerencias.set(DecodeHintType.POSSIBLE_FORMATS, Object.values(BarcodeFormat))
+
+    lector = new BrowserMultiFormatReader(sugerencias)
+
+    // Seleccionamos la cámara trasera
+    const dispositivos = await lector.listVideoInputDevices()
+    let idDispositivo = dispositivos?.[0]?.deviceId || null
+    for (const d of dispositivos) {
+      const label = (d.label || '').toLowerCase()
+      if (label.includes('back') || label.includes('rear')) {
+        idDispositivo = d.deviceId
+        break
+      }
+    }
+
+    const elementoVideo = document.getElementById('video-camara')
+
+    // ZXing engancha el stream de cámara directo al <video> (embebido en tu div)
+    controlesLectura = await lector.decodeFromVideoDevice(
+      idDispositivo,
+      elementoVideo,
+      (resultado, error, controles) => {
+        // Guardamos controles por si ZXing los entrega en el callback la primera vez
+        if (!controlesLectura && controles) controlesLectura = controles
+
+        if (resultado && resultado.text) {
+          codigoDetectado.value = resultado.text
+          logDebug('Código detectado: ' + resultado.text)
+
+          // Guardamos un frame actual como "captura" (debug) SIN disparar foto real
+          try {
+            const canvas = document.createElement('canvas')
+            canvas.width = elementoVideo.videoWidth || 640
+            canvas.height = elementoVideo.videoHeight || 480
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(elementoVideo, 0, 0, canvas.width, canvas.height)
+            ultimaCaptura.value = canvas.toDataURL('image/jpeg')
+          } catch {
+            // Si falla canvas por permisos/tamaño, ignoramos silenciosamente
+          }
+        }
+
+        // Filtramos el error "NotFoundException" que es normal cuando no hay código en el frame
+        if (error && !(error instanceof NotFoundException)) {
+          logDebug('Error en escaneo: ' + (error?.message || String(error)))
+        }
+      },
+    )
+
+    logDebug('Cámara iniciada correctamente (video embebido, sin sonido)')
   } catch (error) {
-    logDebug('❌ Error al iniciar la cámara: ' + error)
+    logDebug('Error al iniciar la cámara: ' + error)
   }
 }
 
 // Detener cámara
 const detenerCamara = async () => {
   try {
-    escaneando = false
-    await CameraPreview.stop()
-    if (lector) lector.reset()
+    if (controlesLectura) {
+      controlesLectura.stop()
+      controlesLectura = null
+    }
+    if (lector) {
+      lector.reset()
+      lector = null
+    }
+    const elementoVideo = document.getElementById('video-camara')
+    if (elementoVideo && elementoVideo.srcObject) {
+      elementoVideo.srcObject.getTracks().forEach((t) => t.stop())
+      elementoVideo.srcObject = null
+    }
     logDebug('⏹ Cámara detenida')
   } catch (error) {
-    logDebug('❌ Error al detener la cámara: ' + error)
+    logDebug('Error al detener la cámara: ' + error)
   }
-}
-
-// Escaneo en vivo
-const iniciarEscaneo = () => {
-  const sugerencias = new Map()
-  // 👉 Le pasamos TODOS los formatos soportados
-  sugerencias.set(DecodeHintType.POSSIBLE_FORMATS, Object.values(BarcodeFormat))
-
-  lector = new BrowserMultiFormatReader(sugerencias)
-  escaneando = true
-  logDebug('🔎 Escaneo iniciado con todos los formatos disponibles')
-  escanearFrame()
-}
-
-const escanearFrame = async () => {
-  if (!escaneando) return
-
-  try {
-    const captura = await CameraPreview.capture({ quality: 70 })
-    ultimaCaptura.value = captura.value
-    logDebug('📸 Captura obtenida, tamaño base64: ' + captura.value.length)
-
-    // Crear imagen DOM a partir del base64
-    const imagen = new Image()
-    imagen.src = 'data:image/jpeg;base64,' + captura.value
-
-    imagen.onload = async () => {
-      try {
-        logDebug('🔄 Intentando decodificar imagen...')
-        const resultado = await lector.decodeFromImageElement(imagen)
-        if (resultado && resultado.text) {
-          codigoDetectado.value = resultado.text
-          logDebug('✅ Código detectado: ' + resultado.text)
-        } else {
-          codigoDetectado.value = ''
-          logDebug('⚠️ No se detectó código en este frame')
-        }
-      } catch (e) {
-        logDebug('❌ Error en escaneo: ' + e.message)
-        codigoDetectado.value = ''
-      }
-    }
-  } catch (e) {
-    logDebug('❌ Error al capturar frame: ' + e.message)
-  }
-
-  setTimeout(escanearFrame, 1000) // cada 1 segundo
 }
 
 // Usar código detectado
@@ -174,6 +181,12 @@ onBeforeUnmount(() => {
   height: 50vh;
   background: black;
   overflow: hidden;
+  position: relative;
+}
+.caja-camara video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .caja-inferior {
   width: 100%;
