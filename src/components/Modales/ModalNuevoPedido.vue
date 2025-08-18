@@ -33,8 +33,8 @@
         />
       </form>
       <!-- Modal de la cámara -->
-      <ModalCamara
-        v-if="mostrarModalCamara"
+      <CamaraPedidos
+        v-if="mostrarCamaraPedidos"
         @cancelar="cerrarCamaraYVolver"
         @codigo-detectado="onCodigoLeido"
       />
@@ -46,7 +46,7 @@
 import { ref } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
-import ModalCamara from './ModalCamara.vue'
+import CamaraPedidos from '../Camara/CamaraPedidos.vue'
 
 const emit = defineEmits(['agregar-pedido', 'cerrar'])
 const numeroPedido = ref('')
@@ -54,7 +54,7 @@ const modalActivo = ref(false)
 const mostrarError = ref(false)
 const animarError = ref(false)
 const textoPlaceholder = ref('Número de pedido')
-const mostrarModalCamara = ref(false)
+const mostrarCamaraPedidos = ref(false)
 
 // Enviar pedido nuevo
 const enviarPedido = () => {
@@ -85,16 +85,16 @@ const restablecerPlaceholder = () => {
 
 // Abrir cámara
 const abrirCamara = () => {
-  mostrarModalCamara.value = true
+  mostrarCamaraPedidos.value = true
 }
 // Cerrar cámara y volver al modal de pedido
 const cerrarCamaraYVolver = () => {
-  mostrarModalCamara.value = false
+  mostrarCamaraPedidos.value = false
 }
 
-// Recibe el código leído desde ModalCamara y lo pone en el input
+// Recibe el código leído desde CamaraPedidos y lo pone en el input
 const onCodigoLeido = (codigo) => {
   numeroPedido.value = codigo
-  mostrarModalCamara.value = false
+  mostrarCamaraPedidos.value = false
 }
 </script>
