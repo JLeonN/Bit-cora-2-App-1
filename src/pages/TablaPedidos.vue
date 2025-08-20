@@ -54,7 +54,19 @@
     />
 
     <!-- Modal: Cámara -->
-    <CamaraPedidos v-if="mostrarCamaraPedidos" @cerrar="mostrarCamaraPedidos = false" />
+    <CamaraPedidos
+      v-if="mostrarCamaraPedidos"
+      @cancelar="cerrarCamaraPedidos"
+      @guardar="abrirModalConfirmarEscaneados"
+    />
+
+    <!-- Modal: Confirmar pedidos escaneados -->
+    <ModalConfirmarEscaneados
+      v-if="mostrarModalConfirmarEscaneados"
+      :pedidos="pedidosEscaneados"
+      @guardar="guardarPedidosEscaneados"
+      @cancelar="cerrarModalConfirmarEscaneados"
+    />
 
     <HistorialPedidos />
   </div>
@@ -69,6 +81,7 @@ import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
 import CamaraPedidos from '../components/Camara/CamaraPedidos.vue'
+import ModalConfirmarEscaneados from '../components/Modales/ModalConfirmarEscaneados.vue'
 import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 
@@ -87,9 +100,12 @@ const mostrarModalAgregar = ref(false)
 const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
 const mostrarCamaraPedidos = ref(false)
+const mostrarModalConfirmarEscaneados = ref(false)
 
 const pedidoEditar = ref(null)
 const pedidoEliminar = ref(null)
+
+const pedidosEscaneados = ref([])
 
 function formatearFecha(fecha) {
   const dia = fecha.getDate().toString().padStart(2, '0')
@@ -138,9 +154,32 @@ function confirmarEliminacion() {
 }
 
 function abrirCamaraPedidos() {
-  // cerrar modal nuevo pedido
   mostrarModalAgregar.value = false
-  // abrir modal cámara
   mostrarCamaraPedidos.value = true
+}
+
+function cerrarCamaraPedidos() {
+  mostrarCamaraPedidos.value = false
+  pedidosEscaneados.value = []
+}
+
+function abrirModalConfirmarEscaneados(arrayPedidos) {
+  pedidosEscaneados.value = arrayPedidos
+  mostrarModalConfirmarEscaneados.value = true
+}
+
+function guardarPedidosEscaneados(arrayPedidos) {
+  const fecha = formatearFecha(new Date())
+  arrayPedidos.forEach((numero) => {
+    pedidos.value.push({ numero, fecha })
+  })
+  guardarPedidos(pedidos.value)
+  mostrarModalConfirmarEscaneados.value = false
+  pedidosEscaneados.value = []
+}
+
+function cerrarModalConfirmarEscaneados() {
+  mostrarModalConfirmarEscaneados.value = false
+  pedidosEscaneados.value = []
 }
 </script>
