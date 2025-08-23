@@ -12,20 +12,20 @@
         </div>
       </div>
 
+      <!-- Mensaje temporal -->
+      <div v-if="mensajeTemporal" class="mensaje-temporal">
+        {{ mensajeTemporal }}
+      </div>
+
       <!-- Parte inferior -->
       <div class="caja-inferior">
-        <!-- Botón usar código detectado -->
-        <button class="boton-usar-codigo" :disabled="!codigoDetectado" @click="agregarPedidoALista">
-          {{ `Agregar: ${codigoDetectado || '...'}` }}
-        </button>
-
         <!-- Botón finalizar -->
         <button
           class="boton-finalizar"
           :disabled="pedidosEscaneados.length === 0"
           @click="emitirFinalizar"
         >
-          {{ `Finalizar (${pedidosEscaneados.length} pedidos)` }}
+          {{ `Finalizar (${pedidosEscaneados.length})` }}
         </button>
 
         <!-- Botón cancelar -->
@@ -46,11 +46,33 @@ import {
 
 const emit = defineEmits(['cancelar', 'codigo-detectado'])
 
-const codigoDetectado = ref('') // Guarda el último código detectado
-const ultimaCaptura = ref(null) // Para la miniatura
-const pedidosEscaneados = ref([]) // Array interno para acumular códigos
+const codigoDetectado = ref('')
+const ultimaCaptura = ref(null)
+const pedidosEscaneados = ref([])
+const mensajeTemporal = ref('')
 
 let lector = null
+
+// Función para mostrar mensaje temporal
+const mostrarMensaje = (texto) => {
+  mensajeTemporal.value = texto
+  setTimeout(() => {
+    mensajeTemporal.value = ''
+  }, 5000) // 5 segundos
+}
+
+// Agrega automáticamente el código detectado
+const procesarCodigoDetectado = (codigo) => {
+  if (!codigo) return
+  if (pedidosEscaneados.value.includes(codigo)) {
+    mostrarMensaje(`El pedido ${codigo} ya está en la lista`)
+  } else {
+    pedidosEscaneados.value.push(codigo)
+    mostrarMensaje(`Agregado: ${codigo}`)
+  }
+  codigoDetectado.value = ''
+  ultimaCaptura.value = null
+}
 
 // Iniciar cámara + escaneo
 const iniciarCamara = async () => {
@@ -72,8 +94,9 @@ const iniciarCamara = async () => {
     lector.decodeFromVideoDevice(idDispositivo, elementoVideo, (resultado, error) => {
       if (resultado && resultado.text) {
         codigoDetectado.value = resultado.text
+        procesarCodigoDetectado(codigoDetectado.value)
 
-        // Opcional: Crear miniatura para feedback visual
+        // Miniatura para feedback visual
         try {
           const canvas = document.createElement('canvas')
           canvas.width = elementoVideo.videoWidth
@@ -92,30 +115,14 @@ const iniciarCamara = async () => {
     })
   } catch (error) {
     console.error('Error al iniciar la cámara:', error)
-    // Podrías emitir un evento de error para notificar al usuario
   }
 }
 
-// Agrega el código detectado actualmente a la lista interna `pedidosEscaneados`
-const agregarPedidoALista = () => {
-  if (codigoDetectado.value && !pedidosEscaneados.value.includes(codigoDetectado.value)) {
-    pedidosEscaneados.value.push(codigoDetectado.value)
-    codigoDetectado.value = '' // Limpia para el siguiente escaneo
-    ultimaCaptura.value = null // Limpia la miniatura
-  }
-}
-
-// Emite la lista completa de códigos escaneados al componente padre
+// Emitir lista completa al finalizar
 const emitirFinalizar = () => {
-  // Asegúrate de agregar el último código detectado si no se ha agregado aún
-  if (codigoDetectado.value && !pedidosEscaneados.value.includes(codigoDetectado.value)) {
-    pedidosEscaneados.value.push(codigoDetectado.value)
-  }
-
   if (pedidosEscaneados.value.length > 0) {
     emit('codigo-detectado', pedidosEscaneados.value)
   } else {
-    // Si no hay nada, simplemente cancela para no emitir un array vacío
     emit('cancelar')
   }
 }
@@ -126,7 +133,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (lector) {
-    lector.reset() // Detiene la cámara y libera recursos
+    lector.reset()
   }
 })
 </script>
