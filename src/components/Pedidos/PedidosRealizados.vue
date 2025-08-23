@@ -2,8 +2,12 @@
   <div class="contenedor-tabla">
     <div class="encabezado-pedidos">
       <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
-      <p class="texto-secundario">{{ pedidosRealizados.length }} pedidos</p>
+      <p class="texto-secundario">Pedidos: {{ pedidosRealizados.length }}</p>
+      <p v-if="cantidadPedidosRepetidos > 0" class="texto-secundario texto-repetidos">
+        Pedidos repetidos: {{ cantidadPedidosRepetidos }}
+      </p>
     </div>
+
     <table class="tabla">
       <thead>
         <tr>
@@ -13,10 +17,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(pedido, indice) in pedidosRealizados" :key="indice">
+        <tr
+          v-for="(pedido, indice) in pedidosRealizados"
+          :key="indice"
+          :class="{
+            'fila-duplicada': esPedidoDuplicado(pedido.numero),
+          }"
+        >
           <td>{{ pedido.fecha }}</td>
           <td>
-            <span class="globito" :title="pedido.numero">
+            <span
+              class="globito"
+              :class="{ 'texto-duplicado': esPedidoDuplicado(pedido.numero) }"
+              :title="pedido.numero"
+            >
               {{ pedido.numero.slice(0, 15) }}<span v-if="pedido.numero.length > 15">...</span>
             </span>
           </td>
@@ -75,6 +89,31 @@ const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
 const mensajeExito = ref('')
 const mensajeError = ref('')
+
+function normalizarNumero(numero) {
+  return String(numero ?? '').trim()
+}
+
+function esPedidoDuplicado(numero) {
+  return numerosDuplicados.value.has(normalizarNumero(numero))
+}
+
+const numerosDuplicados = computed(() => {
+  const conteoPorNumero = new Map()
+  for (const p of pedidosRealizados.value) {
+    const n = normalizarNumero(p.numero)
+    conteoPorNumero.set(n, (conteoPorNumero.get(n) || 0) + 1)
+  }
+  const duplicados = new Set()
+  for (const [n, c] of conteoPorNumero.entries()) {
+    if (n !== '' && c > 1) duplicados.add(n)
+  }
+  return duplicados
+})
+
+const cantidadPedidosRepetidos = computed(
+  () => pedidosRealizados.value.filter((p) => esPedidoDuplicado(p.numero)).length,
+)
 
 function parsearFechaDDMMYYYY(fechaStr) {
   if (!fechaStr || typeof fechaStr !== 'string') return null
@@ -180,10 +219,17 @@ async function confirmarEliminacion() {
   if (indiceEliminar.value !== null) {
     const pedidoAEliminar = pedidosRealizados.value[indiceEliminar.value]
     let todosLosPedidos = await obtenerPedidos()
-    todosLosPedidos = todosLosPedidos.filter(
-      (p) => p.numero !== pedidoAEliminar.numero || p.fecha !== pedidoAEliminar.fecha,
+
+    // Buscar solo UNA coincidencia exacta
+    const indiceEnListaCompleta = todosLosPedidos.findIndex(
+      (p) => p.numero === pedidoAEliminar.numero && p.fecha === pedidoAEliminar.fecha,
     )
-    await guardarPedidos(todosLosPedidos)
+
+    if (indiceEnListaCompleta !== -1) {
+      todosLosPedidos.splice(indiceEnListaCompleta, 1)
+      await guardarPedidos(todosLosPedidos)
+    }
+
     pedidosRealizados.value.splice(indiceEliminar.value, 1)
   }
   mostrarModalEliminar.value = false
@@ -205,13 +251,8 @@ async function enviarPedidos() {
   try {
     // Generar el archivo temporal en el dispositivo
     const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosRealizados.value)
-
-    if (!uri) {
-      throw new Error('No se generó el archivo correctamente.')
-    }
-    // Compartir el archivo usando la lógica centralizada
+    if (!uri) throw new Error('No se generó el archivo correctamente.')
     await compartirArchivo(uri, nombreArchivo)
-
     mensajeExito.value = 'Archivo generado y enviado correctamente'
     setTimeout(() => (mensajeExito.value = ''), 3000)
   } catch (error) {

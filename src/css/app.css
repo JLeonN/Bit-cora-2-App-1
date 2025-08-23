@@ -314,6 +314,18 @@ button {
     transform: translateY(10px);
   }
 }
+.texto-repetidos {
+  color: var(--color-error);
+  font-weight: 600;
+}
+.fila-duplicada {
+  background: color-mix(in oklab, var(--color-error) 10%, transparent);
+}
+.texto-duplicado {
+  color: var(--color-error);
+  font-weight: 700;
+  text-decoration: underline;
+}
 /* -------------------------------------------------------------------------- */
 /* Panel inicio */
 .pagina-inicio {
