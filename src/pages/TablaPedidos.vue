@@ -118,9 +118,22 @@ function abrirModalAgregar() {
   mostrarModalAgregar.value = true
 }
 
-function agregarPedido(nuevoPedido) {
-  nuevoPedido.fecha = formatearFecha(new Date())
-  pedidos.value.push(nuevoPedido)
+function agregarPedido(nuevosPedidos) {
+  const fecha = formatearFecha(new Date())
+
+  // Si viene un solo pedido como objeto
+  if (!Array.isArray(nuevosPedidos)) {
+    nuevosPedidos = [nuevosPedidos]
+  }
+
+  // Guardar todos con la fecha
+  nuevosPedidos.forEach((pedido) => {
+    pedidos.value.push({
+      numero: pedido.numero,
+      fecha,
+    })
+  })
+
   guardarPedidos(pedidos.value)
   mostrarModalAgregar.value = false
 }
