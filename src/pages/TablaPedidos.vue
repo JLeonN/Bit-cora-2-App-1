@@ -59,15 +59,6 @@
       @cancelar="cerrarCamaraPedidos"
       @guardar="abrirModalConfirmarEscaneados"
     />
-
-    <!-- Modal: Confirmar pedidos escaneados -->
-    <ModalConfirmarEscaneados
-      v-if="mostrarModalConfirmarEscaneados"
-      :pedidos="pedidosEscaneados"
-      @guardar="guardarPedidosEscaneados"
-      @cancelar="cerrarModalConfirmarEscaneados"
-    />
-
     <HistorialPedidos />
   </div>
 </template>
@@ -81,7 +72,6 @@ import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
 import CamaraPedidos from '../components/Camara/CamaraPedidos.vue'
-import ModalConfirmarEscaneados from '../components/Modales/ModalConfirmarEscaneados.vue'
 import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 
@@ -179,20 +169,5 @@ function cerrarCamaraPedidos() {
 function abrirModalConfirmarEscaneados(arrayPedidos) {
   pedidosEscaneados.value = arrayPedidos
   mostrarModalConfirmarEscaneados.value = true
-}
-
-function guardarPedidosEscaneados(arrayPedidos) {
-  const fecha = formatearFecha(new Date())
-  arrayPedidos.forEach((numero) => {
-    pedidos.value.push({ numero, fecha })
-  })
-  guardarPedidos(pedidos.value)
-  mostrarModalConfirmarEscaneados.value = false
-  pedidosEscaneados.value = []
-}
-
-function cerrarModalConfirmarEscaneados() {
-  mostrarModalConfirmarEscaneados.value = false
-  pedidosEscaneados.value = []
 }
 </script>
