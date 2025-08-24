@@ -5,6 +5,10 @@ import { defineConfig } from '#q-app/wrappers'
 
 export default defineConfig((/* ctx */) => {
   return {
+    htmlVariables: {
+      productName: 'Bitácora II',
+      productDescription: 'Gestión de pedidos internos con Quasar',
+    },
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
 

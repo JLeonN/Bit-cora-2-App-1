@@ -3,7 +3,7 @@
     <q-layout view="lHh Lpr lff">
       <q-header elevated class="bg-primario-oscuro texto-principal">
         <q-toolbar class="barra-superior">
-          <q-toolbar-title>Bitácora 2</q-toolbar-title>
+          <q-toolbar-title>Bitácora II</q-toolbar-title>
           <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
         </q-toolbar>
       </q-header>
@@ -65,8 +65,8 @@
             <q-avatar size="56px" class="q-mb-sm">
               <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
             </q-avatar>
-            <div class="text-weight-bold">Bitácora 2</div>
-            <div>@Bitácora 2</div>
+            <div class="text-weight-bold">Bitácora II</div>
+            <div>@Bitácora II</div>
           </div>
         </q-img>
       </q-drawer>
