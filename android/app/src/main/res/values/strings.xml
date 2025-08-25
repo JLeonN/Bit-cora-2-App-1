@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Bitacora 2 App</string>
-    <string name="title_activity_main">Bitacora 2 App</string>
+    <string name="app_name">Bitácora II</string>
+    <string name="title_activity_main">Bitácora II</string>
     <string name="package_name">bitacora.v2</string>
     <string name="custom_url_scheme">bitacora.v2</string>
 </resources>
