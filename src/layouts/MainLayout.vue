@@ -31,13 +31,13 @@
               <q-item-section>Pedidos</q-item-section>
             </q-item>
 
-            <!-- Otro 1 -->
-            <!-- <q-item clickable v-ripple to="/Otro_1">
+            <!-- Ajustar ubicaciones -->
+            <q-item clickable v-ripple to="/AjustarUbicaciones">
               <q-item-section avatar>
-                <q-icon name="send" />
+                <IconMapRoute name="send" />
               </q-item-section>
-              <q-item-section> Otro 1 </q-item-section>
-            </q-item> -->
+              <q-item-section>Ajustar ubicaciones</q-item-section>
+            </q-item>
 
             <!-- Otro 2 -->
             <!-- <q-item clickable v-ripple to="/Otro_2">
@@ -82,8 +82,7 @@
 
 <script setup>
 import { ref } from 'vue'
-// import { IconCar } from '@tabler/icons-vue'
-import { IconTableRow } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute } from '@tabler/icons-vue'
 import BotonesNavegacion from 'components/Botones/BotonesNavegacion.vue'
 
 const drawer = ref(false)
