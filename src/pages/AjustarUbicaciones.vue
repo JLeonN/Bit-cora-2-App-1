@@ -26,7 +26,7 @@
         />
       </div>
 
-      <!-- Botón reutilizado -->
+      <!-- Botón agregar ubicación -->
       <div class="contenedor-boton-agregar">
         <TresBotones :textoAceptar="'Agregar'" @aceptar="agregarUbicacion" />
       </div>
@@ -77,13 +77,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import TresBotones from '../components/Botones/TresBotones.vue'
+import {
+  guardarUbicaciones,
+  obtenerUbicaciones,
+} from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
 
-// Estado local (sin base de datos todavía)
+// Estado
 const ubicaciones = ref([])
 const nuevoCodigo = ref('')
 const nuevaUbicacion = ref('')
@@ -98,55 +102,74 @@ const animarErrorCodigo = ref(false)
 const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 
-// Control del modal eliminar
+// Modal eliminar
 const mostrarModalEliminar = ref(false)
 const ubicacionEliminar = ref(null)
 
-// Control del modal editar
+// Modal editar
 const mostrarModalEditar = ref(false)
 const ubicacionEditar = ref(null)
 let indiceEditar = null
 
-// Agregar nueva ubicación
-function agregarUbicacion() {
-  let valido = true
+// Flag para prevenir doble click / doble submit
+let bloqueandoClick = false
 
+// Cargar ubicaciones al montar
+onMounted(async () => {
+  ubicaciones.value = await obtenerUbicaciones()
+})
+
+// Funciones de reset de placeholders
+function restablecerPlaceholderCodigo() {
+  errorCodigo.value = false
+  placeholderCodigo.value = 'Código del artículo'
+}
+
+function restablecerPlaceholderUbicacion() {
+  errorUbicacion.value = false
+  placeholderUbicacion.value = 'Ubicación'
+}
+
+// Agregar nueva ubicación
+async function agregarUbicacion() {
+  if (bloqueandoClick) return
+  bloqueandoClick = true
+
+  let valido = true
   if (!nuevoCodigo.value.trim()) {
     errorCodigo.value = true
     animarErrorCodigo.value = true
     placeholderCodigo.value = 'Ingresar un código'
     valido = false
   }
-
   if (!nuevaUbicacion.value.trim()) {
     errorUbicacion.value = true
     animarErrorUbicacion.value = true
     placeholderUbicacion.value = 'Ingresar una ubicación'
     valido = false
   }
-
-  if (!valido) return
+  if (!valido) {
+    bloqueandoClick = false
+    return
+  }
 
   ubicaciones.value.push({
     codigo: nuevoCodigo.value.trim(),
     ubicacion: nuevaUbicacion.value.trim(),
   })
 
-  // limpiar inputs y placeholders
+  await guardarUbicaciones(ubicaciones.value)
+
+  // limpiar inputs
   nuevoCodigo.value = ''
   nuevaUbicacion.value = ''
   restablecerPlaceholderCodigo()
   restablecerPlaceholderUbicacion()
-}
 
-// Reset de placeholders al escribir
-function restablecerPlaceholderCodigo() {
-  errorCodigo.value = false
-  placeholderCodigo.value = 'Código del artículo'
-}
-function restablecerPlaceholderUbicacion() {
-  errorUbicacion.value = false
-  placeholderUbicacion.value = 'Ubicación'
+  // desbloquear después de 100ms
+  setTimeout(() => {
+    bloqueandoClick = false
+  }, 100)
 }
 
 // Abrir modal editar
@@ -156,11 +179,11 @@ function abrirModalEditar(indice) {
   mostrarModalEditar.value = true
 }
 
-// Guardar cambios desde modal editar
-function guardarEdicion(datos) {
+// Guardar edición
+async function guardarEdicion(datos) {
   if (indiceEditar !== null) {
-    ubicaciones.value[indiceEditar].codigo = datos.codigo
-    ubicaciones.value[indiceEditar].ubicacion = datos.ubicacion
+    ubicaciones.value[indiceEditar] = { ...datos }
+    await guardarUbicaciones(ubicaciones.value)
   }
   mostrarModalEditar.value = false
   indiceEditar = null
@@ -179,10 +202,11 @@ function abrirModalEliminar(indice) {
 }
 
 // Confirmar eliminación
-function confirmarEliminacion() {
+async function confirmarEliminacion() {
   const indice = ubicaciones.value.findIndex((u) => u.codigo === ubicacionEliminar.value.codigo)
   if (indice !== -1) {
     ubicaciones.value.splice(indice, 1)
+    await guardarUbicaciones(ubicaciones.value)
   }
   mostrarModalEliminar.value = false
 }
