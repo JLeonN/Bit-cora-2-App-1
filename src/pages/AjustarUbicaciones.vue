@@ -153,9 +153,10 @@ async function agregarUbicacion() {
     return
   }
 
+  // Convertimos a mayúsculas antes de agregar
   ubicaciones.value.push({
-    codigo: nuevoCodigo.value.trim(),
-    ubicacion: nuevaUbicacion.value.trim(),
+    codigo: nuevoCodigo.value.trim().toUpperCase(),
+    ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
   await guardarUbicaciones(ubicaciones.value)
@@ -182,7 +183,11 @@ function abrirModalEditar(indice) {
 // Guardar edición
 async function guardarEdicion(datos) {
   if (indiceEditar !== null) {
-    ubicaciones.value[indiceEditar] = { ...datos }
+    // Convertimos a mayúsculas antes de guardar
+    ubicaciones.value[indiceEditar] = {
+      codigo: datos.codigo.trim().toUpperCase(),
+      ubicacion: datos.ubicacion.trim().toUpperCase(),
+    }
     await guardarUbicaciones(ubicaciones.value)
   }
   mostrarModalEditar.value = false
