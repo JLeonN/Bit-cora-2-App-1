@@ -50,12 +50,21 @@
           </td>
           <td>{{ item.ubicacion }}</td>
           <td class="acciones">
-            <IconPencil class="icono-accion icono-editar" @click="editarUbicacion(index)" />
+            <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(index)" />
             <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(index)" />
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Modal: Editar Ubicación -->
+    <ModalEditarUbicacion
+      v-if="mostrarModalEditar"
+      :codigo="ubicacionEditar?.codigo"
+      :ubicacion="ubicacionEditar?.ubicacion"
+      @guardar="guardarEdicion"
+      @cerrar="cerrarModalEditar"
+    />
 
     <!-- Modal: Eliminar Ubicación -->
     <ModalEliminar
@@ -71,6 +80,7 @@
 import { ref } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
+import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import TresBotones from '../components/Botones/TresBotones.vue'
 
 // Estado local (sin base de datos todavía)
@@ -88,9 +98,14 @@ const animarErrorCodigo = ref(false)
 const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 
-// Control del modal
+// Control del modal eliminar
 const mostrarModalEliminar = ref(false)
 const ubicacionEliminar = ref(null)
+
+// Control del modal editar
+const mostrarModalEditar = ref(false)
+const ubicacionEditar = ref(null)
+let indiceEditar = null
 
 // Agregar nueva ubicación
 function agregarUbicacion() {
@@ -134,12 +149,27 @@ function restablecerPlaceholderUbicacion() {
   placeholderUbicacion.value = 'Ubicación'
 }
 
-// Editar ubicación
-function editarUbicacion(indice) {
-  const nueva = prompt('Editar ubicación:', ubicaciones.value[indice].ubicacion)
-  if (nueva !== null && nueva.trim() !== '') {
-    ubicaciones.value[indice].ubicacion = nueva.trim()
+// Abrir modal editar
+function abrirModalEditar(indice) {
+  ubicacionEditar.value = { ...ubicaciones.value[indice] }
+  indiceEditar = indice
+  mostrarModalEditar.value = true
+}
+
+// Guardar cambios desde modal editar
+function guardarEdicion(datos) {
+  if (indiceEditar !== null) {
+    ubicaciones.value[indiceEditar].codigo = datos.codigo
+    ubicaciones.value[indiceEditar].ubicacion = datos.ubicacion
   }
+  mostrarModalEditar.value = false
+  indiceEditar = null
+}
+
+// Cerrar modal editar
+function cerrarModalEditar() {
+  mostrarModalEditar.value = false
+  indiceEditar = null
 }
 
 // Abrir modal eliminar
@@ -157,7 +187,7 @@ function confirmarEliminacion() {
   mostrarModalEliminar.value = false
 }
 
-// Cerrar modal
+// Cerrar modal eliminar
 function cerrarModalEliminar() {
   mostrarModalEliminar.value = false
 }
