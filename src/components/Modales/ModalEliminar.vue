@@ -1,10 +1,11 @@
 <template>
   <div class="modal-fondo" @click.self="$emit('cerrar')">
     <div class="modal-contenido">
-      <h3 class="modal-titulo">¿Eliminar Pedido?</h3>
+      <h3 class="modal-titulo">¿Eliminar?</h3>
       <p class="modal-campo">
-        ¿Estás seguro de que querés eliminar el pedido <strong>{{ pedido }}</strong
-        >?
+        ¿Estás seguro de que querés eliminar
+        <strong v-if="texto">{{ texto }}</strong>
+        <span v-else>esto</span>?
       </p>
 
       <DosBotones
@@ -21,7 +22,10 @@
 import DosBotones from '../Botones/TresBotones.vue'
 
 defineProps({
-  pedido: String,
+  texto: {
+    type: String,
+    default: '',
+  },
 })
 
 defineEmits(['cerrar', 'confirmar'])

@@ -46,9 +46,9 @@
     />
 
     <!-- Modal: Eliminar Pedido -->
-    <ModalEliminarPedido
+    <ModalEliminar
       v-if="mostrarModalEliminar"
-      :pedido="pedidoEliminar.numero"
+      :texto="pedidoEliminar.numero"
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
     />
@@ -70,7 +70,7 @@ import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import BotonFlotante from '../components/Botones/BotonFlotante.vue'
 import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
-import ModalEliminarPedido from '../components/Modales/ModalEliminarPedido.vue'
+import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import CamaraPedidos from '../components/Camara/CamaraPedidos.vue'
 import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'

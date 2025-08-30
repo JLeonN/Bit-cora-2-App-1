@@ -51,9 +51,9 @@
     />
 
     <!-- Modal eliminar -->
-    <ModalEliminarPedido
+    <ModalEliminar
       v-if="mostrarModalEliminar"
-      :pedido="pedidoEliminar.numero"
+      :texto="pedidoEliminar.numero"
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
     />
@@ -76,7 +76,7 @@ import { generarYGuardarExcelParaDescarga } from './ExportarPedidosExcel'
 import { generarYGuardarExcelTemporal } from './GeneraExcel/GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Envios/CompartirExcel.js'
 import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
-import ModalEliminarPedido from '../Modales/ModalEliminarPedido.vue'
+import ModalEliminar from '../Modales/ModalEliminar.vue'
 import BotonesDescargarEnviar from '../Botones/BotonesDescargarEnviar.vue'
 
 const route = useRoute()
