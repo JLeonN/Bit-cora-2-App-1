@@ -556,3 +556,16 @@ button {
   }
 }
 /* -------------------------------------------------------------------------- */
+/* Formulario de ubicación */
+/* Responsive */
+@media (max-width: 600px) {
+  .formulario {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .formulario input,
+  .formulario button {
+    width: 100%;
+  }
+}
+/* -------------------------------------------------------------------------- */
