@@ -4,9 +4,32 @@
 
     <!-- Formulario de ubicación -->
     <form class="formulario" @submit.prevent="agregarUbicacion">
-      <input v-model="nuevoCodigo" type="text" placeholder="Código del artículo" required />
-      <input v-model="nuevaUbicacion" type="text" placeholder="Ubicación" required />
-      <button type="submit">Agregar</button>
+      <div class="ubicacion-campo">
+        <input
+          v-model="nuevoCodigo"
+          type="text"
+          :placeholder="placeholderCodigo"
+          :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
+          @animationend="animarErrorCodigo = false"
+          @input="restablecerPlaceholderCodigo"
+        />
+      </div>
+
+      <div class="ubicacion-campo">
+        <input
+          v-model="nuevaUbicacion"
+          type="text"
+          :placeholder="placeholderUbicacion"
+          :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
+          @animationend="animarErrorUbicacion = false"
+          @input="restablecerPlaceholderUbicacion"
+        />
+      </div>
+
+      <!-- Botón reutilizado -->
+      <div class="contenedor-boton-agregar">
+        <TresBotones :textoAceptar="'Agregar'" @aceptar="agregarUbicacion" />
+      </div>
     </form>
 
     <!-- Tabla de ubicaciones -->
@@ -48,11 +71,22 @@
 import { ref } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
+import TresBotones from '../components/Botones/TresBotones.vue'
 
 // Estado local (sin base de datos todavía)
 const ubicaciones = ref([])
 const nuevoCodigo = ref('')
 const nuevaUbicacion = ref('')
+
+// Placeholders dinámicos
+const placeholderCodigo = ref('Código del artículo')
+const placeholderUbicacion = ref('Ubicación')
+
+// Errores de inputs
+const errorCodigo = ref(false)
+const animarErrorCodigo = ref(false)
+const errorUbicacion = ref(false)
+const animarErrorUbicacion = ref(false)
 
 // Control del modal
 const mostrarModalEliminar = ref(false)
@@ -60,14 +94,44 @@ const ubicacionEliminar = ref(null)
 
 // Agregar nueva ubicación
 function agregarUbicacion() {
+  let valido = true
+
+  if (!nuevoCodigo.value.trim()) {
+    errorCodigo.value = true
+    animarErrorCodigo.value = true
+    placeholderCodigo.value = 'Ingresar un código'
+    valido = false
+  }
+
+  if (!nuevaUbicacion.value.trim()) {
+    errorUbicacion.value = true
+    animarErrorUbicacion.value = true
+    placeholderUbicacion.value = 'Ingresar una ubicación'
+    valido = false
+  }
+
+  if (!valido) return
+
   ubicaciones.value.push({
-    codigo: nuevoCodigo.value,
-    ubicacion: nuevaUbicacion.value,
+    codigo: nuevoCodigo.value.trim(),
+    ubicacion: nuevaUbicacion.value.trim(),
   })
 
-  // limpiar inputs
+  // limpiar inputs y placeholders
   nuevoCodigo.value = ''
   nuevaUbicacion.value = ''
+  restablecerPlaceholderCodigo()
+  restablecerPlaceholderUbicacion()
+}
+
+// Reset de placeholders al escribir
+function restablecerPlaceholderCodigo() {
+  errorCodigo.value = false
+  placeholderCodigo.value = 'Código del artículo'
+}
+function restablecerPlaceholderUbicacion() {
+  errorUbicacion.value = false
+  placeholderUbicacion.value = 'Ubicación'
 }
 
 // Editar ubicación
