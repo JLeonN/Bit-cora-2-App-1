@@ -32,6 +32,14 @@
       </div>
     </form>
 
+    <!-- Indicadores de cantidad -->
+    <div class="encabezado-tabla">
+      <p class="texto-secundario">Ubicaciones totales: {{ ubicaciones.length }}</p>
+      <p v-if="cantidadUbicacionesRepetidas > 0" class="texto-secundario texto-repetidos">
+        Ubicaciones repetidas: {{ cantidadUbicacionesRepetidas }}
+      </p>
+    </div>
+
     <!-- Tabla de ubicaciones -->
     <table class="tabla">
       <thead>
@@ -42,13 +50,29 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, index) in ubicaciones" :key="index">
+        <tr
+          v-for="(item, index) in ubicaciones"
+          :key="index"
+          :class="{ 'fila-duplicada': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
+        >
           <td>
-            <span class="globito" :title="item.codigo">
+            <span
+              class="globito"
+              :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
+              :title="item.codigo"
+            >
               {{ item.codigo.slice(0, 15) }}<span v-if="item.codigo.length > 15">...</span>
             </span>
           </td>
-          <td>{{ item.ubicacion }}</td>
+          <td>
+            <span
+              class="globito"
+              :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
+              :title="item.ubicacion"
+            >
+              {{ item.ubicacion }}
+            </span>
+          </td>
           <td class="acciones">
             <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(index)" />
             <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(index)" />
@@ -77,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
@@ -124,11 +148,35 @@ function restablecerPlaceholderCodigo() {
   errorCodigo.value = false
   placeholderCodigo.value = 'Código del artículo'
 }
-
 function restablecerPlaceholderUbicacion() {
   errorUbicacion.value = false
   placeholderUbicacion.value = 'Ubicación'
 }
+
+// Código + Ubicación
+function normalizarUbicacion(item) {
+  return `${item.codigo.trim().toUpperCase()}|${item.ubicacion.trim().toUpperCase()}`
+}
+
+// Para duplicados
+const combinacionesDuplicadas = computed(() => {
+  const conteo = new Map()
+  for (const u of ubicaciones.value) {
+    const clave = normalizarUbicacion(u)
+    conteo.set(clave, (conteo.get(clave) || 0) + 1)
+  }
+  const duplicados = new Set()
+  for (const [clave, cantidad] of conteo.entries()) {
+    if (cantidad > 1) duplicados.add(clave)
+  }
+  return duplicados
+})
+
+const cantidadUbicacionesRepetidas = computed(
+  () =>
+    ubicaciones.value.filter((u) => combinacionesDuplicadas.value.has(normalizarUbicacion(u)))
+      .length,
+)
 
 // Agregar nueva ubicación
 async function agregarUbicacion() {
@@ -167,10 +215,7 @@ async function agregarUbicacion() {
   restablecerPlaceholderCodigo()
   restablecerPlaceholderUbicacion()
 
-  // desbloquear después de 100ms
-  setTimeout(() => {
-    bloqueandoClick = false
-  }, 100)
+  setTimeout(() => (bloqueandoClick = false), 100)
 }
 
 // Abrir modal editar
@@ -208,7 +253,9 @@ function abrirModalEliminar(indice) {
 
 // Confirmar eliminación
 async function confirmarEliminacion() {
-  const indice = ubicaciones.value.findIndex((u) => u.codigo === ubicacionEliminar.value.codigo)
+  const indice = ubicaciones.value.findIndex(
+    (u) => normalizarUbicacion(u) === normalizarUbicacion(ubicacionEliminar.value),
+  )
   if (indice !== -1) {
     ubicaciones.value.splice(indice, 1)
     await guardarUbicaciones(ubicaciones.value)
