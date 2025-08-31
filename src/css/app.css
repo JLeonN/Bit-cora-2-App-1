@@ -609,4 +609,20 @@ button {
 .animar-error {
   animation: sacudida 0.5s;
 }
+/* Botón borrar todo */
+.contenedor-boton-borrar-todo {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0;
+}
+.icono-borrar-todo {
+  cursor: pointer;
+  color: var(--color-error);
+  width: 28px;
+  height: 28px;
+  transition: transform 0.2s;
+}
+.icono-borrar-todo:hover {
+  transform: scale(1.2);
+}
 /* -------------------------------------------------------------------------- */

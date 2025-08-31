@@ -40,6 +40,15 @@
       </p>
     </div>
 
+    <!-- Botón borrar toda la tabla -->
+    <div class="contenedor-boton-borrar-todo" v-if="ubicaciones.length > 0">
+      <IconTrash
+        class="icono-accion icono-borrar-todo"
+        @click="abrirModalEliminarTodas"
+        title="Borrar todas las ubicaciones"
+      />
+    </div>
+
     <!-- Tabla de ubicaciones -->
     <table class="tabla">
       <thead>
@@ -97,6 +106,14 @@
       @confirmar="confirmarEliminacion"
       @cerrar="cerrarModalEliminar"
     />
+
+    <!-- Modal: Eliminar Todas Ubicaciones -->
+    <ModalEliminar
+      v-if="mostrarModalEliminarTodas"
+      texto="todas las ubicaciones"
+      @confirmar="confirmarEliminacionTodas"
+      @cerrar="cerrarModalEliminarTodas"
+    />
   </div>
 </template>
 
@@ -129,6 +146,9 @@ const animarErrorUbicacion = ref(false)
 // Modal eliminar
 const mostrarModalEliminar = ref(false)
 const ubicacionEliminar = ref(null)
+
+// Modal eliminar todas
+const mostrarModalEliminarTodas = ref(false)
 
 // Modal editar
 const mostrarModalEditar = ref(false)
@@ -201,8 +221,7 @@ async function agregarUbicacion() {
     return
   }
 
-  // Convertimos a mayúsculas antes de agregar
-  ubicaciones.value.push({
+  ubicaciones.value.unshift({
     codigo: nuevoCodigo.value.trim().toUpperCase(),
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
@@ -266,5 +285,22 @@ async function confirmarEliminacion() {
 // Cerrar modal eliminar
 function cerrarModalEliminar() {
   mostrarModalEliminar.value = false
+}
+
+// Abrir modal eliminar todas
+function abrirModalEliminarTodas() {
+  mostrarModalEliminarTodas.value = true
+}
+
+// Confirmar eliminación de todas
+async function confirmarEliminacionTodas() {
+  ubicaciones.value = []
+  await guardarUbicaciones(ubicaciones.value)
+  mostrarModalEliminarTodas.value = false
+}
+
+// Cerrar modal eliminar todas
+function cerrarModalEliminarTodas() {
+  mostrarModalEliminarTodas.value = false
 }
 </script>
