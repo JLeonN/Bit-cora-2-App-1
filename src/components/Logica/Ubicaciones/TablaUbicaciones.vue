@@ -67,25 +67,41 @@
 </template>
 
 <script setup>
+// --- Se importa 'computed' para manejar la lógica localmente ---
+import { computed } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 
-defineProps({
+// --- Las props ---
+const props = defineProps({
   ubicaciones: {
     type: Array,
     required: true,
   },
-  combinacionesDuplicadas: {
-    type: Object,
-    required: true,
-  },
-  cantidadUbicacionesRepetidas: {
-    type: Number,
-    required: true,
-  },
 })
 
-// función local para pintar duplicados
+// función local para pintar duplicados y calcularlos
 function normalizarUbicacion(item) {
   return `${item.codigo.trim().toUpperCase()}|${item.ubicacion.trim().toUpperCase()}`
 }
+
+// --- Lógica de duplicados ---
+const combinacionesDuplicadas = computed(() => {
+  const conteo = new Map()
+  for (const u of props.ubicaciones) {
+    const clave = normalizarUbicacion(u)
+    conteo.set(clave, (conteo.get(clave) || 0) + 1)
+  }
+  const duplicados = new Set()
+  for (const [clave, cantidad] of conteo.entries()) {
+    if (cantidad > 1) duplicados.add(clave)
+  }
+  return duplicados
+})
+
+// --- El conteo también se calcula aquí ---
+const cantidadUbicacionesRepetidas = computed(
+  () =>
+    props.ubicaciones.filter((u) => combinacionesDuplicadas.value.has(normalizarUbicacion(u)))
+      .length,
+)
 </script>

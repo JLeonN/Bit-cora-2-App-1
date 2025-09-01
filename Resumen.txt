@@ -120,4 +120,4 @@ src
 │   │   └── ModalNuevoPedido.vue
 │   └── Pedidos
 │       ├── HistorialPedidos.vue
-        └── PedidosRealizados.vue
+│       └── PedidosRealizados.vue

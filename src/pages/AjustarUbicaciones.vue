@@ -8,8 +8,6 @@
     <!-- Tabla separada en componente -->
     <TablaUbicaciones
       :ubicaciones="ubicaciones"
-      :combinacionesDuplicadas="combinacionesDuplicadas"
-      :cantidadUbicacionesRepetidas="cantidadUbicacionesRepetidas"
       @abrirModalEditar="abrirModalEditar"
       @abrirModalEliminar="abrirModalEliminar"
       @abrirModalEliminarTodas="abrirModalEliminarTodas"
@@ -46,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import BotonEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
@@ -77,33 +75,7 @@ onMounted(async () => {
   ubicaciones.value = await obtenerUbicaciones()
 })
 
-// Código + Ubicación
-function normalizarUbicacion(item) {
-  return `${item.codigo.trim().toUpperCase()}|${item.ubicacion.trim().toUpperCase()}`
-}
-
-// Para duplicados
-const combinacionesDuplicadas = computed(() => {
-  const conteo = new Map()
-  for (const u of ubicaciones.value) {
-    const clave = normalizarUbicacion(u)
-    conteo.set(clave, (conteo.get(clave) || 0) + 1)
-  }
-  const duplicados = new Set()
-  for (const [clave, cantidad] of conteo.entries()) {
-    if (cantidad > 1) duplicados.add(clave)
-  }
-  return duplicados
-})
-
-const cantidadUbicacionesRepetidas = computed(
-  () =>
-    ubicaciones.value.filter((u) => combinacionesDuplicadas.value.has(normalizarUbicacion(u)))
-      .length,
-)
-
-// --- FUNCIÓN SIMPLIFICADA PARA AGREGAR UBICACIÓN ---
-// Ahora recibe los datos listos desde el evento del hijo.
+// --- FUNCIÓN AGREGAR UBICACIÓN ---
 async function agregarUbicacion(datosNuevos) {
   ubicaciones.value.unshift({
     codigo: datosNuevos.codigo,
@@ -147,9 +119,7 @@ function abrirModalEliminar(indice) {
 
 // Confirmar eliminación
 async function confirmarEliminacion() {
-  const indice = ubicaciones.value.findIndex(
-    (u) => normalizarUbicacion(u) === normalizarUbicacion(ubicacionEliminar.value),
-  )
+  const indice = ubicaciones.value.indexOf(ubicacionEliminar.value)
   if (indice !== -1) {
     ubicaciones.value.splice(indice, 1)
     await guardarUbicaciones(ubicaciones.value)
