@@ -114,6 +114,9 @@
       @confirmar="confirmarEliminacionTodas"
       @cerrar="cerrarModalEliminarTodas"
     />
+
+    <!-- Botón enviar flotante -->
+    <BotonEnviar @enviar="accionEnviarUbicaciones" />
   </div>
 </template>
 
@@ -123,6 +126,7 @@ import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import TresBotones from '../components/Botones/TresBotones.vue'
+import BotonEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,
@@ -247,7 +251,6 @@ function abrirModalEditar(indice) {
 // Guardar edición
 async function guardarEdicion(datos) {
   if (indiceEditar !== null) {
-    // Convertimos a mayúsculas antes de guardar
     ubicaciones.value[indiceEditar] = {
       codigo: datos.codigo.trim().toUpperCase(),
       ubicacion: datos.ubicacion.trim().toUpperCase(),
@@ -302,5 +305,10 @@ async function confirmarEliminacionTodas() {
 // Cerrar modal eliminar todas
 function cerrarModalEliminarTodas() {
   mostrarModalEliminarTodas.value = false
+}
+
+// Acción enviar (por ahora vacía)
+function accionEnviarUbicaciones() {
+  console.log('Enviar ubicaciones - función pendiente')
 }
 </script>
