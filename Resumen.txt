@@ -75,3 +75,49 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
+src
+├── App.vue
+├── css
+│   └── app.css
+├── layouts
+│   └── MainLayout.vue
+├── pages
+│   ├── AjustarUbicaciones.vue
+│   ├── ErrorNotFound.vue
+│   └── TablaPedidos.vue
+├── router
+│   ├── index.js
+│   └── routes.js
+├── components
+│   ├── BaseDeDatos
+│   │   ├── almacenamiento.js
+│   │   ├── usoAlmacenamientoCapacitor.js
+│   │   ├── usoAlmacenamientoPedidos.js
+│   │   └── usoAlmacenamientoUbicaciones.js
+│   ├── Botones
+│   │   ├── BotonFlotante.vue
+│   │   ├── BotonesDescargarEnviar.vue
+│   │   ├── BotonesNavegacion.vue
+│   │   └── TresBotones.vue
+│   ├── Camara
+│   │   └── CamaraPedidos.vue
+│   ├── Inicio
+│   │   └── PanelInicio.vue
+│   ├── Logica
+│   │   ├── Envios
+│   │   │   └── CompartirExcel.js
+│   │   ├── Pedidos
+│   │   │   └── GeneraExcel
+│   │   │       ├── GeneraExcel.js
+│   │   │       └── ExportarPedidosExcel.js
+│   │   └── Ubicaciones
+│   │       ├── FormularioUbicacion.vue
+│   │       └── TablaUbicaciones.vue
+│   ├── Modales
+│   │   ├── ModalEditarPedido.vue
+│   │   ├── ModalEditarUbicacion.vue
+│   │   ├── ModalEliminar.vue
+│   │   └── ModalNuevoPedido.vue
+│   └── Pedidos
+│       ├── HistorialPedidos.vue
+        └── PedidosRealizados.vue

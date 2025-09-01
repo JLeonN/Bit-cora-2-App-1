@@ -33,7 +33,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { IconSend } from '@tabler/icons-vue'
 import { obtenerPedidos, guardarFechaUltimoEnvio } from '../BaseDeDatos/almacenamiento.js'
-import { generarYGuardarExcelTemporal } from './GeneraExcel/GeneraExcel.js'
+import { generarYGuardarExcelTemporal } from '../Logica/Pedidos/GeneraExcel/GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Envios/CompartirExcel.js'
 
 const router = useRouter()
