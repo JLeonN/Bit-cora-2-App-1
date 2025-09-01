@@ -1,80 +1,86 @@
 ### **Estado Actual del Proyecto: Bitácora II**
 
-Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora II** para gestionar pedidos internos, ubicaciones e inventario, tipo sistema de trabajo. El objetivo es generar un archivo .APK para instalarla y usarla en un celular físico, con la meta final de publicarla en la Play Store de Google.
-
-#### 📦 **Estructura Actual**
-
-##### 🧩 **Componentes Principales:**
-
-* **PedidosRealizados.vue:** Muestra todos los pedidos guardados y tiene un botón para **enviar** el Excel.
-
-* **HistorialPedidos.vue:** Muestra un historial de pedidos agrupados por fechas, también con botón de **Enviar**.
-
-* **Inicio.vue (PanelInicio.vue):** Pantalla principal con navegación a las distintas funciones.
-
-* **ModalNuevoPedido.vue:** Modal para agregar un pedido manual, con input, botón de cámara y confirmación con Enter o botón de aceptar.  
-  - El input manual agrega un solo pedido y se cierra automáticamente al confirmar.  
-  - El botón de cámara abre **CamaraPedidos.vue**, donde se pueden escanear varios pedidos a la vez.
-
-* **CamaraPedidos.vue:** Modal que integra cámara en un `<div>` con botones personalizados y soporte para escaneo de códigos de barra usando **@zxing/library**.
-
-* **AjustarUbicaciones.vue:** Nueva tabla para gestionar ubicaciones de artículos, con formulario responsive (inputs en columna en pantallas chicas) y opciones para editar o eliminar.
-
-* **ModalEliminar.vue:** Modal genérico y reutilizable para confirmación de eliminaciones, usado tanto en pedidos como en ubicaciones.
-
-##### 📁 **Lógica de Exportación y Guardado de Archivos:**
-
-* Uso la librería **xlsx** para generar los datos Excel en memoria.
-* Lógica para descarga directa en la web (`exportarExcel.js`).
-* Módulo reutilizable (`src/components/Pedidos/GeneraExcel/GeneraExcel.js`) con la función `generarYGuardarExcelTemporal`.
-* Función que usa **@capacitor/filesystem** para guardar el archivo Excel (en Base64) como archivo físico temporal en el dispositivo (`Directory.Cache`).
-* El archivo Excel se guarda con un nombre dinámico que incluye el rango de fechas (`Pedidos_DD-MM-AAAA_a_DD-MM-AAAA.xlsx`).
-
-##### 💾 **Almacenamiento de Pedidos:**
-
-* Uso **@capacitor/preferences** para persistencia de pedidos y fechas (`usoAlmacenamientoCapacitor.js`).
-* Manejo centralizado en `almacenamiento.js` que decide qué sistema usar.
-* Rutas ajustadas para evitar errores de imports dinámicos (404 corregidos).
-
-##### 📷 **Integración de Cámara y Escaneo:**
-
-* Implementado con **@zxing/library** embebido en un `<div>` con botones propios, reemplazando el uso directo de **@capacitor/camera**.
-* **CamaraPedidos.vue** permite mostrar la cámara, controlar permisos y escanear en tiempo real.
-* Miniatura de la última captura mostrada sobre la cámara, mejorando la UX.
-* Manejo de errores optimizado y logs en pantalla para depuración.
+Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la gestión de **pedidos internos, ubicaciones e inventario**. Es un sistema de trabajo pensado para correr como aplicación móvil en Android, con la meta de generar un archivo **.APK** e instalarlo en un dispositivo físico, para luego publicarlo en la **Play Store de Google**.  
 
 ---
 
-##### ✅ **Resumen de Logros Actuales:**
+### 📦 **Estructura Actual**
 
-* Persistencia funcional de datos de pedidos.
-* **Generación y guardado nativo de archivos Excel temporales** con Capacitor Filesystem.
-* **Funcionalidad de envío por aplicaciones nativas** usando @capacitor/share.
-* Nombre de archivo Excel adaptado dinámicamente al rango de fechas.
-* Escaneo de códigos de barra implementado y funcionando en dispositivo real.
-* Cámara embebida en un `<div>` con interfaz personalizable y botones propios.
-* Separación clara y modular de responsabilidades (UI, datos, generación/guardado, envío, cámara, escaneo).
-* Reutilización de componentes (botones flotantes, modales, cámara).
-* Feedback al usuario con notificaciones de éxito y error.
-* Navegación principal funcional y errores de rutas corregidos.
-* Manejo robusto de permisos de cámara.
-* Input manual de pedidos funcionando con Enter y botón confirmar, emitido directamente a la tabla principal.
-* **Nuevo módulo de Ajuste de Ubicaciones con tabla y formulario responsive.**
-* **Creación de ModalEliminar.vue genérico, reutilizable en pedidos y ubicaciones.**
+#### 🧩 **Componentes Principales**
+- **PedidosRealizados.vue:** Muestra todos los pedidos guardados y ofrece un botón para **enviar** el Excel.  
+- **HistorialPedidos.vue:** Historial de pedidos agrupados por fechas, también con botón de **Enviar**.  
+- **Inicio.vue (PanelInicio.vue):** Pantalla principal de navegación hacia las distintas funciones.  
+- **ModalNuevoPedido.vue:** Modal para agregar pedidos manuales, con input, botón de cámara y confirmación.  
+  - Input manual: agrega un solo pedido y cierra el modal automáticamente.  
+  - Botón de cámara: abre **CamaraPedidos.vue** para escanear múltiples pedidos.  
+- **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.  
+- **AjustarUbicaciones.vue:** Nueva tabla para gestionar ubicaciones de artículos, con formulario responsive (inputs en columna en pantallas chicas), edición y eliminación.  
+- **ModalEliminar.vue:** Modal genérico, reutilizable tanto en pedidos como en ubicaciones.  
 
 ---
 
-##### 🎯 **Siguiente objetivo:**
-
-* Refinar experiencia de usuario en el envío (agregar opciones, manejo de errores, etc.).
-* Mejorar UI/UX según feedback.
-* Optimizar escaneo de códigos con distintos formatos de códigos de barra y QR.
-* Añadir funciones útiles para el trabajo, como inventario de ubicaciones exportable a Excel.
-* Incorporar función de control de stock, similar a pedidos y ubicaciones, con posibilidad de exportar a Excel y enviar por correo.
-* Ajustes finales en la interfaz de cámara y modales para que sean más intuitivos y consistentes.
+#### 📁 **Lógica de Exportación y Guardado de Archivos**
+- Uso de **xlsx** para generar datos Excel en memoria.  
+- Descarga directa en la web (`exportarExcel.js`).  
+- Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
+- Uso de **@capacitor/filesystem** para guardar Excel en Base64 en `Directory.Cache`.  
+- Nombre de archivo dinámico con rango de fechas (`Pedidos_DD-MM-AAAA_a_DD-MM-AAAA.xlsx`).  
 
 ---
 
+#### 💾 **Almacenamiento de Datos**
+- Persistencia con **@capacitor/preferences**.  
+- Manejo centralizado en `almacenamiento.js` (decide qué sistema usar).  
+- `usoAlmacenamientoPedidos.js` y `usoAlmacenamientoUbicaciones.js` para modularizar la lógica.  
+- Rutas corregidas para evitar errores de imports dinámicos (404).  
+
+---
+
+#### 📷 **Integración de Cámara y Escaneo**
+- Implementación con **@zxing/library** dentro de un `<div>` con botones personalizados.  
+- **CamaraPedidos.vue** maneja permisos de cámara, escaneo en tiempo real y muestra miniatura de la última captura.  
+- Feedback de errores en pantalla (depuración más simple).  
+- Optimización del escaneo para códigos de barra y QR ✅ (objetivo cumplido).  
+
+---
+
+#### 🗂️ **Módulo de Ubicaciones**
+- **FormularioUbicacion.vue:** Alta/edición con inputs adaptables (responsive).  
+- **TablaUbicaciones.vue:** Lista de ubicaciones con botones de acción.  
+- **ModalEditarUbicacion.vue:** Edición puntual de ubicaciones.  
+- **ModalEliminar.vue:** Confirmación reutilizada.  
+
+---
+
+### ✅ **Resumen de Logros Actuales**
+- Persistencia de pedidos y ubicaciones funcional.  
+- **Generación y guardado nativo de Excel temporales** con Capacitor Filesystem.  
+- **Envío de archivos Excel por apps nativas** con @capacitor/share.  
+- Escaneo en tiempo real de códigos de barra y QR funcionando en dispositivo físico.  
+- Cámara embebida con botones propios, permisos gestionados y miniaturas.  
+- Nombre de archivos Excel dinámico con rango de fechas.  
+- Separación modular: UI, datos, generación/guardado, envío, cámara.  
+- Reutilización de componentes (botones flotantes, modales, cámara).  
+- Feedback al usuario (notificaciones de éxito/error).  
+- Navegación principal estable y rutas corregidas.  
+- **Gestión completa de ubicaciones con tabla y formulario responsive.**  
+- **ModalEliminar.vue genérico y reutilizable.**  
+
+---
+
+### 🎯 **Siguientes Objetivos**
+- **Refinar experiencia de usuario en los envíos** (opciones extra, manejo de errores).  
+- **Mejorar UI/UX** con base en feedback.  
+- **Exportar ubicaciones a Excel y permitir su envío** (nuevo objetivo clave).  
+- **Control de stock**: módulo nuevo, similar al de ubicaciones, con exportación y envío de Excel.  
+- **Ajustes finales en la interfaz de cámara y modales** para mayor consistencia.  
+
+---
+
+### 📂 **Estructura de Archivos (src)**
+
+
+### 📂 Estructura del Proyecto
 src
 ├── App.vue
 ├── css

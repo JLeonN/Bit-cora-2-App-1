@@ -5,13 +5,16 @@
     <!-- Formulario de ubicación -->
     <FormularioUbicacion @ubicacion-agregada="agregarUbicacion" />
 
-    <!-- Tabla separada en componente -->
+    <!-- Tabla -->
     <TablaUbicaciones
       :ubicaciones="ubicaciones"
       @abrirModalEditar="abrirModalEditar"
       @abrirModalEliminar="abrirModalEliminar"
       @abrirModalEliminarTodas="abrirModalEliminarTodas"
     />
+
+    <!-- Botón flotante para enviar Excel de ubicaciones -->
+    <BotonesDescargarEnviar @enviar="enviarUbicacionesExcel" />
 
     <!-- Modal: Editar Ubicación -->
     <ModalEditarUbicacion
@@ -37,9 +40,6 @@
       @confirmar="confirmarEliminacionTodas"
       @cerrar="cerrarModalEliminarTodas"
     />
-
-    <!-- Botón enviar flotante -->
-    <BotonEnviar @enviar="accionEnviarUbicaciones" />
   </div>
 </template>
 
@@ -47,9 +47,11 @@
 import { ref, onMounted } from 'vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
-import BotonEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
+import BotonesDescargarEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
+import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
+import { compartirArchivo } from '../components/Logica/Envios/CompartirExcel.js'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,
@@ -149,8 +151,21 @@ function cerrarModalEliminarTodas() {
   mostrarModalEliminarTodas.value = false
 }
 
-// Acción enviar (por ahora vacía)
-function accionEnviarUbicaciones() {
-  console.log('Enviar ubicaciones - función pendiente')
+// --- FUNCIÓN ENVIAR UBICACIONES COMO EXCEL ---
+async function enviarUbicacionesExcel() {
+  if (!ubicaciones.value.length) {
+    alert('No hay ubicaciones para exportar.')
+    return
+  }
+  try {
+    const { uri, nombreArchivo } = await generarYGuardarExcelUbicaciones(ubicaciones.value)
+    if (!uri) {
+      alert('No se pudo generar el archivo Excel.')
+      return
+    }
+    await compartirArchivo(uri, nombreArchivo)
+  } catch (error) {
+    alert('Error al enviar el archivo: ' + error.message)
+  }
 }
 </script>
