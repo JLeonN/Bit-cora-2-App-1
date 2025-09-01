@@ -19,6 +19,7 @@
         :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
         @animationend="animarErrorUbicacion = false"
         @input="restablercerPlaceholderUbicacion"
+        @blur="formatearUbicacion"
       />
     </div>
 
@@ -68,9 +69,20 @@ function limpiarFormulario() {
   restablercerPlaceholderUbicacion()
 }
 
+// --- NUEVO: Formatear ubicación al salir del input o al enviar ---
+function formatearUbicacion() {
+  if (!nuevaUbicacion.value) return
+
+  // Eliminamos espacios al inicio y final
+  let texto = nuevaUbicacion.value.trim()
+  // Reemplazamos espacios intermedios por guiones
+  texto = texto.replace(/\s+/g, '-')
+  nuevaUbicacion.value = texto
+}
+
 // --- LÓGICA DE ENVÍO Y VALIDACIÓN ---
 function gestionarEnvio() {
-  // --- NUEVO: Bloqueamos la función si ya se está ejecutando ---
+  // --- BLOQUEAMOS LA FUNCIÓN SI YA SE ESTÁ EJECUTANDO ---
   if (bloqueandoClick.value) return
   bloqueandoClick.value = true
 
@@ -90,21 +102,23 @@ function gestionarEnvio() {
 
   // Si no es válido, detenemos la ejecución.
   if (!valido) {
-    // --- NUEVO: Desbloqueamos el click también si hay un error ---
     setTimeout(() => (bloqueandoClick.value = false), 100)
     return
   }
 
-  // Si es válido, emitimos el evento al padre con los datos.
+  // --- FORMATEAMOS LA UBICACIÓN ANTES DE ENVIAR ---
+  formatearUbicacion()
+
+  // Emitimos los datos al padre
   emit('ubicacion-agregada', {
     codigo: nuevoCodigo.value.trim().toUpperCase(),
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
-  // Y finalmente, limpiamos el formulario.
+  // Limpiamos el formulario
   limpiarFormulario()
 
-  // --- NUEVO: Desbloqueamos el click después de un breve instante ---
+  // --- DESBLOQUEAMOS EL CLICK ---
   setTimeout(() => (bloqueandoClick.value = false), 100)
 }
 </script>
