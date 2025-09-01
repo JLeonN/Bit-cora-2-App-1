@@ -3,19 +3,7 @@
     <h2 class="titulo-tabla">Ajustar ubicaciones</h2>
 
     <!-- Formulario de ubicación -->
-    <FormularioUbicacion
-      v-model:nuevoCodigo="nuevoCodigo"
-      v-model:nuevaUbicacion="nuevaUbicacion"
-      :placeholderCodigo="placeholderCodigo"
-      :placeholderUbicacion="placeholderUbicacion"
-      :errorCodigo="errorCodigo"
-      :animarErrorCodigo="animarErrorCodigo"
-      :errorUbicacion="errorUbicacion"
-      :animarErrorUbicacion="animarErrorUbicacion"
-      @restablecerPlaceholderCodigo="restablecerPlaceholderCodigo"
-      @restablecerPlaceholderUbicacion="restablecerPlaceholderUbicacion"
-      @agregarUbicacion="agregarUbicacion"
-    />
+    <FormularioUbicacion @ubicacion-agregada="agregarUbicacion" />
 
     <!-- Tabla separada en componente -->
     <TablaUbicaciones
@@ -69,20 +57,8 @@ import {
   obtenerUbicaciones,
 } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
 
-// Estado
+// --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
-const nuevoCodigo = ref('')
-const nuevaUbicacion = ref('')
-
-// Placeholders dinámicos
-const placeholderCodigo = ref('Código del artículo')
-const placeholderUbicacion = ref('Ubicación')
-
-// Errores de inputs
-const errorCodigo = ref(false)
-const animarErrorCodigo = ref(false)
-const errorUbicacion = ref(false)
-const animarErrorUbicacion = ref(false)
 
 // Modal eliminar
 const mostrarModalEliminar = ref(false)
@@ -96,23 +72,10 @@ const mostrarModalEditar = ref(false)
 const ubicacionEditar = ref(null)
 let indiceEditar = null
 
-// Flag para prevenir doble click / doble submit
-let bloqueandoClick = false
-
 // Cargar ubicaciones al montar
 onMounted(async () => {
   ubicaciones.value = await obtenerUbicaciones()
 })
-
-// Funciones de reset de placeholders
-function restablecerPlaceholderCodigo() {
-  errorCodigo.value = false
-  placeholderCodigo.value = 'Código del artículo'
-}
-function restablecerPlaceholderUbicacion() {
-  errorUbicacion.value = false
-  placeholderUbicacion.value = 'Ubicación'
-}
 
 // Código + Ubicación
 function normalizarUbicacion(item) {
@@ -139,43 +102,15 @@ const cantidadUbicacionesRepetidas = computed(
       .length,
 )
 
-// Agregar nueva ubicación
-async function agregarUbicacion() {
-  if (bloqueandoClick) return
-  bloqueandoClick = true
-
-  let valido = true
-  if (!nuevoCodigo.value.trim()) {
-    errorCodigo.value = true
-    animarErrorCodigo.value = true
-    placeholderCodigo.value = 'Ingresar un código'
-    valido = false
-  }
-  if (!nuevaUbicacion.value.trim()) {
-    errorUbicacion.value = true
-    animarErrorUbicacion.value = true
-    placeholderUbicacion.value = 'Ingresar una ubicación'
-    valido = false
-  }
-  if (!valido) {
-    bloqueandoClick = false
-    return
-  }
-
+// --- FUNCIÓN SIMPLIFICADA PARA AGREGAR UBICACIÓN ---
+// Ahora recibe los datos listos desde el evento del hijo.
+async function agregarUbicacion(datosNuevos) {
   ubicaciones.value.unshift({
-    codigo: nuevoCodigo.value.trim().toUpperCase(),
-    ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
+    codigo: datosNuevos.codigo,
+    ubicacion: datosNuevos.ubicacion,
   })
 
   await guardarUbicaciones(ubicaciones.value)
-
-  // limpiar inputs
-  nuevoCodigo.value = ''
-  nuevaUbicacion.value = ''
-  restablecerPlaceholderCodigo()
-  restablecerPlaceholderUbicacion()
-
-  setTimeout(() => (bloqueandoClick = false), 100)
 }
 
 // Abrir modal editar
