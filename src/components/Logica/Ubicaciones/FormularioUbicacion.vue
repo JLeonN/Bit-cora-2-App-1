@@ -45,7 +45,7 @@ const animarErrorCodigo = ref(false)
 const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 
-// --- NUEVO: Flag para prevenir doble click / doble submit ---
+// --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
 
 // --- EMITS ---
@@ -69,7 +69,7 @@ function limpiarFormulario() {
   restablercerPlaceholderUbicacion()
 }
 
-// --- NUEVO: Formatear ubicación al salir del input o al enviar ---
+// --- Formatear ubicación al salir del input o al enviar ---
 function formatearUbicacion() {
   if (!nuevaUbicacion.value) return
 
