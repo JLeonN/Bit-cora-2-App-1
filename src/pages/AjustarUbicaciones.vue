@@ -51,7 +51,7 @@ import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbic
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
 import BotonesDescargarEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
-import { compartirArchivo } from '../components/Logica/Envios/CompartirExcel.js'
+import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,

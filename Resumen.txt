@@ -108,17 +108,16 @@ src
 │   │   ├── BotonesDescargarEnviar.vue
 │   │   ├── BotonesNavegacion.vue
 │   │   └── TresBotones.vue
-│   ├── Camara
-│   │   └── CamaraPedidos.vue
 │   ├── Inicio
 │   │   └── PanelInicio.vue
 │   ├── Logica
 │   │   ├── Envios
 │   │   │   └── CompartirExcel.js
 │   │   ├── Pedidos
-│   │   │   └── GeneraExcel
-│   │   │       ├── GeneraExcel.js
-│   │   │       └── ExportarPedidosExcel.js
+│   │   │   ├── CamaraPedidos.vue
+│   │   │   ├── CompartirExcel.js
+│   │   │   ├── ExportarPedidosExcel.js
+│   │   │   └── GeneraExcel.js
 │   │   └── Ubicaciones
 │   │       ├── FormularioUbicacion.vue
 │   │       ├── TablaUbicaciones.vue
