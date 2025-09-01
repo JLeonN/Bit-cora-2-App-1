@@ -48,7 +48,7 @@
 import { ref } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
-import CamaraPedidos from '../Camara/CamaraPedidos.vue'
+import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
 
 const emit = defineEmits(['agregar-pedido', 'cerrar'])
 const numeroPedido = ref('')
