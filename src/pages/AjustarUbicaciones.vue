@@ -3,34 +3,19 @@
     <h2 class="titulo-tabla">Ajustar ubicaciones</h2>
 
     <!-- Formulario de ubicación -->
-    <form class="formulario" @submit.prevent="agregarUbicacion">
-      <div class="ubicacion-campo">
-        <input
-          v-model="nuevoCodigo"
-          type="text"
-          :placeholder="placeholderCodigo"
-          :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
-          @animationend="animarErrorCodigo = false"
-          @input="restablecerPlaceholderCodigo"
-        />
-      </div>
-
-      <div class="ubicacion-campo">
-        <input
-          v-model="nuevaUbicacion"
-          type="text"
-          :placeholder="placeholderUbicacion"
-          :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
-          @animationend="animarErrorUbicacion = false"
-          @input="restablecerPlaceholderUbicacion"
-        />
-      </div>
-
-      <!-- Botón agregar ubicación -->
-      <div class="contenedor-boton-agregar">
-        <TresBotones :textoAceptar="'Agregar'" @aceptar="agregarUbicacion" />
-      </div>
-    </form>
+    <FormularioUbicacion
+      v-model:nuevoCodigo="nuevoCodigo"
+      v-model:nuevaUbicacion="nuevaUbicacion"
+      :placeholderCodigo="placeholderCodigo"
+      :placeholderUbicacion="placeholderUbicacion"
+      :errorCodigo="errorCodigo"
+      :animarErrorCodigo="animarErrorCodigo"
+      :errorUbicacion="errorUbicacion"
+      :animarErrorUbicacion="animarErrorUbicacion"
+      @restablecerPlaceholderCodigo="restablecerPlaceholderCodigo"
+      @restablecerPlaceholderUbicacion="restablecerPlaceholderUbicacion"
+      @agregarUbicacion="agregarUbicacion"
+    />
 
     <!-- Indicadores de cantidad -->
     <div class="encabezado-tabla">
@@ -125,8 +110,8 @@ import { ref, onMounted, computed } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
-import TresBotones from '../components/Botones/TresBotones.vue'
 import BotonEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
+import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,
