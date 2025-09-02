@@ -559,7 +559,8 @@ button {
 /* Formulario de ubicación */
 .contenedor-principal-formulario {
   display: flex;
-  align-items: center;
+  /* align-items: center; */
+  align-items: flex-end;
   gap: 8px;
   flex-wrap: nowrap;
 }
@@ -601,10 +602,17 @@ button {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  flex-grow: 1;
 }
 .contenedor-boton-agregar button {
   height: 40px;
   min-width: 80px;
+  width: 100%;
+}
+.contenedor-botones-accion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 /* Responsive */
 @media (max-width: 600px) and (orientation: portrait) {
@@ -671,6 +679,16 @@ button {
 }
 .animar-error {
   animation: sacudida 0.5s;
+}
+@media (max-width: 600px) {
+  .contenedor-principal-formulario {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .formulario {
+    gap: 10px;
+  }
 }
 /* Botón borrar todo */
 .contenedor-boton-borrar-todo {

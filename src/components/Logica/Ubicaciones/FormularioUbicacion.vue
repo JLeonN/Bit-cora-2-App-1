@@ -24,14 +24,16 @@
           @blur="formatearUbicacion"
         />
       </div>
-      <!-- Botón Agregar -->
-      <div class="contenedor-boton-agregar">
-        <TresBotones :textoAceptar="'Agregar'" />
+      <div class="contenedor-botones-accion">
+        <!-- Botón Agregar -->
+        <div class="contenedor-boton-agregar">
+          <TresBotones :textoAceptar="'Agregar'" />
+        </div>
+        <!-- Botón de la cámara -->
+        <button type="button" class="camara-ubicacion" @click="abrirCamara">
+          <IconCamera :stroke="2" />
+        </button>
       </div>
-      <!-- Botón de la cámara -->
-      <button type="button" class="camara-ubicacion" @click="abrirCamara">
-        <IconCamera :stroke="2" />
-      </button>
     </div>
   </form>
 </template>
