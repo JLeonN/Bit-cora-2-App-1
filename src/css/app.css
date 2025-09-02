@@ -744,14 +744,42 @@ button {
   justify-content: center;
   align-items: center;
 }
-.controles-principales,
+/* --- controles principales (cancelar / finalizar) --- */
+.controles-principales {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 250px;
+  margin: 0 auto;
+}
+.boton-cancelar,
+.boton-finalizar {
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+}
+.boton-cancelar {
+  background-color: var(--color-error);
+  color: var(--color-texto-principal);
+}
+.boton-finalizar {
+  background-color: var(--color-exito);
+  color: var(--color-texto-principal);
+}
+/* --- controles ingreso (input + botones acción) --- */
 .controles-ingreso {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
   width: 100%;
 }
-/* --- input --- */
 .ubicacion-campo input {
   flex-grow: 1;
   padding: 0.8rem;
@@ -761,7 +789,6 @@ button {
   color: var(--color-texto-principal);
   font-size: 1rem;
 }
-/* --- botones --- */
 .contenedor-botones-accion {
   display: flex;
   gap: 0.8rem;
@@ -788,6 +815,19 @@ button {
 }
 /* Responsive */
 @media (orientation: landscape) {
+  .controles-principales {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    max-width: none;
+    width: 100%;
+  }
+
+  .boton-cancelar,
+  .boton-finalizar {
+    flex: 1;
+    max-width: 200px;
+  }
   .controles-ingreso {
     flex-direction: row;
     align-items: center;
@@ -803,9 +843,5 @@ button {
     flex: none;
     width: 48px;
   }
-}
-.boton-finalizar,
-.boton-cancelar {
-  flex: 1;
 }
 /* -------------------------------------------------------------------------- */

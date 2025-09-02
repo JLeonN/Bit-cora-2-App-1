@@ -10,7 +10,6 @@
 
       <div class="caja-inferior">
         <div v-if="estado === 'escaneando'" class="controles-principales">
-          <button class="boton-cancelar" @click="cancelarGeneral">Cancelar</button>
           <button
             class="boton-finalizar"
             :disabled="ubicacionesGuardadas.length === 0"
@@ -18,6 +17,7 @@
           >
             {{ `Finalizar (${ubicacionesGuardadas.length})` }}
           </button>
+          <button class="boton-cancelar" @click="cancelarGeneral">Cancelar</button>
         </div>
 
         <div v-if="estado === 'ingresandoUbicacion'" class="controles-ingreso">
