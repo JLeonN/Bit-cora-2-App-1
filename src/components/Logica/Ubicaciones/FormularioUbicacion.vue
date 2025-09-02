@@ -36,12 +36,19 @@
       </div>
     </div>
   </form>
+
+  <CamaraUbicaciones
+    v-if="mostrarCamara"
+    @cancelar="cerrarCamara"
+    @finalizar="procesarUbicacionesEscaneadas"
+  />
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
+import CamaraUbicaciones from './CamaraUbicaciones.vue'
 
 // --- ESTADO LOCAL DEL FORMULARIO ---
 const nuevoCodigo = ref('')
@@ -54,10 +61,10 @@ const errorCodigo = ref(false)
 const animarErrorCodigo = ref(false)
 const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
+const mostrarCamara = ref(false)
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
-
 // --- EMITS ---
 const emit = defineEmits(['ubicacion-agregada'])
 
@@ -134,7 +141,24 @@ function gestionarEnvio() {
 
 // --- LÓGICA DEL BOTÓN DE CÁMARA ---
 function abrirCamara() {
-  // Aquí va la lógica para abrir la cámara
-  console.log('Abriendo la cámara...')
+  mostrarCamara.value = true
+}
+function cerrarCamara() {
+  mostrarCamara.value = false
+}
+function procesarUbicacionesEscaneadas(ubicaciones) {
+  // 'ubicaciones' es el array que nos envía el componente CamaraUbicaciones
+  // [{ codigo: '...', ubicacion: '...' }, { ... }]
+
+  // Iteramos sobre cada objeto del array y lo emitimos al componente padre
+  // de la misma forma que lo hace el formulario manual.
+  for (const item of ubicaciones) {
+    emit('ubicacion-agregada', {
+      codigo: item.codigo, // Ya viene en mayúsculas desde la cámara
+      ubicacion: item.ubicacion, // Ya viene en mayúsculas desde la cámara
+    })
+  }
+  // Cerramos la cámara después de procesar
+  cerrarCamara()
 }
 </script>
