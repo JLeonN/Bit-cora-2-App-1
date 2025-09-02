@@ -8,7 +8,6 @@
           id="video-camara-ubicaciones"
           autoplay
           playsinline
-          class="video-camara-ubicaciones"
         ></video>
 
         <!-- Recuadro gris cuando está ingresando ubicación -->

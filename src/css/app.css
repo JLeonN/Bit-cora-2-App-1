@@ -803,6 +803,21 @@ button {
   background-color: var(--color-error);
   color: var(--color-texto-principal);
 }
+.caja-camara {
+  position: relative;
+  width: 100%;
+  height: 65%;
+  background: var(--color-superficie);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#video-camara-ubicaciones {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 /* Responsive */
 @media (orientation: landscape) {
   .controles-principales {
