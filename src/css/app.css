@@ -560,20 +560,27 @@ button {
 .contenedor-principal-formulario {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: nowrap; /* Evita que los elementos salten a la siguiente línea */
+  gap: 8px;
+  flex-wrap: nowrap;
 }
+/* Botón cámara */
 .camara-ubicacion {
+  background-color: transparent !important;
   color: var(--color-texto-principal);
-  border: none;
+  /* border: 1px solid var(--color-borde); */
   border-radius: 4px;
-  padding: 10px 15px;
+  padding: 8px 12px;
   cursor: pointer;
-  display: flex; /* Para centrar el icono */
+  display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s ease;
-  flex-shrink: 0; /* Evita que el botón se haga más pequeño */
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  min-width: 40px;
+  height: 40px;
+}
+.camara-ubicacion:hover {
+  background-color: var(--color-fondo-hover) !important;
 }
 .ubicacion-campo {
   display: flex;
@@ -592,19 +599,49 @@ button {
 }
 .contenedor-boton-agregar {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 .contenedor-boton-agregar button {
   height: 40px;
+  min-width: 80px;
 }
 /* Responsive */
-@media (max-width: 600px) {
-  .formulario {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 600px) and (orientation: portrait) {
+  .contenedor-principal-formulario {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
   }
-  .formulario input,
-  .formulario button {
+  .formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ubicacion-campo {
+    flex-grow: 1;
+  }
+  .camara-ubicacion {
+    min-width: 40px;
+    padding: 8px;
+  }
+  .contenedor-boton-agregar {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+  }
+  .contenedor-boton-agregar button {
     width: 100%;
+    margin-top: 0;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  .camara-ubicacion {
+    min-width: 35px;
+    padding: 6px;
+  }
+  .contenedor-principal-formulario {
+    gap: 6px;
   }
 }
 .input-error {
