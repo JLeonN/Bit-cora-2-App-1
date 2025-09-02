@@ -149,10 +149,6 @@ const procesarCodigoDetectado = (codigo) => {
   estado.value = 'ingresandoUbicacion'
 
   mostrarMensaje(`Código detectado: ${codigo}`)
-
-  nextTick(() => {
-    inputUbicacionRef.value?.focus()
-  })
 }
 
 // --- Iniciar cámara y escaneo ---
