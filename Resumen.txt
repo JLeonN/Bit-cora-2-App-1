@@ -119,6 +119,7 @@ src
 │   │   │   ├── ExportarPedidosExcel.js
 │   │   │   └── GeneraExcel.js
 │   │   └── Ubicaciones
+│   │       ├── CamaraEscaneo.vue
 │   │       ├── FormularioUbicacion.vue
 │   │       ├── TablaUbicaciones.vue
 │   │       ├── ExportarUbicacionesExcel.js

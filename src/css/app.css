@@ -709,16 +709,6 @@ button {
 }
 /* -------------------------------------------------------------------------- */
 /* Camara ubicaciones */
-.visor-placeholder {
-  background-color: var(--color-exito);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--color-texto-principal);
-  font-family: monospace;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
 .feedback-codigo-escaneado {
   background-color: var(--sombra-boton);
   padding: 1rem 1.5rem;

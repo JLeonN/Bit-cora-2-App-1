@@ -1,7 +1,17 @@
 <template>
   <div class="modal-fondo" @click.self="cancelarGeneral">
     <div class="modal-camara">
-      <div class="caja-camara visor-placeholder">
+      <div class="caja-camara">
+        <!-- Video de cámara cuando está escaneando -->
+        <video
+          v-if="estado === 'escaneando'"
+          id="video-camara-ubicaciones"
+          autoplay
+          playsinline
+          class="video-camara-ubicaciones"
+        ></video>
+
+        <!-- Recuadro gris cuando está ingresando ubicación -->
         <div v-if="estado === 'ingresandoUbicacion'" class="feedback-codigo-escaneado">
           <span class="texto-feedback">Artículo Escaneado:</span>
 
@@ -30,6 +40,16 @@
             </button>
           </div>
         </div>
+
+        <!-- Miniatura de feedback visual -->
+        <div v-if="ultimaCaptura && estado === 'ingresandoUbicacion'" class="overlay-miniatura">
+          <img :src="ultimaCaptura" alt="Última captura" class="mini-captura" />
+        </div>
+      </div>
+
+      <!-- Mensaje temporal -->
+      <div v-if="mensajeTemporal" class="mensaje-temporal">
+        {{ mensajeTemporal }}
       </div>
 
       <div class="caja-inferior">
@@ -76,14 +96,25 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { IconArrowRight, IconSquareRoundedMinus, IconPencil, IconCheck } from '@tabler/icons-vue'
+import {
+  BrowserMultiFormatReader,
+  BarcodeFormat,
+  DecodeHintType,
+  NotFoundException,
+} from '@zxing/library'
 
 const emit = defineEmits(['cancelar', 'finalizar'])
 
 // --- Estados de la UI ---
 const estado = ref('escaneando')
 const editandoCodigo = ref(false)
+
+// --- Variables de cámara ---
+let lector = null
+const ultimaCaptura = ref(null)
+const mensajeTemporal = ref('')
 
 // --- Datos del componente ---
 const ubicacionesGuardadas = ref([])
@@ -100,6 +131,84 @@ const animarErrorUbicacion = ref(false)
 const errorCodigo = ref(false)
 const animarErrorCodigo = ref(false)
 
+// --- Función de feedback temporal ---
+const mostrarMensaje = (texto) => {
+  mensajeTemporal.value = texto
+  setTimeout(() => (mensajeTemporal.value = ''), 3000)
+}
+
+// --- Procesar código detectado ---
+const procesarCodigoDetectado = (codigo) => {
+  if (!codigo) return
+
+  // Detener el escaneo temporalmente
+  if (lector) {
+    lector.reset()
+  }
+
+  codigoEscaneadoTemporal.value = codigo
+  estado.value = 'ingresandoUbicacion'
+
+  mostrarMensaje(`Código detectado: ${codigo}`)
+
+  nextTick(() => {
+    inputUbicacionRef.value?.focus()
+  })
+}
+
+// --- Iniciar cámara y escaneo ---
+const iniciarCamara = async () => {
+  try {
+    const hints = new Map()
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, Object.values(BarcodeFormat))
+    lector = new BrowserMultiFormatReader(hints)
+
+    const dispositivos = await lector.listVideoInputDevices()
+    let idDispositivo = null
+    if (dispositivos.length > 0) {
+      const camaraTrasera = dispositivos.find((d) => /back|rear/i.test(d.label))
+      idDispositivo = camaraTrasera ? camaraTrasera.deviceId : dispositivos[0].deviceId
+    }
+
+    const videoElem = document.getElementById('video-camara-ubicaciones')
+    if (!videoElem) return
+
+    lector.decodeFromVideoDevice(idDispositivo, videoElem, (resultado, error) => {
+      if (resultado?.text && estado.value === 'escaneando') {
+        procesarCodigoDetectado(resultado.text)
+
+        // Crear miniatura
+        try {
+          const canvas = document.createElement('canvas')
+          canvas.width = videoElem.videoWidth
+          canvas.height = videoElem.videoHeight
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height)
+          ultimaCaptura.value = canvas.toDataURL('image/jpeg')
+        } catch (e) {
+          console.warn('Error miniatura:', e)
+        }
+      }
+
+      if (error && !(error instanceof NotFoundException)) {
+        console.warn('Error escaneo:', error)
+      }
+    })
+  } catch (e) {
+    console.error('Error iniciar cámara:', e)
+    mostrarMensaje('Error al acceder a la cámara')
+  }
+}
+
+// --- Reanudar escaneo ---
+const reanudarEscaneo = () => {
+  estado.value = 'escaneando'
+  ultimaCaptura.value = null
+  nextTick(() => {
+    iniciarCamara()
+  })
+}
+
 // --- Funciones edición de código ---
 function activarEdicionCodigo() {
   editandoCodigo.value = true
@@ -115,11 +224,12 @@ function confirmarEdicionCodigo() {
   if (!nuevoCodigo) {
     errorCodigo.value = true
     animarErrorCodigo.value = true
+    mostrarMensaje('El código no puede estar vacío')
     return false
   }
-  codigoEscaneadoTemporal.value = nuevoCodigo
+  codigoEscaneadoTemporal.value = nuevoCodigo.toUpperCase()
   editandoCodigo.value = false
-  // Mantener recuadro gris y no disparar escaneo
+  mostrarMensaje('Código actualizado')
   return true
 }
 
@@ -142,17 +252,6 @@ function formatearUbicacion() {
   nuevaUbicacion.value = texto
 }
 
-// --- Simulación escaneo ---
-function simularEscaneo() {
-  const codigosDePrueba = ['5455454', 'ASC-123', 'PROD-9981']
-  const codigoSimulado = codigosDePrueba[Math.floor(Math.random() * codigosDePrueba.length)]
-  codigoEscaneadoTemporal.value = codigoSimulado
-  estado.value = 'ingresandoUbicacion'
-  nextTick(() => {
-    inputUbicacionRef.value?.focus()
-  })
-}
-
 // --- Guardar ubicación ---
 function guardarUbicacion() {
   if (!nuevaUbicacion.value.trim()) {
@@ -172,8 +271,8 @@ function guardarUbicacion() {
   // Reset de inputs
   nuevaUbicacion.value = ''
   codigoEscaneadoTemporal.value = null
-  estado.value = 'escaneando'
 
+  mostrarMensaje('Ubicación guardada correctamente')
   console.log('Ubicaciones guardadas:', ubicacionesGuardadas.value)
   return true
 }
@@ -183,12 +282,14 @@ function confirmarUbicacionYSiguiente() {
   if (!codigoEscaneadoTemporal.value) {
     errorCodigo.value = true
     animarErrorCodigo.value = true
+    mostrarMensaje('Código requerido')
     return
   }
 
   const exito = guardarUbicacion()
   if (exito) {
-    nextTick(() => simularEscaneo())
+    // Reanudar escaneo para el siguiente artículo
+    nextTick(() => reanudarEscaneo())
   }
 }
 
@@ -196,7 +297,7 @@ function confirmarUbicacionYSiguiente() {
 function descartarEscaneo() {
   nuevaUbicacion.value = ''
   codigoEscaneadoTemporal.value = null
-  estado.value = 'escaneando'
+  reanudarEscaneo()
 }
 
 function finalizar() {
@@ -206,10 +307,20 @@ function finalizar() {
 }
 
 function cancelarGeneral() {
+  if (lector) {
+    lector.reset()
+  }
   emit('cancelar')
 }
 
+// --- Lifecycle hooks ---
 onMounted(() => {
-  document.querySelector('.visor-placeholder').addEventListener('click', simularEscaneo)
+  iniciarCamara()
+})
+
+onBeforeUnmount(() => {
+  if (lector) {
+    lector.reset()
+  }
 })
 </script>
