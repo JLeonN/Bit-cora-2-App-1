@@ -844,4 +844,53 @@ button {
     width: 48px;
   }
 }
+/* Contenedor del código y botón de edición */
+.contenedor-codigo-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.boton-editar-codigo {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-texto-principal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Modo edición de código */
+.contenedor-edicion-codigo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.input-codigo-editable {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-borde);
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-size: 1rem;
+  min-width: 120px;
+}
+.boton-confirmar-codigo,
+.boton-cancelar-codigo {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.boton-confirmar-codigo {
+  background-color: var(--color-exito);
+  color: var(--color-texto-principal);
+}
+.boton-cancelar-codigo {
+  background-color: var(--color-error);
+  color: var(--color-texto-principal);
+}
 /* -------------------------------------------------------------------------- */

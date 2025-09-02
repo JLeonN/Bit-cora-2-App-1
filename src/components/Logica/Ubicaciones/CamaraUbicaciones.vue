@@ -4,7 +4,31 @@
       <div class="caja-camara visor-placeholder">
         <div v-if="estado === 'ingresandoUbicacion'" class="feedback-codigo-escaneado">
           <span class="texto-feedback">Artículo Escaneado:</span>
-          <span class="codigo-feedback">{{ codigoEscaneadoTemporal }}</span>
+
+          <!-- Vista normal del código -->
+          <div v-if="!editandoCodigo" class="contenedor-codigo-feedback">
+            <span class="codigo-feedback">{{ codigoEscaneadoTemporal }}</span>
+            <button class="boton-editar-codigo" @click="activarEdicionCodigo">
+              <IconPencil stroke="2" />
+            </button>
+          </div>
+
+          <!-- Modo edición del código -->
+          <div v-else class="contenedor-edicion-codigo">
+            <input
+              v-model="codigoEditado"
+              type="text"
+              class="input-codigo-editable"
+              ref="inputCodigoRef"
+              @keydown.enter="confirmarEdicionCodigo"
+            />
+            <button class="boton-cancelar-codigo" @click="cancelarEdicionCodigo">
+              <IconSquareRoundedMinus stroke="2" />
+            </button>
+            <button class="boton-confirmar-codigo" @click="confirmarEdicionCodigo">
+              <IconCheck stroke="2" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -21,7 +45,7 @@
         </div>
 
         <div v-if="estado === 'ingresandoUbicacion'" class="controles-ingreso">
-          <!-- input ubicacion (idéntico al formulario) -->
+          <!-- input ubicacion -->
           <div class="ubicacion-campo">
             <input
               v-model="nuevaUbicacion"
@@ -32,6 +56,7 @@
               @animationend="animarErrorUbicacion = false"
               @input="restablercerPlaceholderUbicacion"
               @blur="formatearUbicacion"
+              :disabled="editandoCodigo"
             />
           </div>
 
@@ -52,23 +77,48 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
-import { IconArrowRight, IconSquareRoundedMinus } from '@tabler/icons-vue'
+import { IconArrowRight, IconSquareRoundedMinus, IconPencil, IconCheck } from '@tabler/icons-vue'
 
 const emit = defineEmits(['cancelar', 'finalizar'])
 
 // --- Estados de la UI ---
 const estado = ref('escaneando')
+const editandoCodigo = ref(false)
 
 // --- Datos del componente ---
 const ubicacionesGuardadas = ref([])
 const codigoEscaneadoTemporal = ref(null)
+const codigoEditado = ref('')
 const nuevaUbicacion = ref('')
 const inputUbicacionRef = ref(null)
+const inputCodigoRef = ref(null)
 
 // --- Placeholders y errores ---
 const placeholderUbicacion = ref('Ingrese la ubicación del artículo')
 const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
+
+// --- Funciones edición de código ---
+function activarEdicionCodigo() {
+  editandoCodigo.value = true
+  codigoEditado.value = codigoEscaneadoTemporal.value
+  nextTick(() => {
+    inputCodigoRef.value?.focus()
+    inputCodigoRef.value?.select()
+  })
+}
+
+function confirmarEdicionCodigo() {
+  const nuevoCodigo = codigoEditado.value.trim()
+  if (!nuevoCodigo) return
+  codigoEscaneadoTemporal.value = nuevoCodigo
+  editandoCodigo.value = false
+}
+
+function cancelarEdicionCodigo() {
+  editandoCodigo.value = false
+  codigoEditado.value = ''
+}
 
 // --- Funciones de placeholders ---
 function restablercerPlaceholderUbicacion() {
