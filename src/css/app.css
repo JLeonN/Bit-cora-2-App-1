@@ -1,3 +1,4 @@
+/* 🎨 Variables */
 :root {
   --color-fondo: #121214; /* Fondo principal */
   --color-superficie: #1c1c20; /* Cartas / contenedores */
@@ -705,5 +706,106 @@ button {
 }
 .icono-borrar-todo:hover {
   transform: scale(1.2);
+}
+/* -------------------------------------------------------------------------- */
+/* Camara ubicaciones */
+.visor-placeholder {
+  background-color: var(--color-exito);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-texto-principal);
+  font-family: monospace;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.feedback-codigo-escaneado {
+  background-color: var(--sombra-boton);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--borde-boton);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.texto-feedback {
+  font-size: 1rem;
+  color: var(--color-texto-secundario);
+}
+.codigo-feedback {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--color-texto-principal);
+}
+.caja-inferior {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.controles-principales,
+.controles-ingreso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+}
+/* --- input --- */
+.ubicacion-campo input {
+  flex-grow: 1;
+  padding: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-borde);
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-size: 1rem;
+}
+/* --- botones --- */
+.contenedor-botones-accion {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+}
+.boton-siguiente,
+.boton-descartar {
+  flex: 1;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.boton-siguiente {
+  background-color: var(--color-exito);
+  color: var(--color-texto-principal);
+}
+.boton-descartar {
+  background-color: var(--color-error);
+  color: var(--color-texto-principal);
+}
+/* Responsive */
+@media (orientation: landscape) {
+  .controles-ingreso {
+    flex-direction: row;
+    align-items: center;
+  }
+  .ubicacion-campo {
+    flex: 1;
+  }
+  .contenedor-botones-accion {
+    width: auto;
+  }
+  .boton-descartar,
+  .boton-siguiente {
+    flex: none;
+    width: 48px;
+  }
+}
+.boton-finalizar,
+.boton-cancelar {
+  flex: 1;
 }
 /* -------------------------------------------------------------------------- */
