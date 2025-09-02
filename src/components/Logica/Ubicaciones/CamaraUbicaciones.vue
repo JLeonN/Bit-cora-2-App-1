@@ -45,7 +45,7 @@
         </div>
 
         <div v-if="estado === 'ingresandoUbicacion'" class="controles-ingreso">
-          <!-- input ubicacion -->
+          <!-- input ubicación -->
           <div class="ubicacion-campo">
             <input
               v-model="nuevaUbicacion"
@@ -65,7 +65,7 @@
             <button class="boton-descartar" @click="descartarEscaneo">
               <IconSquareRoundedMinus stroke="2" />
             </button>
-            <button class="boton-siguiente" @click="guardarUbicacion">
+            <button class="boton-siguiente" @click="confirmarUbicacionYSiguiente">
               <IconArrowRight stroke="2" />
             </button>
           </div>
@@ -97,6 +97,8 @@ const inputCodigoRef = ref(null)
 const placeholderUbicacion = ref('Ingrese la ubicación del artículo')
 const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
+const errorCodigo = ref(false)
+const animarErrorCodigo = ref(false)
 
 // --- Funciones edición de código ---
 function activarEdicionCodigo() {
@@ -110,9 +112,15 @@ function activarEdicionCodigo() {
 
 function confirmarEdicionCodigo() {
   const nuevoCodigo = codigoEditado.value.trim()
-  if (!nuevoCodigo) return
+  if (!nuevoCodigo) {
+    errorCodigo.value = true
+    animarErrorCodigo.value = true
+    return false
+  }
   codigoEscaneadoTemporal.value = nuevoCodigo
   editandoCodigo.value = false
+  // Mantener recuadro gris y no disparar escaneo
+  return true
 }
 
 function cancelarEdicionCodigo() {
@@ -151,7 +159,7 @@ function guardarUbicacion() {
     errorUbicacion.value = true
     animarErrorUbicacion.value = true
     placeholderUbicacion.value = 'Ingresar una ubicación'
-    return
+    return false
   }
 
   formatearUbicacion()
@@ -161,11 +169,27 @@ function guardarUbicacion() {
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
+  // Reset de inputs
   nuevaUbicacion.value = ''
   codigoEscaneadoTemporal.value = null
   estado.value = 'escaneando'
 
   console.log('Ubicaciones guardadas:', ubicacionesGuardadas.value)
+  return true
+}
+
+// --- Confirmar ubicación y pasar al siguiente escaneo ---
+function confirmarUbicacionYSiguiente() {
+  if (!codigoEscaneadoTemporal.value) {
+    errorCodigo.value = true
+    animarErrorCodigo.value = true
+    return
+  }
+
+  const exito = guardarUbicacion()
+  if (exito) {
+    nextTick(() => simularEscaneo())
+  }
 }
 
 // --- Otros controles ---
