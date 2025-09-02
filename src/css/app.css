@@ -557,6 +557,45 @@ button {
 }
 /* -------------------------------------------------------------------------- */
 /* Formulario de ubicación */
+.contenedor-principal-formulario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap; /* Evita que los elementos salten a la siguiente línea */
+}
+.camara-ubicacion {
+  color: var(--color-texto-principal);
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex; /* Para centrar el icono */
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0; /* Evita que el botón se haga más pequeño */
+}
+.ubicacion-campo {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-bottom: 0;
+}
+.ubicacion-campo input {
+  padding: 0.5rem;
+  border: 1px solid var(--color-borde);
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 4px;
+  height: 40px;
+  width: 100%;
+}
+.contenedor-boton-agregar {
+  flex-shrink: 0;
+}
+.contenedor-boton-agregar button {
+  height: 40px;
+}
 /* Responsive */
 @media (max-width: 600px) {
   .formulario {
@@ -567,19 +606,6 @@ button {
   .formulario button {
     width: 100%;
   }
-}
-/* Inputs con mismo estilo que el modal */
-.ubicacion-campo {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-.ubicacion-campo input {
-  padding: 0.5rem;
-  border: 1px solid var(--color-borde);
-  background-color: var(--color-fondo);
-  color: var(--color-texto-principal);
-  border-radius: 4px;
 }
 .input-error {
   border-color: var(--color-error);

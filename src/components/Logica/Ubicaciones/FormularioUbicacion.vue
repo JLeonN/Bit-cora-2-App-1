@@ -1,30 +1,37 @@
 <template>
   <form class="formulario" @submit.prevent="gestionarEnvio">
-    <div class="ubicacion-campo">
-      <input
-        v-model="nuevoCodigo"
-        type="text"
-        :placeholder="placeholderCodigo"
-        :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
-        @animationend="animarErrorCodigo = false"
-        @input="restablercerPlaceholderCodigo"
-      />
-    </div>
-
-    <div class="ubicacion-campo">
-      <input
-        v-model="nuevaUbicacion"
-        type="text"
-        :placeholder="placeholderUbicacion"
-        :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
-        @animationend="animarErrorUbicacion = false"
-        @input="restablercerPlaceholderUbicacion"
-        @blur="formatearUbicacion"
-      />
-    </div>
-
-    <div class="contenedor-boton-agregar">
-      <TresBotones :textoAceptar="'Agregar'" />
+    <div class="contenedor-principal-formulario">
+      <!-- input codigo -->
+      <div class="ubicacion-campo">
+        <input
+          v-model="nuevoCodigo"
+          type="text"
+          :placeholder="placeholderCodigo"
+          :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
+          @animationend="animarErrorCodigo = false"
+          @input="restablercerPlaceholderCodigo"
+        />
+      </div>
+      <!-- input ubicacion -->
+      <div class="ubicacion-campo">
+        <input
+          v-model="nuevaUbicacion"
+          type="text"
+          :placeholder="placeholderUbicacion"
+          :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
+          @animationend="animarErrorUbicacion = false"
+          @input="restablercerPlaceholderUbicacion"
+          @blur="formatearUbicacion"
+        />
+      </div>
+      <!-- Botón Agregar -->
+      <div class="contenedor-boton-agregar">
+        <TresBotones :textoAceptar="'Agregar'" />
+      </div>
+      <!-- Botón de la cámara -->
+      <button type="button" class="camara-ubicacion" @click="abrirCamara">
+        <IconCamera :stroke="2" />
+      </button>
     </div>
   </form>
 </template>
@@ -32,6 +39,7 @@
 <script setup>
 import { ref } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
+import { IconCamera } from '@tabler/icons-vue'
 
 // --- ESTADO LOCAL DEL FORMULARIO ---
 const nuevoCodigo = ref('')
@@ -120,5 +128,11 @@ function gestionarEnvio() {
 
   // --- DESBLOQUEAMOS EL CLICK ---
   setTimeout(() => (bloqueandoClick.value = false), 100)
+}
+
+// --- LÓGICA DEL BOTÓN DE CÁMARA ---
+function abrirCamara() {
+  // Aquí va la lógica para abrir la cámara
+  console.log('Abriendo la cámara...')
 }
 </script>
