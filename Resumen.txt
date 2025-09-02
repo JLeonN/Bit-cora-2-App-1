@@ -14,7 +14,9 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Input manual: agrega un solo pedido y cierra el modal automáticamente.  
   - Botón de cámara: abre **CamaraPedidos.vue** para escanear múltiples pedidos.  
 - **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.  
-- **AjustarUbicaciones.vue:** Nueva tabla para gestionar ubicaciones de artículos, con formulario responsive (inputs en columna en pantallas chicas), edición y eliminación. Además, **el botón de enviar Excel ya funciona correctamente**.  
+- **AjustarUbicaciones.vue:** Tabla para gestionar ubicaciones de artículos, con formulario responsive (inputs en columna en pantallas chicas), edición y eliminación.  
+  - **Ya está lista la función para agregar ubicaciones manualmente y también usando la cámara, con la posibilidad de escanear varios artículos seguidos y asignar la ubicación en el momento.**  
+  - El botón de **enviar Excel** funciona correctamente.  
 - **ModalEliminar.vue:** Modal genérico, reutilizable tanto en pedidos como en ubicaciones.  
 
 ---
@@ -51,6 +53,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **ModalEditarUbicacion.vue:** Edición puntual de ubicaciones.  
 - **ModalEliminar.vue:** Confirmación reutilizada.  
 - **ExportarUbicacionesExcel.js:** Exportación y envío de ubicaciones en Excel.  
+- **CamaraUbicaciones.vue:** Escaneo en tiempo real para carga rápida de ubicaciones.   
 
 ---
 
@@ -65,7 +68,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Reutilización de componentes (botones flotantes, modales, cámara).  
 - Feedback al usuario (notificaciones de éxito/error).  
 - Navegación principal estable y rutas corregidas.  
-- **Gestión completa de ubicaciones con tabla y formulario responsive.**  
+- **Gestión completa de ubicaciones con tabla, formulario responsive y cámara.**  
 - **Botón de enviar Excel desde AjustarUbicaciones funcionando correctamente.**  
 - **ModalEliminar.vue genérico y reutilizable.**  
 
@@ -76,7 +79,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **Mejorar UI/UX** con base en feedback.  
 - **Control de stock**: módulo nuevo, similar al de ubicaciones, con exportación y envío de Excel.  
 - **Ajustes finales en la interfaz de cámara y modales** para mayor consistencia.  
-- **integrar cámara** con ubicaciones para escanear artículos mas rápido.
+- **Agregar** una hoja de excel mejor para enviar ubicación.
 
 ---
 
