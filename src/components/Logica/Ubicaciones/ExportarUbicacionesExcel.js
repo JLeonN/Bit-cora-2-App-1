@@ -12,38 +12,62 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
   try {
     // --- Crear hoja de trabajo vacía ---
     const hojaDeTrabajo = XLSX.utils.aoa_to_sheet([])
+    // --- ENCABEZADOS en fila 1 ---
+    hojaDeTrabajo['A1'] = { v: 'articulo', t: 's' }
+    hojaDeTrabajo['B1'] = { v: 'sub1', t: 's' }
+    hojaDeTrabajo['C1'] = { v: 'sub2', t: 's' }
+    hojaDeTrabajo['D1'] = { v: 'deposito', t: 's' }
+    hojaDeTrabajo['E1'] = { v: 'ubic', t: 's' }
 
-    // --- Datos de ubicaciones desde fila 1 ---
-    ubicaciones.forEach((u, index) => {
-      const fila = index + 1 // fila 1 para el primer dato
-      hojaDeTrabajo[`A${fila}`] = { v: u.codigo || 'Sin código', t: 's' }
-      hojaDeTrabajo[`B${fila}`] = { v: u.ubicacion || 'Sin ubicación', t: 's' }
-      // Para agregar más columnas, descomenta y edita:
-      // hojaDeTrabajo[`C${fila}`] = { v: u.otroCampo || '', t: 's' }
-      // hojaDeTrabajo[`D${fila}`] = { v: u.otroDato || '', t: 's' }
+    // --- Datos de ubicaciones desde fila 2 ---
+    ubicaciones.forEach((ubicacion, indice) => {
+      const numeroFila = indice + 2 // fila 2 para el primer dato
+      // Columna A: código del artículo
+      hojaDeTrabajo[`A${numeroFila}`] = {
+        v: ubicacion.codigo || 'Sin código',
+        t: 's',
+      }
+      // Columna B: sub1 (siempre 0)
+      hojaDeTrabajo[`B${numeroFila}`] = {
+        v: 0,
+        t: 'n',
+      }
+      // Columna C: sub2 (siempre 0)
+      hojaDeTrabajo[`C${numeroFila}`] = {
+        v: 0,
+        t: 'n',
+      }
+      // Columna D: deposito (siempre 00000016)
+      hojaDeTrabajo[`D${numeroFila}`] = {
+        v: '00000016',
+        t: 's',
+      }
+      // Columna E: ubicación
+      hojaDeTrabajo[`E${numeroFila}`] = {
+        v: ubicacion.ubicacion || 'Sin ubicación',
+        t: 's',
+      }
     })
 
-    // --- Definir rango de la hoja para que Excel lo muestre ---
-    const ultimaFila = ubicaciones.length
-    hojaDeTrabajo['!ref'] = `A1:B${ultimaFila}` // <-- aquí cambias columnas si agregas más
-
+    // --- Definir rango de la hoja ---
+    const ultimaFila = ubicaciones.length + 1 // +1 por los encabezados
+    hojaDeTrabajo['!ref'] = `A1:E${ultimaFila}`
     // --- Crear libro y agregar hoja ---
     const libroDeTrabajo = XLSX.utils.book_new()
-    const nombreHoja = 'Ubicaciones' // <-- aquí cambias nombre de la hoja
+    const nombreHoja = 'Ubicaciones'
     XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreHoja)
 
     // --- Nombre del archivo ---
-    const nombreArchivo = 'Ubicaciones.xlsx' // <-- aquí cambias nombre del archivo
+    const nombreArchivo = 'UBICACIONES.xlsx'
     // --- Convertir a Base64 y guardar ---
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
     const resultadoEscritura = await Filesystem.writeFile({
       path: nombreArchivo,
       data: datosEnBase64,
-      directory: Directory.Cache, // <-- si querés cambiar carpeta, aquí
+      directory: Directory.Cache,
     })
-
-    console.log('Archivo de ubicaciones guardado temporalmente en:', resultadoEscritura.uri) // <-- log opcional
-    return { uri: resultadoEscritura.uri, nombreArchivo } // <-- retorna URI y nombre
+    console.log('Archivo de ubicaciones guardado temporalmente en:', resultadoEscritura.uri)
+    return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {
     console.error('Error al generar o guardar el archivo Excel de ubicaciones:', error)
     return null
