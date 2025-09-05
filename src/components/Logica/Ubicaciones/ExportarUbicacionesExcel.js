@@ -58,7 +58,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreHoja)
 
     // --- Nombre del archivo ---
-    const nombreArchivo = 'UBICACIONES.xlsx'
+    const nombreArchivo = 'Ubicaciones.xlsx'
     // --- Convertir a Base64 y guardar ---
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
     const resultadoEscritura = await Filesystem.writeFile({

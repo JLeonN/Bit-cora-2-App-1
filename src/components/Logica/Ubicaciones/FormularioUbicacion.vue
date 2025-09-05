@@ -1,8 +1,8 @@
 <template>
   <form class="formulario" @submit.prevent="gestionarEnvio">
     <div class="contenedor-principal-formulario">
-      <!-- input codigo -->
-      <div class="ubicacion-campo">
+      <!-- input codigo CON BUSCADOR -->
+      <div class="ubicacion-campo ubicacion-campo-con-buscador">
         <input
           v-model="nuevoCodigo"
           type="text"
@@ -10,8 +10,18 @@
           :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
           @animationend="animarErrorCodigo = false"
           @input="restablercerPlaceholderCodigo"
+          @focus="enfocarInputCodigo"
+          @blur="desenfocarInputCodigo"
+        />
+
+        <!-- Componente buscador -->
+        <CodigoMasNombre
+          v-if="mostrarBuscador"
+          :busqueda="nuevoCodigo"
+          @articulo-seleccionado="seleccionarArticuloDelBuscador"
         />
       </div>
+
       <!-- input ubicacion -->
       <div class="ubicacion-campo">
         <input
@@ -49,6 +59,7 @@ import { ref } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
+import CodigoMasNombre from './CodigoMasNombre.vue'
 
 // --- ESTADO LOCAL DEL FORMULARIO ---
 const nuevoCodigo = ref('')
@@ -63,8 +74,13 @@ const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 const mostrarCamara = ref(false)
 
+// --- NUEVAS VARIABLES PARA EL BUSCADOR ---
+const inputCodigoEnfocado = ref(false)
+const mostrarBuscador = ref(false)
+
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
+
 // --- EMITS ---
 const emit = defineEmits(['ubicacion-agregada'])
 
@@ -84,6 +100,27 @@ function limpiarFormulario() {
   nuevaUbicacion.value = ''
   restablercerPlaceholderCodigo()
   restablercerPlaceholderUbicacion()
+  mostrarBuscador.value = false
+}
+
+// --- NUEVAS FUNCIONES PARA EL BUSCADOR ---
+function enfocarInputCodigo() {
+  inputCodigoEnfocado.value = true
+  mostrarBuscador.value = true
+}
+
+function desenfocarInputCodigo() {
+  // Pequeño delay para permitir el click en el buscador
+  setTimeout(() => {
+    inputCodigoEnfocado.value = false
+    mostrarBuscador.value = false
+  }, 200)
+}
+
+function seleccionarArticuloDelBuscador(articulo) {
+  nuevoCodigo.value = articulo.codigo
+  mostrarBuscador.value = false
+  restablercerPlaceholderCodigo()
 }
 
 // --- Formatear ubicación al salir del input o al enviar ---
@@ -162,3 +199,11 @@ function procesarUbicacionesEscaneadas(ubicaciones) {
   cerrarCamara()
 }
 </script>
+
+<style scoped>
+/* Nuevo estilo para el campo con buscador */
+.ubicacion-campo-con-buscador {
+  position: relative;
+  z-index: 50;
+}
+</style>

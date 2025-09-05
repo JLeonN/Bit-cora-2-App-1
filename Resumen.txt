@@ -14,10 +14,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Input manual: agrega un solo pedido y cierra el modal automáticamente.  
   - Botón de cámara: abre **CamaraPedidos.vue** para escanear múltiples pedidos.  
 - **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.  
-- **AjustarUbicaciones.vue:** Tabla para gestionar ubicaciones de artículos, con formulario responsive (inputs en columna en pantallas chicas), edición y eliminación.  
-  - **Ya está lista la función para agregar ubicaciones manualmente y también usando la cámara, con la posibilidad de escanear varios artículos seguidos y asignar la ubicación en el momento.**  
-  - El botón de **enviar Excel** funciona correctamente.  
+- **AjustarUbicaciones.vue:** Tabla para gestionar ubicaciones de artículos, con formulario responsive, edición y eliminación.  
+  - Agregar ubicaciones manualmente o usando la cámara.  
+  - Botón de **enviar Excel** ya funcional.  
 - **ModalEliminar.vue:** Modal genérico, reutilizable tanto en pedidos como en ubicaciones.  
+- **CodigoMasNombre.vue:** Nuevo componente que implementa la lógica de búsqueda en base de datos, mostrando coincidencias dinámicamente.  
 
 ---
 
@@ -33,7 +34,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 #### 💾 **Almacenamiento de Datos**
 - Persistencia con **@capacitor/preferences**.  
-- Manejo centralizado en `almacenamiento.js` (decide qué sistema usar).  
+- Manejo centralizado en `almacenamiento.js`.  
 - `usoAlmacenamientoPedidos.js` y `usoAlmacenamientoUbicaciones.js` para modularizar la lógica.  
 - Rutas corregidas para evitar errores de imports dinámicos (404).  
 
@@ -42,96 +43,100 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 #### 📷 **Integración de Cámara y Escaneo**
 - Implementación con **@zxing/library** dentro de un `<div>` con botones personalizados.  
 - **CamaraPedidos.vue** maneja permisos de cámara, escaneo en tiempo real y muestra miniatura de la última captura.  
-- Feedback de errores en pantalla (depuración más simple).  
-- Optimización del escaneo para códigos de barra y QR ✅ (objetivo cumplido).  
+- Optimización del escaneo para códigos de barra y QR ✅.  
 
 ---
 
 #### 🗂️ **Módulo de Ubicaciones**
-- **FormularioUbicacion.vue:** Alta/edición con inputs adaptables (responsive).  
-- **TablaUbicaciones.vue:** Lista de ubicaciones con botones de acción.  
-- **ModalEditarUbicacion.vue:** Edición puntual de ubicaciones.  
+- **FormularioUbicacion.vue:** Alta/edición responsive.  
+- **TablaUbicaciones.vue:** Lista de ubicaciones con acciones.  
+- **ModalEditarUbicacion.vue:** Edición puntual.  
 - **ModalEliminar.vue:** Confirmación reutilizada.  
-- **ExportarUbicacionesExcel.js:** Exportación y envío de ubicaciones en Excel.  
-- **CamaraUbicaciones.vue:** Escaneo en tiempo real para carga rápida de ubicaciones.   
+- **ExportarUbicacionesExcel.js:** Exportación de ubicaciones a Excel.  
+- **CamaraUbicaciones.vue:** Escaneo rápido de ubicaciones.  
+
+---
+
+#### 🔎 **Nueva Función: Búsqueda de Artículos**
+- Se implementó una **base de datos local** con un array de artículos (`código` + `nombre`).  
+- Nuevo componente **CodigoMasNombre.vue** maneja esta lógica.  
+- Cuando el usuario escribe en el formulario de **ubicaciones**, aparece un **rectángulo flotante** con el título **“Artículos encontrados”**.  
+- Ese rectángulo muestra **5 coincidencias más cercanas**, ya sea que el usuario escriba un código o parte del nombre (ejemplo: “manillar”).  
+- A medida que el usuario escribe, la lista se ajusta dinámicamente.  
+- Si no hay coincidencias, aparece el mensaje **“Artículos no encontrados”**.  
 
 ---
 
 ### ✅ **Resumen de Logros Actuales**
-- Persistencia de pedidos y ubicaciones funcional.  
-- **Generación y guardado nativo de Excel temporales** con Capacitor Filesystem.  
-- **Envío de archivos Excel por apps nativas** con @capacitor/share.  
-- Escaneo en tiempo real de códigos de barra y QR funcionando en dispositivo físico.  
-- Cámara embebida con botones propios, permisos gestionados y miniaturas.  
-- Nombre de archivos Excel dinámico con rango de fechas.  
-- Separación modular: UI, datos, generación/guardado, envío, cámara.  
-- Reutilización de componentes (botones flotantes, modales, cámara).  
-- Feedback al usuario (notificaciones de éxito/error).  
-- Navegación principal estable y rutas corregidas.  
-- **Gestión completa de ubicaciones con tabla, formulario responsive y cámara.**  
-- **Botón de enviar Excel desde AjustarUbicaciones funcionando correctamente.**  
-- **ModalEliminar.vue genérico y reutilizable.**  
+- Persistencia de pedidos y ubicaciones.  
+- Generación y guardado de Excel con Capacitor.  
+- Envío de Excel por apps nativas.  
+- Escaneo de códigos en tiempo real funcionando.  
+- Interfaz modular (UI, datos, cámara, exportación).  
+- Reutilización de componentes (botones, modales, cámara).  
+- Feedback al usuario con notificaciones.  
+- Gestión completa de ubicaciones.  
+- **Nueva búsqueda inteligente de artículos con coincidencias dinámicas.**  
 
 ---
 
 ### 🎯 **Siguientes Objetivos**
-- **Refinar experiencia de usuario en los envíos** (opciones extra, manejo de errores).  
-- **Mejorar UI/UX** con base en feedback.  
-- **Control de stock**: módulo nuevo, similar al de ubicaciones, con exportación y envío de Excel.  
-- **Ajustes finales en la interfaz de cámara y modales** para mayor consistencia.  
-- **Agregar** una hoja de excel mejor para enviar ubicación.
-
----
-
-### 📂 **Estructura de Archivos (src)**
+- Refinar experiencia en envíos (manejo de errores).  
+- Mejorar UI/UX general.  
+- Implementar control de stock con exportación a Excel.  
+- Ajustar detalles de cámara y modales.  
+- Mejorar presentación visual del rectángulo de coincidencias (animaciones, estilos).  
 
 
-### 📂 Estructura del Proyecto
+### 📂 **Estructura de Archivos
+
 src
 ├── App.vue
 ├── css
-│   └── app.css
+│   └── app.css
 ├── layouts
-│   └── MainLayout.vue
+│   └── MainLayout.vue
 ├── pages
-│   ├── AjustarUbicaciones.vue
-│   ├── ErrorNotFound.vue
-│   └── TablaPedidos.vue
+│   ├── AjustarUbicaciones.vue
+│   ├── ErrorNotFound.vue
+│   └── TablaPedidos.vue
 ├── router
-│   ├── index.js
-│   └── routes.js
+│   ├── index.js
+│   └── routes.js
 ├── components
-│   ├── BaseDeDatos
-│   │   ├── almacenamiento.js
-│   │   ├── usoAlmacenamientoCapacitor.js
-│   │   ├── usoAlmacenamientoPedidos.js
-│   │   └── usoAlmacenamientoUbicaciones.js
-│   ├── Botones
-│   │   ├── BotonFlotante.vue
-│   │   ├── BotonesDescargarEnviar.vue
-│   │   ├── BotonesNavegacion.vue
-│   │   └── TresBotones.vue
-│   ├── Inicio
-│   │   └── PanelInicio.vue
-│   ├── Logica
-│   │   ├── Envios
-│   │   │   └── CompartirExcel.js
-│   │   ├── Pedidos
-│   │   │   ├── CamaraPedidos.vue
-│   │   │   ├── CompartirExcel.js
-│   │   │   ├── ExportarPedidosExcel.js
-│   │   │   └── GeneraExcel.js
-│   │   └── Ubicaciones
-│   │       ├── CamaraEscaneo.vue
-│   │       ├── FormularioUbicacion.vue
-│   │       ├── TablaUbicaciones.vue
-│   │       ├── ExportarUbicacionesExcel.js
-│   │       └── CamaraUbicaciones.vue
-│   ├── Modales
-│   │   ├── ModalEditarPedido.vue
-│   │   ├── ModalEditarUbicacion.vue
-│   │   ├── ModalEliminar.vue
-│   │   └── ModalNuevoPedido.vue
-│   └── Pedidos
-│       ├── HistorialPedidos.vue
-│       └── PedidosRealizados.vue
+│   ├── BaseDeDatos
+│   │   ├── CodigosArticulos.js 
+│   │   ├── almacenamiento.js
+│   │   ├── usoAlmacenamientoCapacitor.js
+│   │   ├── usoAlmacenamientoPedidos.js
+│   │   └── usoAlmacenamientoUbicaciones.js
+│   ├── Botones
+│   │   ├── BotonFlotante.vue
+│   │   ├── BotonesDescargarEnviar.vue
+│   │   ├── BotonesNavegacion.vue
+│   │   └── TresBotones.vue
+│   ├── Inicio
+│   │   └── PanelInicio.vue
+│   ├── Logica
+│   │   ├── Envios
+│   │   │   └── CompartirExcel.js
+│   │   ├── Pedidos
+│   │   │   ├── CamaraPedidos.vue
+│   │   │   ├── CompartirExcel.js
+│   │   │   ├── ExportarPedidosExcel.js
+│   │   │   └── GeneraExcel.js
+│   │   └── Ubicaciones
+│   │       ├── CamaraEscaneo.vue
+│   │       ├── CamaraUbicaciones.vue
+│   │       ├── CodigoMasNombre.vue
+│   │       ├── ExportarUbicacionesExcel.js
+│   │       ├── FormularioUbicacion.vue
+│   │       └── TablaUbicaciones.vue
+│   ├── Modales
+│   │   ├── ModalEditarPedido.vue
+│   │   ├── ModalEditarUbicacion.vue
+│   │   ├── ModalEliminar.vue
+│   │   └── ModalNuevoPedido.vue
+│   └── Pedidos
+│       ├── HistorialPedidos.vue
+│       └── PedidosRealizados.vue
