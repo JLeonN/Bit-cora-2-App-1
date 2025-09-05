@@ -5,9 +5,6 @@
     <!-- Formulario de ubicación -->
     <FormularioUbicacion @ubicacion-agregada="agregarUbicacion" />
 
-    <!-- Lista de Codigos y Nombres -->
-    <CodigoMasNombre />
-
     <!-- Tabla -->
     <TablaUbicaciones
       :ubicaciones="ubicaciones"
@@ -59,7 +56,6 @@ import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
-import CodigoMasNombre from 'src/components/Logica/Ubicaciones/CodigoMasNombre.vue'
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])

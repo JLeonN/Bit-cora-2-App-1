@@ -1,22 +1,23 @@
 <template>
   <form class="formulario" @submit.prevent="gestionarEnvio">
     <div class="contenedor-principal-formulario">
-      <!-- input codigo CON BUSCADOR -->
+      <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
         <input
+          ref="inputCodigo"
           v-model="nuevoCodigo"
           type="text"
           :placeholder="placeholderCodigo"
           :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
           @animationend="animarErrorCodigo = false"
-          @input="restablercerPlaceholderCodigo"
-          @focus="enfocarInputCodigo"
-          @blur="desenfocarInputCodigo"
+          @input="manejarInputCodigo"
+          @focus="activarBuscador"
+          @blur="desactivarBuscador"
         />
 
         <!-- Componente buscador -->
         <CodigoMasNombre
-          v-if="mostrarBuscador"
+          v-if="mostrarBuscador && nuevoCodigo.length >= 3"
           :busqueda="nuevoCodigo"
           @articulo-seleccionado="seleccionarArticuloDelBuscador"
         />
@@ -30,10 +31,11 @@
           :placeholder="placeholderUbicacion"
           :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
           @animationend="animarErrorUbicacion = false"
-          @input="restablercerPlaceholderUbicacion"
+          @input="restablecerPlaceholderUbicacion"
           @blur="formatearUbicacion"
         />
       </div>
+
       <div class="contenedor-botones-accion">
         <!-- Botón Agregar -->
         <div class="contenedor-boton-agregar">
@@ -55,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
@@ -74,9 +76,9 @@ const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 const mostrarCamara = ref(false)
 
-// --- NUEVAS VARIABLES PARA EL BUSCADOR ---
-const inputCodigoEnfocado = ref(false)
+// --- ESTADO DEL BUSCADOR ---
 const mostrarBuscador = ref(false)
+const inputEnfocado = ref(false)
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -85,12 +87,12 @@ const bloqueandoClick = ref(false)
 const emit = defineEmits(['ubicacion-agregada'])
 
 // --- FUNCIONES INTERNAS ---
-function restablercerPlaceholderCodigo() {
+function restablecerPlaceholderCodigo() {
   errorCodigo.value = false
   placeholderCodigo.value = 'Código del artículo'
 }
 
-function restablercerPlaceholderUbicacion() {
+function restablecerPlaceholderUbicacion() {
   errorUbicacion.value = false
   placeholderUbicacion.value = 'Ubicación'
 }
@@ -98,32 +100,58 @@ function restablercerPlaceholderUbicacion() {
 function limpiarFormulario() {
   nuevoCodigo.value = ''
   nuevaUbicacion.value = ''
-  restablercerPlaceholderCodigo()
-  restablercerPlaceholderUbicacion()
+  restablecerPlaceholderCodigo()
+  restablecerPlaceholderUbicacion()
   mostrarBuscador.value = false
 }
 
-// --- NUEVAS FUNCIONES PARA EL BUSCADOR ---
-function enfocarInputCodigo() {
-  inputCodigoEnfocado.value = true
-  mostrarBuscador.value = true
+// --- FUNCIONES DEL BUSCADOR ---
+function manejarInputCodigo() {
+  restablecerPlaceholderCodigo()
+  // Si hay texto y el input está enfocado, mostrar buscador
+  if (inputEnfocado.value && nuevoCodigo.value.length >= 3) {
+    mostrarBuscador.value = true
+  } else {
+    mostrarBuscador.value = false
+  }
 }
 
-function desenfocarInputCodigo() {
-  // Pequeño delay para permitir el click en el buscador
+function activarBuscador() {
+  inputEnfocado.value = true
+  // Si ya hay texto suficiente, mostrar buscador inmediatamente
+  if (nuevoCodigo.value.length >= 3) {
+    mostrarBuscador.value = true
+  }
+}
+
+function desactivarBuscador() {
+  inputEnfocado.value = false
+  // Delay para permitir el click en las opciones del buscador
   setTimeout(() => {
-    inputCodigoEnfocado.value = false
-    mostrarBuscador.value = false
+    if (!inputEnfocado.value) {
+      mostrarBuscador.value = false
+    }
   }, 200)
 }
 
 function seleccionarArticuloDelBuscador(articulo) {
   nuevoCodigo.value = articulo.codigo
   mostrarBuscador.value = false
-  restablercerPlaceholderCodigo()
+  inputEnfocado.value = false
+  restablecerPlaceholderCodigo()
+
+  // Enfocar el siguiente input (ubicación)
+  nextTick(() => {
+    const inputUbicacion = document.querySelector(
+      'input[placeholder*="ubicación"], input[placeholder*="Ubicación"]',
+    )
+    if (inputUbicacion) {
+      inputUbicacion.focus()
+    }
+  })
 }
 
-// --- Formatear ubicación al salir del input o al enviar ---
+// --- Formatear ubicación ---
 function formatearUbicacion() {
   if (!nuevaUbicacion.value) return
 
@@ -136,7 +164,6 @@ function formatearUbicacion() {
 
 // --- LÓGICA DE ENVÍO Y VALIDACIÓN ---
 function gestionarEnvio() {
-  // --- BLOQUEAMOS LA FUNCIÓN SI YA SE ESTÁ EJECUTANDO ---
   if (bloqueandoClick.value) return
   bloqueandoClick.value = true
 
@@ -179,16 +206,14 @@ function gestionarEnvio() {
 // --- LÓGICA DEL BOTÓN DE CÁMARA ---
 function abrirCamara() {
   mostrarCamara.value = true
+  mostrarBuscador.value = false // Ocultar buscador si está abierto
 }
+
 function cerrarCamara() {
   mostrarCamara.value = false
 }
-function procesarUbicacionesEscaneadas(ubicaciones) {
-  // 'ubicaciones' es el array que nos envía el componente CamaraUbicaciones
-  // [{ codigo: '...', ubicacion: '...' }, { ... }]
 
-  // Iteramos sobre cada objeto del array y lo emitimos al componente padre
-  // de la misma forma que lo hace el formulario manual.
+function procesarUbicacionesEscaneadas(ubicaciones) {
   for (const item of ubicaciones) {
     emit('ubicacion-agregada', {
       codigo: item.codigo, // Ya viene en mayúsculas desde la cámara
@@ -201,9 +226,21 @@ function procesarUbicacionesEscaneadas(ubicaciones) {
 </script>
 
 <style scoped>
-/* Nuevo estilo para el campo con buscador */
+/* --- ESTILO PARA EL CAMPO CON BUSCADOR --- */
 .ubicacion-campo-con-buscador {
   position: relative;
   z-index: 50;
+}
+
+/* --- ASEGURAR QUE EL CONTENEDOR PRINCIPAL TENGA ESPACIO --- */
+.contenedor-principal-formulario {
+  position: relative;
+}
+
+/* --- MEJORAR SPACING EN MOBILE --- */
+@media (max-width: 600px) {
+  .ubicacion-campo-con-buscador {
+    margin-bottom: 8px;
+  }
 }
 </style>

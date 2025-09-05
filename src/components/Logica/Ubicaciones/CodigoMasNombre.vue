@@ -19,7 +19,7 @@
     </div>
 
     <div v-else-if="busqueda.length >= caracteresMinimos" class="sin-resultados">
-      <div class="texto-sin-resultados">No se encontraron artículos</div>
+      <div class="texto-sin-resultados">Artículo inexistente</div>
     </div>
   </div>
 </template>
@@ -28,7 +28,7 @@
 import { computed } from 'vue'
 import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
 
-// Props
+// --- PROPS ---
 const props = defineProps({
   busqueda: {
     type: String,
@@ -36,18 +36,19 @@ const props = defineProps({
   },
 })
 
-// Emits
+// --- EMITS ---
 const emit = defineEmits(['articulo-seleccionado'])
 
-// Variables reactivas
-const caracteresMinimos = 2
+// --- CONFIGURACIÓN DEL BUSCADOR ---
+const caracteresMinimos = 3
 const maximosResultados = 5
 
-// Computed
+// --- COMPUTED PARA MOSTRAR/OCULTAR LISTA ---
 const mostrarLista = computed(() => {
   return props.busqueda.length >= caracteresMinimos
 })
 
+// --- COMPUTED PARA RESULTADOS DE BÚSQUEDA ---
 const resultadosBusqueda = computed(() => {
   if (props.busqueda.length < caracteresMinimos) {
     return []
@@ -56,7 +57,7 @@ const resultadosBusqueda = computed(() => {
   const terminoBusqueda = props.busqueda.toLowerCase().trim()
   const resultados = []
 
-  // 1. Códigos que empiecen con la búsqueda
+  // 1. Códigos que empiecen con la búsqueda (PRIORIDAD MÁXIMA)
   const codigosEmpiezan = articulos.filter((articulo) =>
     articulo.codigo.toLowerCase().startsWith(terminoBusqueda),
   )
@@ -87,7 +88,7 @@ const resultadosBusqueda = computed(() => {
       !codigosContienen.includes(articulo),
   )
 
-  // Combinar resultados por prioridad
+  // Combinar resultados por orden de prioridad
   resultados.push(...codigosEmpiezan)
   resultados.push(...nombresEmpiezan)
   resultados.push(...codigosContienen)
@@ -96,7 +97,7 @@ const resultadosBusqueda = computed(() => {
   return resultados.slice(0, maximosResultados)
 })
 
-// Métodos
+// --- FUNCIONES ---
 function seleccionarArticulo(articulo) {
   emit('articulo-seleccionado', articulo)
 }
@@ -112,95 +113,173 @@ function resaltarCoincidencia(texto, busqueda) {
 </script>
 
 <style scoped>
+/* --- CONTENEDOR PRINCIPAL --- */
 .contenedor-buscador {
-  position: relative;
-  z-index: 100;
-}
-
-.lista-resultados {
   position: absolute;
-  top: 0;
+  top: 100%;
   left: 0;
   right: 0;
-  background-color: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: 101;
+  z-index: 100;
+  margin-top: 4px;
 }
 
+/* --- LISTA DE RESULTADOS --- */
+.lista-resultados {
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  overflow: hidden;
+  animation: aparecerTarjeta 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* --- ITEMS DE RESULTADO --- */
 .item-resultado {
-  padding: 12px 16px;
+  padding: 14px 16px;
   cursor: pointer;
   border-bottom: 1px solid var(--color-borde);
-  transition: background-color 0.2s ease;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .item-resultado:hover {
   background-color: var(--color-fondo);
+  transform: translateX(4px);
 }
 
 .item-resultado:last-child {
   border-bottom: none;
 }
 
+.item-resultado:active {
+  transform: scale(0.98) translateX(4px);
+  background-color: var(--color-primario-oscuro);
+}
+
+/* --- TEXTOS DE RESULTADO --- */
 .codigo-resultado {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--color-primario-claro);
   font-weight: 600;
-  margin-bottom: 4px;
+  letter-spacing: 0.5px;
 }
 
 .nombre-resultado {
   font-size: 0.85rem;
   color: var(--color-texto-secundario);
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
+/* --- SIN RESULTADOS --- */
 .sin-resultados {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   background-color: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 101;
+  width: 100%;
+  animation: aparecerTarjeta 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .texto-sin-resultados {
-  padding: 16px;
+  padding: 18px 16px;
   text-align: center;
-  color: var(--color-texto-secundario);
+  color: var(--color-error);
   font-size: 0.9rem;
+  font-weight: 500;
+  font-style: italic;
 }
 
+/* --- TEXTO RESALTADO --- */
 .texto-resaltado {
   background-color: var(--color-primario);
   color: var(--color-texto-principal);
   font-weight: bold;
-  border-radius: 3px;
-  padding: 1px 3px;
+  border-radius: 4px;
+  padding: 2px 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* Scrollbar personalizada para la lista */
+/* --- ANIMACIONES --- */
+@keyframes aparecerTarjeta {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.9);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-5px) scale(0.95);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* --- SCROLLBAR PERSONALIZADA --- */
 .lista-resultados::-webkit-scrollbar {
   width: 6px;
 }
 
 .lista-resultados::-webkit-scrollbar-track {
   background: var(--color-fondo);
+  border-radius: 3px;
 }
 
 .lista-resultados::-webkit-scrollbar-thumb {
   background: var(--color-borde);
   border-radius: 3px;
+  transition: background 0.2s ease;
 }
 
 .lista-resultados::-webkit-scrollbar-thumb:hover {
   background: var(--color-texto-secundario);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 600px) {
+  .contenedor-buscador {
+    margin-top: 2px;
+  }
+
+  .item-resultado {
+    padding: 12px 14px;
+  }
+
+  .codigo-resultado {
+    font-size: 0.9rem;
+  }
+
+  .nombre-resultado {
+    font-size: 0.8rem;
+  }
+
+  .lista-resultados {
+    border-radius: 8px;
+    max-height: 250px;
+  }
+
+  .item-resultado:hover {
+    transform: translateX(2px);
+  }
+}
+
+@media (max-width: 400px) {
+  .item-resultado {
+    padding: 10px 12px;
+    gap: 2px;
+  }
+
+  .texto-sin-resultados {
+    padding: 16px 12px;
+    font-size: 0.85rem;
+  }
 }
 </style>
