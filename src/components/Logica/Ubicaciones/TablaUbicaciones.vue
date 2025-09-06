@@ -3,8 +3,8 @@
     <!-- Indicadores de cantidad -->
     <div class="encabezado-tabla">
       <p class="texto-secundario">Ubicaciones totales: {{ ubicaciones.length }}</p>
-      <p v-if="cantidadUbicacionesRepetidas > 0" class="texto-secundario texto-repetidos">
-        Ubicaciones repetidas: {{ cantidadUbicacionesRepetidas }}
+      <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos">
+        Códigos repetidos: {{ cantidadCodigosRepetidos }}
       </p>
     </div>
 
@@ -32,13 +32,13 @@
           :key="index"
           class="fila-ubicacion"
           :class="{
-            'fila-ubicacion-duplicada': combinacionesDuplicadas.has(normalizarUbicacion(item)),
+            'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(item.codigo)),
           }"
         >
           <td class="celda-nombre-codigo">
             <span
               class="globito-ubicacion"
-              :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
+              :class="{ 'texto-duplicado': codigosDuplicados.has(normalizarCodigo(item.codigo)) }"
               :title="`${obtenerNombreArticulo(item.codigo)} - ${item.codigo}`"
             >
               <div class="contenedor-nombre-codigo">
@@ -52,11 +52,7 @@
             </span>
           </td>
           <td class="celda-ubicacion">
-            <span
-              class="globito-ubicacion"
-              :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
-              :title="item.ubicacion"
-            >
+            <span class="globito-ubicacion" :title="item.ubicacion">
               {{ item.ubicacion }}
             </span>
           </td>
@@ -79,12 +75,10 @@
 </template>
 
 <script setup>
-// --- Se importa 'computed' para manejar la lógica localmente ---
 import { computed } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
 
-// --- Las props ---
 const props = defineProps({
   ubicaciones: {
     type: Array,
@@ -92,9 +86,9 @@ const props = defineProps({
   },
 })
 
-// función local para pintar duplicados y calcularlos
-function normalizarUbicacion(item) {
-  return `${item.codigo.trim().toUpperCase()}|${item.ubicacion.trim().toUpperCase()}`
+// --- Función para normalizar solo el código ---
+function normalizarCodigo(codigo) {
+  return codigo.trim().toUpperCase()
 }
 
 // --- Función para obtener el nombre del artículo ---
@@ -106,23 +100,29 @@ function obtenerNombreArticulo(codigo) {
 }
 
 // --- Lógica de duplicados ---
-const combinacionesDuplicadas = computed(() => {
+const codigosDuplicados = computed(() => {
   const conteo = new Map()
-  for (const u of props.ubicaciones) {
-    const clave = normalizarUbicacion(u)
-    conteo.set(clave, (conteo.get(clave) || 0) + 1)
+  // Contar ocurrencias de cada código
+  for (const ubicacion of props.ubicaciones) {
+    const codigoNormalizado = normalizarCodigo(ubicacion.codigo)
+    conteo.set(codigoNormalizado, (conteo.get(codigoNormalizado) || 0) + 1)
   }
+
+  // Crear Set con códigos que aparecen más de una vez
   const duplicados = new Set()
-  for (const [clave, cantidad] of conteo.entries()) {
-    if (cantidad > 1) duplicados.add(clave)
+  for (const [codigo, cantidad] of conteo.entries()) {
+    if (cantidad > 1) {
+      duplicados.add(codigo)
+    }
   }
   return duplicados
 })
 
-// --- El conteo también se calcula aquí ---
-const cantidadUbicacionesRepetidas = computed(
+// --- Conteo de ubicaciones con códigos repetidos ---
+const cantidadCodigosRepetidos = computed(
   () =>
-    props.ubicaciones.filter((u) => combinacionesDuplicadas.value.has(normalizarUbicacion(u)))
-      .length,
+    props.ubicaciones.filter((ubicacion) =>
+      codigosDuplicados.value.has(normalizarCodigo(ubicacion.codigo)),
+    ).length,
 )
 </script>
