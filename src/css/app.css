@@ -1049,38 +1049,121 @@ button {
   }
 }
 /* -------------------------------------------------------------------------- */
-/* Tabla ubicaciones */
-/* Alineación vertical para las celdas de la tabla */
-.tabla td {
-  vertical-align: middle;
+/* Tabla específica para ubicaciones */
+.tabla-ubicaciones {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  table-layout: fixed; /* Fuerza el ancho de columnas */
 }
-
-/* Contenedor para nombre y código */
+.tabla-ubicaciones th,
+.tabla-ubicaciones td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+  color: var(--color-texto-principal);
+  vertical-align: top;
+}
+.tabla-ubicaciones th {
+  color: var(--color-primario-claro);
+}
+/* Definir anchos específicos de columnas */
+.columna-nombre-codigo {
+  width: 50%;
+}
+.columna-ubicacion {
+  width: 25%;
+}
+.columna-acciones {
+  width: 25%;
+}
+/* Celdas específicas */
+.celda-nombre-codigo,
+.celda-ubicacion {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.celda-acciones {
+  text-align: center;
+}
+/* Acciones específicas para ubicaciones */
+.acciones-ubicacion {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 44px; /* Asegurar altura mínima para alineación */
+}
+/* Iconos específicos para ubicaciones */
+.icono-ubicacion {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.icono-ubicacion:hover {
+  transform: scale(1.2);
+}
+.icono-ubicacion.icono-editar {
+  color: var(--color-acento);
+}
+.icono-ubicacion.icono-borrar {
+  color: var(--color-error);
+}
+/* Globito específico para ubicaciones */
+.globito-ubicacion {
+  position: relative;
+  cursor: help;
+  display: block;
+  width: 100%;
+}
+.globito-ubicacion:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: 120%;
+  left: 0;
+  z-index: 10;
+  background-color: var(--color-texto-principal);
+  color: black;
+  padding: 0.75rem;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  white-space: normal;
+  font-size: 0.9rem;
+  pointer-events: none;
+  max-width: 300px;
+}
+/* Fila específica para ubicaciones */
+.fila-ubicacion {
+  min-height: 44px;
+}
+.fila-ubicacion-duplicada {
+  background: color-mix(in oklab, var(--color-error) 10%, transparent);
+}
+/* Contenedor nombre y código igual que antes */
 .contenedor-nombre-codigo {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .nombre-articulo {
   color: var(--color-texto-principal);
   font-weight: 600;
   font-size: 0.9rem;
   line-height: 1.2;
 }
-
 .codigo-articulo {
   color: var(--color-texto-secundario);
   font-size: 0.8rem;
   font-weight: 400;
 }
-
-/* Estilos para duplicados */
+/* Estilos para duplicados específicos */
 .texto-duplicado .nombre-articulo {
   color: var(--color-error);
 }
-
 .texto-duplicado .codigo-articulo {
   color: var(--color-error);
 }
-/* -------------------------------------------------------------------------- */

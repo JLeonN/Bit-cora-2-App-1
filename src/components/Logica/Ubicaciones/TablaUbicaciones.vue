@@ -18,23 +18,26 @@
     </div>
 
     <!-- Tabla de ubicaciones -->
-    <table class="tabla tabla-ubicaciones">
+    <table class="tabla-ubicaciones">
       <thead>
         <tr>
-          <th>Nombre y Código</th>
-          <th>Ubicación</th>
-          <th>Acciones</th>
+          <th class="columna-nombre-codigo">Nombre y Código</th>
+          <th class="columna-ubicacion">Ubicación</th>
+          <th class="columna-acciones">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr
           v-for="(item, index) in ubicaciones"
           :key="index"
-          :class="{ 'fila-duplicada': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
+          class="fila-ubicacion"
+          :class="{
+            'fila-ubicacion-duplicada': combinacionesDuplicadas.has(normalizarUbicacion(item)),
+          }"
         >
-          <td>
+          <td class="celda-nombre-codigo">
             <span
-              class="globito"
+              class="globito-ubicacion"
               :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
               :title="`${obtenerNombreArticulo(item.codigo)} - ${item.codigo}`"
             >
@@ -48,24 +51,26 @@
               </div>
             </span>
           </td>
-          <td>
+          <td class="celda-ubicacion">
             <span
-              class="globito"
+              class="globito-ubicacion"
               :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
               :title="item.ubicacion"
             >
               {{ item.ubicacion }}
             </span>
           </td>
-          <td class="acciones">
-            <IconPencil
-              class="icono-accion icono-editar"
-              @click="$emit('abrirModalEditar', index)"
-            />
-            <IconTrash
-              class="icono-accion icono-borrar"
-              @click="$emit('abrirModalEliminar', index)"
-            />
+          <td class="celda-acciones">
+            <div class="acciones-ubicacion">
+              <IconPencil
+                class="icono-ubicacion icono-editar"
+                @click="$emit('abrirModalEditar', index)"
+              />
+              <IconTrash
+                class="icono-ubicacion icono-borrar"
+                @click="$emit('abrirModalEliminar', index)"
+              />
+            </div>
           </td>
         </tr>
       </tbody>
