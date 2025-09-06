@@ -1,6 +1,13 @@
 <template>
   <div class="contenedor-buscador" v-if="mostrarLista">
-    <div class="lista-resultados" v-if="resultadosBusqueda.length > 0">
+    <!-- Título con estado de base de datos -->
+    <div class="titulo-tarjeta">
+      <span v-if="baseDatosCargada">Artículos encontrados</span>
+      <span v-else class="titulo-sin-base">Base de datos no cargada</span>
+    </div>
+
+    <!-- Resultados de búsqueda -->
+    <div class="lista-resultados" v-if="resultadosBusqueda.length > 0 && baseDatosCargada">
       <div
         v-for="(articulo, indice) in resultadosBusqueda"
         :key="indice"
@@ -20,15 +27,28 @@
       </div>
     </div>
 
-    <div v-else-if="busqueda.length >= caracteresMinimos" class="sin-resultados">
+    <!-- Sin resultados pero con base de datos cargada -->
+    <div
+      v-else-if="busqueda.length >= caracteresMinimos && baseDatosCargada"
+      class="sin-resultados"
+    >
       <div class="texto-sin-resultados">Artículo inexistente</div>
+    </div>
+
+    <!-- Base de datos no cargada -->
+    <div v-else-if="!baseDatosCargada" class="sin-base-datos">
+      <div class="texto-sin-base">
+        <IconDatabaseX :size="24" />
+        <span>Cargar base de datos primero</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
+import { computed, ref, onMounted } from 'vue'
+import { IconDatabaseX } from '@tabler/icons-vue'
+import { obtenerArticulosCargados, obtenerEstadoCarga } from '../../BaseDeDatos/LectorExcel.js'
 
 // --- PROPS ---
 const props = defineProps({
@@ -41,6 +61,10 @@ const props = defineProps({
 // --- EMITS ---
 const emit = defineEmits(['articulo-seleccionado'])
 
+// --- ESTADO REACTIVO ---
+const articulosDisponibles = ref([])
+const baseDatosCargada = ref(false)
+
 // --- CONFIGURACIÓN DEL BUSCADOR ---
 const caracteresMinimos = 3
 const maximosResultados = 3
@@ -52,7 +76,7 @@ const mostrarLista = computed(() => {
 
 // --- COMPUTED PARA RESULTADOS DE BÚSQUEDA ---
 const resultadosBusqueda = computed(() => {
-  if (props.busqueda.length < caracteresMinimos) {
+  if (props.busqueda.length < caracteresMinimos || !baseDatosCargada.value) {
     return []
   }
 
@@ -61,18 +85,18 @@ const resultadosBusqueda = computed(() => {
   const resultados = []
 
   // Códigos que empiecen con la búsqueda (PRIORIDAD MÁXIMA)
-  const codigosEmpiezan = articulos.filter((articulo) =>
+  const codigosEmpiezan = articulosDisponibles.value.filter((articulo) =>
     articulo.codigo.toLowerCase().startsWith(terminoBusqueda),
   )
 
   // Nombres que contengan todas las palabras en cualquier orden
-  const nombresCoinciden = articulos.filter((articulo) => {
+  const nombresCoinciden = articulosDisponibles.value.filter((articulo) => {
     const nombre = articulo.nombre.toLowerCase()
     return palabras.every((palabra) => nombre.includes(palabra))
   })
 
   // Códigos que contengan la búsqueda (pero no empiecen)
-  const codigosContienen = articulos.filter(
+  const codigosContienen = articulosDisponibles.value.filter(
     (articulo) =>
       articulo.codigo.toLowerCase().includes(terminoBusqueda) &&
       !codigosEmpiezan.includes(articulo),
@@ -107,4 +131,51 @@ function resaltarCoincidencia(texto, busqueda) {
 
   return textoResaltado
 }
+
+function actualizarArticulos() {
+  const estado = obtenerEstadoCarga()
+  baseDatosCargada.value = estado.cargado
+
+  if (estado.cargado) {
+    articulosDisponibles.value = obtenerArticulosCargados()
+    console.log(`Buscador actualizado: ${articulosDisponibles.value.length} artículos disponibles`)
+  } else {
+    articulosDisponibles.value = []
+  }
+}
+
+// --- EXPONER FUNCIÓN PARA ACTUALIZAR DESDE PADRE ---
+function refrescarBaseDatos() {
+  actualizarArticulos()
+}
+
+// --- LIFECYCLE ---
+onMounted(() => {
+  actualizarArticulos()
+})
+
+// --- WATCH PARA REACTIVIDAD ---
+// Escuchar cambios cada cierto tiempo (alternativa a eventos)
+let intervalId = null
+onMounted(() => {
+  intervalId = setInterval(() => {
+    const estadoActual = obtenerEstadoCarga()
+    if (estadoActual.cargado !== baseDatosCargada.value) {
+      actualizarArticulos()
+    }
+  }, 1000) // Revisar cada segundo
+})
+
+// Cleanup del interval
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
+})
+
+// Exponer función para el componente padre
+defineExpose({
+  refrescarBaseDatos,
+})
 </script>

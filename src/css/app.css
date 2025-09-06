@@ -1167,3 +1167,200 @@ button {
 .texto-duplicado .codigo-articulo {
   color: var(--color-error);
 }
+/* -------------------------------------------------------------------------- */
+/* BuscarExcel.vue - Estilos para carga de base de datos */
+.contenedor-buscar-excel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+/* Botón principal */
+.boton-cargar-excel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background-color: var(--color-acento);
+  color: var(--color-texto-principal);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.boton-cargar-excel:hover:not(:disabled) {
+  background-color: var(--color-primario-claro);
+  transform: translateY(-2px);
+}
+
+.boton-cargar-excel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Estados específicos del botón */
+.boton-cargando {
+  background-color: var(--color-texto-secundario) !important;
+  cursor: wait !important;
+}
+
+.boton-exito {
+  background-color: var(--color-exito) !important;
+}
+
+.boton-cargar-excel.boton-exito:hover {
+  background-color: var(--color-exito) !important;
+  filter: brightness(1.1);
+}
+
+/* Icono girando para carga */
+.icono-girando {
+  animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Información de estado */
+.info-estado {
+  text-align: center;
+  max-width: 300px;
+}
+
+.texto-info {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.texto-exito {
+  color: var(--color-exito);
+  font-weight: 500;
+}
+
+.texto-neutral {
+  color: var(--color-texto-secundario);
+}
+
+/* Mensaje de error detallado */
+.mensaje-error-detallado {
+  background-color: color-mix(in oklab, var(--color-error) 10%, transparent);
+  border: 1px solid var(--color-error);
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+  max-width: 320px;
+}
+
+.texto-error {
+  color: var(--color-error);
+  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.boton-reintentar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: var(--color-error);
+  color: var(--color-texto-principal);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.boton-reintentar:hover {
+  background-color: var(--color-error);
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .contenedor-buscar-excel {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .boton-cargar-excel {
+    min-width: 180px;
+    font-size: 0.9rem;
+    padding: 10px 16px;
+  }
+
+  .mensaje-error-detallado {
+    max-width: 100%;
+    padding: 10px 12px;
+  }
+}
+/* -------------------------------------------------------------------------- */
+/* CodigoMasNombre.vue - Estilos adicionales para estado sin base de datos */
+
+/* Título cuando no hay base de datos */
+.titulo-sin-base {
+  color: var(--color-error) !important;
+  font-weight: 600;
+}
+
+/* Contenedor sin base de datos */
+.sin-base-datos {
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.texto-sin-base {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-error);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.texto-sin-base svg {
+  opacity: 0.7;
+}
+
+/* Animación para estado sin base */
+.sin-base-datos {
+  animation: pulso-error 2s ease-in-out infinite;
+}
+
+@keyframes pulso-error {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Modificar tarjeta cuando no hay base de datos */
+.contenedor-buscador:has(.sin-base-datos) .titulo-tarjeta {
+  background-color: color-mix(in oklab, var(--color-error) 20%, var(--color-superficie));
+  border-bottom-color: var(--color-error);
+}
