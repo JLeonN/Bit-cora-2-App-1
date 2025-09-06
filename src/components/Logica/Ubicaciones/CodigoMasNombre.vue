@@ -60,18 +60,18 @@ const resultadosBusqueda = computed(() => {
   const palabras = terminoBusqueda.split(/\s+/) // dividir en palabras
   const resultados = []
 
-  // 1. Códigos que empiecen con la búsqueda (PRIORIDAD MÁXIMA)
+  // Códigos que empiecen con la búsqueda (PRIORIDAD MÁXIMA)
   const codigosEmpiezan = articulos.filter((articulo) =>
     articulo.codigo.toLowerCase().startsWith(terminoBusqueda),
   )
 
-  // 2. Nombres que contengan todas las palabras en cualquier orden
+  // Nombres que contengan todas las palabras en cualquier orden
   const nombresCoinciden = articulos.filter((articulo) => {
     const nombre = articulo.nombre.toLowerCase()
     return palabras.every((palabra) => nombre.includes(palabra))
   })
 
-  // 3. Códigos que contengan la búsqueda (pero no empiecen)
+  // Códigos que contengan la búsqueda (pero no empiecen)
   const codigosContienen = articulos.filter(
     (articulo) =>
       articulo.codigo.toLowerCase().includes(terminoBusqueda) &&
