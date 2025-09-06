@@ -15,9 +15,7 @@
       <!-- Icono según estado -->
       <IconFolderOpen v-if="estadoCarga === 'no-cargado' && !estaCargando" :size="20" />
       <IconLoader2 v-if="estaCargando" :size="20" class="icono-girando" />
-      <!-- <IconDatabaseCheck v-if="estadoCarga === 'cargado'" :size="20" /> -->
       <IconDatabaseX v-if="estadoCarga === 'error'" :size="20" />
-
       <!-- Texto del botón -->
       <span>{{ textoBoton }}</span>
     </button>
@@ -65,16 +63,16 @@
     </div>
 
     <!-- Mensaje de error -->
-    <div class="mensaje-error" v-if="estadoCarga === 'error' && mensajeError">
+    <div class="mensaje-error-selector" v-if="estadoCarga === 'error' && mensajeError">
       <div class="contenido-error">
         <IconAlertTriangle :size="20" />
-        <div class="texto-error">
+        <div class="texto-error-selector">
           <h4>Error al cargar archivo</h4>
           <p>{{ mensajeError }}</p>
         </div>
       </div>
       <div class="botones-error">
-        <button type="button" class="boton-reintentar" @click="abrirSelectorArchivo">
+        <button type="button" class="boton-reintentar-selector" @click="abrirSelectorArchivo">
           <IconRefresh :size="16" />
           Seleccionar otro archivo
         </button>
@@ -130,7 +128,6 @@ import { ref, computed, onMounted } from 'vue'
 import {
   IconFolderOpen,
   IconLoader2,
-  // IconDatabaseCheck,
   IconDatabaseX,
   IconFileSpreadsheet,
   IconRefresh,

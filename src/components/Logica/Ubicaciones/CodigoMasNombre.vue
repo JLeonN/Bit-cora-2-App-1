@@ -1,51 +1,55 @@
 <template>
   <div class="contenedor-buscador" v-if="mostrarLista">
     <!-- Título con estado de base de datos -->
-    <div class="titulo-tarjeta">
-      <span v-if="baseDatosCargada">Artículos encontrados</span>
-      <span v-else class="titulo-sin-base">
-        <IconDatabaseX :size="16" />
-        Base de datos no cargada
-      </span>
-    </div>
+    <div class="tarjeta-resultados-mejorada">
+      <div class="titulo-tarjeta-mejorado">
+        <span v-if="baseDatosCargada">Artículos encontrados</span>
+        <span v-else class="titulo-sin-base-mejorado">
+          <IconDatabaseX :size="16" />
+          Base de datos no cargada
+        </span>
+      </div>
 
-    <!-- Resultados de búsqueda -->
-    <div class="lista-resultados" v-if="resultadosBusqueda.length > 0 && baseDatosCargada">
+      <!-- Resultados de búsqueda -->
       <div
-        v-for="(articulo, indice) in resultadosBusqueda"
-        :key="indice"
-        class="item-resultado"
-        @click="seleccionarArticulo(articulo)"
+        class="lista-resultados-mejorada"
+        v-if="resultadosBusqueda.length > 0 && baseDatosCargada"
       >
         <!-- Nombre primero -->
         <div
-          class="nombre-resultado"
-          v-html="resaltarCoincidencia(articulo.nombre, busqueda)"
-        ></div>
-        <!-- Código después -->
-        <div
-          class="codigo-resultado"
-          v-html="resaltarCoincidencia(articulo.codigo, busqueda)"
-        ></div>
+          v-for="(articulo, indice) in resultadosBusqueda"
+          :key="indice"
+          class="item-resultado-mejorado"
+          @click="seleccionarArticulo(articulo)"
+        >
+          <div
+            class="nombre-resultado-mejorado"
+            v-html="resaltarCoincidencia(articulo.nombre, busqueda)"
+          ></div>
+          <div
+            class="codigo-resultado-mejorado"
+            v-html="resaltarCoincidencia(articulo.codigo, busqueda)"
+          ></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Sin resultados pero con base de datos cargada -->
-    <div
-      v-else-if="busqueda.length >= caracteresMinimos && baseDatosCargada"
-      class="sin-resultados"
-    >
-      <div class="texto-sin-resultados">
-        <IconSearch :size="16" />
-        Artículo inexistente
+      <!-- Sin resultados pero con base de datos cargada -->
+      <div
+        v-else-if="busqueda.length >= caracteresMinimos && baseDatosCargada"
+        class="sin-resultados-mejorado"
+      >
+        <div class="texto-sin-resultados-mejorado">
+          <IconSearch :size="16" />
+          Artículo inexistente
+        </div>
       </div>
-    </div>
 
-    <!-- Base de datos no cargada -->
-    <div v-else-if="!baseDatosCargada" class="sin-base-datos">
-      <div class="texto-sin-base">
-        <IconDatabaseX :size="20" />
-        <span>Selecciona un archivo Excel primero</span>
+      <!-- Base de datos no cargada -->
+      <div v-else-if="!baseDatosCargada" class="sin-base-datos-mejorada">
+        <div class="texto-sin-base-mejorado">
+          <IconDatabaseX :size="20" />
+          <span>Selecciona un archivo Excel primero</span>
+        </div>
       </div>
     </div>
   </div>
@@ -149,7 +153,10 @@ function resaltarCoincidencia(texto, busqueda) {
   // Resaltar cada palabra por separado
   palabras.forEach((palabra) => {
     const regex = new RegExp(`(${escaparRegex(palabra)})`, 'gi')
-    textoResaltado = textoResaltado.replace(regex, '<span class="texto-resaltado">$1</span>')
+    textoResaltado = textoResaltado.replace(
+      regex,
+      '<span class="texto-resaltado-mejorado">$1</span>',
+    )
   })
 
   return textoResaltado
