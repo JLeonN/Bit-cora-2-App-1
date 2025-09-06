@@ -57,6 +57,7 @@ const resultadosBusqueda = computed(() => {
   }
 
   const terminoBusqueda = props.busqueda.toLowerCase().trim()
+  const palabras = terminoBusqueda.split(/\s+/) // dividir en palabras
   const resultados = []
 
   // 1. Códigos que empiecen con la búsqueda (PRIORIDAD MÁXIMA)
@@ -64,37 +65,23 @@ const resultadosBusqueda = computed(() => {
     articulo.codigo.toLowerCase().startsWith(terminoBusqueda),
   )
 
-  // 2. Nombres que empiecen con la búsqueda
-  const nombresEmpiezan = articulos.filter(
-    (articulo) =>
-      articulo.nombre.toLowerCase().startsWith(terminoBusqueda) &&
-      !codigosEmpiezan.includes(articulo),
-  )
+  // 2. Nombres que contengan todas las palabras en cualquier orden
+  const nombresCoinciden = articulos.filter((articulo) => {
+    const nombre = articulo.nombre.toLowerCase()
+    return palabras.every((palabra) => nombre.includes(palabra))
+  })
 
   // 3. Códigos que contengan la búsqueda (pero no empiecen)
   const codigosContienen = articulos.filter(
     (articulo) =>
       articulo.codigo.toLowerCase().includes(terminoBusqueda) &&
-      !articulo.codigo.toLowerCase().startsWith(terminoBusqueda) &&
-      !codigosEmpiezan.includes(articulo) &&
-      !nombresEmpiezan.includes(articulo),
+      !codigosEmpiezan.includes(articulo),
   )
 
-  // 4. Nombres que contengan la búsqueda (pero no empiecen)
-  const nombresContienen = articulos.filter(
-    (articulo) =>
-      articulo.nombre.toLowerCase().includes(terminoBusqueda) &&
-      !articulo.nombre.toLowerCase().startsWith(terminoBusqueda) &&
-      !codigosEmpiezan.includes(articulo) &&
-      !nombresEmpiezan.includes(articulo) &&
-      !codigosContienen.includes(articulo),
-  )
-
-  // Combinar resultados por orden de prioridad
+  // Combinar resultados
   resultados.push(...codigosEmpiezan)
-  resultados.push(...nombresEmpiezan)
+  resultados.push(...nombresCoinciden)
   resultados.push(...codigosContienen)
-  resultados.push(...nombresContienen)
 
   return resultados.slice(0, maximosResultados)
 })
@@ -109,7 +96,15 @@ function resaltarCoincidencia(texto, busqueda) {
     return texto
   }
 
-  const regex = new RegExp(`(${busqueda})`, 'gi')
-  return texto.replace(regex, '<span class="texto-resaltado">$1</span>')
+  const palabras = busqueda.trim().split(/\s+/).filter(Boolean)
+  let textoResaltado = texto
+
+  // resaltar cada palabra por separado
+  palabras.forEach((palabra) => {
+    const regex = new RegExp(`(${palabra})`, 'gi')
+    textoResaltado = textoResaltado.replace(regex, '<span class="texto-resaltado">$1</span>')
+  })
+
+  return textoResaltado
 }
 </script>
