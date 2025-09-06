@@ -904,3 +904,171 @@ button {
   color: var(--color-texto-principal);
 }
 /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* Buscador CodigoMasNombre */
+.contenedor-buscador {
+  position: relative;
+  z-index: 100;
+}
+
+/* Tarjeta principal con resultados */
+.tarjeta-resultados {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 101;
+  overflow: hidden;
+  animation: aparecer-tarjeta 0.2s ease-out;
+}
+
+/* Tarjeta sin resultados */
+.tarjeta-sin-resultados {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 101;
+  animation: aparecer-tarjeta 0.2s ease-out;
+}
+
+/* Título de la tarjeta */
+.titulo-tarjeta {
+  background-color: var(--color-primario-oscuro);
+  color: var(--color-texto-principal);
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+/* Lista scrolleable de resultados */
+.lista-resultados {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* Items individuales */
+.item-resultado {
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-borde);
+  transition: all 0.2s ease;
+}
+
+.item-resultado:hover {
+  background-color: var(--color-fondo);
+  transform: translateX(4px);
+}
+
+.item-resultado:last-child {
+  border-bottom: none;
+}
+
+/* Código del artículo */
+.codigo-resultado {
+  font-size: 0.95rem;
+  color: var(--color-primario-claro);
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* Nombre del artículo */
+.nombre-resultado {
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+  line-height: 1.4;
+}
+
+/* Texto cuando no hay resultados */
+.texto-sin-resultados {
+  padding: 20px 16px;
+  text-align: center;
+  color: var(--color-texto-secundario);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Texto resaltado en coincidencias */
+.texto-resaltado {
+  background-color: var(--color-primario);
+  color: var(--color-texto-principal);
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 2px 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Animación de aparición */
+@keyframes aparecer-tarjeta {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Scrollbar personalizada para la lista */
+.lista-resultados::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lista-resultados::-webkit-scrollbar-track {
+  background: var(--color-fondo);
+  border-radius: 4px;
+}
+
+.lista-resultados::-webkit-scrollbar-thumb {
+  background: var(--color-borde);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.lista-resultados::-webkit-scrollbar-thumb:hover {
+  background: var(--color-texto-secundario);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .tarjeta-resultados,
+  .tarjeta-sin-resultados {
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .titulo-tarjeta {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .lista-resultados {
+    max-height: 220px;
+  }
+
+  .item-resultado {
+    padding: 12px 14px;
+  }
+
+  .codigo-resultado {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .nombre-resultado {
+    font-size: 0.8rem;
+  }
+}
+/* -------------------------------------------------------------------------- */
