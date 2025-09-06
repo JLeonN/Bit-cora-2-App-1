@@ -1,6 +1,15 @@
 // ExportarUbicacionesExcel.js
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
+import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
+
+// --- Función para obtener el nombre del artículo ---
+function obtenerNombreArticulo(codigo) {
+  const articuloEncontrado = articulos.find(
+    (articulo) => articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  )
+  return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'
+}
 
 // --- Función principal ---
 export async function generarYGuardarExcelUbicaciones(ubicaciones) {
@@ -18,6 +27,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     hojaDeTrabajo['C1'] = { v: 'sub2', t: 's' }
     hojaDeTrabajo['D1'] = { v: 'deposito', t: 's' }
     hojaDeTrabajo['E1'] = { v: 'ubic', t: 's' }
+    hojaDeTrabajo['F1'] = { v: 'Descripcion', t: 's' }
 
     // --- Datos de ubicaciones desde fila 2 ---
     ubicaciones.forEach((ubicacion, indice) => {
@@ -47,11 +57,16 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
         v: ubicacion.ubicacion || 'Sin ubicación',
         t: 's',
       }
+      // Columna F: descripción (nombre del artículo)
+      hojaDeTrabajo[`F${numeroFila}`] = {
+        v: obtenerNombreArticulo(ubicacion.codigo),
+        t: 's',
+      }
     })
 
     // --- Definir rango de la hoja ---
     const ultimaFila = ubicaciones.length + 1 // +1 por los encabezados
-    hojaDeTrabajo['!ref'] = `A1:E${ultimaFila}`
+    hojaDeTrabajo['!ref'] = `A1:F${ultimaFila}`
     // --- Crear libro y agregar hoja ---
     const libroDeTrabajo = XLSX.utils.book_new()
     const nombreHoja = 'Ubicaciones'

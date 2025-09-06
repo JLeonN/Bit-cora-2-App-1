@@ -18,10 +18,10 @@
     </div>
 
     <!-- Tabla de ubicaciones -->
-    <table class="tabla">
+    <table class="tabla tabla-ubicaciones">
       <thead>
         <tr>
-          <th>Código</th>
+          <th>Nombre y Código</th>
           <th>Ubicación</th>
           <th>Acciones</th>
         </tr>
@@ -36,9 +36,16 @@
             <span
               class="globito"
               :class="{ 'texto-duplicado': combinacionesDuplicadas.has(normalizarUbicacion(item)) }"
-              :title="item.codigo"
+              :title="`${obtenerNombreArticulo(item.codigo)} - ${item.codigo}`"
             >
-              {{ item.codigo.slice(0, 15) }}<span v-if="item.codigo.length > 15">...</span>
+              <div class="contenedor-nombre-codigo">
+                <div class="nombre-articulo">
+                  {{ obtenerNombreArticulo(item.codigo) }}
+                </div>
+                <div class="codigo-articulo">
+                  {{ item.codigo.slice(0, 15) }}<span v-if="item.codigo.length > 15">...</span>
+                </div>
+              </div>
             </span>
           </td>
           <td>
@@ -70,6 +77,7 @@
 // --- Se importa 'computed' para manejar la lógica localmente ---
 import { computed } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
+import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
 
 // --- Las props ---
 const props = defineProps({
@@ -82,6 +90,14 @@ const props = defineProps({
 // función local para pintar duplicados y calcularlos
 function normalizarUbicacion(item) {
   return `${item.codigo.trim().toUpperCase()}|${item.ubicacion.trim().toUpperCase()}`
+}
+
+// --- Función para obtener el nombre del artículo ---
+function obtenerNombreArticulo(codigo) {
+  const articuloEncontrado = articulos.find(
+    (articulo) => articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  )
+  return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'
 }
 
 // --- Lógica de duplicados ---

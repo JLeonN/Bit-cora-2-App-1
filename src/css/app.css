@@ -1049,3 +1049,38 @@ button {
   }
 }
 /* -------------------------------------------------------------------------- */
+/* Tabla ubicaciones */
+/* Alineación vertical para las celdas de la tabla */
+.tabla td {
+  vertical-align: middle;
+}
+
+/* Contenedor para nombre y código */
+.contenedor-nombre-codigo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nombre-articulo {
+  color: var(--color-texto-principal);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.codigo-articulo {
+  color: var(--color-texto-secundario);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+/* Estilos para duplicados */
+.texto-duplicado .nombre-articulo {
+  color: var(--color-error);
+}
+
+.texto-duplicado .codigo-articulo {
+  color: var(--color-error);
+}
+/* -------------------------------------------------------------------------- */
