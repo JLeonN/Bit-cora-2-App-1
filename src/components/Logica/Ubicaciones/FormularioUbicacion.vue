@@ -67,7 +67,7 @@ import CodigoMasNombre from './CodigoMasNombre.vue'
 const nuevoCodigo = ref('')
 const nuevaUbicacion = ref('')
 
-const placeholderCodigo = ref('Código del artículo')
+const placeholderCodigo = ref('Código o nombre del artículo')
 const placeholderUbicacion = ref('Ubicación')
 
 const errorCodigo = ref(false)
@@ -171,7 +171,7 @@ function gestionarEnvio() {
   if (!nuevoCodigo.value.trim()) {
     errorCodigo.value = true
     animarErrorCodigo.value = true
-    placeholderCodigo.value = 'Ingresar un código'
+    placeholderCodigo.value = 'Ingresar código o nombre'
     valido = false
   }
   if (!nuevaUbicacion.value.trim()) {
