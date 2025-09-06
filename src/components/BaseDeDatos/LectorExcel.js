@@ -1,118 +1,167 @@
-// LectorExcel.js - Servicio para leer base de datos desde Excel
-import { Filesystem, Directory } from '@capacitor/filesystem'
+// LectorExcel.js - Con selector manual de archivos
 import * as XLSX from 'xlsx'
-
-// TODO: Cambiar nombre del archivo por el definitivo
-const NOMBRE_ARCHIVO_EXCEL = 'articulos.xlsx'
-
-// --- CONFIGURACIÓN DE RUTAS DE BÚSQUEDA ---
-// Define aquí las carpetas donde buscar el archivo Excel.
-// Puedes agregar más si es necesario.
-const RUTAS_POSIBLES = [
-  { nombre: 'Documents', directorio: Directory.Documents },
-  { nombre: 'Downloads', directorio: Directory.Downloads },
-  // Agrega otras rutas si es necesario, por ejemplo:
-  // { nombre: 'External', directorio: Directory.External },
-]
-
-// Define subcarpetas comunes donde podría estar el archivo.
-const RUTAS_ESPECIFICAS = [
-  '', // Raíz del directorio base (ej. /Downloads/)
-  'WhatsApp/Media/WhatsApp Documents/',
-  'Download/',
-  'Bluetooth/',
-]
 
 // Variable global para almacenar los artículos cargados
 let articulosDelExcel = []
 let estadoCarga = 'no-cargado' // 'no-cargado', 'cargando', 'cargado', 'error'
+let informacionArchivo = null // Info del archivo seleccionado
 
-// --- FUNCIÓN PARA BUSCAR EN MÚLTIPLES RUTAS ---
-async function buscarArchivoEnMultiplesRutas() {
-  console.log('Iniciando búsqueda en múltiples ubicaciones...')
+// --- FUNCIÓN PARA CREAR INPUT DE ARCHIVO ---
+function crearSelectorDeArchivo() {
+  return new Promise((resolve, reject) => {
+    // Crear input de archivo invisible
+    const inputArchivo = document.createElement('input')
+    inputArchivo.type = 'file'
+    inputArchivo.accept = '.xlsx,.xls' // Solo Excel
+    inputArchivo.style.display = 'none'
 
-  for (const rutaBase of RUTAS_POSIBLES) {
-    for (const subruta of RUTAS_ESPECIFICAS) {
-      const rutaCompleta = subruta + NOMBRE_ARCHIVO_EXCEL
-      try {
-        console.log(`Probando en: ${rutaBase.nombre}/${rutaCompleta}`)
-        const archivo = await Filesystem.readFile({
-          path: rutaCompleta,
-          directory: rutaBase.directorio,
-        })
-        console.log(`¡ARCHIVO ENCONTRADO en ${rutaBase.nombre}/${rutaCompleta}!`)
-        return archivo // Retorna el archivo encontrado
-      } catch (error) {
-        // Si no es un error de "archivo no encontrado", muéstralo.
-        if (error.message && !error.message.includes('File does not exist')) {
-          console.warn(`Aviso en ${rutaBase.nombre}/${rutaCompleta}: ${error.message}`)
-        }
-        // Si no, continúa buscando silenciosamente.
+    // Manejar selección de archivo
+    inputArchivo.onchange = (evento) => {
+      const archivo = evento.target.files[0]
+      if (archivo) {
+        console.log(`📁 Archivo seleccionado: ${archivo.name} (${archivo.size} bytes)`)
+        resolve(archivo)
+      } else {
+        reject(new Error('No se seleccionó ningún archivo'))
       }
+      // Limpiar el input
+      document.body.removeChild(inputArchivo)
     }
-  }
 
-  console.log('Archivo no encontrado en ninguna ubicación.')
-  return null // Retorna null si no se encontró en ninguna parte
+    // Manejar cancelación
+    inputArchivo.oncancel = () => {
+      reject(new Error('Selección cancelada'))
+      document.body.removeChild(inputArchivo)
+    }
+
+    // Agregar al DOM y activar
+    document.body.appendChild(inputArchivo)
+    inputArchivo.click()
+  })
 }
 
-// --- FUNCIÓN PRINCIPAL PARA CARGAR EXCEL ---
+// --- FUNCIÓN PARA LEER ARCHIVO COMO ARRAY BUFFER ---
+function leerArchivoComoBuffer(archivo) {
+  return new Promise((resolve, reject) => {
+    const lector = new FileReader()
+
+    lector.onload = (evento) => {
+      resolve(evento.target.result)
+    }
+
+    lector.onerror = () => {
+      reject(new Error('Error al leer el archivo'))
+    }
+
+    // Leer como ArrayBuffer para XLSX
+    lector.readAsArrayBuffer(archivo)
+  })
+}
+
+// --- FUNCIÓN PRINCIPAL PARA CARGAR EXCEL CON SELECTOR ---
 export async function cargarArticulosDesdeExcel() {
   if (estadoCarga === 'cargando') {
-    console.log('Ya se está procesando el archivo Excel...')
+    console.log('Ya se está procesando un archivo...')
     return { exito: false, mensaje: 'Ya está cargando...' }
   }
 
   estadoCarga = 'cargando'
-  console.log(`Buscando archivo: ${NOMBRE_ARCHIVO_EXCEL}...`)
+  console.log('Iniciando selector de archivos...')
 
   try {
-    const archivoLeido = await buscarArchivoEnMultiplesRutas()
+    // Mostrar selector de archivos
+    console.log('Abriendo selector de archivos...')
+    const archivoSeleccionado = await crearSelectorDeArchivo()
 
-    if (!archivoLeido) {
-      throw new Error('File does not exist')
+    // Guardar información del archivo
+    informacionArchivo = {
+      nombre: archivoSeleccionado.name,
+      tamano: archivoSeleccionado.size,
+      tipo: archivoSeleccionado.type,
+      fechaModificacion: archivoSeleccionado.lastModified,
     }
 
-    console.log('Archivo encontrado, procesando Excel...')
+    console.log('Archivo seleccionado:', informacionArchivo)
 
-    // Convertir Base64 a buffer para XLSX
-    const datosBuffer = Uint8Array.from(atob(archivoLeido.data), (c) => c.charCodeAt(0))
+    // Validar que sea un Excel
+    const esExcel =
+      archivoSeleccionado.name.toLowerCase().endsWith('.xlsx') ||
+      archivoSeleccionado.name.toLowerCase().endsWith('.xls') ||
+      archivoSeleccionado.type.includes('spreadsheet')
 
-    // Parsear Excel
-    const libroExcel = XLSX.read(datosBuffer, { type: 'array' })
+    if (!esExcel) {
+      throw new Error('El archivo seleccionado no es un Excel válido (.xlsx o .xls)')
+    }
+
+    // Leer el archivo
+    console.log('Leyendo contenido del archivo...')
+    const bufferArchivo = await leerArchivoComoBuffer(archivoSeleccionado)
+
+    // Procesar Excel
+    console.log('Procesando Excel...')
+    const libroExcel = XLSX.read(bufferArchivo, { type: 'array' })
+
+    if (!libroExcel.SheetNames || libroExcel.SheetNames.length === 0) {
+      throw new Error('El archivo Excel no tiene hojas o está corrupto')
+    }
+
     const nombrePrimeraHoja = libroExcel.SheetNames[0]
     const hojaExcel = libroExcel.Sheets[nombrePrimeraHoja]
 
+    console.log(`Procesando hoja: "${nombrePrimeraHoja}"`)
+
     // Convertir a JSON
     const datosJson = XLSX.utils.sheet_to_json(hojaExcel, { header: 1 })
+    console.log(`Filas encontradas: ${datosJson.length}`)
 
     // Procesar y validar datos
     const articulosProcesados = procesarDatosExcel(datosJson)
 
     if (articulosProcesados.length === 0) {
       estadoCarga = 'error'
-      return { exito: false, mensaje: 'El archivo Excel está vacío o tiene un formato incorrecto.' }
+      return {
+        exito: false,
+        mensaje:
+          'El archivo no contiene datos válidos. Asegúrate de que tenga al menos 2 columnas: código y nombre.',
+      }
     }
 
     // Guardar en variable global
     articulosDelExcel = articulosProcesados
     estadoCarga = 'cargado'
 
-    console.log(`Excel cargado exitosamente: ${articulosDelExcel.length} artículos`)
+    console.log(`¡Carga exitosa!`)
+    console.log(`Estadísticas:`)
+    console.log(`- Archivo: ${informacionArchivo.nombre}`)
+    console.log(`- Tamaño: ${(informacionArchivo.tamano / 1024).toFixed(1)} KB`)
+    console.log(`- Artículos cargados: ${articulosProcesados.length}`)
+    console.log(`- Muestra:`, articulosProcesados.slice(0, 3))
+
     return {
       exito: true,
-      mensaje: `Base de datos cargada: ${articulosDelExcel.length} artículos`,
-      cantidad: articulosDelExcel.length,
+      mensaje: `${articulosProcesados.length} artículos cargados desde "${informacionArchivo.nombre}"`,
+      cantidad: articulosProcesados.length,
+      archivo: informacionArchivo,
     }
   } catch (error) {
     estadoCarga = 'error'
     console.error('Error al cargar Excel:', error)
 
     let mensajeError = 'Error desconocido al procesar el archivo.'
-    if (error.message?.includes('File does not exist')) {
-      mensajeError = `No se encontró "${NOMBRE_ARCHIVO_EXCEL}". Asegúrate de que esté en Descargas, Documentos o carpetas similares.`
-    } else if (error.message?.includes('Permission denied')) {
-      mensajeError = 'No se tienen los permisos necesarios para leer el archivo.'
+
+    if (error.message?.includes('No se seleccionó')) {
+      mensajeError = 'No se seleccionó ningún archivo.'
+    } else if (error.message?.includes('cancelada')) {
+      mensajeError = 'Selección de archivo cancelada.'
+    } else if (error.message?.includes('no es un Excel')) {
+      mensajeError = 'El archivo seleccionado no es un Excel válido. Debe ser .xlsx o .xls'
+    } else if (error.message?.includes('no tiene hojas')) {
+      mensajeError = 'El archivo Excel está corrupto o vacío.'
+    } else if (error.message?.includes('no contiene datos')) {
+      mensajeError =
+        'El archivo no tiene el formato correcto. Debe tener columnas: código y nombre.'
+    } else {
+      mensajeError = `Error al procesar: ${error.message}`
     }
 
     return { exito: false, mensaje: mensajeError }
@@ -122,18 +171,34 @@ export async function cargarArticulosDesdeExcel() {
 // --- FUNCIÓN PARA PROCESAR DATOS DEL EXCEL ---
 function procesarDatosExcel(datosJson) {
   const articulosProcesados = []
-  // Omitir la primera fila (encabezados)
-  const filas = datosJson.slice(1)
+  const filas = datosJson.slice(1) // Omitir encabezados
 
-  for (const fila of filas) {
-    // Validar que la fila exista y tenga al menos 2 columnas
-    if (!fila || fila.length < 2) continue
+  console.log(`Procesando ${filas.length} filas de datos...`)
+
+  // Mostrar encabezados para debug
+  if (datosJson.length > 0) {
+    console.log(`Encabezados detectados:`, datosJson[0])
+  }
+
+  let filasOmitidas = 0
+
+  for (let i = 0; i < filas.length; i++) {
+    const fila = filas[i]
+
+    // Validar que la fila tenga datos
+    if (!fila || fila.length < 2) {
+      filasOmitidas++
+      continue
+    }
 
     const codigo = fila[0]?.toString()?.trim()
     const nombre = fila[1]?.toString()?.trim()
 
     // Validar que código y nombre no estén vacíos
-    if (!codigo || !nombre) continue
+    if (!codigo || !nombre) {
+      filasOmitidas++
+      continue
+    }
 
     articulosProcesados.push({
       codigo: codigo.toUpperCase(),
@@ -141,11 +206,14 @@ function procesarDatosExcel(datosJson) {
     })
   }
 
+  console.log(`Procesamiento completado:`)
+  console.log(`- Filas procesadas: ${articulosProcesados.length}`)
+  console.log(`- Filas omitidas: ${filasOmitidas}`)
+
   return articulosProcesados
 }
 
 // --- FUNCIONES AUXILIARES ---
-
 export function obtenerArticulosCargados() {
   return articulosDelExcel
 }
@@ -155,10 +223,29 @@ export function obtenerEstadoCarga() {
     estado: estadoCarga,
     cantidad: articulosDelExcel.length,
     cargado: estadoCarga === 'cargado',
+    archivo: informacionArchivo,
   }
+}
+
+export function obtenerInformacionArchivo() {
+  return informacionArchivo
 }
 
 export function reiniciarBaseDatos() {
   articulosDelExcel = []
   estadoCarga = 'no-cargado'
+  informacionArchivo = null
+  console.log('Base de datos reiniciada')
+}
+
+// --- FUNCIÓN PARA VERIFICAR SOPORTE DEL NAVEGADOR ---
+export function verificarSoporteSelector() {
+  const tieneFileAPI = !!(window.File && window.FileReader && window.FileList && window.Blob)
+  const tieneInputFile = document.createElement('input').type === 'file'
+
+  return {
+    soportado: tieneFileAPI && tieneInputFile,
+    fileAPI: tieneFileAPI,
+    inputFile: tieneInputFile,
+  }
 }

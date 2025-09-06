@@ -2,6 +2,9 @@
   <div class="contenedor-tabla">
     <h2 class="titulo-tabla">Ajustar ubicaciones</h2>
 
+    <!-- Selector de Excel para cargar base de datos -->
+    <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
+
     <!-- Formulario de ubicación -->
     <FormularioUbicacion @ubicacion-agregada="agregarUbicacion" />
 
@@ -50,6 +53,7 @@ import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
 import BotonesDescargarEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
+import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
@@ -76,6 +80,19 @@ let indiceEditar = null
 onMounted(async () => {
   ubicaciones.value = await obtenerUbicaciones()
 })
+
+// --- MANEJO DE EVENTOS DEL SELECTOR DE EXCEL ---
+function manejarBaseDatosCargada(evento) {
+  console.log('✅ Base de datos cargada:', evento)
+  // Aquí puedes mostrar una notificación de éxito si quieres
+  // Por ejemplo: mostrar un toast o actualizar algún estado
+}
+
+function manejarErrorCarga(mensaje) {
+  console.error('❌ Error cargando base de datos:', mensaje)
+  // Aquí puedes mostrar una notificación de error si quieres
+  alert(`Error al cargar archivo: ${mensaje}`)
+}
 
 // --- FUNCIÓN AGREGAR UBICACIÓN ---
 async function agregarUbicacion(datosNuevos) {
