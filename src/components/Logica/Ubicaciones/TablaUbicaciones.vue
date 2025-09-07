@@ -77,7 +77,7 @@
 <script setup>
 import { computed } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
-import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
+import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
   ubicaciones: {
@@ -93,7 +93,8 @@ function normalizarCodigo(codigo) {
 
 // --- Función para obtener el nombre del artículo ---
 function obtenerNombreArticulo(codigo) {
-  const articuloEncontrado = articulos.find(
+  const articulosCargados = obtenerArticulosCargados()
+  const articuloEncontrado = articulosCargados.find(
     (articulo) => articulo.codigo.toLowerCase() === codigo.toLowerCase(),
   )
   return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'

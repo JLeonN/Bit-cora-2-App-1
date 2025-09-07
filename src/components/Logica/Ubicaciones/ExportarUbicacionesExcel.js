@@ -1,11 +1,12 @@
 // ExportarUbicacionesExcel.js
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
-import { articulos } from '../../BaseDeDatos/CodigosArticulos.js'
+import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 // --- Función para obtener el nombre del artículo ---
 function obtenerNombreArticulo(codigo) {
-  const articuloEncontrado = articulos.find(
+  const articulosCargados = obtenerArticulosCargados()
+  const articuloEncontrado = articulosCargados.find(
     (articulo) => articulo.codigo.toLowerCase() === codigo.toLowerCase(),
   )
   return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'
