@@ -1,4 +1,4 @@
-/* 🎨 Variables */
+/* Variables */
 :root {
   --color-fondo: #121214; /* Fondo principal */
   --color-superficie: #1c1c20; /* Cartas / contenedores */
@@ -710,6 +710,21 @@ button {
 }
 .icono-borrar-todo:hover {
   transform: scale(1.2);
+}
+/* --- ESTILO PARA EL CAMPO CON BUSCADOR --- */
+.ubicacion-campo-con-buscador {
+  position: relative;
+  z-index: 50;
+}
+/* --- ASEGURAR QUE EL CONTENEDOR PRINCIPAL TENGA ESPACIO --- */
+.contenedor-principal-formulario {
+  position: relative;
+}
+/* --- MEJORAR SPACING EN MOBILE --- */
+@media (max-width: 600px) {
+  .ubicacion-campo-con-buscador {
+    margin-bottom: 8px;
+  }
 }
 /* -------------------------------------------------------------------------- */
 /* Camara ubicaciones */

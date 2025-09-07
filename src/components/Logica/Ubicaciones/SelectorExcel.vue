@@ -89,7 +89,6 @@
           <ul class="lista-formatos">
             <li>Formatos soportados: .xlsx, .xls</li>
             <li>Debe tener 2 columnas: código y nombre</li>
-            <li>Primera fila para encabezados (opcional)</li>
           </ul>
         </div>
       </div>

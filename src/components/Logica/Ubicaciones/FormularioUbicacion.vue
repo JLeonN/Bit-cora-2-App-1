@@ -1,5 +1,5 @@
 <template>
-  <form class="formulario" @submit.prevent="gestionarEnvio">
+  <form ref="formularioRef" class="formulario" @submit.prevent="gestionarEnvio">
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
@@ -11,8 +11,8 @@
           :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
           @animationend="animarErrorCodigo = false"
           @input="manejarInputCodigo"
-          @focus="activarBuscador"
-          @blur="desactivarBuscador"
+          @focus="manejarEnfoqueCodigo"
+          @blur="manejarDesenfoqueCodigo"
         />
 
         <!-- Componente buscador -->
@@ -26,13 +26,15 @@
       <!-- input ubicacion -->
       <div class="ubicacion-campo">
         <input
+          ref="inputUbicacion"
           v-model="nuevaUbicacion"
           type="text"
           :placeholder="placeholderUbicacion"
           :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
           @animationend="animarErrorUbicacion = false"
           @input="restablecerPlaceholderUbicacion"
-          @blur="formatearUbicacion"
+          @focus="manejarEnfoqueUbicacion"
+          @blur="manejarDesenfoqueUbicacion"
         />
       </div>
 
@@ -62,6 +64,11 @@ import TresBotones from '../../Botones/TresBotones.vue'
 import { IconCamera } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
+
+// --- REFS DEL TEMPLATE ---
+const formularioRef = ref(null)
+const inputCodigo = ref(null)
+const inputUbicacion = ref(null)
 
 // --- ESTADO LOCAL DEL FORMULARIO ---
 const nuevoCodigo = ref('')
@@ -105,7 +112,20 @@ function limpiarFormulario() {
   mostrarBuscador.value = false
 }
 
-// --- FUNCIONES DEL BUSCADOR ---
+// --- FUNCIÓN DE SCROLL AUTOMÁTICO ---
+function moverFormularioArriba() {
+  if (!formularioRef.value) return
+
+  const rect = formularioRef.value.getBoundingClientRect()
+  const offset = 82 // píxeles desde arriba
+
+  window.scrollTo({
+    top: window.scrollY + rect.top - offset,
+    behavior: 'smooth',
+  })
+}
+
+// --- FUNCIONES DEL BUSCADOR Y ENFOQUE ---
 function manejarInputCodigo() {
   restablecerPlaceholderCodigo()
   // Si hay texto y el input está enfocado, mostrar buscador
@@ -116,22 +136,36 @@ function manejarInputCodigo() {
   }
 }
 
-function activarBuscador() {
+function manejarEnfoqueCodigo() {
   inputEnfocado.value = true
+
+  // Solo scroll automático, sin anclar
+  moverFormularioArriba()
+
   // Si ya hay texto suficiente, mostrar buscador inmediatamente
   if (nuevoCodigo.value.length >= 3) {
     mostrarBuscador.value = true
   }
 }
 
-function desactivarBuscador() {
+function manejarDesenfoqueCodigo() {
   inputEnfocado.value = false
+
   // Delay para permitir el click en las opciones del buscador
   setTimeout(() => {
     if (!inputEnfocado.value) {
       mostrarBuscador.value = false
     }
   }, 200)
+}
+
+function manejarEnfoqueUbicacion() {
+  // Solo scroll automático, sin anclar
+  moverFormularioArriba()
+}
+
+function manejarDesenfoqueUbicacion() {
+  formatearUbicacion()
 }
 
 function seleccionarArticuloDelBuscador(articulo) {
@@ -142,11 +176,8 @@ function seleccionarArticuloDelBuscador(articulo) {
 
   // Enfocar el siguiente input (ubicación)
   nextTick(() => {
-    const inputUbicacion = document.querySelector(
-      'input[placeholder*="ubicación"], input[placeholder*="Ubicación"]',
-    )
-    if (inputUbicacion) {
-      inputUbicacion.focus()
+    if (inputUbicacion.value) {
+      inputUbicacion.value.focus()
     }
   })
 }
@@ -181,7 +212,7 @@ function gestionarEnvio() {
     valido = false
   }
 
-  // Si no es válido, detenemos la ejecución.
+  // Si no es válido, detenemos la ejecución
   if (!valido) {
     setTimeout(() => (bloqueandoClick.value = false), 100)
     return
@@ -224,23 +255,3 @@ function procesarUbicacionesEscaneadas(ubicaciones) {
   cerrarCamara()
 }
 </script>
-
-<style scoped>
-/* --- ESTILO PARA EL CAMPO CON BUSCADOR --- */
-.ubicacion-campo-con-buscador {
-  position: relative;
-  z-index: 50;
-}
-
-/* --- ASEGURAR QUE EL CONTENEDOR PRINCIPAL TENGA ESPACIO --- */
-.contenedor-principal-formulario {
-  position: relative;
-}
-
-/* --- MEJORAR SPACING EN MOBILE --- */
-@media (max-width: 600px) {
-  .ubicacion-campo-con-buscador {
-    margin-bottom: 8px;
-  }
-}
-</style>
