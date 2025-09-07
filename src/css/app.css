@@ -18,6 +18,10 @@
 
   --sombra-boton: rgba(0, 0, 0, 0.4);
   --borde-boton: rgba(255, 255, 255, 0.12);
+
+  --color-carga: #ff9800; /* Naranja para carga */
+  --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
+  --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
 }
 
 body {
@@ -1469,7 +1473,7 @@ button {
 }
 .progreso-animado {
   height: 100%;
-  background: linear-gradient(45deg, #ff9800, #ffb74d);
+  background: var(--gradiente-progreso);
   animation: progreso-carga 2s infinite;
 }
 @keyframes progreso-carga {
@@ -1483,7 +1487,7 @@ button {
 .texto-carga {
   margin: 0;
   font-size: 14px;
-  color: #ff9800;
+  color: var(--color-carga);
 }
 /* Mensaje de error del selector */
 .mensaje-error-selector {
@@ -1796,5 +1800,161 @@ button {
     font-size: 0.8rem;
     margin-bottom: 4px;
   }
+}
+/* -------------------------------------------------------------------------- */
+/* BuscarExcel.vue - Componente de carga de base de datos */
+.contenedor-buscar-excel {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-superficie);
+}
+.boton-cargar-excel {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-acento);
+  color: var(--color-texto-principal);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+.boton-cargar-excel:hover:not(:disabled) {
+  background: var(--color-primario-claro);
+}
+.boton-cargar-excel:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.boton-cargando {
+  background: #ff9800 !important;
+}
+.boton-exito {
+  background: var(--color-exito) !important;
+}
+.boton-error {
+  background: var(--color-error) !important;
+}
+.info-estado {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--color-superficie);
+}
+.texto-info {
+  margin: 0;
+  font-size: 13px;
+}
+.texto-exito {
+  color: var(--color-exito);
+  background: color-mix(in oklab, var(--color-exito) 15%, var(--color-superficie));
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+.texto-neutral {
+  color: var(--color-texto-secundario);
+}
+.texto-cargando {
+  color: #f57c00;
+  background: color-mix(in oklab, #ff9800 15%, var(--color-superficie));
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+.mensaje-error-detallado {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--color-error) 15%, var(--color-superficie));
+  border-left: 4px solid var(--color-error);
+}
+.texto-error {
+  margin: 0 0 12px 0;
+  color: var(--color-error);
+  font-size: 13px;
+}
+.boton-debug {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-texto-secundario);
+  border-radius: 4px;
+  background: var(--color-superficie);
+  color: var(--color-texto-secundario);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.boton-debug:hover {
+  background: var(--color-texto-secundario);
+  color: var(--color-texto-principal);
+}
+/* Panel de ayuda */
+.panel-ayuda {
+  margin-top: 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.titulo-ayuda {
+  padding: 12px 16px;
+  background: color-mix(in oklab, var(--color-primario) 10%, var(--color-superficie));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--color-texto-principal);
+}
+.titulo-ayuda:hover {
+  background: color-mix(in oklab, var(--color-primario) 20%, var(--color-superficie));
+}
+.rotado {
+  transform: rotate(180deg);
+}
+.contenido-ayuda {
+  padding: 16px;
+  background: var(--color-superficie);
+}
+.paso-ayuda {
+  margin-bottom: 16px;
+}
+.paso-ayuda:last-child {
+  margin-bottom: 0;
+}
+.paso-ayuda h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--color-texto-principal);
+}
+.paso-ayuda ul,
+.paso-ayuda ol {
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+.paso-ayuda li {
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: var(--color-texto-secundario);
+}
+.paso-ayuda code {
+  background: color-mix(in oklab, var(--color-primario) 15%, var(--color-superficie));
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  color: var(--color-texto-principal);
+}
+.paso-ayuda p {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: var(--color-texto-secundario);
 }
 /* -------------------------------------------------------------------------- */

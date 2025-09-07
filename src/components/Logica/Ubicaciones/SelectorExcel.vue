@@ -120,6 +120,14 @@
         </div>
       </details>
     </div>
+
+    <!-- Modal confirmar limpieza -->
+    <ModalEliminar
+      v-if="mostrarModalEliminar"
+      texto="la base de datos cargada"
+      @confirmar="confirmarLimpieza"
+      @cerrar="cerrarModal"
+    />
   </div>
 </template>
 
@@ -142,6 +150,7 @@ import {
   obtenerArticulosCargados,
   reiniciarBaseDatos,
 } from '../../BaseDeDatos/LectorExcel.js'
+import ModalEliminar from '../../Modales/ModalEliminar.vue'
 
 // --- PROPS ---
 defineProps({
@@ -158,6 +167,7 @@ const mensajeError = ref('')
 const cantidadArticulos = ref(0)
 const informacionArchivo = ref(null)
 const mensajeCarga = ref('')
+const mostrarModalEliminar = ref(false)
 
 // --- EMITS ---
 const emit = defineEmits(['base-datos-cargada', 'error-carga', 'base-datos-limpia'])
@@ -241,12 +251,19 @@ async function abrirSelectorArchivo() {
 }
 
 function limpiarBaseDatos() {
-  if (confirm('¿Estás seguro de que quieres limpiar la base de datos cargada?')) {
-    reiniciarBaseDatos()
-    actualizarEstado()
-    emit('base-datos-limpia')
-    console.log('[SelectorExcel] Base de datos limpiada')
-  }
+  mostrarModalEliminar.value = true
+}
+
+function confirmarLimpieza() {
+  reiniciarBaseDatos()
+  actualizarEstado()
+  emit('base-datos-limpia')
+  console.log('[SelectorExcel] Base de datos limpiada')
+  mostrarModalEliminar.value = false
+}
+
+function cerrarModal() {
+  mostrarModalEliminar.value = false
 }
 
 function actualizarEstado() {
