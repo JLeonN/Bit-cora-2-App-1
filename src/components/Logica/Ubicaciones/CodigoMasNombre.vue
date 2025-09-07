@@ -22,14 +22,24 @@
           class="item-resultado-mejorado"
           @click="seleccionarArticulo(articulo)"
         >
-          <div
-            class="nombre-resultado-mejorado"
-            v-html="resaltarCoincidencia(articulo.nombre, busqueda)"
-          ></div>
-          <div
-            class="codigo-resultado-mejorado"
-            v-html="resaltarCoincidencia(articulo.codigo, busqueda)"
-          ></div>
+          <div class="nombre-resultado-mejorado">
+            <span
+              v-for="(parte, idx) in obtenerPartesTextoResaltado(articulo.nombre, busqueda)"
+              :key="idx"
+              :class="{ 'texto-resaltado-mejorado': parte.resaltado }"
+            >
+              {{ parte.texto }}
+            </span>
+          </div>
+          <div class="codigo-resultado-mejorado">
+            <span
+              v-for="(parte, idx) in obtenerPartesTextoResaltado(articulo.codigo, busqueda)"
+              :key="idx"
+              :class="{ 'texto-resaltado-mejorado': parte.resaltado }"
+            >
+              {{ parte.texto }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -142,24 +152,65 @@ function seleccionarArticulo(articulo) {
   emit('articulo-seleccionado', articulo)
 }
 
-function resaltarCoincidencia(texto, busqueda) {
+// Función corregida para manejar el resaltado sin v-html
+function obtenerPartesTextoResaltado(texto, busqueda) {
   if (!busqueda || busqueda.length < caracteresMinimos) {
-    return texto
+    return [{ texto, resaltado: false }]
   }
 
   const palabras = busqueda.trim().split(/\s+/).filter(Boolean)
-  let textoResaltado = texto
+  const partes = []
+  let posicionActual = 0
 
-  // Resaltar cada palabra por separado
+  // Encontrar todas las coincidencias
+  const coincidencias = []
+
   palabras.forEach((palabra) => {
-    const regex = new RegExp(`(${escaparRegex(palabra)})`, 'gi')
-    textoResaltado = textoResaltado.replace(
-      regex,
-      '<span class="texto-resaltado-mejorado">$1</span>',
-    )
+    const regex = new RegExp(escaparRegex(palabra), 'gi')
+    let match
+
+    while ((match = regex.exec(texto)) !== null) {
+      coincidencias.push({
+        inicio: match.index,
+        fin: match.index + match[0].length,
+        textoCoincidente: match[0],
+      })
+    }
   })
 
-  return textoResaltado
+  // Ordenar coincidencias por posición
+  coincidencias.sort((a, b) => a.inicio - b.inicio)
+
+  // Crear partes del texto
+  coincidencias.forEach((coincidencia) => {
+    // Agregar texto antes de la coincidencia
+    if (coincidencia.inicio > posicionActual) {
+      partes.push({
+        texto: texto.substring(posicionActual, coincidencia.inicio),
+        resaltado: false,
+      })
+    }
+
+    // Agregar la coincidencia resaltada (evitar duplicados)
+    if (coincidencia.inicio >= posicionActual) {
+      partes.push({
+        texto: coincidencia.textoCoincidente,
+        resaltado: true,
+      })
+      posicionActual = coincidencia.fin
+    }
+  })
+
+  // Agregar texto restante
+  if (posicionActual < texto.length) {
+    partes.push({
+      texto: texto.substring(posicionActual),
+      resaltado: false,
+    })
+  }
+
+  // Si no hay partes, devolver el texto completo
+  return partes.length > 0 ? partes : [{ texto, resaltado: false }]
 }
 
 function escaparRegex(texto) {
