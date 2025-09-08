@@ -16,9 +16,10 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.  
 - **AjustarUbicaciones.vue:** Tabla para gestionar ubicaciones de artículos, con formulario responsive, edición y eliminación.  
   - Agregar ubicaciones manualmente o usando la cámara.  
-  - Botón de **enviar Excel** ya funcional.  
+  - Botón de **enviar Excel** ya funcional.
+  - **Integra SelectorExcel** para cargar base de datos de artículos.
 - **ModalEliminar.vue:** Modal genérico, reutilizable tanto en pedidos como en ubicaciones.  
-- **CodigoMasNombre.vue:** Nuevo componente que implementa la lógica de búsqueda en base de datos, mostrando coincidencias dinámicamente.  
+- **CodigoMasNombre.vue:** Componente que implementa la lógica de búsqueda en base de datos, mostrando coincidencias dinámicamente con **base de datos cargada desde Excel**.  
 
 ---
 
@@ -28,7 +29,9 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
 - Uso de **@capacitor/filesystem** para guardar Excel en Base64 en `Directory.Cache`.  
 - Nombre de archivo dinámico con rango de fechas (`Pedidos_DD-MM-AAAA_a_DD-MM-AAAA.xlsx`).  
-- Nuevo módulo: **ExportarUbicacionesExcel.js** para manejar exportación y envío de Excel desde el módulo de ubicaciones.  
+- **ExportarUbicacionesExcel.js** para manejar exportación y envío de Excel desde el módulo de ubicaciones.  
+  - **Integración con base de datos cargada**: Obtiene nombres de artículos automáticamente usando `obtenerNombreArticulo()`.
+  - Genera columnas: `articulo`, `sub1`, `sub2`, `deposito`, `ubic`, `Descripcion`.
 
 ---
 
@@ -43,27 +46,80 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 #### 📷 **Integración de Cámara y Escaneo**
 - Implementación con **@zxing/library** dentro de un `<div>` con botones personalizados.  
 - **CamaraPedidos.vue** maneja permisos de cámara, escaneo en tiempo real y muestra miniatura de la última captura.  
+- **CamaraEscaneo.vue** y **CamaraUbicaciones.vue** para escaneo específico de ubicaciones.
 - Optimización del escaneo para códigos de barra y QR ✅.  
 
 ---
 
 #### 🗂️ **Módulo de Ubicaciones**
-- **FormularioUbicacion.vue:** Alta/edición responsive.  
-- **TablaUbicaciones.vue:** Lista de ubicaciones con acciones.  
+- **FormularioUbicacion.vue:** Alta/edición responsive con **integración del buscador inteligente**.
+  - Scroll automático al enfocar inputs.
+  - Formateo automático de ubicaciones (espacios → guiones).
+  - Integración con **CodigoMasNombre.vue** para autocompletado.
+- **TablaUbicaciones.vue:** Lista de ubicaciones con acciones y **detección de códigos duplicados**.
+  - Muestra nombres de artículos obtenidos de la base de datos.
+  - Resalta visualmente códigos repetidos.
+  - Contador de códigos duplicados.
 - **ModalEditarUbicacion.vue:** Edición puntual.  
 - **ModalEliminar.vue:** Confirmación reutilizada.  
-- **ExportarUbicacionesExcel.js:** Exportación de ubicaciones a Excel.  
+- **ExportarUbicacionesExcel.js:** Exportación de ubicaciones a Excel con nombres automáticos.  
 - **CamaraUbicaciones.vue:** Escaneo rápido de ubicaciones.  
 
 ---
 
-#### 🔎 **Nueva Función: Búsqueda de Artículos**
-- Se implementó una **base de datos local** con un array de artículos (`código` + `nombre`).  
-- Nuevo componente **CodigoMasNombre.vue** maneja esta lógica.  
-- Cuando el usuario escribe en el formulario de **ubicaciones**, aparece un **rectángulo flotante** con el título **“Artículos encontrados”**.  
-- Ese rectángulo muestra **5 coincidencias más cercanas**, ya sea que el usuario escriba un código o parte del nombre (ejemplo: “manillar”).  
-- A medida que el usuario escribe, la lista se ajusta dinámicamente.  
-- Si no hay coincidencias, aparece el mensaje **“Artículos no encontrados”**.  
+#### 📊 **Sistema de Base de Datos Excel**
+- **SelectorExcel.vue:** Componente completo para seleccionar y cargar archivos Excel.
+  - Interfaz visual con estados: no-cargado, cargando, cargado, error.
+  - **Selector nativo de archivos** con validación de formato (.xlsx, .xls).
+  - **Información del archivo**: nombre, tamaño, cantidad de artículos.
+  - **Acciones**: cambiar archivo, limpiar base de datos.
+  - **Estados visuales**: iconos, barras de progreso, mensajes de error.
+  - **Preview de datos** (modo desarrollo).
+  - **Modal de confirmación** para limpiar base de datos.
+
+- **LectorExcel.js:** Lógica central para procesar archivos Excel.
+  - **Selector manual de archivos** usando `input[type="file"]`.
+  - **Procesamiento con XLSX**: lectura como ArrayBuffer.
+  - **Validaciones**: formato de archivo, estructura de datos.
+  - **Estado global**: artículos cargados, estado de carga, información del archivo.
+  - **Funciones exportadas**:
+    - `cargarArticulosDesdeExcel()`: función principal.
+    - `obtenerArticulosCargados()`: obtiene artículos cargados.
+    - `obtenerEstadoCarga()`: estado actual de la base.
+    - `obtenerInformacionArchivo()`: info del archivo.
+    - `reiniciarBaseDatos()`: limpia todo.
+    - `verificarSoporteSelector()`: valida soporte del navegador.
+
+---
+
+#### 🔎 **Sistema de Búsqueda Inteligente**
+- **CodigoMasNombre.vue:** Buscador con base de datos Excel cargada.
+  - **Monitoreo automático** de cambios en la base de datos (polling cada 1s).
+  - **Búsqueda priorizada**:
+    1. Códigos que empiecen exactamente con la búsqueda.
+    2. Nombres que contengan todas las palabras.
+    3. Códigos que contengan la búsqueda.
+    4. Nombres con coincidencias parciales.
+  - **Interfaz visual**:
+    - Título dinámico según estado de base de datos.
+    - **Resaltado de texto** en coincidencias.
+    - Estados: "Artículos encontrados", "Artículo inexistente", "Base de datos no cargada".
+  - **Máximo 3 resultados** por búsqueda.
+  - **Mínimo 3 caracteres** para activar búsqueda.
+  - **Detección automática** de base de datos cargada/descargada.
+
+---
+
+#### 🎨 **Integración Visual y UX**
+- **Estados visuales claros** en SelectorExcel:
+  - Botón principal cambia color según estado.
+  - Iconos específicos: carpeta, cargando, error, base de datos.
+  - **Tarjeta de archivo** con estadísticas y acciones.
+- **Feedback al usuario**:
+  - Barras de progreso durante carga.
+  - Mensajes de error específicos y claros.
+  - Confirmación antes de limpiar datos.
+- **Responsive design** en todos los componentes.
 
 ---
 
@@ -76,7 +132,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Reutilización de componentes (botones, modales, cámara).  
 - Feedback al usuario con notificaciones.  
 - Gestión completa de ubicaciones.  
-- **Nueva búsqueda inteligente de artículos con coincidencias dinámicas.**  
+- **✅ Sistema completo de carga y gestión de base de datos Excel**.
+- **✅ Búsqueda inteligente de artículos con coincidencias dinámicas y base de datos**.
+- **✅ Exportación mejorada con nombres automáticos de artículos**.
+- **✅ Detección y visualización de códigos duplicados**.
+- **✅ UX mejorada con scroll automático y formateo**.
 
 ---
 
@@ -85,11 +145,13 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Mejorar UI/UX general.  
 - Implementar control de stock con exportación a Excel.  
 - Ajustar detalles de cámara y modales.  
-- Mejorar presentación visual del rectángulo de coincidencias (animaciones, estilos).  
+- **Optimizar rendimiento** del buscador para bases de datos grandes.
+- **Implementar caché** para búsquedas frecuentes.
+- **Mejorar validaciones** de archivos Excel (estructura de columnas).
 
+---
 
-### 📂 **Estructura de Archivos
-
+### 📂 **Estructura de Archivos**
 src
 ├── App.vue
 ├── css
@@ -109,7 +171,8 @@ src
 │   │   ├── almacenamiento.js
 │   │   ├── usoAlmacenamientoCapacitor.js
 │   │   ├── usoAlmacenamientoPedidos.js
-│   │   └── usoAlmacenamientoUbicaciones.js
+│   │   ├── usoAlmacenamientoUbicaciones.js
+│   │   └── LectorExcel.js
 │   ├── Botones
 │   │   ├── BotonFlotante.vue
 │   │   ├── BotonesDescargarEnviar.vue
@@ -131,7 +194,8 @@ src
 │   │       ├── CodigoMasNombre.vue
 │   │       ├── ExportarUbicacionesExcel.js
 │   │       ├── FormularioUbicacion.vue
-│   │       └── TablaUbicaciones.vue
+│   │       ├── TablaUbicaciones.vue
+│   │       └── SelectorExcel.vue
 │   ├── Modales
 │   │   ├── ModalEditarPedido.vue
 │   │   ├── ModalEditarUbicacion.vue
@@ -140,3 +204,14 @@ src
 │   └── Pedidos
 │       ├── HistorialPedidos.vue
 │       └── PedidosRealizados.vue
+```
+
+---
+
+### 🔧 **Tecnologías y Dependencias**
+- **Framework**: Vue 3 + Quasar
+- **Capacitor**: Filesystem, Preferences
+- **XLSX**: Procesamiento de archivos Excel
+- **@zxing/library**: Escaneo de códigos
+- **@tabler/icons-vue**: Iconografía
+- **Target**: Android APK → Google Play Store
