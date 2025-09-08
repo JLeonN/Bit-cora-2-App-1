@@ -31,12 +31,12 @@
               <q-item-section>Pedidos</q-item-section>
             </q-item>
 
-            <!-- Ajustar ubicaciones -->
+            <!-- Ubicaciones -->
             <q-item clickable v-ripple to="/AjustarUbicaciones">
               <q-item-section avatar>
                 <IconMapRoute name="send" />
               </q-item-section>
-              <q-item-section>Ajustar ubicaciones</q-item-section>
+              <q-item-section>Ubicaciones</q-item-section>
             </q-item>
 
             <!-- Otro 2 -->

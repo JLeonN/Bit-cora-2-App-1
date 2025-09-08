@@ -7,10 +7,10 @@
         Mis pedidos
       </button>
 
-      <!-- Botón Ajustar ubicaciones -->
+      <!-- Botón Ubicaciones -->
       <button class="boton-inicio" @click="IrAjustarUbicaciones">
         <IconMapRoute class="icono-boton" />
-        Ajustar ubicaciones
+        Ubicaciones
       </button>
     </div>
   </q-page>

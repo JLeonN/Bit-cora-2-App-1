@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-tabla">
-    <h2 class="titulo-tabla">Ajustar ubicaciones</h2>
+    <h2 class="titulo-tabla">Ubicaciones</h2>
 
     <!-- Selector de Excel para cargar base de datos -->
     <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
