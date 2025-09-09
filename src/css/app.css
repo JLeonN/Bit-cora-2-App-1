@@ -695,6 +695,21 @@ button {
     gap: 10px;
   }
 }
+/* TABLET */
+@media (max-width: 964px) and (min-width: 601px) {
+  .formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .contenedor-principal-formulario {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px;
+    align-items: end;
+  }
+}
 /* Botón borrar todo */
 .contenedor-boton-borrar-todo {
   display: flex;
