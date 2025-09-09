@@ -696,7 +696,7 @@ button {
   }
 }
 /* TABLET */
-@media (max-width: 964px) and (min-width: 601px) {
+@media (max-width: 1200px) and (min-width: 601px) {
   .formulario {
     display: flex;
     flex-direction: column;
@@ -2020,3 +2020,4 @@ button {
 .ubicacion-campo {
   position: relative;
 }
+/* -------------------------------------------------------------------------- */
