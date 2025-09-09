@@ -148,6 +148,7 @@ import {
   obtenerInformacionArchivo,
   obtenerArticulosCargados,
   reiniciarBaseDatos,
+  inicializarBaseDatos,
 } from '../../BaseDeDatos/LectorExcel.js'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
 
@@ -253,8 +254,8 @@ function limpiarBaseDatos() {
   mostrarModalEliminar.value = true
 }
 
-function confirmarLimpieza() {
-  reiniciarBaseDatos()
+async function confirmarLimpieza() {
+  await reiniciarBaseDatos() // ** AHORA ES ASYNC **
   actualizarEstado()
   emit('base-datos-limpia')
   console.log('[SelectorExcel] Base de datos limpiada')
@@ -279,8 +280,22 @@ function actualizarEstado() {
 }
 
 // --- LIFECYCLE ---
-onMounted(() => {
+onMounted(async () => {
   console.log('[SelectorExcel] Componente montado')
+
+  // ** INICIALIZAR BASE DE DATOS AL MONTAR **
+  await inicializarBaseDatos()
+
+  // Actualizar estado después de la inicialización
   actualizarEstado()
+
+  // Si se cargó automáticamente, emitir evento
+  if (estadoCarga.value === 'cargado') {
+    emit('base-datos-cargada', {
+      cantidad: cantidadArticulos.value,
+      mensaje: `Base de datos cargada automáticamente: ${cantidadArticulos.value} artículos`,
+      archivo: informacionArchivo.value,
+    })
+  }
 })
 </script>

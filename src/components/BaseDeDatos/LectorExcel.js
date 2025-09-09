@@ -1,10 +1,84 @@
-// LectorExcel.js - Con selector manual de archivos
+// LectorExcel.js - Con persistencia automática y carga al inicializar
 import * as XLSX from 'xlsx'
+import { Preferences } from '@capacitor/preferences'
 
 // Variable global para almacenar los artículos cargados
 let articulosDelExcel = []
 let estadoCarga = 'no-cargado' // 'no-cargado', 'cargando', 'cargado', 'error'
 let informacionArchivo = null // Info del archivo seleccionado
+
+// Clave para persistir en Preferences
+const CLAVE_BASE_DATOS_PERSISTENTE = 'base_datos_excel_persistente'
+
+// --- FUNCIONES DE PERSISTENCIA ---
+async function guardarBaseDatosEnPreferences() {
+  try {
+    const datosAGuardar = {
+      articulosCargados: articulosDelExcel,
+      informacionArchivo: informacionArchivo,
+      fechaCarga: Date.now(),
+      version: '1.0',
+    }
+
+    await Preferences.set({
+      key: CLAVE_BASE_DATOS_PERSISTENTE,
+      value: JSON.stringify(datosAGuardar),
+    })
+
+    console.log(`[LectorExcel] Base de datos persistida: ${articulosDelExcel.length} artículos`)
+  } catch (error) {
+    console.error('[LectorExcel] Error al persistir base de datos:', error)
+  }
+}
+
+async function cargarBaseDatosDesdePreferences() {
+  try {
+    const resultado = await Preferences.get({
+      key: CLAVE_BASE_DATOS_PERSISTENTE,
+    })
+
+    if (!resultado.value) {
+      console.log('[LectorExcel] No hay base de datos persistida')
+      return false
+    }
+
+    const datosGuardados = JSON.parse(resultado.value)
+
+    // Validar estructura de datos
+    if (!datosGuardados.articulosCargados || !Array.isArray(datosGuardados.articulosCargados)) {
+      console.log('[LectorExcel] Datos persistidos inválidos, limpiando...')
+      await limpiarBaseDatosPersistida()
+      return false
+    }
+
+    // Restaurar datos
+    articulosDelExcel = datosGuardados.articulosCargados
+    informacionArchivo = datosGuardados.informacionArchivo
+    estadoCarga = articulosDelExcel.length > 0 ? 'cargado' : 'no-cargado'
+
+    console.log(`[LectorExcel] Base de datos cargada desde persistencia:`)
+    console.log(`- Artículos: ${articulosDelExcel.length}`)
+    console.log(`- Archivo: ${informacionArchivo?.nombre || 'Sin info'}`)
+    console.log(`- Fecha carga: ${new Date(datosGuardados.fechaCarga || 0).toLocaleString()}`)
+
+    return true
+  } catch (error) {
+    console.error('[LectorExcel] Error al cargar base persistida:', error)
+    await limpiarBaseDatosPersistida()
+    return false
+  }
+}
+
+async function limpiarBaseDatosPersistida() {
+  try {
+    await Preferences.remove({
+      key: CLAVE_BASE_DATOS_PERSISTENTE,
+    })
+    console.log('[LectorExcel] Base de datos persistida eliminada')
+  } catch (error) {
+    console.error('[LectorExcel] Error al limpiar base persistida:', error)
+  }
+}
 
 // --- FUNCIÓN PARA CREAR INPUT DE ARCHIVO ---
 function crearSelectorDeArchivo() {
@@ -130,6 +204,9 @@ export async function cargarArticulosDesdeExcel() {
     articulosDelExcel = articulosProcesados
     estadoCarga = 'cargado'
 
+    // ** PERSISTIR AUTOMÁTICAMENTE **
+    await guardarBaseDatosEnPreferences()
+
     console.log(`¡Carga exitosa!`)
     console.log(`Estadísticas:`)
     console.log(`- Archivo: ${informacionArchivo.nombre}`)
@@ -213,6 +290,22 @@ function procesarDatosExcel(datosJson) {
   return articulosProcesados
 }
 
+// --- FUNCIÓN DE INICIALIZACIÓN AUTOMÁTICA ---
+export async function inicializarBaseDatos() {
+  if (estadoCarga !== 'no-cargado') {
+    console.log('[LectorExcel] Base de datos ya inicializada')
+    return
+  }
+
+  console.log('[LectorExcel] Inicializando base de datos...')
+
+  const cargaExitosa = await cargarBaseDatosDesdePreferences()
+
+  if (!cargaExitosa) {
+    console.log('[LectorExcel] No hay base de datos persistida, esperando carga manual')
+  }
+}
+
 // --- FUNCIONES AUXILIARES ---
 export function obtenerArticulosCargados() {
   return articulosDelExcel
@@ -231,11 +324,15 @@ export function obtenerInformacionArchivo() {
   return informacionArchivo
 }
 
-export function reiniciarBaseDatos() {
+export async function reiniciarBaseDatos() {
   articulosDelExcel = []
   estadoCarga = 'no-cargado'
   informacionArchivo = null
-  console.log('Base de datos reiniciada')
+
+  // Limpiar persistencia
+  await limpiarBaseDatosPersistida()
+
+  console.log('Base de datos reiniciada y persistencia limpiada')
 }
 
 // --- FUNCIÓN PARA VERIFICAR SOPORTE DEL NAVEGADOR ---
@@ -249,3 +346,9 @@ export function verificarSoporteSelector() {
     inputFile: tieneInputFile,
   }
 }
+
+// --- INICIALIZACIÓN AUTOMÁTICA AL IMPORTAR EL MÓDULO ---
+// Se ejecuta automáticamente cuando se importa el módulo
+setTimeout(() => {
+  inicializarBaseDatos()
+}, 100)

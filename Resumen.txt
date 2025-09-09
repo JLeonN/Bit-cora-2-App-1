@@ -41,6 +41,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - `usoAlmacenamientoPedidos.js` y `usoAlmacenamientoUbicaciones.js` para modularizar la lógica.  
 - Rutas corregidas para evitar errores de imports dinámicos (404).
 - **recordarUltimaTipografia.js**: Módulo para persistir la última ubicación ingresada entre sesiones.
+- **✅ NUEVA: Persistencia automática de base de datos Excel** - Los artículos se guardan automáticamente en `@capacitor/preferences` y se cargan al inicializar sin intervención del usuario.
 
 ---
 
@@ -83,19 +84,27 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Estados visuales**: iconos, barras de progreso, mensajes de error.
   - **Preview de datos** (modo desarrollo).
   - **Modal de confirmación** para limpiar base de datos.
+  - **✅ NUEVA: Carga automática** - Al montar el componente inicializa automáticamente la base de datos desde persistencia.
 
 - **LectorExcel.js:** Lógica central para procesar archivos Excel.
   - **Selector manual de archivos** usando `input[type="file"]`.
   - **Procesamiento con XLSX**: lectura como ArrayBuffer.
   - **Validaciones**: formato de archivo, estructura de datos.
   - **Estado global**: artículos cargados, estado de carga, información del archivo.
+  - **✅ NUEVA: Persistencia automática**:
+    - Los artículos se guardan automáticamente en `@capacitor/preferences` después de cargar.
+    - Se restauran automáticamente al inicializar el módulo (función `inicializarBaseDatos()`).
+    - Limpieza automática si hay errores o datos corruptos.
+    - **Sin intervención del usuario** - Una vez cargado, siempre disponible.
   - **Funciones exportadas**:
     - `cargarArticulosDesdeExcel()`: función principal.
     - `obtenerArticulosCargados()`: obtiene artículos cargados.
     - `obtenerEstadoCarga()`: estado actual de la base.
     - `obtenerInformacionArchivo()`: info del archivo.
-    - `reiniciarBaseDatos()`: limpia todo.
+    - `reiniciarBaseDatos()`: limpia todo (ahora async).
     - `verificarSoporteSelector()`: valida soporte del navegador.
+    - **✅ NUEVA: `inicializarBaseDatos()`**: carga automática desde persistencia.
+  - **✅ NUEVA: Inicialización automática**: Se ejecuta automáticamente al importar el módulo con `setTimeout`.
 
 ---
 
@@ -114,6 +123,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Máximo 3 resultados** por búsqueda.
   - **Mínimo 3 caracteres** para activar búsqueda.
   - **Detección automática** de base de datos cargada/descargada.
+  - **✅ MEJORADO: Compatible con persistencia automática** - Detecta automáticamente cuando la base se carga desde persistencia.
 
 ---
 
@@ -143,6 +153,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Barras de progreso durante carga.
   - Mensajes de error específicos y claros.
   - Confirmación antes de limpiar datos.
+  - **✅ NUEVO: Sin interrupciones** - La base se carga automáticamente en segundo plano.
 - **Responsive design** en todos los componentes.
 - **✅ NUEVO: Botones de limpiar ubicación**:
   - IconTrash consistente con el resto de la aplicación.
@@ -169,6 +180,9 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **✅ Sistema de recordar última ubicación para workflow optimizado**.
 - **✅ Persistencia de ubicaciones entre sesiones de la app**.
 - **✅ Botones de limpieza con iconografía consistente y efectos visuales**.
+- **✅ NUEVA: Persistencia automática de base de datos Excel** - Se guarda y restaura automáticamente sin intervención del usuario.
+- **✅ NUEVA: Inicialización automática** - La base de datos se carga automáticamente al iniciar la aplicación.
+- **✅ NUEVA: UX sin fricciones** - El usuario carga el archivo una vez y queda disponible para siempre.
 
 ---
 
