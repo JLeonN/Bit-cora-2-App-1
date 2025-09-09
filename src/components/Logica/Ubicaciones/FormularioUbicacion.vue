@@ -36,6 +36,17 @@
           @focus="manejarEnfoqueUbicacion"
           @blur="manejarDesenfoqueUbicacion"
         />
+
+        <!-- Botón para limpiar ubicación -->
+        <button
+          v-if="nuevaUbicacion"
+          type="button"
+          class="boton-limpiar-ubicacion"
+          @click="limpiarUbicacionRecordada"
+          title="Limpiar ubicación"
+        >
+          <IconTrash :size="16" />
+        </button>
       </div>
 
       <div class="contenedor-botones-accion">
@@ -59,11 +70,16 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
-import { IconCamera } from '@tabler/icons-vue'
+import { IconCamera, IconTrash } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
+import {
+  guardarUltimaUbicacion,
+  obtenerUltimaUbicacion,
+  limpiarUltimaUbicacion,
+} from './recordarUltimaTipografia.js'
 
 // --- REFS DEL TEMPLATE ---
 const formularioRef = ref(null)
@@ -104,12 +120,11 @@ function restablecerPlaceholderUbicacion() {
   placeholderUbicacion.value = 'Ubicación'
 }
 
-function limpiarFormulario() {
-  nuevoCodigo.value = ''
+// --- FUNCIÓN PARA LIMPIAR UBICACIÓN RECORDADA ---
+async function limpiarUbicacionRecordada() {
   nuevaUbicacion.value = ''
-  restablecerPlaceholderCodigo()
-  restablecerPlaceholderUbicacion()
-  mostrarBuscador.value = false
+  await limpiarUltimaUbicacion()
+  console.log('[FormularioUbicacion] Ubicación recordada limpiada')
 }
 
 // --- FUNCIÓN DE SCROLL AUTOMÁTICO ---
@@ -194,7 +209,7 @@ function formatearUbicacion() {
 }
 
 // --- LÓGICA DE ENVÍO Y VALIDACIÓN ---
-function gestionarEnvio() {
+async function gestionarEnvio() {
   if (bloqueandoClick.value) return
   bloqueandoClick.value = true
 
@@ -221,14 +236,19 @@ function gestionarEnvio() {
   // --- FORMATEAMOS LA UBICACIÓN ANTES DE ENVIAR ---
   formatearUbicacion()
 
+  // GUARDAR LA ÚLTIMA UBICACIÓN ANTES DE EMITIR
+  await guardarUltimaUbicacion(nuevaUbicacion.value)
+
   // Emitimos los datos al padre
   emit('ubicacion-agregada', {
     codigo: nuevoCodigo.value.trim().toUpperCase(),
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
-  // Limpiamos el formulario
-  limpiarFormulario()
+  // Limpiar solo el código, mantener la ubicación para el próximo
+  nuevoCodigo.value = ''
+  restablecerPlaceholderCodigo()
+  mostrarBuscador.value = false
 
   // --- DESBLOQUEAMOS EL CLICK ---
   setTimeout(() => (bloqueandoClick.value = false), 100)
@@ -254,4 +274,14 @@ function procesarUbicacionesEscaneadas(ubicaciones) {
   // Cerramos la cámara después de procesar
   cerrarCamara()
 }
+
+// --- LIFECYCLE ---
+onMounted(async () => {
+  // CARGAR ÚLTIMA UBICACIÓN AL INICIAR
+  const ultimaUbicacion = await obtenerUltimaUbicacion()
+  if (ultimaUbicacion) {
+    nuevaUbicacion.value = ultimaUbicacion
+    console.log(`[FormularioUbicacion] Cargada última ubicación: ${ultimaUbicacion}`)
+  }
+})
 </script>

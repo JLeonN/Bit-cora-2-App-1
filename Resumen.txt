@@ -39,7 +39,8 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Persistencia con **@capacitor/preferences**.  
 - Manejo centralizado en `almacenamiento.js`.  
 - `usoAlmacenamientoPedidos.js` y `usoAlmacenamientoUbicaciones.js` para modularizar la lógica.  
-- Rutas corregidas para evitar errores de imports dinámicos (404).  
+- Rutas corregidas para evitar errores de imports dinámicos (404).
+- **recordarUltimaTipografia.js**: Módulo para persistir la última ubicación ingresada entre sesiones.
 
 ---
 
@@ -47,7 +48,8 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Implementación con **@zxing/library** dentro de un `<div>` con botones personalizados.  
 - **CamaraPedidos.vue** maneja permisos de cámara, escaneo en tiempo real y muestra miniatura de la última captura.  
 - **CamaraEscaneo.vue** y **CamaraUbicaciones.vue** para escaneo específico de ubicaciones.
-- Optimización del escaneo para códigos de barra y QR ✅.  
+- Optimización del escaneo para códigos de barra y QR ✅.
+- **Funcionalidad mejorada**: Recordar última ubicación durante escaneos consecutivos.
 
 ---
 
@@ -56,6 +58,9 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Scroll automático al enfocar inputs.
   - Formateo automático de ubicaciones (espacios → guiones).
   - Integración con **CodigoMasNombre.vue** para autocompletado.
+  - **✅ NUEVO: Recordar última ubicación** - Carga automáticamente la última ubicación usada.
+  - **✅ NUEVO: Botón IconTrash** para limpiar ubicación recordada cuando se cambia de zona.
+  - **✅ NUEVO: Mantener ubicación** entre artículos consecutivos (solo limpia el código).
 - **TablaUbicaciones.vue:** Lista de ubicaciones con acciones y **detección de códigos duplicados**.
   - Muestra nombres de artículos obtenidos de la base de datos.
   - Resalta visualmente códigos repetidos.
@@ -63,7 +68,9 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **ModalEditarUbicacion.vue:** Edición puntual.  
 - **ModalEliminar.vue:** Confirmación reutilizada.  
 - **ExportarUbicacionesExcel.js:** Exportación de ubicaciones a Excel con nombres automáticos.  
-- **CamaraUbicaciones.vue:** Escaneo rápido de ubicaciones.  
+- **CamaraUbicaciones.vue:** Escaneo rápido de ubicaciones.
+  - **✅ NUEVO: Recordar ubicación** durante escaneos múltiples.
+  - **✅ NUEVO: Mantener ubicación** entre artículos (workflow optimizado).
 
 ---
 
@@ -110,6 +117,23 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
+#### 💾 **Sistema de Recordar Ubicaciones**
+- **recordarUltimaTipografia.js:** Módulo dedicado para gestionar la última ubicación.
+  - **Funciones principales**:
+    - `guardarUltimaUbicacion()`: Persiste la ubicación en Capacitor Preferences.
+    - `obtenerUltimaUbicacion()`: Recupera la ubicación guardada.
+    - `limpiarUltimaUbicacion()`: Elimina la ubicación recordada.
+  - **Persistencia entre sesiones** usando `@capacitor/preferences`.
+  - **Formateo automático**: Convierte a mayúsculas y limpia espacios.
+  
+- **Workflow optimizado para ubicaciones**:
+  - **Carga automática**: Al abrir formulario/cámara se carga la última ubicación.
+  - **Solo limpia código**: Después de agregar un artículo, mantiene la ubicación.
+  - **Botón de limpieza**: IconTrash para cambiar de zona rápidamente.
+  - **Ideal para inventarios**: Múltiples artículos en la misma ubicación física.
+
+---
+
 #### 🎨 **Integración Visual y UX**
 - **Estados visuales claros** en SelectorExcel:
   - Botón principal cambia color según estado.
@@ -120,6 +144,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Mensajes de error específicos y claros.
   - Confirmación antes de limpiar datos.
 - **Responsive design** en todos los componentes.
+- **✅ NUEVO: Botones de limpiar ubicación**:
+  - IconTrash consistente con el resto de la aplicación.
+  - Efectos hover con transiciones suaves.
+  - Posicionamiento absoluto dentro del input.
+  - CSS unificado en archivo principal.
 
 ---
 
@@ -137,6 +166,9 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **✅ Exportación mejorada con nombres automáticos de artículos**.
 - **✅ Detección y visualización de códigos duplicados**.
 - **✅ UX mejorada con scroll automático y formateo**.
+- **✅ Sistema de recordar última ubicación para workflow optimizado**.
+- **✅ Persistencia de ubicaciones entre sesiones de la app**.
+- **✅ Botones de limpieza con iconografía consistente y efectos visuales**.
 
 ---
 
@@ -148,6 +180,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **Optimizar rendimiento** del buscador para bases de datos grandes.
 - **Implementar caché** para búsquedas frecuentes.
 - **Mejorar validaciones** de archivos Excel (estructura de columnas).
+- **Agregar estadísticas** de ubicaciones más utilizadas.
 
 ---
 
@@ -195,7 +228,8 @@ src
 │   │       ├── ExportarUbicacionesExcel.js
 │   │       ├── FormularioUbicacion.vue
 │   │       ├── TablaUbicaciones.vue
-│   │       └── SelectorExcel.vue
+│   │       ├── SelectorExcel.vue
+│   │       └── recordarUltimaTipografia.js
 │   ├── Modales
 │   │   ├── ModalEditarPedido.vue
 │   │   ├── ModalEditarUbicacion.vue

@@ -73,10 +73,21 @@
               :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
               ref="inputUbicacionRef"
               @animationend="animarErrorUbicacion = false"
-              @input="restablercerPlaceholderUbicacion"
+              @input="restablecerPlaceholderUbicacion"
               @blur="formatearUbicacion"
               :disabled="editandoCodigo"
             />
+
+            <!-- Botón para limpiar ubicación -->
+            <button
+              v-if="nuevaUbicacion && !editandoCodigo"
+              type="button"
+              class="boton-limpiar-ubicacion-camara"
+              @click="limpiarUbicacionRecordada"
+              title="Limpiar ubicación"
+            >
+              <IconTrash :size="16" />
+            </button>
           </div>
 
           <!-- contenedor botones -->
@@ -96,13 +107,24 @@
 
 <script setup>
 import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { IconArrowRight, IconSquareRoundedMinus, IconPencil, IconCheck } from '@tabler/icons-vue'
+import {
+  IconArrowRight,
+  IconSquareRoundedMinus,
+  IconPencil,
+  IconCheck,
+  IconTrash,
+} from '@tabler/icons-vue'
 import {
   BrowserMultiFormatReader,
   BarcodeFormat,
   DecodeHintType,
   NotFoundException,
 } from '@zxing/library'
+import {
+  guardarUltimaUbicacion,
+  obtenerUltimaUbicacion,
+  limpiarUltimaUbicacion,
+} from './recordarUltimaTipografia.js'
 
 const emit = defineEmits(['cancelar', 'finalizar'])
 
@@ -129,6 +151,13 @@ const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 const errorCodigo = ref(false)
 const animarErrorCodigo = ref(false)
+
+// --- FUNCIÓN PARA LIMPIAR UBICACIÓN RECORDADA ---
+async function limpiarUbicacionRecordada() {
+  nuevaUbicacion.value = ''
+  await limpiarUltimaUbicacion()
+  console.log('[CamaraUbicaciones] Ubicación recordada limpiada')
+}
 
 // --- Función de feedback temporal ---
 const mostrarMensaje = (texto) => {
@@ -234,7 +263,7 @@ function cancelarEdicionCodigo() {
 }
 
 // --- Funciones de placeholders ---
-function restablercerPlaceholderUbicacion() {
+function restablecerPlaceholderUbicacion() {
   errorUbicacion.value = false
   placeholderUbicacion.value = 'Ingrese la ubicación del artículo'
 }
@@ -248,7 +277,7 @@ function formatearUbicacion() {
 }
 
 // --- Guardar ubicación ---
-function guardarUbicacion() {
+async function guardarUbicacion() {
   if (!nuevaUbicacion.value.trim()) {
     errorUbicacion.value = true
     animarErrorUbicacion.value = true
@@ -258,13 +287,16 @@ function guardarUbicacion() {
 
   formatearUbicacion()
 
+  // GUARDAR LA ÚLTIMA UBICACIÓN ANTES DE AGREGAR
+  await guardarUltimaUbicacion(nuevaUbicacion.value)
+
   ubicacionesGuardadas.value.push({
     codigo: codigoEscaneadoTemporal.value,
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
-  // Reset de inputs
-  nuevaUbicacion.value = ''
+  // Reset código pero mantener ubicación para el siguiente
+  // NO resetear nuevaUbicacion para mantenerla
   codigoEscaneadoTemporal.value = null
 
   mostrarMensaje('Ubicación guardada correctamente')
@@ -290,7 +322,7 @@ function confirmarUbicacionYSiguiente() {
 
 // --- Otros controles ---
 function descartarEscaneo() {
-  nuevaUbicacion.value = ''
+  // Solo limpiar código, mantener ubicación
   codigoEscaneadoTemporal.value = null
   reanudarEscaneo()
 }
@@ -309,8 +341,15 @@ function cancelarGeneral() {
 }
 
 // --- Lifecycle hooks ---
-onMounted(() => {
+onMounted(async () => {
   iniciarCamara()
+
+  // CARGAR ÚLTIMA UBICACIÓN AL INICIAR
+  const ultimaUbicacion = await obtenerUltimaUbicacion()
+  if (ultimaUbicacion) {
+    nuevaUbicacion.value = ultimaUbicacion
+    console.log(`[CamaraUbicaciones] Cargada última ubicación: ${ultimaUbicacion}`)
+  }
 })
 
 onBeforeUnmount(() => {
