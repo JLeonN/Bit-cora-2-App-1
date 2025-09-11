@@ -2008,14 +2008,12 @@ button {
   justify-content: center;
   color: var(--color-desactivado);
 }
-
 .boton-limpiar-ubicacion:hover,
 .boton-limpiar-ubicacion-camara:hover {
   opacity: 1;
   color: var(--color-error);
   transform: translateY(-50%) scale(1.1);
 }
-
 /* Asegurar que el contenedor tenga position relative */
 .ubicacion-campo {
   position: relative;
