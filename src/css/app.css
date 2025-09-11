@@ -335,6 +335,14 @@ button {
   font-weight: 700;
   text-decoration: underline;
 }
+.texto-inexistente {
+  color: var(--color-carga);
+}
+.texto-articulo-inexistente {
+  color: var(--color-carga);
+  font-weight: 700;
+  text-decoration: underline;
+}
 /* -------------------------------------------------------------------------- */
 /* Panel inicio */
 .pagina-inicio {
@@ -1177,6 +1185,9 @@ button {
 .fila-ubicacion-duplicada {
   background: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
+.fila-articulo-inexistente {
+  background: color-mix(in oklab, var(--color-carga) 10%, transparent);
+}
 /* Contenedor nombre y código igual que antes */
 .contenedor-nombre-codigo {
   display: flex;
@@ -1200,6 +1211,12 @@ button {
 }
 .texto-duplicado .codigo-articulo {
   color: var(--color-error);
+}
+.texto-articulo-inexistente .nombre-articulo {
+  color: var(--color-carga);
+}
+.texto-articulo-inexistente .codigo-articulo {
+  color: var(--color-carga);
 }
 /* -------------------------------------------------------------------------- */
 /* BuscarExcel.vue - Estilos para carga de base de datos */

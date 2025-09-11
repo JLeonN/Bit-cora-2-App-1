@@ -6,6 +6,9 @@
       <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos">
         Códigos repetidos: {{ cantidadCodigosRepetidos }}
       </p>
+      <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente">
+        Artículos inexistentes: {{ cantidadArticulosInexistentes }}
+      </p>
     </div>
 
     <!-- Botón borrar toda la tabla -->
@@ -33,12 +36,16 @@
           class="fila-ubicacion"
           :class="{
             'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(item.codigo)),
+            'fila-articulo-inexistente': esArticuloInexistente(item.codigo),
           }"
         >
           <td class="celda-nombre-codigo">
             <span
               class="globito-ubicacion"
-              :class="{ 'texto-duplicado': codigosDuplicados.has(normalizarCodigo(item.codigo)) }"
+              :class="{
+                'texto-duplicado': codigosDuplicados.has(normalizarCodigo(item.codigo)),
+                'texto-articulo-inexistente': esArticuloInexistente(item.codigo), // <-- AÑADE TU LÍNEA AQUÍ
+              }"
               :title="`${obtenerNombreArticulo(item.codigo)} - ${item.codigo}`"
             >
               <div class="contenedor-nombre-codigo">
@@ -100,6 +107,15 @@ function obtenerNombreArticulo(codigo) {
   return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'
 }
 
+// --- Función para verificar si un artículo existe ---
+// Devuelve `true` si no existe, `false` si existe. Es más limpio que comparar texto.
+function esArticuloInexistente(codigo) {
+  const articulosCargados = obtenerArticulosCargados()
+  return !articulosCargados.some(
+    (articulo) => articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  )
+}
+
 // --- Lógica de duplicados ---
 const codigosDuplicados = computed(() => {
   const conteo = new Map()
@@ -125,5 +141,10 @@ const cantidadCodigosRepetidos = computed(
     props.ubicaciones.filter((ubicacion) =>
       codigosDuplicados.value.has(normalizarCodigo(ubicacion.codigo)),
     ).length,
+)
+
+// --- Propiedad computada para contar artículos inexistentes ---
+const cantidadArticulosInexistentes = computed(
+  () => props.ubicaciones.filter((ubicacion) => esArticuloInexistente(ubicacion.codigo)).length,
 )
 </script>
