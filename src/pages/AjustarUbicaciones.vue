@@ -16,9 +16,6 @@
       @abrirModalEliminarTodas="abrirModalEliminarTodas"
     />
 
-    <!-- Botón flotante para enviar Excel de ubicaciones -->
-    <BotonesDescargarEnviar @enviar="enviarUbicacionesExcel" />
-
     <!-- Modal: Editar Ubicación -->
     <ModalEditarUbicacion
       v-if="mostrarModalEditar"
@@ -43,16 +40,19 @@
       @confirmar="confirmarEliminacionTodas"
       @cerrar="cerrarModalEliminarTodas"
     />
+
+    <!-- Mensajes de notificación -->
+    <div v-if="mensajeExito" class="mensaje-exito">{{ mensajeExito }}</div>
+    <div v-if="mensajeError" class="mensaje-error">{{ mensajeError }}</div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
-import BotonesDescargarEnviar from '../components/Botones/BotonesDescargarEnviar.vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
@@ -60,6 +60,9 @@ import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
+
+// Emit para configurar la barra inferior
+const emit = defineEmits(['configurar-barra'])
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
@@ -76,22 +79,67 @@ const mostrarModalEditar = ref(false)
 const ubicacionEditar = ref(null)
 let indiceEditar = null
 
-// Cargar ubicaciones al montar
-onMounted(async () => {
-  ubicaciones.value = await obtenerUbicaciones()
-})
+// Estados de notificaciones
+const mensajeExito = ref('')
+const mensajeError = ref('')
+
+// Configuración dinámica de la barra inferior
+const configuracionBarra = computed(() => ({
+  mostrarAgregar: false, // Se agrega desde el formulario integrado
+  mostrarEnviar: ubicaciones.value.length > 0,
+  puedeEnviar: ubicaciones.value.length > 0,
+  botonesPersonalizados: [
+    // Botón de limpiar todas las ubicaciones
+    {
+      icono: 'IconTrash',
+      accion: 'eliminar-todas',
+      titulo: 'Eliminar todas las ubicaciones',
+      claseCSS: 'boton-eliminar',
+      desactivado: ubicaciones.value.length === 0,
+    },
+  ],
+}))
+
+// Métodos que la barra inferior va a llamar
+const metodosParaBarra = {
+  onAgregar: () => {
+    // No se usa porque el formulario ya está integrado
+  },
+  onEnviar: () => {
+    enviarUbicacionesExcel()
+  },
+  onAccionPersonalizada: (accion) => {
+    if (accion === 'eliminar-todas') {
+      abrirModalEliminarTodas()
+    }
+  },
+}
+
+// Función para actualizar la configuración de la barra
+const actualizarConfiguracionBarra = () => {
+  emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
+}
+
+// Watchers para actualizar la barra cuando cambien los datos
+watch(
+  () => ubicaciones.value.length,
+  () => {
+    actualizarConfiguracionBarra()
+  },
+  { deep: true },
+)
 
 // --- MANEJO DE EVENTOS DEL SELECTOR DE EXCEL ---
 function manejarBaseDatosCargada(evento) {
-  console.log('✅ Base de datos cargada:', evento)
-  // Aquí puedes mostrar una notificación de éxito si quieres
-  // Por ejemplo: mostrar un toast o actualizar algún estado
+  console.log('Base de datos cargada:', evento)
+  mensajeExito.value = 'Base de datos cargada correctamente'
+  setTimeout(() => (mensajeExito.value = ''), 3000)
 }
 
 function manejarErrorCarga(mensaje) {
-  console.error('❌ Error cargando base de datos:', mensaje)
-  // Aquí puedes mostrar una notificación de error si quieres
-  alert(`Error al cargar archivo: ${mensaje}`)
+  console.error('Error cargando base de datos:', mensaje)
+  mensajeError.value = `Error al cargar archivo: ${mensaje}`
+  setTimeout(() => (mensajeError.value = ''), 3000)
 }
 
 // --- FUNCIÓN AGREGAR UBICACIÓN ---
@@ -102,6 +150,7 @@ async function agregarUbicacion(datosNuevos) {
   })
 
   await guardarUbicaciones(ubicaciones.value)
+  actualizarConfiguracionBarra()
 }
 
 // Abrir modal editar
@@ -119,6 +168,7 @@ async function guardarEdicion(datos) {
       ubicacion: datos.ubicacion.trim().toUpperCase(),
     }
     await guardarUbicaciones(ubicaciones.value)
+    actualizarConfiguracionBarra()
   }
   mostrarModalEditar.value = false
   indiceEditar = null
@@ -142,6 +192,7 @@ async function confirmarEliminacion() {
   if (indice !== -1) {
     ubicaciones.value.splice(indice, 1)
     await guardarUbicaciones(ubicaciones.value)
+    actualizarConfiguracionBarra()
   }
   mostrarModalEliminar.value = false
 }
@@ -161,6 +212,10 @@ async function confirmarEliminacionTodas() {
   ubicaciones.value = []
   await guardarUbicaciones(ubicaciones.value)
   mostrarModalEliminarTodas.value = false
+  actualizarConfiguracionBarra()
+
+  mensajeExito.value = 'Todas las ubicaciones eliminadas'
+  setTimeout(() => (mensajeExito.value = ''), 3000)
 }
 
 // Cerrar modal eliminar todas
@@ -171,18 +226,46 @@ function cerrarModalEliminarTodas() {
 // --- FUNCIÓN ENVIAR UBICACIONES COMO EXCEL ---
 async function enviarUbicacionesExcel() {
   if (!ubicaciones.value.length) {
-    alert('No hay ubicaciones para exportar.')
+    mensajeError.value = 'No hay ubicaciones para exportar'
+    setTimeout(() => (mensajeError.value = ''), 3000)
     return
   }
+
   try {
     const { uri, nombreArchivo } = await generarYGuardarExcelUbicaciones(ubicaciones.value)
     if (!uri) {
-      alert('No se pudo generar el archivo Excel.')
-      return
+      throw new Error('No se pudo generar el archivo Excel')
     }
+
     await compartirArchivo(uri, nombreArchivo)
+    mensajeExito.value = 'Archivo de ubicaciones enviado correctamente'
+    setTimeout(() => (mensajeExito.value = ''), 3000)
   } catch (error) {
-    alert('Error al enviar el archivo: ' + error.message)
+    console.error('Error al enviar ubicaciones:', error)
+    mensajeError.value = 'Error al enviar el archivo: ' + error.message
+    setTimeout(() => (mensajeError.value = ''), 3000)
   }
 }
+
+// Cargar ubicaciones al montar
+onMounted(async () => {
+  ubicaciones.value = await obtenerUbicaciones()
+
+  // Configurar la barra inferior
+  actualizarConfiguracionBarra()
+})
+
+onUnmounted(() => {
+  // Limpiar configuración de la barra al salir de la página
+  emit(
+    'configurar-barra',
+    {
+      mostrarAgregar: false,
+      mostrarEnviar: false,
+      puedeEnviar: false,
+      botonesPersonalizados: [],
+    },
+    null,
+  )
+})
 </script>
