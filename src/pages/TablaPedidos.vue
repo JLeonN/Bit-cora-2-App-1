@@ -26,9 +26,6 @@
       </tbody>
     </table>
 
-    <!-- Botón flotante para abrir el modal de nuevo pedido -->
-    <BotonFlotante @abrir-modal="abrirModalAgregar" />
-
     <!-- Modal: Nuevo Pedido -->
     <ModalNuevoPedido
       v-if="mostrarModalAgregar"
@@ -59,15 +56,15 @@
       @cancelar="cerrarCamaraPedidos"
       @guardar="abrirModalConfirmarEscaneados"
     />
+
     <HistorialPedidos />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 
-import BotonFlotante from '../components/Botones/BotonFlotante.vue'
 import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
@@ -75,28 +72,66 @@ import CamaraPedidos from '../components/Logica/Pedidos/CamaraPedidos.vue'
 import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 
+// Emit para configurar la barra inferior
+const emit = defineEmits(['configurar-barra'])
+
+// Estado principal
 const pedidos = ref([])
 
-const ultimosTresPedidos = computed(() => {
-  return [...pedidos.value].slice(-3).reverse()
-})
-
-onMounted(async () => {
-  const datos = await obtenerPedidos()
-  pedidos.value = datos
-})
-
+// Estados de modales
 const mostrarModalAgregar = ref(false)
 const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
 const mostrarCamaraPedidos = ref(false)
 const mostrarModalConfirmarEscaneados = ref(false)
 
+// Datos para editar/eliminar
 const pedidoEditar = ref(null)
 const pedidoEliminar = ref(null)
-
 const pedidosEscaneados = ref([])
 
+// Computed
+const ultimosTresPedidos = computed(() => {
+  return [...pedidos.value].slice(-3).reverse()
+})
+
+// Configuración dinámica de la barra inferior
+const configuracionBarra = computed(() => ({
+  mostrarAgregar: true,
+  mostrarEnviar: false, // TablaPedidos no necesita enviar
+  puedeEnviar: false,
+  botonesPersonalizados: [],
+}))
+
+// Métodos que la barra inferior va a llamar
+const metodosParaBarra = {
+  onAgregar: () => {
+    abrirModalAgregar()
+  },
+  onEnviar: () => {
+    // No necesario en TablaPedidos
+    console.log('Enviar no implementado en TablaPedidos')
+  },
+  onAccionPersonalizada: (accion) => {
+    console.log('Acción personalizada:', accion)
+  },
+}
+
+// Función para actualizar la configuración de la barra
+const actualizarConfiguracionBarra = () => {
+  emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
+}
+
+// Watchers para actualizar la barra cuando cambien los datos
+watch(
+  () => pedidos.value.length,
+  () => {
+    actualizarConfiguracionBarra()
+  },
+  { deep: true },
+)
+
+// Funciones utilitarias
 function formatearFecha(fecha) {
   const dia = fecha.getDate().toString().padStart(2, '0')
   const mes = (fecha.getMonth() + 1).toString().padStart(2, '0')
@@ -104,6 +139,7 @@ function formatearFecha(fecha) {
   return `${dia}/${mes}/${anio}`
 }
 
+// Métodos de modales
 function abrirModalAgregar() {
   mostrarModalAgregar.value = true
 }
@@ -126,6 +162,9 @@ function agregarPedido(nuevosPedidos) {
 
   guardarPedidos(pedidos.value)
   mostrarModalAgregar.value = false
+
+  // Actualizar barra después de agregar
+  actualizarConfiguracionBarra()
 }
 
 function abrirModalEditar(pedido) {
@@ -154,8 +193,12 @@ function confirmarEliminacion() {
     guardarPedidos(pedidos.value)
   }
   mostrarModalEliminar.value = false
+
+  // Actualizar barra después de eliminar
+  actualizarConfiguracionBarra()
 }
 
+// Métodos de cámara
 function abrirCamaraPedidos() {
   mostrarModalAgregar.value = false
   mostrarCamaraPedidos.value = true
@@ -170,4 +213,28 @@ function abrirModalConfirmarEscaneados(arrayPedidos) {
   pedidosEscaneados.value = arrayPedidos
   mostrarModalConfirmarEscaneados.value = true
 }
+
+// Ciclo de vida
+onMounted(async () => {
+  // Cargar datos existentes
+  const datos = await obtenerPedidos()
+  pedidos.value = datos
+
+  // Configurar la barra inferior
+  actualizarConfiguracionBarra()
+})
+
+onUnmounted(() => {
+  // Limpiar configuración de la barra al salir de la página
+  emit(
+    'configurar-barra',
+    {
+      mostrarAgregar: false,
+      mostrarEnviar: false,
+      puedeEnviar: false,
+      botonesPersonalizados: [],
+    },
+    null,
+  )
+})
 </script>

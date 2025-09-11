@@ -58,9 +58,6 @@
       @cerrar="mostrarModalEliminar = false"
     />
 
-    <!-- Botones descargar y enviar -->
-    <BotonesDescargarEnviar @descargar="descargarPedidos" @enviar="enviarPedidos" />
-
     <!-- Mensajes de notificación -->
     <div v-if="mensajeExito" class="mensaje-exito">{{ mensajeExito }}</div>
     <div v-if="mensajeError" class="mensaje-error">{{ mensajeError }}</div>
@@ -68,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
@@ -77,19 +74,30 @@ import { generarYGuardarExcelTemporal } from '../Logica/Pedidos/GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Pedidos/CompartirExcel.js'
 import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
 import ModalEliminar from '../Modales/ModalEliminar.vue'
-import BotonesDescargarEnviar from '../Botones/BotonesDescargarEnviar.vue'
+
+// Emit para configurar la barra inferior
+const emit = defineEmits(['configurar-barra'])
 
 const route = useRoute()
+
+// Estado principal
 const pedidosRealizados = ref([])
+
+// Estados de modales
 const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
+
+// Datos para editar/eliminar
 const pedidoEditar = ref({ numero: '', fecha: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
 const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
+
+// Estados de notificaciones
 const mensajeExito = ref('')
 const mensajeError = ref('')
 
+// Funciones utilitarias
 function normalizarNumero(numero) {
   return String(numero ?? '').trim()
 }
@@ -98,6 +106,7 @@ function esPedidoDuplicado(numero) {
   return numerosDuplicados.value.has(normalizarNumero(numero))
 }
 
+// Computed properties
 const numerosDuplicados = computed(() => {
   const conteoPorNumero = new Map()
   for (const p of pedidosRealizados.value) {
@@ -114,25 +123,6 @@ const numerosDuplicados = computed(() => {
 const cantidadPedidosRepetidos = computed(
   () => pedidosRealizados.value.filter((p) => esPedidoDuplicado(p.numero)).length,
 )
-
-function parsearFechaDDMMYYYY(fechaStr) {
-  if (!fechaStr || typeof fechaStr !== 'string') return null
-  const partes = fechaStr.split('/')
-  if (partes.length !== 3) return null
-
-  const [dia, mes, anio] = partes.map(Number)
-  // Se crea la fecha en UTC para consistencia.
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
-
-  if (
-    fecha.getUTCFullYear() === anio &&
-    fecha.getUTCMonth() === mes - 1 &&
-    fecha.getUTCDate() === dia
-  ) {
-    return fecha
-  }
-  return null
-}
 
 const etiquetaMes = computed(() => {
   const { inicio, fin } = route.query
@@ -163,29 +153,73 @@ const etiquetaMes = computed(() => {
   return ''
 })
 
-onMounted(async () => {
-  let datos = await obtenerPedidos()
+// Configuración dinámica de la barra inferior
+const configuracionBarra = computed(() => ({
+  mostrarAgregar: false, // PedidosRealizados no agrega, solo muestra
+  mostrarEnviar: pedidosRealizados.value.length > 0,
+  puedeEnviar: pedidosRealizados.value.length > 0,
+  botonesPersonalizados: [
+    // Botón de descargar como personalizado
+    {
+      icono: 'IconDownload',
+      accion: 'descargar',
+      titulo: 'Descargar Excel',
+      claseCSS: 'boton-descarga',
+      desactivado: pedidosRealizados.value.length === 0,
+    },
+  ],
+}))
 
-  // Lógica de filtrado.
-  const { inicio, fin } = route.query
+// Métodos que la barra inferior va a llamar
+const metodosParaBarra = {
+  onAgregar: () => {
+    // No se usa en esta página
+  },
+  onEnviar: () => {
+    enviarPedidos()
+  },
+  onAccionPersonalizada: (accion) => {
+    if (accion === 'descargar') {
+      descargarPedidos()
+    }
+  },
+}
 
-  if (inicio && fin) {
-    const fechaInicio = new Date(inicio)
-    const fechaFin = new Date(fin)
+// Función para actualizar la configuración de la barra
+const actualizarConfiguracionBarra = () => {
+  emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
+}
 
-    datos = datos.filter((pedido) => {
-      const fechaPedido = parsearFechaDDMMYYYY(pedido.fecha)
-      if (!fechaPedido) return false
-      return (
-        fechaPedido.getTime() >= fechaInicio.getTime() &&
-        fechaPedido.getTime() <= fechaFin.getTime()
-      )
-    })
+// Watchers para actualizar la barra cuando cambien los datos
+watch(
+  () => pedidosRealizados.value.length,
+  () => {
+    actualizarConfiguracionBarra()
+  },
+  { deep: true },
+)
+
+// Función para parsear fechas
+function parsearFechaDDMMYYYY(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== 'string') return null
+  const partes = fechaStr.split('/')
+  if (partes.length !== 3) return null
+
+  const [dia, mes, anio] = partes.map(Number)
+  // Se crea la fecha en UTC para consistencia.
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
+
+  if (
+    fecha.getUTCFullYear() === anio &&
+    fecha.getUTCMonth() === mes - 1 &&
+    fecha.getUTCDate() === dia
+  ) {
+    return fecha
   }
+  return null
+}
 
-  pedidosRealizados.value = datos.slice().reverse()
-})
-
+// Métodos de modales
 function abrirModalEditar(indice) {
   indiceEditar.value = indice
   pedidoEditar.value = { ...pedidosRealizados.value[indice] }
@@ -207,6 +241,7 @@ async function guardarEdicion(nuevoNumero) {
     }
   }
   mostrarModalEditar.value = false
+  actualizarConfiguracionBarra()
 }
 
 function abrirModalEliminar(indice) {
@@ -233,8 +268,10 @@ async function confirmarEliminacion() {
     pedidosRealizados.value.splice(indiceEliminar.value, 1)
   }
   mostrarModalEliminar.value = false
+  actualizarConfiguracionBarra()
 }
 
+// Métodos para descargar y enviar
 async function descargarPedidos() {
   try {
     await generarYGuardarExcelParaDescarga(pedidosRealizados.value)
@@ -261,4 +298,45 @@ async function enviarPedidos() {
     setTimeout(() => (mensajeError.value = ''), 3000)
   }
 }
+
+// Ciclo de vida
+onMounted(async () => {
+  let datos = await obtenerPedidos()
+
+  // Lógica de filtrado.
+  const { inicio, fin } = route.query
+
+  if (inicio && fin) {
+    const fechaInicio = new Date(inicio)
+    const fechaFin = new Date(fin)
+
+    datos = datos.filter((pedido) => {
+      const fechaPedido = parsearFechaDDMMYYYY(pedido.fecha)
+      if (!fechaPedido) return false
+      return (
+        fechaPedido.getTime() >= fechaInicio.getTime() &&
+        fechaPedido.getTime() <= fechaFin.getTime()
+      )
+    })
+  }
+
+  pedidosRealizados.value = datos.slice().reverse()
+
+  // Configurar la barra inferior
+  actualizarConfiguracionBarra()
+})
+
+onUnmounted(() => {
+  // Limpiar configuración de la barra al salir de la página
+  emit(
+    'configurar-barra',
+    {
+      mostrarAgregar: false,
+      mostrarEnviar: false,
+      puedeEnviar: false,
+      botonesPersonalizados: [],
+    },
+    null,
+  )
+})
 </script>

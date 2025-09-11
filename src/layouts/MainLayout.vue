@@ -38,22 +38,6 @@
               </q-item-section>
               <q-item-section>Ubicaciones</q-item-section>
             </q-item>
-
-            <!-- Otro 2 -->
-            <!-- <q-item clickable v-ripple to="/Otro_2">
-              <q-item-section avatar>
-                <q-icon name="drafts" />
-              </q-item-section>
-              <q-item-section> Otro 2 </q-item-section>
-            </q-item> -->
-
-            <!-- Otro 3 -->
-            <!-- <q-item clickable v-ripple to="/Otro_3">
-              <q-item-section avatar>
-                <IconCar :stroke="1.25" size="24" />
-              </q-item-section>
-              <q-item-section> Otro 3 </q-item-section>
-            </q-item> -->
           </q-list>
         </q-scroll-area>
         <q-img
@@ -71,19 +55,71 @@
         </q-img>
       </q-drawer>
 
-      <q-page-container class="fondo-app texto-principal">
-        <router-view></router-view>
+      <q-page-container class="fondo-app texto-principal contenedor-con-barra-inferior">
+        <router-view @configurar-barra="manejarConfiguracionBarra" />
       </q-page-container>
-      <!-- Botones de navegación flotantes -->
-      <BotonesNavegacion />
+
+      <!-- NUEVA: Barra de botones inferior siempre visible -->
+      <BarraBotonesInferior
+        :mostrar-agregar="configuracionBarra.mostrarAgregar"
+        :mostrar-enviar="configuracionBarra.mostrarEnviar"
+        :puede-enviar="configuracionBarra.puedeEnviar"
+        :botones-personalizados="configuracionBarra.botonesPersonalizados"
+        @agregar="manejarAgregar"
+        @enviar="manejarEnviar"
+        @accion-personalizada="manejarAccionPersonalizada"
+      />
     </q-layout>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { IconTableRow, IconMapRoute } from '@tabler/icons-vue'
-import BotonesNavegacion from 'components/Botones/BotonesNavegacion.vue'
+import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 
 const drawer = ref(false)
+
+// Estado centralizado de la barra inferior
+const configuracionBarra = reactive({
+  mostrarAgregar: false,
+  mostrarEnviar: false,
+  puedeEnviar: true,
+  botonesPersonalizados: [],
+})
+
+// Referencia para emitir eventos a la página activa
+let paginaActivaRef = null
+
+// Método para que las páginas configuren la barra
+const manejarConfiguracionBarra = (configuracion, refPagina) => {
+  Object.assign(configuracionBarra, configuracion)
+  paginaActivaRef = refPagina
+}
+
+// Métodos que se ejecutan cuando se presionan los botones
+const manejarAgregar = () => {
+  if (paginaActivaRef?.onAgregar) {
+    paginaActivaRef.onAgregar()
+  }
+}
+
+const manejarEnviar = () => {
+  if (paginaActivaRef?.onEnviar) {
+    paginaActivaRef.onEnviar()
+  }
+}
+
+const manejarAccionPersonalizada = (accion) => {
+  if (paginaActivaRef?.onAccionPersonalizada) {
+    paginaActivaRef.onAccionPersonalizada(accion)
+  }
+}
 </script>
+
+<style scoped>
+/* Agregamos padding-bottom para que el contenido no quede tapado por la barra */
+.contenedor-con-barra-inferior {
+  padding-bottom: 80px;
+}
+</style>
