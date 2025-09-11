@@ -18,7 +18,7 @@
     <!-- Botón Agregar (Plus) -->
     <button
       v-if="mostrarAgregar"
-      class="boton-barra boton-agregar"
+      class="boton-barra"
       @click="agregarElemento"
       title="Agregar nuevo"
     >
@@ -120,20 +120,25 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 <style scoped>
 .barra-botones-inferior {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 26px; /* Levantamos la barra del fondo */
+  left: 50%; /* La centramos horizontalmente */
+  transform: translateX(-50%);
+  width: 90%; /* Hacemos que ocupe el 90% del ancho */
+  max-width: 500px; /* Un ancho máximo para pantallas grandes */
+  border-radius: 30px; /* Redondeamos las esquinas */
   height: 60px;
   background-color: var(--color-superficie);
-  border-top: 1px solid var(--color-borde);
+  border: 1px solid var(--color-borde); /* Cambiado de border-top a border para que se vea completo */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 24px;
   z-index: 1000;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra un poco más pronunciada */
   padding: 0 16px;
+  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
 }
+
 .boton-barra {
   width: 48px;
   height: 48px;
@@ -184,6 +189,7 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     gap: 16px;
     height: 56px;
     padding: 0 12px;
+    width: 92%; /* Ajuste de ancho para pantallas pequeñas */
   }
   .boton-barra {
     width: 44px;
