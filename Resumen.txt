@@ -16,14 +16,39 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.  
 - **AjustarUbicaciones.vue:** Tabla para gestionar ubicaciones de artículos, con formulario responsive, edición y eliminación.  
   - Agregar ubicaciones manualmente o usando la cámara.  
-  - Botón de **enviar Excel** ya funcional.
+  - **✅ INTEGRACIÓN CON BARRA INFERIOR NUEVA**: Configuración dinámica de botones según el estado.
   - **Integra SelectorExcel** para cargar base de datos de artículos.
+  - **Sistema de notificaciones** mejorado con mensajes de éxito/error.
 - **ModalEliminar.vue:** Modal genérico, reutilizable tanto en pedidos como en ubicaciones.  
 - **CodigoMasNombre.vue:** Componente que implementa la lógica de búsqueda en base de datos, mostrando coincidencias dinámicamente con **base de datos cargada desde Excel**.  
 
 ---
 
 #### 📁 **Lógica de Exportación y Guardado de Archivos**
+
+#### ✅ **Componentes NUEVOS:**
+- **BarraBotonesInferior.vue:** **COMPONENTE PRINCIPAL DE NAVEGACIÓN**
+  - **Barra flotante centrada** con diseño moderno y redondeado.
+  - **Botones dinámicos**: atrás, inicio, agregar, enviar.
+  - **Configuración por props**: cada página define qué botones mostrar.
+  - **Botones personalizados**: sistema extensible para acciones específicas.
+  - **Estados dinámicos**: habilitar/deshabilitar según contexto.
+  - **Responsive design** con ajustes para pantallas pequeñas.
+  - **Auto-ocultamiento**: botón "atrás" se oculta automáticamente en página inicial.
+  - **Efectos visuales**: hover, active, sombras, transiciones suaves.
+
+#### ✅ **Componentes MANTENIDOS:**
+- **TresBotones.vue:** Para formularios y modales (confirmar, cancelar, eliminar).
+
+#### 🔄 **Sistema de Configuración Dinámica:**
+- **Configuración por página**: Cada página emite su configuración de botones.
+- **Watchers reactivos**: Los botones se actualizan automáticamente según el estado.
+- **Métodos de callback**: Las páginas definen qué hacer cuando se presiona cada botón.
+- **Cleanup automático**: Se limpia la configuración al salir de las páginas.
+
+---
+
+### 📁 **Lógica de Exportación y Guardado de Archivos**
 - Uso de **xlsx** para generar datos Excel en memoria.  
 - Descarga directa en la web (`exportarExcel.js`).  
 - Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
@@ -32,6 +57,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **ExportarUbicacionesExcel.js** para manejar exportación y envío de Excel desde el módulo de ubicaciones.  
   - **Integración con base de datos cargada**: Obtiene nombres de artículos automáticamente usando `obtenerNombreArticulo()`.
   - Genera columnas: `articulo`, `sub1`, `sub2`, `deposito`, `ubic`, `Descripcion`.
+- **✅ INTEGRADO CON BARRA INFERIOR**: Botón de envío disponible dinámicamente.
 
 ---
 
@@ -75,7 +101,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
-#### 📊 **Sistema de Base de Datos Excel**
+### 📊 **Sistema de Base de Datos Excel**
 - **SelectorExcel.vue:** Componente completo para seleccionar y cargar archivos Excel.
   - Interfaz visual con estados: no-cargado, cargando, cargado, error.
   - **Selector nativo de archivos** con validación de formato (.xlsx, .xls).
@@ -145,15 +171,29 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 ---
 
 #### 🎨 **Integración Visual y UX**
+- **✅ NUEVA: Barra de navegación inferior moderna**:
+  - Diseño flotante centrado con bordes redondeados.
+  - Sombras y efectos visuales profesionales.
+  - Botones circulares con hover effects.
+  - Sistema de iconos consistente con Tabler Icons.
+  - Responsive con ajustes automáticos para pantallas pequeñas.
+
 - **Estados visuales claros** en SelectorExcel:
   - Botón principal cambia color según estado.
   - Iconos específicos: carpeta, cargando, error, base de datos.
   - **Tarjeta de archivo** con estadísticas y acciones.
+
+- **✅ NUEVO: Sistema de notificaciones mejorado**:
+  - Mensajes de éxito y error con timeouts automáticos.
+  - Feedback visual para todas las acciones importantes.
+  - Integración con el sistema de barra inferior.
+
 - **Feedback al usuario**:
   - Barras de progreso durante carga.
   - Mensajes de error específicos y claros.
   - Confirmación antes de limpiar datos.
   - **✅ NUEVO: Sin interrupciones** - La base se carga automáticamente en segundo plano.
+
 - **Responsive design** en todos los componentes.
 - **✅ NUEVO: Botones de limpiar ubicación**:
   - IconTrash consistente con el resto de la aplicación.
@@ -183,6 +223,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **✅ NUEVA: Persistencia automática de base de datos Excel** - Se guarda y restaura automáticamente sin intervención del usuario.
 - **✅ NUEVA: Inicialización automática** - La base de datos se carga automáticamente al iniciar la aplicación.
 - **✅ NUEVA: UX sin fricciones** - El usuario carga el archivo una vez y queda disponible para siempre.
+- **🚀 NUEVO: Sistema de navegación centralizado y moderno**:
+  - Barra inferior flotante con configuración dinámica por página.
+  - Arquitectura escalable para botones personalizados.
+  - Limpieza de componentes obsoletos para mejor mantenimiento.
+  - UX consistente en toda la aplicación.
 
 ---
 
@@ -221,9 +266,7 @@ src
 │   │   ├── usoAlmacenamientoUbicaciones.js
 │   │   └── LectorExcel.js
 │   ├── Botones
-│   │   ├── BotonFlotante.vue
-│   │   ├── BotonesDescargarEnviar.vue
-│   │   ├── BotonesNavegacion.vue
+│   │   ├── BarraBotonesInferior.vue
 │   │   └── TresBotones.vue
 │   ├── Inicio
 │   │   └── PanelInicio.vue
