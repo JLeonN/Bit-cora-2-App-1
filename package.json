@@ -26,6 +26,7 @@
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/share": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.3",
     "@quasar/extras": "^1.16.4",
     "@tabler/icons-vue": "^3.34.1",
     "@zxing/library": "^0.21.3",
