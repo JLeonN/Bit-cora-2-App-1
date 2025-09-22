@@ -277,7 +277,9 @@ src
 │   │   │   ├── CamaraPedidos.vue
 │   │   │   ├── CompartirExcel.js
 │   │   │   ├── ExportarPedidosExcel.js
-│   │   │   └── GeneraExcel.js
+│   │   │   ├── GeneraExcel.js
+│   │   │   ├── HistorialPedidos.vue
+│   │   │   └── PedidosRealizados.vue
 │   │   └── Ubicaciones
 │   │       ├── CamaraEscaneo.vue
 │   │       ├── CamaraUbicaciones.vue
@@ -292,9 +294,6 @@ src
 │   │   ├── ModalEditarUbicacion.vue
 │   │   ├── ModalEliminar.vue
 │   │   └── ModalNuevoPedido.vue
-│   └── Pedidos
-│       ├── HistorialPedidos.vue
-│       └── PedidosRealizados.vue
 ```
 
 ---

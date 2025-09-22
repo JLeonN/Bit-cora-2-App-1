@@ -68,12 +68,12 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
-import { guardarPedidos, obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
-import { generarYGuardarExcelParaDescarga } from '../Logica/Pedidos/ExportarPedidosExcel.js'
-import { generarYGuardarExcelTemporal } from '../Logica/Pedidos/GeneraExcel.js'
+import { guardarPedidos, obtenerPedidos } from '../../BaseDeDatos/almacenamiento.js'
+import { generarYGuardarExcelParaDescarga } from './ExportarPedidosExcel.js'
+import { generarYGuardarExcelTemporal } from './GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Pedidos/CompartirExcel.js'
-import ModalEditarPedido from '../Modales/ModalEditarPedido.vue'
-import ModalEliminar from '../Modales/ModalEliminar.vue'
+import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
+import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])

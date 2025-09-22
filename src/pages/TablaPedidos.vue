@@ -69,7 +69,7 @@ import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import CamaraPedidos from '../components/Logica/Pedidos/CamaraPedidos.vue'
-import HistorialPedidos from 'src/components/Pedidos/HistorialPedidos.vue'
+import HistorialPedidos from '../components/Logica/Pedidos/HistorialPedidos.vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 
 // Emit para configurar la barra inferior
