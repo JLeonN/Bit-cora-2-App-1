@@ -26,6 +26,9 @@
       </tbody>
     </table>
 
+    <!-- Contador de pedidos diarios -->
+    <ContadorPedidosDiarios ref="contadorRef" />
+
     <!-- Modal: Nuevo Pedido -->
     <ModalNuevoPedido
       v-if="mostrarModalAgregar"
@@ -64,19 +67,22 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { IconPencil, IconTrash } from '@tabler/icons-vue'
-
+import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import CamaraPedidos from '../components/Logica/Pedidos/CamaraPedidos.vue'
 import HistorialPedidos from '../components/Logica/Pedidos/HistorialPedidos.vue'
-import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
+import ContadorPedidosDiarios from '../components/Logica/Pedidos/ContadorPedidosDiarios.vue'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
 
 // Estado principal
 const pedidos = ref([])
+
+// Referencias
+const contadorRef = ref(null)
 
 // Estados de modales
 const mostrarModalAgregar = ref(false)
@@ -165,6 +171,11 @@ function agregarPedido(nuevosPedidos) {
 
   // Actualizar barra después de agregar
   actualizarConfiguracionBarra()
+
+  // Actualizar el contador después de agregar pedidos
+  if (contadorRef.value) {
+    contadorRef.value.actualizarContador()
+  }
 }
 
 function abrirModalEditar(pedido) {
@@ -179,6 +190,11 @@ function guardarEdicion(nuevoNumero) {
     guardarPedidos(pedidos.value)
   }
   mostrarModalEditar.value = false
+
+  // Actualizar contador después de editar
+  if (contadorRef.value) {
+    contadorRef.value.actualizarContador()
+  }
 }
 
 function abrirModalEliminar(pedido) {
@@ -196,6 +212,11 @@ function confirmarEliminacion() {
 
   // Actualizar barra después de eliminar
   actualizarConfiguracionBarra()
+
+  // Actualizar contador después de eliminar
+  if (contadorRef.value) {
+    contadorRef.value.actualizarContador()
+  }
 }
 
 // Métodos de cámara
