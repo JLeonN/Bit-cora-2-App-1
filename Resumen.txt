@@ -9,18 +9,22 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 #### 🧩 **Componentes Principales**
 - **PedidosRealizados.vue:** Muestra todos los pedidos guardados y ofrece un botón para **enviar** el Excel.  
 - **HistorialPedidos.vue:** Historial de pedidos agrupados por fechas, también con botón de **Enviar**.  
+- **TablaPedidos.vue:** Pantalla principal de pedidos con tabla de últimos 3 pedidos e integración completa con ContadorPedidosDiarios.
 - **Inicio.vue (PanelInicio.vue):** Pantalla principal de navegación hacia las distintas funciones.  
 - **ModalNuevoPedido.vue:** Modal para agregar pedidos manuales, con input, botón de cámara y confirmación.  
   - Input manual: agrega un solo pedido y cierra el modal automáticamente.  
   - Botón de cámara: abre **CamaraPedidos.vue** para escanear múltiples pedidos.  
-- **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.  
 - **AjustarUbicaciones.vue:** Tabla para gestionar ubicaciones de artículos, con formulario responsive, edición y eliminación.  
   - Agregar ubicaciones manualmente o usando la cámara.  
-  - **✅ INTEGRACIÓN CON BARRA INFERIOR NUEVA**: Configuración dinámica de botones según el estado.
-  - **Integra SelectorExcel** para cargar base de datos de artículos.
-  - **Sistema de notificaciones** mejorado con mensajes de éxito/error.
-- **ModalEliminar.vue:** Modal genérico, reutilizable tanto en pedidos como en ubicaciones.  
-- **CodigoMasNombre.vue:** Componente que implementa la lógica de búsqueda en base de datos, mostrando coincidencias dinámicamente con **base de datos cargada desde Excel**.  
+- **CamaraPedidos.vue:** Modal con cámara embebida en un `<div>` + botones personalizados. Usa **@zxing/library** para escaneo en tiempo real de códigos de barra y QR.
+- **✅ ContadorPedidosDiarios.vue:** **COMPONENTE NUEVO** para mostrar estadísticas diarias de pedidos.
+  - **Contador automático** de pedidos del día actual.
+  - **Reinicio a medianoche** automático con verificación cada minuto.
+  - **Mensajes contextuales**: Fines de semana muestra "¡Buen descanso!", días sin pedidos muestra mensaje informativo.
+  - **Persistencia** entre sesiones de la aplicación.
+  - **Integración completa** con TablaPedidos.vue - se actualiza automáticamente al agregar/editar/eliminar pedidos.
+  - **Diseño moderno** con gradientes y efectos hover integrados a la paleta de colores oscura.
+  - **Responsive design** para dispositivos móviles.
 
 ---
 
@@ -171,7 +175,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 ---
 
 #### 🎨 **Integración Visual y UX**
-- **✅ NUEVA: Barra de navegación inferior moderna**:
+- **✅ Barra de navegación inferior moderna**:
   - Diseño flotante centrado con bordes redondeados.
   - Sombras y efectos visuales profesionales.
   - Botones circulares con hover effects.
@@ -183,7 +187,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Iconos específicos: carpeta, cargando, error, base de datos.
   - **Tarjeta de archivo** con estadísticas y acciones.
 
-- **✅ NUEVO: Sistema de notificaciones mejorado**:
+- **✅ Sistema de notificaciones mejorado**:
   - Mensajes de éxito y error con timeouts automáticos.
   - Feedback visual para todas las acciones importantes.
   - Integración con el sistema de barra inferior.
@@ -192,10 +196,10 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Barras de progreso durante carga.
   - Mensajes de error específicos y claros.
   - Confirmación antes de limpiar datos.
-  - **✅ NUEVO: Sin interrupciones** - La base se carga automáticamente en segundo plano.
+  - **✅ Sin interrupciones** - La base se carga automáticamente en segundo plano.
 
 - **Responsive design** en todos los componentes.
-- **✅ NUEVO: Botones de limpiar ubicación**:
+- **✅ Botones de limpiar ubicación**:
   - IconTrash consistente con el resto de la aplicación.
   - Efectos hover con transiciones suaves.
   - Posicionamiento absoluto dentro del input.
@@ -220,14 +224,19 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **✅ Sistema de recordar última ubicación para workflow optimizado**.
 - **✅ Persistencia de ubicaciones entre sesiones de la app**.
 - **✅ Botones de limpieza con iconografía consistente y efectos visuales**.
-- **✅ NUEVA: Persistencia automática de base de datos Excel** - Se guarda y restaura automáticamente sin intervención del usuario.
-- **✅ NUEVA: Inicialización automática** - La base de datos se carga automáticamente al iniciar la aplicación.
-- **✅ NUEVA: UX sin fricciones** - El usuario carga el archivo una vez y queda disponible para siempre.
-- **🚀 NUEVO: Sistema de navegación centralizado y moderno**:
+- **✅ Persistencia automática de base de datos Excel** - Se guarda y restaura automáticamente sin intervención del usuario.
+- **✅ Inicialización automática** - La base de datos se carga automáticamente al iniciar la aplicación.
+- **✅ UX sin fricciones** - El usuario carga el archivo una vez y queda disponible para siempre.
+- **🚀  Sistema de navegación centralizado y moderno**:
   - Barra inferior flotante con configuración dinámica por página.
   - Arquitectura escalable para botones personalizados.
   - Limpieza de componentes obsoletos para mejor mantenimiento.
   - UX consistente en toda la aplicación.
+- **📊 Sistema de estadísticas diarias de pedidos**:
+  - Contador automático de pedidos por día con reinicio a medianoche.
+  - Mensajes contextuales para fines de semana y días sin actividad.
+  - Integración completa con el flujo de pedidos existente.
+  - Base sólida para futuras estadísticas avanzadas.
 
 ---
 
@@ -244,56 +253,57 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 ---
 
 ### 📂 **Estructura de Archivos**
-src
+src/
 ├── App.vue
-├── css
+├── css/
 │   └── app.css
-├── layouts
+├── layouts/
 │   └── MainLayout.vue
-├── pages
+├── pages/
 │   ├── AjustarUbicaciones.vue
 │   ├── ErrorNotFound.vue
 │   └── TablaPedidos.vue
-├── router
+├── router/
 │   ├── index.js
 │   └── routes.js
-├── components
-│   ├── BaseDeDatos
-│   │   ├── CodigosArticulos.js 
-│   │   ├── almacenamiento.js
-│   │   ├── usoAlmacenamientoCapacitor.js
-│   │   ├── usoAlmacenamientoPedidos.js
-│   │   ├── usoAlmacenamientoUbicaciones.js
-│   │   └── LectorExcel.js
-│   ├── Botones
-│   │   ├── BarraBotonesInferior.vue
-│   │   └── TresBotones.vue
-│   ├── Inicio
-│   │   └── PanelInicio.vue
-│   ├── Logica
-│   │   ├── Envios
-│   │   │   └── CompartirExcel.js
-│   │   ├── Pedidos
-│   │   │   ├── CamaraPedidos.vue
-│   │   │   ├── CompartirExcel.js
-│   │   │   ├── ExportarPedidosExcel.js
-│   │   │   ├── GeneraExcel.js
-│   │   │   ├── HistorialPedidos.vue
-│   │   │   └── PedidosRealizados.vue
-│   │   └── Ubicaciones
-│   │       ├── CamaraEscaneo.vue
-│   │       ├── CamaraUbicaciones.vue
-│   │       ├── CodigoMasNombre.vue
-│   │       ├── ExportarUbicacionesExcel.js
-│   │       ├── FormularioUbicacion.vue
-│   │       ├── TablaUbicaciones.vue
-│   │       ├── SelectorExcel.vue
-│   │       └── recordarUltimaTipografia.js
-│   ├── Modales
-│   │   ├── ModalEditarPedido.vue
-│   │   ├── ModalEditarUbicacion.vue
-│   │   ├── ModalEliminar.vue
-│   │   └── ModalNuevoPedido.vue
+└── components/
+    ├── BaseDeDatos/
+    │   ├── CodigosArticulos.js
+    │   ├── almacenamiento.js
+    │   ├── usoAlmacenamientoCapacitor.js
+    │   ├── usoAlmacenamientoPedidos.js
+    │   ├── usoAlmacenamientoUbicaciones.js
+    │   └── LectorExcel.js
+    ├── Botones/
+    │   ├── BarraBotonesInferior.vue
+    │   └── TresBotones.vue
+    ├── Inicio/
+    │   └── PanelInicio.vue
+    ├── Logica/
+    │   ├── Envios/
+    │   │   └── CompartirExcel.js
+    │   ├── Pedidos/
+    │   │   ├── CamaraPedidos.vue
+    │   │   ├── CompartirExcel.js
+    │   │   ├── ContadorPedidosDiarios.vue
+    │   │   ├── ExportarPedidosExcel.js
+    │   │   ├── GeneraExcel.js
+    │   │   ├── HistorialPedidos.vue
+    │   │   └── PedidosRealizados.vue
+    │   └── Ubicaciones/
+    │       ├── CamaraEscaneo.vue
+    │       ├── CamaraUbicaciones.vue
+    │       ├── CodigoMasNombre.vue
+    │       ├── ExportarUbicacionesExcel.js
+    │       ├── FormularioUbicacion.vue
+    │       ├── TablaUbicaciones.vue
+    │       ├── SelectorExcel.vue
+    │       └── recordarUltimaTipografia.js
+    └── Modales/
+        ├── ModalEditarPedido.vue
+        ├── ModalEditarUbicacion.vue
+        ├── ModalEliminar.vue
+        └── ModalNuevoPedido.vue
 ```
 
 ---
