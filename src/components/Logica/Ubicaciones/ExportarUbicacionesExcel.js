@@ -1,7 +1,7 @@
 // ExportarUbicacionesExcel.js
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
-import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
+import { obtenerArticulosCargados, obtenerUbicacionAntigua } from '../../BaseDeDatos/LectorExcel.js'
 
 // --- Función para obtener el nombre del artículo ---
 function obtenerNombreArticulo(codigo) {
@@ -29,10 +29,26 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     hojaDeTrabajo['D1'] = { v: 'deposito', t: 's' }
     hojaDeTrabajo['E1'] = { v: 'ubic', t: 's' }
     hojaDeTrabajo['F1'] = { v: 'Descripcion', t: 's' }
+    hojaDeTrabajo['G1'] = { v: 'ubicacion antigua', t: 's' }
+
+    // --- Contadores para estadísticas ---
+    let ubicacionesAntiguasEncontradas = 0
+    let ubicacionesAntiguasVacias = 0
 
     // --- Datos de ubicaciones desde fila 2 ---
     ubicaciones.forEach((ubicacion, indice) => {
       const numeroFila = indice + 2 // fila 2 para el primer dato
+
+      // Obtener ubicación antigua
+      const ubicacionAntiguaDelArticulo = obtenerUbicacionAntigua(ubicacion.codigo)
+
+      // Actualizar estadísticas
+      if (ubicacionAntiguaDelArticulo && ubicacionAntiguaDelArticulo.trim() !== '') {
+        ubicacionesAntiguasEncontradas++
+      } else {
+        ubicacionesAntiguasVacias++
+      }
+
       // Columna A: código del artículo
       hojaDeTrabajo[`A${numeroFila}`] = {
         v: ubicacion.codigo || 'Sin código',
@@ -53,7 +69,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
         v: '00000016',
         t: 's',
       }
-      // Columna E: ubicación
+      // Columna E: ubicación nueva
       hojaDeTrabajo[`E${numeroFila}`] = {
         v: ubicacion.ubicacion || 'Sin ubicación',
         t: 's',
@@ -63,11 +79,17 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
         v: obtenerNombreArticulo(ubicacion.codigo),
         t: 's',
       }
+      // Columna G: ubicación antigua
+      hojaDeTrabajo[`G${numeroFila}`] = {
+        v: ubicacionAntiguaDelArticulo || '', // Vacío si no tiene
+        t: 's',
+      }
     })
 
     // --- Definir rango de la hoja ---
     const ultimaFila = ubicaciones.length + 1 // +1 por los encabezados
-    hojaDeTrabajo['!ref'] = `A1:F${ultimaFila}`
+    hojaDeTrabajo['!ref'] = `A1:G${ultimaFila}` // A1:G en lugar de A1:F
+
     // --- Crear libro y agregar hoja ---
     const libroDeTrabajo = XLSX.utils.book_new()
     const nombreHoja = 'Ubicaciones'
@@ -75,6 +97,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
 
     // --- Nombre del archivo ---
     const nombreArchivo = 'Ubicaciones.xlsx'
+
     // --- Convertir a Base64 y guardar ---
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
     const resultadoEscritura = await Filesystem.writeFile({
@@ -82,10 +105,73 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
       data: datosEnBase64,
       directory: Directory.Cache,
     })
-    console.log('Archivo de ubicaciones guardado temporalmente en:', resultadoEscritura.uri)
+
+    // --- Log de estadísticas ---
+    console.log('- Archivo de ubicaciones generado exitosamente:')
+    console.log(`- Ubicaciones totales: ${ubicaciones.length}`)
+    console.log(`- Con ubicación antigua: ${ubicacionesAntiguasEncontradas}`)
+    console.log(`- Sin ubicación antigua: ${ubicacionesAntiguasVacias}`)
+    console.log(`- Archivo guardado en: ${resultadoEscritura.uri}`)
+    console.log(
+      `- Columnas exportadas: A-articulo, B-sub1, C-sub2, D-deposito, E-ubic, F-descripcion, G-ubicacion antigua`,
+    )
+
     return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {
-    console.error('Error al generar o guardar el archivo Excel de ubicaciones:', error)
+    console.error(' Error al generar o guardar el archivo Excel de ubicaciones:', error)
     return null
+  }
+}
+
+// Función auxiliar para obtener estadísticas antes de exportar
+export function obtenerEstadisticasUbicaciones(ubicaciones) {
+  if (!ubicaciones || ubicaciones.length === 0) {
+    return {
+      total: 0,
+      conUbicacionAntigua: 0,
+      sinUbicacionAntigua: 0,
+      porcentajeConAntigua: 0,
+    }
+  }
+  let conUbicacionAntigua = 0
+  let sinUbicacionAntigua = 0
+  ubicaciones.forEach((ubicacion) => {
+    const ubicacionAntigua = obtenerUbicacionAntigua(ubicacion.codigo)
+    if (ubicacionAntigua && ubicacionAntigua.trim() !== '') {
+      conUbicacionAntigua++
+    } else {
+      sinUbicacionAntigua++
+    }
+  })
+  const porcentajeConAntigua = Math.round((conUbicacionAntigua / ubicaciones.length) * 100)
+  return {
+    total: ubicaciones.length,
+    conUbicacionAntigua,
+    sinUbicacionAntigua,
+    porcentajeConAntigua,
+  }
+}
+
+// Función para validar si hay datos de ubicaciones antiguas
+export function validarDatosUbicacionesAntiguas() {
+  const articulosCargados = obtenerArticulosCargados()
+  if (articulosCargados.length === 0) {
+    return {
+      valido: false,
+      mensaje: 'No hay base de datos Excel cargada',
+      tieneUbicacionesAntiguas: false,
+      totalArticulos: 0,
+      articulosConUbicacionAntigua: 0,
+    }
+  }
+  const articulosConUbicacionAntigua = articulosCargados.filter(
+    (articulo) => articulo.ubicacionAntigua && articulo.ubicacionAntigua.trim() !== '',
+  ).length
+  return {
+    valido: true,
+    mensaje: 'Base de datos disponible',
+    tieneUbicacionesAntiguas: articulosConUbicacionAntigua > 0,
+    totalArticulos: articulosCargados.length,
+    articulosConUbicacionAntigua,
   }
 }

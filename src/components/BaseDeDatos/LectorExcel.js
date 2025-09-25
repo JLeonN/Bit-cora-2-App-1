@@ -17,7 +17,7 @@ async function guardarBaseDatosEnPreferences() {
       articulosCargados: articulosDelExcel,
       informacionArchivo: informacionArchivo,
       fechaCarga: Date.now(),
-      version: '1.0',
+      version: '2.0',
     }
 
     await Preferences.set({
@@ -51,8 +51,16 @@ async function cargarBaseDatosDesdePreferences() {
       return false
     }
 
+    // Migración automática para versiones anteriores sin ubicación antigua
+    const articulosMigrados = datosGuardados.articulosCargados.map((articulo) => ({
+      codigo: articulo.codigo,
+      nombre: articulo.nombre,
+      ubicacionAntigua: articulo.ubicacionAntigua || '', // Por defecto vacío
+      stock: articulo.stock || '', // Por defecto vacío
+    }))
+
     // Restaurar datos
-    articulosDelExcel = datosGuardados.articulosCargados
+    articulosDelExcel = articulosMigrados
     informacionArchivo = datosGuardados.informacionArchivo
     estadoCarga = articulosDelExcel.length > 0 ? 'cargado' : 'no-cargado'
 
@@ -60,6 +68,9 @@ async function cargarBaseDatosDesdePreferences() {
     console.log(`- Artículos: ${articulosDelExcel.length}`)
     console.log(`- Archivo: ${informacionArchivo?.nombre || 'Sin info'}`)
     console.log(`- Fecha carga: ${new Date(datosGuardados.fechaCarga || 0).toLocaleString()}`)
+    console.log(
+      `- Con ubicaciones antiguas: ${articulosMigrados.filter((a) => a.ubicacionAntigua).length}`,
+    )
 
     return true
   } catch (error) {
@@ -212,6 +223,10 @@ export async function cargarArticulosDesdeExcel() {
     console.log(`- Archivo: ${informacionArchivo.nombre}`)
     console.log(`- Tamaño: ${(informacionArchivo.tamano / 1024).toFixed(1)} KB`)
     console.log(`- Artículos cargados: ${articulosProcesados.length}`)
+    console.log(
+      `- Con ubicaciones antiguas: ${articulosProcesados.filter((a) => a.ubicacionAntigua).length}`,
+    )
+    console.log(`- Con stock: ${articulosProcesados.filter((a) => a.stock).length}`)
     console.log(`- Muestra:`, articulosProcesados.slice(0, 3))
 
     return {
@@ -246,6 +261,7 @@ export async function cargarArticulosDesdeExcel() {
 }
 
 // --- FUNCIÓN PARA PROCESAR DATOS DEL EXCEL ---
+// Procesa las 4 columnas A, B, C, D
 function procesarDatosExcel(datosJson) {
   const articulosProcesados = []
   const filas = datosJson.slice(1) // Omitir encabezados
@@ -262,7 +278,7 @@ function procesarDatosExcel(datosJson) {
   for (let i = 0; i < filas.length; i++) {
     const fila = filas[i]
 
-    // Validar que la fila tenga datos
+    // Validar que la fila tenga datos mínimos (código y nombre)
     if (!fila || fila.length < 2) {
       filasOmitidas++
       continue
@@ -270,6 +286,8 @@ function procesarDatosExcel(datosJson) {
 
     const codigo = fila[0]?.toString()?.trim()
     const nombre = fila[1]?.toString()?.trim()
+    const ubicacionAntigua = fila[2]?.toString()?.trim() || '' // Columna C
+    const stock = fila[3]?.toString()?.trim() || '' // Columna D (para futuro)
 
     // Validar que código y nombre no estén vacíos
     if (!codigo || !nombre) {
@@ -277,15 +295,22 @@ function procesarDatosExcel(datosJson) {
       continue
     }
 
+    // Incluir nuevos campos
     articulosProcesados.push({
       codigo: codigo.toUpperCase(),
       nombre: nombre.toUpperCase(),
+      ubicacionAntigua: ubicacionAntigua.toUpperCase(),
+      stock: stock, // (mantenemos original para números)
     })
   }
 
   console.log(`Procesamiento completado:`)
   console.log(`- Filas procesadas: ${articulosProcesados.length}`)
   console.log(`- Filas omitidas: ${filasOmitidas}`)
+  console.log(
+    `- Artículos con ubicación antigua: ${articulosProcesados.filter((a) => a.ubicacionAntigua).length}`,
+  )
+  console.log(`- Artículos con stock: ${articulosProcesados.filter((a) => a.stock).length}`)
 
   return articulosProcesados
 }
@@ -333,6 +358,42 @@ export async function reiniciarBaseDatos() {
   await limpiarBaseDatosPersistida()
 
   console.log('Base de datos reiniciada y persistencia limpiada')
+}
+
+// Obtener ubicación antigua de un artículo
+export function obtenerUbicacionAntigua(codigo) {
+  // Validar que el código recibido no esté vacío
+  if (!codigo || typeof codigo !== 'string') {
+    console.warn('[obtenerUbicacionAntigua] Código inválido:', codigo)
+    return ''
+  }
+  const articuloEncontrado = articulosDelExcel.find(
+    (articulo) =>
+      articulo && // Validar que el artículo existe
+      articulo.codigo && // Validar que el código existe
+      typeof articulo.codigo === 'string' && // Validar que es string
+      articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  )
+  return articuloEncontrado?.ubicacionAntigua || ''
+}
+
+// Obtener stock de un artículo (para futuro uso) - TAMBIÉN CORREGIDO
+export function obtenerStock(codigo) {
+  // Validar que el código recibido no esté vacío
+  if (!codigo || typeof codigo !== 'string') {
+    console.warn('[obtenerStock] Código inválido:', codigo)
+    return ''
+  }
+
+  const articuloEncontrado = articulosDelExcel.find(
+    (articulo) =>
+      articulo && // Validar que el artículo existe
+      articulo.codigo && // Validar que el código existe
+      typeof articulo.codigo === 'string' && // Validar que es string
+      articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  )
+
+  return articuloEncontrado?.stock || ''
 }
 
 // --- FUNCIÓN PARA VERIFICAR SOPORTE DEL NAVEGADOR ---

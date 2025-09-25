@@ -10,7 +10,7 @@
 
     <!-- Tabla -->
     <TablaUbicaciones
-      :ubicaciones="ubicaciones"
+      :ubicaciones="ubicacionesArray"
       @abrirModalEditar="abrirModalEditar"
       @abrirModalEliminar="abrirModalEliminar"
       @abrirModalEliminarTodas="abrirModalEliminarTodas"
@@ -65,7 +65,20 @@ import {
 const emit = defineEmits(['configurar-barra'])
 
 // --- ESTADO PRINCIPAL ---
-const ubicaciones = ref([])
+const ubicaciones = ref([]) // SIEMPRE inicializar como array vacío
+
+// Computed para garantizar que siempre sea array
+const ubicacionesArray = computed(() => {
+  if (!Array.isArray(ubicaciones.value)) {
+    console.warn(
+      '[AjustarUbicaciones] ubicaciones no es array:',
+      typeof ubicaciones.value,
+      ubicaciones.value,
+    )
+    return []
+  }
+  return ubicaciones.value
+})
 
 // Modal eliminar
 const mostrarModalEliminar = ref(false)
@@ -86,8 +99,8 @@ const mensajeError = ref('')
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false, // Se agrega desde el formulario integrado
-  mostrarEnviar: ubicaciones.value.length > 0,
-  puedeEnviar: ubicaciones.value.length > 0,
+  mostrarEnviar: ubicacionesArray.value.length > 0,
+  puedeEnviar: ubicacionesArray.value.length > 0,
   botonesPersonalizados: [
     // Botón de limpiar todas las ubicaciones
     {
@@ -95,7 +108,7 @@ const configuracionBarra = computed(() => ({
       accion: 'eliminar-todas',
       titulo: 'Eliminar todas las ubicaciones',
       claseCSS: 'boton-eliminar',
-      desactivado: ubicaciones.value.length === 0,
+      desactivado: ubicacionesArray.value.length === 0,
     },
   ],
 }))
@@ -122,7 +135,7 @@ const actualizarConfiguracionBarra = () => {
 
 // Watchers para actualizar la barra cuando cambien los datos
 watch(
-  () => ubicaciones.value.length,
+  () => ubicacionesArray.value.length,
   () => {
     actualizarConfiguracionBarra()
   },
@@ -142,36 +155,97 @@ function manejarErrorCarga(mensaje) {
   setTimeout(() => (mensajeError.value = ''), 3000)
 }
 
-// --- FUNCIÓN AGREGAR UBICACIÓN ---
+// --- FUNCIÓN AGREGAR UBICACIÓN
 async function agregarUbicacion(datosNuevos) {
-  ubicaciones.value.unshift({
-    codigo: datosNuevos.codigo,
-    ubicacion: datosNuevos.ubicacion,
-  })
+  try {
+    // Asegurar que ubicaciones.value es un array
+    if (!Array.isArray(ubicaciones.value)) {
+      console.warn('[agregarUbicacion] Reinicializando ubicaciones como array')
+      ubicaciones.value = []
+    }
 
-  await guardarUbicaciones(ubicaciones.value)
-  actualizarConfiguracionBarra()
+    // Validar datos nuevos
+    if (!datosNuevos || !datosNuevos.codigo || !datosNuevos.ubicacion) {
+      console.error('[agregarUbicacion] Datos inválidos:', datosNuevos)
+      mensajeError.value = 'Datos de ubicación inválidos'
+      setTimeout(() => (mensajeError.value = ''), 3000)
+      return
+    }
+
+    const nuevaUbicacion = {
+      codigo: String(datosNuevos.codigo).trim().toUpperCase(),
+      ubicacion: String(datosNuevos.ubicacion).trim().toUpperCase(),
+    }
+
+    ubicaciones.value.unshift(nuevaUbicacion)
+    await guardarUbicaciones(ubicaciones.value)
+    actualizarConfiguracionBarra()
+
+    console.log('[agregarUbicacion] Ubicación agregada:', nuevaUbicacion)
+  } catch (error) {
+    console.error('[agregarUbicacion] Error:', error)
+    mensajeError.value = 'Error al agregar ubicación: ' + error.message
+    setTimeout(() => (mensajeError.value = ''), 3000)
+  }
 }
 
 // Abrir modal editar
 function abrirModalEditar(indice) {
-  ubicacionEditar.value = { ...ubicaciones.value[indice] }
-  indiceEditar = indice
-  mostrarModalEditar.value = true
+  try {
+    if (
+      !Array.isArray(ubicacionesArray.value) ||
+      indice < 0 ||
+      indice >= ubicacionesArray.value.length
+    ) {
+      console.error('[abrirModalEditar] Índice inválido:', indice)
+      mensajeError.value = 'Error: ubicación no encontrada'
+      setTimeout(() => (mensajeError.value = ''), 3000)
+      return
+    }
+
+    ubicacionEditar.value = { ...ubicacionesArray.value[indice] }
+    indiceEditar = indice
+    mostrarModalEditar.value = true
+  } catch (error) {
+    console.error('[abrirModalEditar] Error:', error)
+    mensajeError.value = 'Error al abrir editor'
+    setTimeout(() => (mensajeError.value = ''), 3000)
+  }
 }
 
 // Guardar edición
 async function guardarEdicion(datos) {
-  if (indiceEditar !== null) {
+  try {
+    if (indiceEditar === null || !Array.isArray(ubicaciones.value)) {
+      console.error('[guardarEdicion] Estado inválido')
+      return
+    }
+
+    if (indiceEditar < 0 || indiceEditar >= ubicaciones.value.length) {
+      console.error('[guardarEdicion] Índice fuera de rango:', indiceEditar)
+      return
+    }
+
     ubicaciones.value[indiceEditar] = {
-      codigo: datos.codigo.trim().toUpperCase(),
-      ubicacion: datos.ubicacion.trim().toUpperCase(),
+      codigo: String(datos.codigo || '')
+        .trim()
+        .toUpperCase(),
+      ubicacion: String(datos.ubicacion || '')
+        .trim()
+        .toUpperCase(),
     }
     await guardarUbicaciones(ubicaciones.value)
     actualizarConfiguracionBarra()
+
+    mostrarModalEditar.value = false
+    indiceEditar = null
+
+    console.log('[guardarEdicion] Ubicación editada exitosamente')
+  } catch (error) {
+    console.error('[guardarEdicion] Error:', error)
+    mensajeError.value = 'Error al guardar cambios: ' + error.message
+    setTimeout(() => (mensajeError.value = ''), 3000)
   }
-  mostrarModalEditar.value = false
-  indiceEditar = null
 }
 
 // Cerrar modal editar
@@ -182,19 +256,44 @@ function cerrarModalEditar() {
 
 // Abrir modal eliminar
 function abrirModalEliminar(indice) {
-  ubicacionEliminar.value = ubicaciones.value[indice]
-  mostrarModalEliminar.value = true
+  try {
+    if (
+      !Array.isArray(ubicacionesArray.value) ||
+      indice < 0 ||
+      indice >= ubicacionesArray.value.length
+    ) {
+      console.error('[abrirModalEliminar] Índice inválido:', indice)
+      return
+    }
+
+    ubicacionEliminar.value = ubicacionesArray.value[indice]
+    mostrarModalEliminar.value = true
+  } catch (error) {
+    console.error('[abrirModalEliminar] Error:', error)
+  }
 }
 
 // Confirmar eliminación
 async function confirmarEliminacion() {
-  const indice = ubicaciones.value.indexOf(ubicacionEliminar.value)
-  if (indice !== -1) {
-    ubicaciones.value.splice(indice, 1)
-    await guardarUbicaciones(ubicaciones.value)
-    actualizarConfiguracionBarra()
+  try {
+    if (!Array.isArray(ubicaciones.value) || !ubicacionEliminar.value) {
+      console.error('[confirmarEliminacion] Estado inválido')
+      return
+    }
+
+    const indice = ubicaciones.value.indexOf(ubicacionEliminar.value)
+    if (indice !== -1) {
+      ubicaciones.value.splice(indice, 1)
+      await guardarUbicaciones(ubicaciones.value)
+      actualizarConfiguracionBarra()
+    }
+
+    mostrarModalEliminar.value = false
+  } catch (error) {
+    console.error('[confirmarEliminacion] Error:', error)
+    mensajeError.value = 'Error al eliminar ubicación'
+    setTimeout(() => (mensajeError.value = ''), 3000)
   }
-  mostrarModalEliminar.value = false
 }
 
 // Cerrar modal eliminar
@@ -209,13 +308,19 @@ function abrirModalEliminarTodas() {
 
 // Confirmar eliminación de todas
 async function confirmarEliminacionTodas() {
-  ubicaciones.value = []
-  await guardarUbicaciones(ubicaciones.value)
-  mostrarModalEliminarTodas.value = false
-  actualizarConfiguracionBarra()
+  try {
+    ubicaciones.value = []
+    await guardarUbicaciones(ubicaciones.value)
+    mostrarModalEliminarTodas.value = false
+    actualizarConfiguracionBarra()
 
-  mensajeExito.value = 'Todas las ubicaciones eliminadas'
-  setTimeout(() => (mensajeExito.value = ''), 3000)
+    mensajeExito.value = 'Todas las ubicaciones eliminadas'
+    setTimeout(() => (mensajeExito.value = ''), 3000)
+  } catch (error) {
+    console.error('[confirmarEliminacionTodas] Error:', error)
+    mensajeError.value = 'Error al eliminar ubicaciones'
+    setTimeout(() => (mensajeError.value = ''), 3000)
+  }
 }
 
 // Cerrar modal eliminar todas
@@ -223,21 +328,22 @@ function cerrarModalEliminarTodas() {
   mostrarModalEliminarTodas.value = false
 }
 
-// --- FUNCIÓN ENVIAR UBICACIONES COMO EXCEL ---
+// --- FUNCIÓN ENVIAR UBICACIONES COMO EXCEL
 async function enviarUbicacionesExcel() {
-  if (!ubicaciones.value.length) {
-    mensajeError.value = 'No hay ubicaciones para exportar'
-    setTimeout(() => (mensajeError.value = ''), 3000)
-    return
-  }
-
   try {
-    const { uri, nombreArchivo } = await generarYGuardarExcelUbicaciones(ubicaciones.value)
-    if (!uri) {
+    if (!Array.isArray(ubicacionesArray.value) || ubicacionesArray.value.length === 0) {
+      mensajeError.value = 'No hay ubicaciones para exportar'
+      setTimeout(() => (mensajeError.value = ''), 3000)
+      return
+    }
+
+    const resultado = await generarYGuardarExcelUbicaciones(ubicacionesArray.value)
+
+    if (!resultado || !resultado.uri) {
       throw new Error('No se pudo generar el archivo Excel')
     }
 
-    await compartirArchivo(uri, nombreArchivo)
+    await compartirArchivo(resultado.uri, resultado.nombreArchivo)
     mensajeExito.value = 'Archivo de ubicaciones enviado correctamente'
     setTimeout(() => (mensajeExito.value = ''), 3000)
   } catch (error) {
@@ -249,10 +355,31 @@ async function enviarUbicacionesExcel() {
 
 // Cargar ubicaciones al montar
 onMounted(async () => {
-  ubicaciones.value = await obtenerUbicaciones()
+  try {
+    console.log('[AjustarUbicaciones] Montando componente...')
 
-  // Configurar la barra inferior
-  actualizarConfiguracionBarra()
+    // Cargar ubicaciones con validación
+    const ubicacionesCargadas = await obtenerUbicaciones()
+
+    if (Array.isArray(ubicacionesCargadas)) {
+      ubicaciones.value = ubicacionesCargadas
+      console.log(`[AjustarUbicaciones] ${ubicacionesCargadas.length} ubicaciones cargadas`)
+    } else {
+      console.warn(
+        '[AjustarUbicaciones] obtenerUbicaciones() no devolvió array:',
+        ubicacionesCargadas,
+      )
+      ubicaciones.value = [] // Fallback seguro
+    }
+
+    // Configurar la barra inferior
+    actualizarConfiguracionBarra()
+  } catch (error) {
+    console.error('[AjustarUbicaciones] Error en onMounted:', error)
+    ubicaciones.value = [] // Fallback en caso de error
+    mensajeError.value = 'Error al cargar ubicaciones: ' + error.message
+    setTimeout(() => (mensajeError.value = ''), 3000)
+  }
 })
 
 onUnmounted(() => {
