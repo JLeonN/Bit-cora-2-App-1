@@ -29,7 +29,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     hojaDeTrabajo['D1'] = { v: 'deposito', t: 's' }
     hojaDeTrabajo['E1'] = { v: 'ubic', t: 's' }
     hojaDeTrabajo['F1'] = { v: 'Descripcion', t: 's' }
-    hojaDeTrabajo['G1'] = { v: 'ubicacion antigua', t: 's' }
+    hojaDeTrabajo['G1'] = { v: 'Ubic Antigua', t: 's' }
 
     // --- Contadores para estadísticas ---
     let ubicacionesAntiguasEncontradas = 0
