@@ -60,7 +60,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Nombre de archivo dinámico con rango de fechas (`Pedidos_DD-MM-AAAA_a_DD-MM-AAAA.xlsx`).  
 - **ExportarUbicacionesExcel.js** para manejar exportación y envío de Excel desde el módulo de ubicaciones.  
   - **Integración con base de datos cargada**: Obtiene nombres de artículos automáticamente usando `obtenerNombreArticulo()`.
-  - Genera columnas: `articulo`, `sub1`, `sub2`, `deposito`, `ubic`, `Descripcion`.
+  - **Incluye ubicaciones antiguas**: Genera columnas: `articulo`, `sub1`, `sub2`, `deposito`, `ubic`, `Descripcion`, `UbicacionAntigua`.
 - **✅ INTEGRADO CON BARRA INFERIOR**: Botón de envío disponible dinámicamente.
 
 ---
@@ -92,7 +92,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **✅ NUEVO: Recordar última ubicación** - Carga automáticamente la última ubicación usada.
   - **✅ NUEVO: Botón IconTrash** para limpiar ubicación recordada cuando se cambia de zona.
   - **✅ NUEVO: Mantener ubicación** entre artículos consecutivos (solo limpia el código).
-- **TablaUbicaciones.vue:** Lista de ubicaciones con acciones y **detección de códigos duplicados**.
+- **✅ TablaUbicaciones.vue:** Lista de ubicaciones con acciones y **detección de códigos duplicados**
   - Muestra nombres de artículos obtenidos de la base de datos.
   - Resalta visualmente códigos repetidos.
   - Contador de códigos duplicados.
@@ -139,7 +139,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 ---
 
 #### 🔎 **Sistema de Búsqueda Inteligente**
-- **CodigoMasNombre.vue:** Buscador con base de datos Excel cargada.
+- **✅ CodigoMasNombre.vue:** Buscador con base de datos Excel cargada
   - **Monitoreo automático** de cambios en la base de datos (polling cada 1s).
   - **Búsqueda priorizada**:
     1. Códigos que empiecen exactamente con la búsqueda.
@@ -198,6 +198,12 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Confirmación antes de limpiar datos.
   - **✅ Sin interrupciones** - La base se carga automáticamente en segundo plano.
 
+- **✅ UI Simplificada**:
+  - **Eliminación de información redundante** en la interfaz de usuario.
+  - **Ubicaciones antiguas** solo visibles en Excel exportado, no en la UI.
+  - **Buscador más limpio** sin indicadores de tipo de coincidencia.
+  - **Tablas más simples** enfocadas en la información esencial.
+
 - **Responsive design** en todos los componentes.
 - **✅ Botones de limpiar ubicación**:
   - IconTrash consistente con el resto de la aplicación.
@@ -227,7 +233,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **✅ Persistencia automática de base de datos Excel** - Se guarda y restaura automáticamente sin intervención del usuario.
 - **✅ Inicialización automática** - La base de datos se carga automáticamente al iniciar la aplicación.
 - **✅ UX sin fricciones** - El usuario carga el archivo una vez y queda disponible para siempre.
-- **🚀  Sistema de navegación centralizado y moderno**:
+- **🚀 Sistema de navegación centralizado y moderno**:
   - Barra inferior flotante con configuración dinámica por página.
   - Arquitectura escalable para botones personalizados.
   - Limpieza de componentes obsoletos para mejor mantenimiento.
@@ -237,18 +243,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Mensajes contextuales para fines de semana y días sin actividad.
   - Integración completa con el flujo de pedidos existente.
   - Base sólida para futuras estadísticas avanzadas.
-
----
-
-### 🎯 **Siguientes Objetivos**
-- Refinar experiencia en envíos (manejo de errores).  
-- Mejorar UI/UX general.  
-- Implementar control de stock con exportación a Excel.  
-- Ajustar detalles de cámara y modales.  
-- **Optimizar rendimiento** del buscador para bases de datos grandes.
-- **Implementar caché** para búsquedas frecuentes.
-- **Mejorar validaciones** de archivos Excel (estructura de columnas).
-- **Agregar estadísticas** de ubicaciones más utilizadas.
+- **🧹 Simplificación de UI reciente**:
+  - **Ubicaciones antiguas eliminadas** de TablaUbicaciones.vue - Solo visible en Excel.
+  - **Buscador simplificado** sin indicadores de tipo de coincidencia.
+  - **Interface más limpia** enfocada en información esencial.
+  - **Mejor experiencia de usuario** con menos distracciones visuales.
 
 ---
 
