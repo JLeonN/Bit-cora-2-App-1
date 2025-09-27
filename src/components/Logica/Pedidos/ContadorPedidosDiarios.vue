@@ -2,7 +2,7 @@
   <div class="contenedor-contador">
     <div class="tarjeta-contador">
       <div class="icono-contador">
-        <IconCalendarEvent size="24" />
+        <component :is="obtenerIconoContador" size="24" />
       </div>
       <div class="info-contador">
         <p class="texto-contador">{{ textoContador }}</p>
@@ -14,7 +14,14 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { IconCalendarEvent } from '@tabler/icons-vue'
+import {
+  IconCalendarEvent,
+  IconThumbUp,
+  IconFlame,
+  IconBolt,
+  IconTornado,
+  IconDiamond,
+} from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../BaseDeDatos/almacenamiento.js'
 
 // Estado reactivo
@@ -38,18 +45,54 @@ const fechaFormateada = computed(() => {
   return fechaActual.value.toLocaleDateString('es-ES', opciones)
 })
 
-// Texto dinámico del contador
+// Función para obtener el icono según la cantidad de pedidos
+const obtenerIconoContador = computed(() => {
+  const esFinde = esFinesDeSemana(fechaActual.value)
+  const cantidad = pedidosDelDia.value
+
+  // Si no hay pedidos, siempre calendario
+  if (cantidad === 0) {
+    return IconCalendarEvent
+  }
+
+  // Fin de semana: empieza con pulgar desde pedido 1
+  if (esFinde) {
+    if (cantidad >= 50) return IconDiamond // 50+ diamante
+    if (cantidad >= 40) return IconTornado // 40-49 tornado
+    if (cantidad >= 30) return IconBolt // 30-39 rayo
+    if (cantidad >= 20) return IconFlame // 20-29 llama
+    return IconThumbUp // 1-19 pulgar arriba
+  }
+
+  // Entre semana: sin icono hasta el 10
+  if (cantidad >= 50) return IconDiamond // 50+ diamante
+  if (cantidad >= 40) return IconTornado // 40-49 tornado
+  if (cantidad >= 30) return IconBolt // 30-39 rayo
+  if (cantidad >= 20) return IconFlame // 20-29 llama
+  if (cantidad >= 10) return IconThumbUp // 10-19 pulgar arriba
+
+  return IconCalendarEvent // 1-9 calendario normal
+})
+// Texto dinámico del contador mejorado
 const textoContador = computed(() => {
   const esFinde = esFinesDeSemana(fechaActual.value)
 
-  if (esFinde) {
-    return '¡Buen descanso! 🌟'
+  // Si es fin de semana pero están trabajando (tienen pedidos)
+  if (esFinde && pedidosDelDia.value > 0) {
+    return `Pedidos del día: ${pedidosDelDia.value}`
   }
 
+  // Fin de semana sin pedidos - descanso
+  if (esFinde) {
+    return '¡Buen descanso!'
+  }
+
+  // Entre semana sin pedidos
   if (pedidosDelDia.value === 0) {
     return 'Todavía no se ingresaron pedidos'
   }
 
+  // Entre semana con pedidos
   return `Pedidos del día de hoy: ${pedidosDelDia.value}`
 })
 
