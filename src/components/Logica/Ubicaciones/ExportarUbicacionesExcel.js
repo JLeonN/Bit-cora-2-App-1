@@ -3,6 +3,18 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
 import { obtenerArticulosCargados, obtenerUbicacionAntigua } from '../../BaseDeDatos/LectorExcel.js'
 
+// --- CONFIGURACIÓN DE ANCHOS DE COLUMNAS ---
+const ANCHOS_COLUMNAS = [
+  { wch: 18 }, // A - articulo
+  { wch: 6 }, // B - sub1
+  { wch: 6 }, // C - sub2
+  { wch: 10 }, // D - deposito
+  { wch: 8 }, // E - ubic
+  { wch: 65 }, // F - Descripcion
+  { wch: 12 }, // G - Ubic Antigua
+  { wch: 7 }, // H - Info (emojis)
+]
+
 // --- Función para obtener el nombre del artículo ---
 function obtenerNombreArticulo(codigo) {
   const articulosCargados = obtenerArticulosCargados()
@@ -22,6 +34,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
   try {
     // --- Crear hoja de trabajo vacía ---
     const hojaDeTrabajo = XLSX.utils.aoa_to_sheet([])
+
     // --- ENCABEZADOS en fila 1 ---
     hojaDeTrabajo['A1'] = { v: 'articulo', t: 's' }
     hojaDeTrabajo['B1'] = { v: 'sub1', t: 's' }
@@ -30,6 +43,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     hojaDeTrabajo['E1'] = { v: 'ubic', t: 's' }
     hojaDeTrabajo['F1'] = { v: 'Descripcion', t: 's' }
     hojaDeTrabajo['G1'] = { v: 'Ubic Antigua', t: 's' }
+    hojaDeTrabajo['H1'] = { v: 'Info', t: 's' }
 
     // --- Contadores para estadísticas ---
     let ubicacionesAntiguasEncontradas = 0
@@ -39,14 +53,26 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     ubicaciones.forEach((ubicacion, indice) => {
       const numeroFila = indice + 2 // fila 2 para el primer dato
 
-      // Obtener ubicación antigua
+      // Obtener ubicación antigua y descripción
       const ubicacionAntiguaDelArticulo = obtenerUbicacionAntigua(ubicacion.codigo)
+      const descripcionArticulo = obtenerNombreArticulo(ubicacion.codigo)
 
       // Actualizar estadísticas
       if (ubicacionAntiguaDelArticulo && ubicacionAntiguaDelArticulo.trim() !== '') {
         ubicacionesAntiguasEncontradas++
       } else {
         ubicacionesAntiguasVacias++
+      }
+
+      // --- DETERMINAR EMOJI SEGÚN CONDICIONES ---
+      const esUbicacionSL = ubicacionAntiguaDelArticulo.toUpperCase() === 'SL'
+      const esArticuloInexistente = descripcionArticulo === 'Artículo inexistente'
+
+      // Prioridad: SL → ❌, Inexistente → ❌, Resto → ✔️
+      let emojiInfo = '✔️' // Por defecto OK
+
+      if (esUbicacionSL || esArticuloInexistente) {
+        emojiInfo = '❌' // Error para SL o inexistente
       }
 
       // Columna A: código del artículo
@@ -76,19 +102,29 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
       }
       // Columna F: descripción (nombre del artículo)
       hojaDeTrabajo[`F${numeroFila}`] = {
-        v: obtenerNombreArticulo(ubicacion.codigo),
+        v: descripcionArticulo,
         t: 's',
       }
+
       // Columna G: ubicación antigua
       hojaDeTrabajo[`G${numeroFila}`] = {
         v: ubicacionAntiguaDelArticulo || '', // Vacío si no tiene
+        t: 's',
+      }
+
+      // Columna H: Info con emoji
+      hojaDeTrabajo[`H${numeroFila}`] = {
+        v: emojiInfo,
         t: 's',
       }
     })
 
     // --- Definir rango de la hoja ---
     const ultimaFila = ubicaciones.length + 1 // +1 por los encabezados
-    hojaDeTrabajo['!ref'] = `A1:G${ultimaFila}` // A1:G en lugar de A1:F
+    hojaDeTrabajo['!ref'] = `A1:H${ultimaFila}` // Ahora hasta columna H
+
+    // --- APLICAR ANCHOS DE COLUMNAS ---
+    hojaDeTrabajo['!cols'] = ANCHOS_COLUMNAS
 
     // --- Crear libro y agregar hoja ---
     const libroDeTrabajo = XLSX.utils.book_new()
@@ -111,14 +147,15 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     console.log(`- Ubicaciones totales: ${ubicaciones.length}`)
     console.log(`- Con ubicación antigua: ${ubicacionesAntiguasEncontradas}`)
     console.log(`- Sin ubicación antigua: ${ubicacionesAntiguasVacias}`)
+    console.log(`- Anchos aplicados: A(18), B(6), C(6), D(10), E(8), F(65), G(12), H(7)`)
+    console.log(`📋 COLUMNA INFO (H):`)
+    console.log(`- = Ubicación SL o Artículo inexistente`)
+    console.log(`- = Todo correcto`)
     console.log(`- Archivo guardado en: ${resultadoEscritura.uri}`)
-    console.log(
-      `- Columnas exportadas: A-articulo, B-sub1, C-sub2, D-deposito, E-ubic, F-descripcion, G-ubicacion antigua`,
-    )
 
     return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {
-    console.error(' Error al generar o guardar el archivo Excel de ubicaciones:', error)
+    console.error('Error al generar o guardar el archivo Excel de ubicaciones:', error)
     return null
   }
 }

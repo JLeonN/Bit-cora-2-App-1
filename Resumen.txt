@@ -59,10 +59,13 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
 - Uso de **@capacitor/filesystem** para guardar Excel en Base64 en `Directory.Cache`.  
 - Nombre de archivo dinámico con rango de fechas (`Pedidos_DD-MM-AAAA_a_DD-MM-AAAA.xlsx`).  
-- **ExportarUbicacionesExcel.js** para manejar exportación y envío de Excel desde el módulo de ubicaciones.  
-  - **Integración con base de datos cargada**: Obtiene nombres de artículos automáticamente usando `obtenerNombreArticulo()`.
-  - **Incluye ubicaciones antiguas**: Genera columnas: `articulo`, `sub1`, `sub2`, `deposito`, `ubic`, `Descripcion`, `UbicacionAntigua`.
-- **✅ INTEGRADO CON BARRA INFERIOR**: Botón de envío disponible dinámicamente.
+- **✅ ExportarUbicacionesExcel.js MEJORADO:**
+  - **Anchos optimizados** para todas las columnas según contenido real.
+  - **Nueva columna H "Info"** con sistema de emojis para identificación rápida.
+  - **❌ Emoji** para ubicaciones SL o artículos inexistentes.
+  - **✔️ Emoji** para ubicaciones correctas.
+  - **Integración con base de datos cargada**: Obtiene nombres automáticamente.
+  - **Formato limpio** sin problemas de compatibilidad de colores.
 
 ---
 
@@ -99,7 +102,6 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Contador de códigos duplicados.
 - **ModalEditarUbicacion.vue:** Edición puntual.  
 - **ModalEliminar.vue:** Confirmación reutilizada.  
-- **ExportarUbicacionesExcel.js:** Exportación de ubicaciones a Excel con nombres automáticos.  
 - **CamaraUbicaciones.vue:** Escaneo rápido de ubicaciones.
   - **✅ Recordar ubicación** durante escaneos múltiples.
   - **✅ Mantener ubicación** entre artículos (workflow optimizado).
@@ -249,6 +251,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Buscador simplificado** sin indicadores de tipo de coincidencia.
   - **Interface más limpia** enfocada en información esencial.
   - **Mejor experiencia de usuario** con menos distracciones visuales.
+- **✅ Optimización de Excel de ubicaciones**:
+  - **Anchos de columnas** ajustados según contenido real para mejor visualización.
+  - **Sistema de emojis** para identificación rápida de problemas (❌/✔️).
+  - **Columna Info** que marca inmediatamente ubicaciones SL o artículos inexistentes.
+  - **Formato 100% compatible** sin problemas de colores en diferentes versiones de Excel.
 
 ---
 
@@ -304,7 +311,6 @@ src/
         ├── ModalEditarUbicacion.vue
         ├── ModalEliminar.vue
         └── ModalNuevoPedido.vue
-```
 
 ---
 
