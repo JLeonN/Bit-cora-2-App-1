@@ -29,6 +29,27 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
+#### ✅ ** Sistema de Configuración de Usuario**
+- **PaginaConfiguracion.vue:** Página principal de configuración accesible desde `/configuracion`.
+- **ConfiguracionUsuario.vue:** Formulario completo para gestionar nombre de usuario.
+  - **Input limpio** con placeholder dinámico (no pre-rellena el campo).
+  - **Validación** mínimo 2 caracteres y diferente al actual.
+  - **Modal de confirmación** usando ModalEliminar.vue para resetear nombre.
+  - **Persistencia automática** con feedback visual de éxito/error.
+- **usoAlmacenamientoConfiguracion.js:** Módulo dedicado para persistir configuración.
+  - **Almacenamiento en @capacitor/preferences** con estructura JSON completa.
+  - **Valor por defecto**: "Usua desconocido".
+  - **Funciones**: guardar, obtener, limpiar, configuración completa.
+- **MainLayout actualizado:**
+  - **Nombre dinámico** en header (`<q-toolbar-title>{{ nombreUsuario }}</q-toolbar-title>`).
+  - **Avatar dinámico** (`@{{ nombreUsuario }}`).
+  - **Botón configuración** en footer del drawer con icono que rota al hover.
+  - **Carga automática** del nombre con polling cada 5 segundos.
+  - **Responsive** con separación adecuada en móviles.
+- **Ruta nueva:** `/configuracion` agregada al sistema de routing.
+
+---
+
 #### 📁 **Lógica de Exportación y Guardado de Archivos**
 
 #### ✅ **Componentes NUEVOS:**
@@ -58,7 +79,10 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - Descarga directa en la web (`exportarExcel.js`).  
 - Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
 - Uso de **@capacitor/filesystem** para guardar Excel en Base64 en `Directory.Cache`.  
-- Nombre de archivo dinámico con rango de fechas (`Pedidos_DD-MM-AAAA_a_DD-MM-AAAA.xlsx`).  
+- **✅ PREPARADO: Nombre de usuario dinámico** en archivos Excel:
+  - **Pedidos**: `"Pedi NombreUsuario 03-09-2025 - 26-09-2025.xlsx"`
+  - **Ubicaciones**: `"Ubic NombreUsuario.xlsx"`
+  - **Integración pendiente** con exportadores existentes.
 - **✅ ExportarUbicacionesExcel.js MEJORADO:**
   - **Anchos optimizados** para todas las columnas según contenido real.
   - **Nueva columna H "Info"** con sistema de emojis para identificación rápida.
@@ -72,10 +96,10 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 #### 💾 **Almacenamiento de Datos**
 - Persistencia con **@capacitor/preferences**.  
 - Manejo centralizado en `almacenamiento.js`.  
-- `usoAlmacenamientoPedidos.js` y `usoAlmacenamientoUbicaciones.js` para modularizar la lógica.  
+- `usoAlmacenamientoPedidos.js`, `usoAlmacenamientoUbicaciones.js` y **✅  `usoAlmacenamientoConfiguracion.js`** para modularizar la lógica.  
 - Rutas corregidas para evitar errores de imports dinámicos (404).
 - **recordarUltimaTipografia.js**: Módulo para persistir la última ubicación ingresada entre sesiones.
-- **✅ NUEVA: Persistencia automática de base de datos Excel** - Los artículos se guardan automáticamente en `@capacitor/preferences` y se cargan al inicializar sin intervención del usuario.
+- **✅ Persistencia automática de base de datos Excel** - Los artículos se guardan automáticamente en `@capacitor/preferences` y se cargan al inicializar sin intervención del usuario.
 
 ---
 
@@ -100,8 +124,8 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Muestra nombres de artículos obtenidos de la base de datos.
   - Resalta visualmente códigos repetidos.
   - Contador de códigos duplicados.
-- **ModalEditarUbicacion.vue:** Edición puntual.  
-- **ModalEliminar.vue:** Confirmación reutilizada.  
+- **ModalEditarUbicacion.vue:** Edición puntual.
+- **ModalEliminar.vue:** Confirmación reutilizada.
 - **CamaraUbicaciones.vue:** Escaneo rápido de ubicaciones.
   - **✅ Recordar ubicación** durante escaneos múltiples.
   - **✅ Mantener ubicación** entre artículos (workflow optimizado).
@@ -117,14 +141,14 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Estados visuales**: iconos, barras de progreso, mensajes de error.
   - **Preview de datos** (modo desarrollo).
   - **Modal de confirmación** para limpiar base de datos.
-  - **✅ NUEVA: Carga automática** - Al montar el componente inicializa automáticamente la base de datos desde persistencia.
+  - **✅ Carga automática** - Al montar el componente inicializa automáticamente la base de datos desde persistencia.
 
 - **LectorExcel.js:** Lógica central para procesar archivos Excel.
   - **Selector manual de archivos** usando `input[type="file"]`.
   - **Procesamiento con XLSX**: lectura como ArrayBuffer.
   - **Validaciones**: formato de archivo, estructura de datos.
   - **Estado global**: artículos cargados, estado de carga, información del archivo.
-  - **✅ NUEVA: Persistencia automática**:
+  - **✅ Persistencia automática**:
     - Los artículos se guardan automáticamente en `@capacitor/preferences` después de cargar.
     - Se restauran automáticamente al inicializar el módulo (función `inicializarBaseDatos()`).
     - Limpieza automática si hay errores o datos corruptos.
@@ -136,8 +160,8 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
     - `obtenerInformacionArchivo()`: info del archivo.
     - `reiniciarBaseDatos()`: limpia todo (ahora async).
     - `verificarSoporteSelector()`: valida soporte del navegador.
-    - **✅ NUEVA: `inicializarBaseDatos()`**: carga automática desde persistencia.
-  - **✅ NUEVA: Inicialización automática**: Se ejecuta automáticamente al importar el módulo con `setTimeout`.
+    - **✅ `inicializarBaseDatos()`**: carga automática desde persistencia.
+  - **✅ Inicialización automática**: Se ejecuta automáticamente al importar el módulo con `setTimeout`.
 
 ---
 
@@ -214,6 +238,12 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - Posicionamiento absoluto dentro del input.
   - CSS unificado en archivo principal.
 
+- **✅ Sistema de configuración integrado**:
+  - **Botón configuración** en drawer con animación de rotación.
+  - **Formularios consistentes** usando las mismas clases CSS de modales.
+  - **Modal reutilizable** para confirmaciones importantes.
+  - **Placeholder dinámico** que mejora la UX del formulario.
+
 ---
 
 ### ✅ **Resumen de Logros Actuales**
@@ -256,6 +286,12 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Sistema de emojis** para identificación rápida de problemas (❌/✔️).
   - **Columna Info** que marca inmediatamente ubicaciones SL o artículos inexistentes.
   - **Formato 100% compatible** sin problemas de colores en diferentes versiones de Excel.
+- **🆕 Sistema completo de configuración de usuario**:
+  - **Configuración personalizable** del nombre de usuario con persistencia automática.
+  - **UI dinámica** que se actualiza automáticamente con el nombre configurado.
+  - **Modal reutilizable** para confirmaciones críticas sin duplicar código.
+  - **Preparación completa** para integración con exportadores Excel personalizados.
+  - **Navegación integrada** desde drawer con efectos visuales profesionales.
 
 ---
 
@@ -269,7 +305,8 @@ src/
 ├── pages/
 │   ├── AjustarUbicaciones.vue
 │   ├── ErrorNotFound.vue
-│   └── TablaPedidos.vue
+│   ├── TablaPedidos.vue
+│   └── PaginaConfiguracion.vue
 ├── router/
 │   ├── index.js
 │   └── routes.js
@@ -280,10 +317,13 @@ src/
     │   ├── usoAlmacenamientoCapacitor.js
     │   ├── usoAlmacenamientoPedidos.js
     │   ├── usoAlmacenamientoUbicaciones.js
+    │   ├── usoAlmacenamientoConfiguracion.js
     │   └── LectorExcel.js
     ├── Botones/
     │   ├── BarraBotonesInferior.vue
     │   └── TresBotones.vue
+    ├── Configuracion/
+    │   └── ConfiguracionUsuario.vue
     ├── Inicio/
     │   └── PanelInicio.vue
     ├── Logica/
