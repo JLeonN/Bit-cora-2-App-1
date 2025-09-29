@@ -2,6 +2,12 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
+// --- CONFIGURACIÓN DE ANCHOS DE COLUMNAS ---
+const ANCHOS_COLUMNAS = [
+  { wch: 11 }, // Fechas
+  { wch: 11 }, // Pedidos
+]
+
 function parsearFechaDDMMYYYY(fechaStr) {
   if (!fechaStr || typeof fechaStr !== 'string') return null
   const partes = fechaStr.split('/')
@@ -58,6 +64,9 @@ export async function generarYGuardarExcelTemporal(pedidos) {
     })
     const hojaDeTrabajo = XLSX.utils.json_to_sheet(datosParaHoja)
 
+    // --- APLICAR ANCHOS DE COLUMNAS ---
+    hojaDeTrabajo['!cols'] = ANCHOS_COLUMNAS
+
     const libroDeTrabajo = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
 
@@ -72,6 +81,7 @@ export async function generarYGuardarExcelTemporal(pedidos) {
 
     console.log('Archivo guardado temporalmente en:', resultadoEscritura.uri)
     console.log('Nombre de usuario:', nombreUsuario)
+    console.log('Anchos aplicados: Fechas(11), Pedidos(11)')
 
     return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {
