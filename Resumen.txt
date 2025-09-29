@@ -29,7 +29,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
-#### ✅ ** Sistema de Configuración de Usuario**
+#### ✅ **Sistema de Configuración de Usuario**
 - **PaginaConfiguracion.vue:** Página principal de configuración accesible desde `/configuracion`.
 - **ConfiguracionUsuario.vue:** Formulario completo para gestionar nombre de usuario.
   - **Input limpio** con placeholder dinámico (no pre-rellena el campo).
@@ -38,7 +38,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Persistencia automática** con feedback visual de éxito/error.
 - **usoAlmacenamientoConfiguracion.js:** Módulo dedicado para persistir configuración.
   - **Almacenamiento en @capacitor/preferences** con estructura JSON completa.
-  - **Valor por defecto**: "Usua desconocido".
+  - **Valor por defecto**: "Usua des".
   - **Funciones**: guardar, obtener, limpiar, configuración completa.
 - **MainLayout actualizado:**
   - **Nombre dinámico** en header (`<q-toolbar-title>{{ nombreUsuario }}</q-toolbar-title>`).
@@ -51,6 +51,15 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 ---
 
 #### 📁 **Lógica de Exportación y Guardado de Archivos**
+
+#### ✅ **Nombres Personalizados en Excel**
+- **Integración completa** del nombre de usuario en archivos exportados.
+- **Pedidos con rango**: `Pedi Usuario DD-MM-AAAA - DD-MM-AAAA.xlsx` (rango de fechas).
+- **Pedidos mensuales**: `Pedi Usuario - MM-AAAA.xlsx` (mes actual).
+- **Ubicaciones**: `Ubic Usuario.xlsx` (sin fecha).
+- **Nombre de hoja**: Solo el nombre del usuario en todos los archivos.
+- **Valor por defecto**: "Usua des" cuando no hay usuario configurado.
+- **Persistencia automática**: El nombre se carga desde configuración guardada.
 
 #### ✅ **Componentes NUEVOS:**
 - **BarraBotonesInferior.vue:** **COMPONENTE PRINCIPAL DE NAVEGACIÓN**
@@ -74,18 +83,14 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
-### 📁 **Lógica de Exportación y Guardado de Archivos**
+### 📁 **Exportación y Guardado de Archivos**
 - Uso de **xlsx** para generar datos Excel en memoria.  
-- Descarga directa en la web (`exportarExcel.js`).  
+- Descarga directa en la web (`ExportarPedidosExcel.js`).  
 - Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
 - Uso de **@capacitor/filesystem** para guardar Excel en Base64 en `Directory.Cache`.  
-- **✅ PREPARADO: Nombre de usuario dinámico** en archivos Excel:
-  - **Pedidos**: `"Pedi NombreUsuario 03-09-2025 - 26-09-2025.xlsx"`
-  - **Ubicaciones**: `"Ubic NombreUsuario.xlsx"`
-  - **Integración pendiente** con exportadores existentes.
 - **✅ ExportarUbicacionesExcel.js MEJORADO:**
   - **Anchos optimizados** para todas las columnas según contenido real.
-  - **Nueva columna H "Info"** con sistema de emojis para identificación rápida.
+  - **Columna H "Info"** con sistema de emojis para identificación rápida.
   - **❌ Emoji** para ubicaciones SL o artículos inexistentes.
   - **✔️ Emoji** para ubicaciones correctas.
   - **Integración con base de datos cargada**: Obtiene nombres automáticamente.
@@ -290,7 +295,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Configuración personalizable** del nombre de usuario con persistencia automática.
   - **UI dinámica** que se actualiza automáticamente con el nombre configurado.
   - **Modal reutilizable** para confirmaciones críticas sin duplicar código.
-  - **Preparación completa** para integración con exportadores Excel personalizados.
+  - **✅ Integración completa con exportadores Excel** - Nombres personalizados en todos los archivos.
   - **Navegación integrada** desde drawer con efectos visuales profesionales.
 
 ---

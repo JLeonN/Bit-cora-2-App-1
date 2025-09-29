@@ -2,6 +2,7 @@
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
 import { obtenerArticulosCargados, obtenerUbicacionAntigua } from '../../BaseDeDatos/LectorExcel.js'
+import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 // --- CONFIGURACIÓN DE ANCHOS DE COLUMNAS ---
 const ANCHOS_COLUMNAS = [
@@ -32,6 +33,8 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
   }
 
   try {
+    const nombreUsuario = await obtenerNombreUsuario()
+
     // --- Crear hoja de trabajo vacía ---
     const hojaDeTrabajo = XLSX.utils.aoa_to_sheet([])
 
@@ -128,11 +131,10 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
 
     // --- Crear libro y agregar hoja ---
     const libroDeTrabajo = XLSX.utils.book_new()
-    const nombreHoja = 'Ubicaciones'
-    XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreHoja)
+    XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
 
     // --- Nombre del archivo ---
-    const nombreArchivo = 'Ubicaciones.xlsx'
+    const nombreArchivo = `Ubic ${nombreUsuario}.xlsx`
 
     // --- Convertir a Base64 y guardar ---
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
@@ -144,13 +146,14 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
 
     // --- Log de estadísticas ---
     console.log('- Archivo de ubicaciones generado exitosamente:')
+    console.log(`- Usuario: ${nombreUsuario}`)
     console.log(`- Ubicaciones totales: ${ubicaciones.length}`)
     console.log(`- Con ubicación antigua: ${ubicacionesAntiguasEncontradas}`)
     console.log(`- Sin ubicación antigua: ${ubicacionesAntiguasVacias}`)
     console.log(`- Anchos aplicados: A(18), B(6), C(6), D(10), E(8), F(65), G(12), H(7)`)
     console.log(`📋 COLUMNA INFO (H):`)
-    console.log(`- = Ubicación SL o Artículo inexistente`)
-    console.log(`- = Todo correcto`)
+    console.log(`- ❌ = Ubicación SL o Artículo inexistente`)
+    console.log(`- ✔️ = Todo correcto`)
     console.log(`- Archivo guardado en: ${resultadoEscritura.uri}`)
 
     return { uri: resultadoEscritura.uri, nombreArchivo }

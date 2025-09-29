@@ -1,5 +1,6 @@
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
+import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 function parsearFechaDDMMYYYY(fechaStr) {
   if (!fechaStr || typeof fechaStr !== 'string') return null
@@ -27,6 +28,8 @@ export async function generarYGuardarExcelTemporal(pedidos) {
   }
 
   try {
+    const nombreUsuario = await obtenerNombreUsuario()
+
     // Parsear fechas
     const fechas = pedidos
       .map((pedido) => parsearFechaDDMMYYYY(pedido.fecha))
@@ -45,7 +48,7 @@ export async function generarYGuardarExcelTemporal(pedidos) {
     const fechaMinNombre = formatearFechaParaNombreArchivo(fechaMin)
     const fechaMaxNombre = formatearFechaParaNombreArchivo(fechaMax)
 
-    const nombreArchivo = `Pedidos del ${fechaMinNombre} al ${fechaMaxNombre}.xlsx`
+    const nombreArchivo = `Pedi ${nombreUsuario} ${fechaMinNombre} - ${fechaMaxNombre}.xlsx`
 
     const datosParaHoja = pedidos.map((pedido) => {
       return {
@@ -56,7 +59,7 @@ export async function generarYGuardarExcelTemporal(pedidos) {
     const hojaDeTrabajo = XLSX.utils.json_to_sheet(datosParaHoja)
 
     const libroDeTrabajo = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, 'Pedidos')
+    XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
 
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
 
@@ -68,6 +71,7 @@ export async function generarYGuardarExcelTemporal(pedidos) {
     })
 
     console.log('Archivo guardado temporalmente en:', resultadoEscritura.uri)
+    console.log('Nombre de usuario:', nombreUsuario)
 
     return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {
