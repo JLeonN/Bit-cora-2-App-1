@@ -1,8 +1,8 @@
 <template>
-  <div class="contenedor-principal-etiquetas">
+  <div class="contenedor-tabla">
     <!-- HEADER CON TÍTULO Y SELECTOR DE TAMAÑO -->
     <div class="header-etiquetas">
-      <h2 class="titulo-pagina">Etiquetas</h2>
+      <h2 class="titulo-tabla">Etiquetas</h2>
 
       <div class="selector-tamano">
         <span class="label-tamano">Tamaño:</span>
@@ -54,8 +54,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-// import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
-// import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
+import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
+import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 
@@ -164,7 +164,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.contenedor-principal-etiquetas {
+.contenedor-tabla {
   padding: 1rem;
   padding-bottom: 120px;
 }
@@ -178,7 +178,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 1rem;
 }
-.titulo-pagina {
+.titulo-tabla {
   text-align: center;
   color: var(--color-primario);
   font-size: 2rem;
@@ -226,13 +226,13 @@ onUnmounted(() => {
 }
 /* Responsive */
 @media (max-width: 600px) {
-  .contenedor-principal-etiquetas {
+  .contenedor-tabla {
     padding: 0.75rem;
   }
   .header-etiquetas {
     padding: 1rem;
   }
-  .titulo-pagina {
+  .titulo-tabla {
     font-size: 1.5rem;
   }
   .selector-tamano {
@@ -250,7 +250,7 @@ onUnmounted(() => {
   }
 }
 @media (max-width: 900px) and (min-width: 601px) {
-  .titulo-pagina {
+  .titulo-tabla {
     font-size: 1.8rem;
   }
 }
