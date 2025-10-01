@@ -29,7 +29,7 @@
             <!-- PEDIDOS -->
             <q-item clickable v-ripple to="/TablaPedidos">
               <q-item-section avatar>
-                <IconTableRow stroke="{1}" />
+                <IconTableRow :stroke="2" />
               </q-item-section>
               <q-item-section>Pedidos</q-item-section>
             </q-item>
@@ -37,9 +37,17 @@
             <!-- UBICACIONES -->
             <q-item clickable v-ripple to="/AjustarUbicaciones">
               <q-item-section avatar>
-                <IconMapRoute name="send" />
+                <IconMapRoute :stroke="2" />
               </q-item-section>
               <q-item-section>Ubicaciones</q-item-section>
+            </q-item>
+
+            <!-- ETIQUETAS -->
+            <q-item clickable v-ripple to="/etiquetas">
+              <q-item-section avatar>
+                <IconTag :stroke="2" />
+              </q-item-section>
+              <q-item-section>Etiquetas</q-item-section>
             </q-item>
           </q-list>
         </q-scroll-area>
@@ -93,7 +101,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { IconTableRow, IconMapRoute, IconSettings } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconTag, IconSettings } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
@@ -163,7 +171,6 @@ const manejarAccionPersonalizada = (accion) => {
 .contenedor-con-barra-inferior {
   padding-bottom: 80px;
 }
-
 /* FOOTER DEL DRAWER */
 .drawer-footer {
   position: absolute;

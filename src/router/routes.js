@@ -26,6 +26,12 @@ const routes = [
         name: 'Configuracion',
         component: () => import('pages/PaginaConfiguracion.vue'),
       },
+      // ETIQUETAS - Generación de etiquetas con códigos de barras
+      {
+        path: '/etiquetas',
+        name: 'Etiquetas',
+        component: () => import('pages/PaginaEtiquetas.vue'),
+      },
     ],
   },
   // PÁGINA 404 - Manejo de rutas no encontradas
