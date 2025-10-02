@@ -43,12 +43,23 @@
       <!-- Campo Ubicación (autocompletado) -->
       <div class="campo-formulario">
         <label for="ubicacion-etiqueta">Ubicación</label>
-        <input
-          id="ubicacion-etiqueta"
-          type="text"
-          v-model="ubicacionIngresada"
-          placeholder="Ubicación en depósito"
-        />
+        <div class="ubicacion-campo">
+          <input
+            id="ubicacion-etiqueta"
+            type="text"
+            v-model="ubicacionIngresada"
+            placeholder="Ubicación"
+          />
+          <button
+            v-if="ubicacionIngresada"
+            type="button"
+            class="boton-limpiar-ubicacion"
+            @click="limpiarUbicacion"
+            title="Limpiar ubicación"
+          >
+            <IconTrash :size="16" />
+          </button>
+        </div>
       </div>
 
       <!-- Campo Cantidad de copias -->
@@ -82,7 +93,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { IconCamera, IconPlus } from '@tabler/icons-vue'
+import { IconCamera, IconPlus, IconTrash } from '@tabler/icons-vue'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
@@ -173,6 +184,11 @@ function procesarCodigosEscaneados(codigos) {
 
   // Focus en cantidad
   document.getElementById('cantidad-copias')?.focus()
+}
+
+// Limpiar ubicación
+function limpiarUbicacion() {
+  ubicacionIngresada.value = ''
 }
 
 // Validar y agregar etiqueta

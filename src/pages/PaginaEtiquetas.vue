@@ -181,7 +181,7 @@ onUnmounted(() => {
 .titulo-tabla {
   text-align: center;
   color: var(--color-primario);
-  font-size: 2rem;
+  font-size: 3rem;
   font-weight: bold;
   margin: 0;
 }
@@ -231,9 +231,6 @@ onUnmounted(() => {
   }
   .header-etiquetas {
     padding: 1rem;
-  }
-  .titulo-tabla {
-    font-size: 1.5rem;
   }
   .selector-tamano {
     flex-direction: column;

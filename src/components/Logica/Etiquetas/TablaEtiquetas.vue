@@ -1,7 +1,7 @@
 <template>
   <div class="contenedor-tabla">
     <div class="header-tabla">
-      <h2 class="titulo-tabla">Artículos para imprimir</h2>
+      <h2 class="titulo-tabla">Etiqueta para imprimir</h2>
       <span class="contador-etiquetas" v-if="etiquetas.length > 0">
         {{ totalCopias }} etiqueta{{ totalCopias !== 1 ? 's' : '' }} en total
       </span>
@@ -9,8 +9,8 @@
 
     <div v-if="etiquetas.length === 0" class="sin-etiquetas">
       <IconTag :size="48" :stroke="1.5" class="icono-vacio" />
-      <p>No hay artículos agregados</p>
-      <span class="texto-ayuda">Agregá artículos usando el formulario de arriba</span>
+      <p>No hay etiqueta agregadas</p>
+      <span class="texto-ayuda">Agregá etiqueta usando el formulario de arriba</span>
     </div>
 
     <table v-else class="tabla-etiquetas">
@@ -182,7 +182,6 @@ function eliminarEtiqueta(indice) {
   border: 1px solid var(--color-borde);
   margin-bottom: 1.5rem;
 }
-
 .header-tabla {
   display: flex;
   justify-content: space-between;
@@ -191,14 +190,12 @@ function eliminarEtiqueta(indice) {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-
 .titulo-tabla {
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--color-texto-principal);
   margin: 0;
 }
-
 .contador-etiquetas {
   font-size: 0.9rem;
   color: var(--color-texto-secundario);
@@ -207,37 +204,31 @@ function eliminarEtiqueta(indice) {
   border-radius: 6px;
   font-weight: 500;
 }
-
 /* Sin etiquetas */
 .sin-etiquetas {
   text-align: center;
   padding: 3rem 1rem;
   color: var(--color-texto-secundario);
 }
-
 .icono-vacio {
   color: var(--color-texto-secundario);
   opacity: 0.5;
   margin-bottom: 1rem;
 }
-
 .sin-etiquetas p {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
   color: var(--color-texto-principal);
 }
-
 .texto-ayuda {
   font-size: 0.9rem;
   font-style: italic;
 }
-
 /* Tabla */
 .tabla-etiquetas {
   width: 100%;
   border-collapse: collapse;
 }
-
 .tabla-etiquetas th,
 .tabla-etiquetas td {
   padding: 12px;
@@ -246,39 +237,31 @@ function eliminarEtiqueta(indice) {
   color: var(--color-texto-principal);
   vertical-align: middle;
 }
-
 .tabla-etiquetas th {
   color: var(--color-primario-claro);
   font-weight: 600;
   font-size: 0.9rem;
 }
-
 .tabla-etiquetas tbody tr:last-child td {
   border-bottom: none;
 }
-
 /* Columnas */
 .columna-codigo {
   width: 15%;
 }
-
 .columna-descripcion {
   width: 35%;
 }
-
 .columna-ubicacion {
   width: 20%;
 }
-
 .columna-cantidad {
   width: 15%;
 }
-
 .columna-acciones {
   width: 15%;
   text-align: center;
 }
-
 /* Celdas */
 .celda-codigo .texto-codigo {
   font-family: 'Courier New', monospace;
@@ -286,7 +269,6 @@ function eliminarEtiqueta(indice) {
   color: var(--color-primario-claro);
   font-size: 0.9rem;
 }
-
 .celda-descripcion .texto-descripcion {
   display: block;
   overflow: hidden;
@@ -294,12 +276,10 @@ function eliminarEtiqueta(indice) {
   white-space: nowrap;
   color: var(--color-texto-principal);
 }
-
 .celda-ubicacion .texto-ubicacion {
   color: var(--color-texto-secundario);
   font-size: 0.9rem;
 }
-
 /* Control de cantidad */
 .control-cantidad {
   display: flex;
@@ -307,7 +287,6 @@ function eliminarEtiqueta(indice) {
   gap: 0.5rem;
   justify-content: center;
 }
-
 .boton-cantidad {
   width: 28px;
   height: 28px;
@@ -322,18 +301,15 @@ function eliminarEtiqueta(indice) {
   transition: all 0.2s ease;
   padding: 0;
 }
-
 .boton-cantidad:hover:not(:disabled) {
   background: var(--color-superficie);
   border-color: var(--color-primario);
   color: var(--color-primario);
 }
-
 .boton-cantidad:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
 .input-cantidad {
   width: 50px;
   padding: 0.3rem;
@@ -344,12 +320,10 @@ function eliminarEtiqueta(indice) {
   border-radius: 4px;
   font-size: 0.9rem;
 }
-
 .input-cantidad:focus {
   outline: none;
   border-color: var(--color-primario);
 }
-
 /* Acciones */
 .acciones-etiqueta {
   display: flex;
@@ -357,76 +331,61 @@ function eliminarEtiqueta(indice) {
   justify-content: center;
   align-items: center;
 }
-
 .icono-accion {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
-
 .icono-accion:hover {
   transform: scale(1.2);
 }
-
 .icono-editar {
   color: var(--color-acento);
 }
-
 .icono-borrar {
   color: var(--color-error);
 }
-
 /* Responsive */
 @media (max-width: 900px) {
   .tabla-etiquetas {
     font-size: 0.85rem;
   }
-
   .tabla-etiquetas th,
   .tabla-etiquetas td {
     padding: 8px;
   }
-
   .control-cantidad {
     flex-direction: column;
     gap: 0.3rem;
   }
-
   .boton-cantidad {
     width: 100%;
   }
-
   .input-cantidad {
     width: 100%;
   }
 }
-
 @media (max-width: 600px) {
   .contenedor-tabla {
     padding: 1rem;
     overflow-x: auto;
   }
-
   .header-tabla {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .tabla-etiquetas {
     display: block;
     overflow-x: auto;
   }
-
   .tabla-etiquetas thead {
     display: none;
   }
-
   .tabla-etiquetas tbody,
   .tabla-etiquetas tr,
   .tabla-etiquetas td {
     display: block;
     width: 100%;
   }
-
   .tabla-etiquetas tr {
     margin-bottom: 1rem;
     border: 1px solid var(--color-borde);
@@ -434,13 +393,11 @@ function eliminarEtiqueta(indice) {
     padding: 1rem;
     background: var(--color-fondo);
   }
-
   .tabla-etiquetas td {
     padding: 0.5rem 0;
     border: none;
     text-align: left;
   }
-
   .tabla-etiquetas td::before {
     content: attr(data-label);
     font-weight: 600;
@@ -449,7 +406,6 @@ function eliminarEtiqueta(indice) {
     margin-bottom: 0.3rem;
     font-size: 0.85rem;
   }
-
   .celda-codigo::before {
     content: 'Código:';
   }
@@ -465,12 +421,10 @@ function eliminarEtiqueta(indice) {
   .celda-acciones::before {
     content: 'Acciones:';
   }
-
   .control-cantidad {
     flex-direction: row;
     justify-content: flex-start;
   }
-
   .acciones-etiqueta {
     justify-content: flex-start;
   }
