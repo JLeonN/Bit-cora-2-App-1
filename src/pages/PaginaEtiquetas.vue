@@ -54,12 +54,16 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
+import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasWord.js'
+import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 
 const router = useRouter()
+const $q = useQuasar()
 
 // --- ESTADO REACTIVO ---
 const tamanoSeleccionado = ref('grande')
@@ -67,6 +71,7 @@ const listaEtiquetas = ref([])
 const mostrarModalEliminar = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
+const generandoDocumento = ref(false)
 
 // --- BOTONES PERSONALIZADOS ---
 const botonesPersonalizados = computed(() => [
@@ -82,7 +87,7 @@ const botonesPersonalizados = computed(() => [
     icono: 'IconFileText',
     texto: 'Generar Word',
     color: 'verde',
-    deshabilitado: listaEtiquetas.value.length === 0,
+    deshabilitado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
   },
 ])
 
@@ -134,11 +139,53 @@ function limpiarTodo() {
   }
 }
 
-function generarWord() {
-  console.log('[PaginaEtiquetas] Generando Word con:', listaEtiquetas.value.length, 'etiquetas')
-  console.log('Tamaño seleccionado:', tamanoSeleccionado.value)
-  // TODO: Implementar generación de Word
-  alert('Función de generar Word - Próximamente')
+async function generarWord() {
+  if (listaEtiquetas.value.length === 0) return
+
+  try {
+    generandoDocumento.value = true
+
+    // Mostrar notificación de generación
+    $q.loading.show({
+      message: 'Generando documento Word...',
+      spinnerColor: 'primary',
+    })
+
+    console.log('[PaginaEtiquetas] Generando Word con', listaEtiquetas.value.length, 'etiquetas')
+
+    // Generar documento
+    const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value)
+
+    $q.loading.hide()
+
+    if (!resultado.exito) {
+      throw new Error(resultado.mensaje)
+    }
+
+    console.log('[PaginaEtiquetas] ✅ Documento generado:', resultado.rutaArchivo)
+
+    // Compartir archivo
+    const compartido = await compartirArchivo(resultado.rutaArchivo, resultado.nombreArchivo)
+
+    if (compartido) {
+      $q.notify({
+        type: 'positive',
+        message: '✅ Documento generado y compartido correctamente',
+        position: 'top',
+        timeout: 2000,
+      })
+    }
+  } catch (error) {
+    console.error('[PaginaEtiquetas] ❌ Error generando Word:', error)
+    $q.notify({
+      type: 'negative',
+      message: `❌ Error: ${error.message}`,
+      position: 'top',
+      timeout: 3000,
+    })
+  } finally {
+    generandoDocumento.value = false
+  }
 }
 
 function manejarBotonPersonalizado(idBoton) {
@@ -181,7 +228,7 @@ onUnmounted(() => {
 .titulo-tabla {
   text-align: center;
   color: var(--color-primario);
-  font-size: 3rem;
+  font-size: 2rem;
   font-weight: bold;
   margin: 0;
 }
@@ -231,6 +278,9 @@ onUnmounted(() => {
   }
   .header-etiquetas {
     padding: 1rem;
+  }
+  .titulo-tabla {
+    font-size: 1.5rem;
   }
   .selector-tamano {
     flex-direction: column;
