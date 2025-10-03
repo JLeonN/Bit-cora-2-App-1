@@ -101,6 +101,23 @@ watch(
   { deep: true },
 )
 
+// --- NUEVO ---
+// Observador para formatear el campo de ubicación en tiempo real.
+watch(
+  () => etiquetaEditada.value.ubicacion,
+  (newValue) => {
+    if (typeof newValue === 'string') {
+      // Transforma el valor a mayúsculas y reemplaza espacios con guiones.
+      const formattedValue = newValue.toUpperCase().replace(/\s+/g, '-')
+
+      // Solo actualiza si el valor formateado es diferente para evitar un bucle.
+      if (formattedValue !== etiquetaEditada.value.ubicacion) {
+        etiquetaEditada.value.ubicacion = formattedValue
+      }
+    }
+  },
+)
+
 function guardarCambios() {
   // Validaciones básicas
   if (!etiquetaEditada.value.codigo.trim()) {
@@ -117,11 +134,15 @@ function guardarCambios() {
     etiquetaEditada.value.cantidad = 1
   }
 
+  // --- MODIFICADO ---
+  // Limpia los guiones que puedan quedar al principio o al final del string.
+  const ubicacionFinal = (etiquetaEditada.value.ubicacion || '').replace(/^-+|-+$/g, '')
+
   emit('guardar', {
     ...etiquetaEditada.value,
     codigo: etiquetaEditada.value.codigo.trim().toUpperCase(),
     descripcion: etiquetaEditada.value.descripcion.trim(),
-    ubicacion: etiquetaEditada.value.ubicacion.trim() || 'Sin ubicación',
+    ubicacion: ubicacionFinal || 'Sin ubicación',
   })
 }
 </script>

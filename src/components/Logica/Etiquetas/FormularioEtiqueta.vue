@@ -218,11 +218,14 @@ function agregarEtiqueta() {
     return
   }
 
+  // Limpia los guiones que puedan quedar al principio o al final del string.
+  const ubicacionFinal = ubicacionIngresada.value.replace(/^-+|-+$/g, '')
+
   // Emitir etiqueta
   emit('agregar-etiqueta', {
     codigo: codigoIngresado.value.trim().toUpperCase(),
     descripcion: descripcionIngresada.value.trim(),
-    ubicacion: ubicacionIngresada.value.trim() || 'Sin ubicación',
+    ubicacion: ubicacionFinal || 'Sin ubicación',
     cantidad: cantidadCopias.value,
   })
 
@@ -248,6 +251,19 @@ watch(mostrarResultados, (nuevo) => {
     }, 100)
   } else {
     document.removeEventListener('click', cerrarResultadosFuera)
+  }
+})
+
+// Observador para formatear el campo de ubicación en tiempo real.
+watch(ubicacionIngresada, (newValue) => {
+  if (typeof newValue === 'string') {
+    // Transforma el valor a mayúsculas y reemplaza espacios con guiones.
+    const formattedValue = newValue.toUpperCase().replace(/\s+/g, '-')
+
+    // Solo actualiza si el valor formateado es diferente, para evitar un bucle infinito.
+    if (formattedValue !== ubicacionIngresada.value) {
+      ubicacionIngresada.value = formattedValue
+    }
   }
 })
 

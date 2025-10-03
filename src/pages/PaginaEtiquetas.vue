@@ -35,9 +35,10 @@
     <BarraBotonesInferior
       :mostrar-atras="true"
       :mostrar-agregar="false"
-      :mostrar-enviar="false"
+      :mostrar-enviar="true"
       :botones-personalizados="botonesPersonalizados"
       @atras="volverAtras"
+      @enviar="generarWord"
       @boton-personalizado="manejarBotonPersonalizado"
     />
 
@@ -81,13 +82,6 @@ const botonesPersonalizados = computed(() => [
     texto: 'Limpiar todo',
     color: 'rojo',
     deshabilitado: listaEtiquetas.value.length === 0,
-  },
-  {
-    id: 'generar',
-    icono: 'IconFileText',
-    texto: 'Generar Word',
-    color: 'verde',
-    deshabilitado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
   },
 ])
 
@@ -191,8 +185,6 @@ async function generarWord() {
 function manejarBotonPersonalizado(idBoton) {
   if (idBoton === 'limpiar') {
     limpiarTodo()
-  } else if (idBoton === 'generar') {
-    generarWord()
   }
 }
 
