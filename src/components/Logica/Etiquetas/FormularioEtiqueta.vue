@@ -23,8 +23,8 @@
         <!-- Buscador integrado -->
         <CodigoMasNombre
           v-if="mostrarResultados && codigoIngresado.length >= 3"
-          :termino-busqueda="codigoIngresado"
-          @seleccionar-articulo="seleccionarArticulo"
+          :busqueda="codigoIngresado"
+          @articulo-seleccionado="seleccionarArticulo"
         />
       </div>
 
