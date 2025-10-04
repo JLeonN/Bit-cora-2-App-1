@@ -47,15 +47,13 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useQuasar } from 'quasar'
+import { Loading, Notify } from 'quasar'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasWord.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
-
-const $q = useQuasar()
 
 // --- ESTADO REACTIVO ---
 const tamanoSeleccionado = ref('grande')
@@ -64,6 +62,8 @@ const mostrarModalEliminar = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
+
+const emit = defineEmits(['configurar-barra'])
 
 // --- FUNCIONES ---
 function agregarEtiqueta(etiqueta) {
@@ -120,7 +120,7 @@ async function generarWord() {
     generandoDocumento.value = true
 
     // Mostrar notificación de generación
-    $q.loading.show({
+    Loading.show({
       message: 'Generando documento Word...',
       spinnerColor: 'primary',
     })
@@ -130,7 +130,7 @@ async function generarWord() {
     // Generar documento
     const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value)
 
-    $q.loading.hide()
+    Loading.hide()
 
     if (!resultado.exito) {
       throw new Error(resultado.mensaje)
@@ -142,7 +142,7 @@ async function generarWord() {
     const compartido = await compartirArchivo(resultado.rutaArchivo, resultado.nombreArchivo)
 
     if (compartido) {
-      $q.notify({
+      Notify.create({
         type: 'positive',
         message: '✅ Documento generado y compartido correctamente',
         position: 'top',
@@ -151,7 +151,8 @@ async function generarWord() {
     }
   } catch (error) {
     console.error('[PaginaEtiquetas] ❌ Error generando Word:', error)
-    $q.notify({
+    Loading.hide()
+    Notify.create({
       type: 'negative',
       message: `❌ Error: ${error.message}`,
       position: 'top',
@@ -160,6 +161,21 @@ async function generarWord() {
   } finally {
     generandoDocumento.value = false
   }
+}
+
+const configuracionBarra = computed(() => ({
+  mostrarAtras: true,
+  mostrarInicio: true,
+  mostrarAgregar: false,
+  mostrarEnviar: listaEtiquetas.value.length > 0,
+  puedeEnviar: listaEtiquetas.value.length > 0,
+  botonesPersonalizados: [],
+}))
+
+const metodosParaBarra = {
+  onEnviar: () => generarWord(),
+  onAgregar: () => {},
+  onAccionPersonalizada: () => {},
 }
 
 // --- LIFECYCLE ---
@@ -181,23 +197,6 @@ onUnmounted(() => {
     null,
   )
 })
-
-const emit = defineEmits(['configurar-barra'])
-
-const configuracionBarra = computed(() => ({
-  mostrarAtras: true,
-  mostrarInicio: true,
-  mostrarAgregar: false,
-  mostrarEnviar: listaEtiquetas.value.length > 0,
-  puedeEnviar: listaEtiquetas.value.length > 0,
-  botonesPersonalizados: [],
-}))
-
-const metodosParaBarra = {
-  onEnviar: () => generarWord(),
-  onAgregar: () => {},
-  onAccionPersonalizada: () => {},
-}
 
 watch(
   () => listaEtiquetas.value.length,
