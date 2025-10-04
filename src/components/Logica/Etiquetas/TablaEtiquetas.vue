@@ -41,68 +41,80 @@
           }"
         >
           <td class="celda-nombre-codigo">
-            <span
-              class="globito-ubicacion"
-              :class="{
-                'texto-duplicado': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
-                'texto-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
-              }"
-              :title="`${obtenerNombreArticulo(etiqueta.codigo)} - ${etiqueta.codigo}`"
-            >
-              <div class="contenedor-nombre-codigo">
-                <div class="nombre-articulo">
-                  {{ obtenerNombreArticulo(etiqueta.codigo) }}
+            <div class="campo-responsive">
+              <span class="label-responsive">Nombre y Código:</span>
+              <span
+                class="globito-ubicacion"
+                :class="{
+                  'texto-duplicado': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
+                  'texto-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
+                }"
+                :title="`${obtenerNombreArticulo(etiqueta.codigo)} - ${etiqueta.codigo}`"
+              >
+                <div class="contenedor-nombre-codigo">
+                  <div class="nombre-articulo">
+                    {{ obtenerNombreArticulo(etiqueta.codigo) }}
+                  </div>
+                  <div class="codigo-articulo">{{ etiqueta.codigo }}</div>
                 </div>
-                <div class="codigo-articulo">{{ etiqueta.codigo }}</div>
-              </div>
-            </span>
+              </span>
+            </div>
           </td>
 
           <td class="celda-ubicacion">
-            <span class="globito-ubicacion" :title="etiqueta.ubicacion || 'Sin ubicación'">
-              {{ etiqueta.ubicacion || 'Sin ubicación' }}
-            </span>
+            <div class="campo-responsive">
+              <span class="label-responsive">Ubicación:</span>
+              <span class="globito-ubicacion" :title="etiqueta.ubicacion || 'Sin ubicación'">
+                {{ etiqueta.ubicacion || 'Sin ubicación' }}
+              </span>
+            </div>
           </td>
 
           <td class="celda-cantidad">
-            <div class="control-cantidad">
-              <button
-                type="button"
-                class="boton-cantidad boton-menos"
-                @click="decrementarCantidad(indice)"
-                :disabled="etiqueta.cantidad <= 1"
-              >
-                <IconMinus :size="16" :stroke="2" />
-              </button>
-              <input
-                type="number"
-                min="1"
-                v-model.number="etiqueta.cantidad"
-                @change="actualizarCantidad(indice)"
-                class="input-cantidad"
-              />
-              <button
-                type="button"
-                class="boton-cantidad boton-mas"
-                @click="incrementarCantidad(indice)"
-              >
-                <IconPlus :size="16" :stroke="2" />
-              </button>
+            <div class="campo-responsive">
+              <span class="label-responsive">Cantidad:</span>
+              <div class="control-cantidad">
+                <button
+                  type="button"
+                  class="boton-cantidad boton-menos"
+                  @click="decrementarCantidad(indice)"
+                  :disabled="etiqueta.cantidad <= 1"
+                >
+                  <IconMinus :size="16" :stroke="2" />
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  v-model.number="etiqueta.cantidad"
+                  @change="actualizarCantidad(indice)"
+                  class="input-cantidad"
+                />
+                <button
+                  type="button"
+                  class="boton-cantidad boton-mas"
+                  @click="incrementarCantidad(indice)"
+                >
+                  <IconPlus :size="16" :stroke="2" />
+                </button>
+              </div>
             </div>
           </td>
 
           <td class="celda-acciones">
-            <div class="acciones-ubicacion">
-              <IconPencil
-                class="icono-ubicacion icono-editar"
-                @click="editarEtiqueta(indice)"
-                title="Editar etiqueta"
-              />
-              <IconTrash
-                class="icono-ubicacion icono-borrar"
-                @click="eliminarEtiqueta(indice)"
-                title="Eliminar etiqueta"
-              />
+            <div class="campo-responsive">
+              <span class="label-responsive">Acciones:</span>
+              <div class="acciones-ubicacion">
+                <IconPencil
+                  class="icono-ubicacion icono-editar"
+                  @click="editarEtiqueta(indice)"
+                  title="Editar etiqueta"
+                />
+                <IconTrash
+                  class="icono-ubicacion icono-borrar"
+                  @click="eliminarEtiqueta(indice)"
+                  title="Eliminar etiqueta"
+                />
+              </div>
             </div>
           </td>
         </tr>
@@ -318,7 +330,6 @@ const cantidadArticulosInexistentes = computed(() => {
   gap: 0.5rem;
   justify-content: center;
 }
-
 .boton-cantidad {
   width: 28px;
   height: 28px;
@@ -333,18 +344,15 @@ const cantidadArticulosInexistentes = computed(() => {
   transition: all 0.2s ease;
   padding: 0;
 }
-
 .boton-cantidad:hover:not(:disabled) {
   background: var(--color-superficie);
   border-color: var(--color-primario);
   color: var(--color-primario);
 }
-
 .boton-cantidad:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
 .input-cantidad {
   width: 50px;
   padding: 0.3rem;
@@ -355,33 +363,33 @@ const cantidadArticulosInexistentes = computed(() => {
   border-radius: 4px;
   font-size: 0.9rem;
 }
-
 .input-cantidad:focus {
   outline: none;
   border-color: var(--color-primario);
 }
-
 .sin-etiquetas {
   text-align: center;
   padding: 3rem 1rem;
   color: var(--color-texto-secundario);
 }
-
 .icono-vacio {
   color: var(--color-texto-secundario);
   opacity: 0.5;
   margin-bottom: 1rem;
 }
-
 .sin-etiquetas p {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
   color: var(--color-texto-principal);
 }
-
 .texto-ayuda {
   font-size: 0.9rem;
   font-style: italic;
+}
+
+/* Ocultar labels en desktop */
+.label-responsive {
+  display: none;
 }
 
 /* RESPONSIVE */
@@ -402,6 +410,23 @@ const cantidadArticulosInexistentes = computed(() => {
 }
 
 @media (max-width: 600px) {
+  .encabezado-tabla {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .texto-secundario {
+    width: 100%;
+    text-align: center;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .contenedor-boton-borrar-todo {
+    margin-bottom: 0.5rem;
+  }
+
   /* Tabla responsive - Modo cards */
   .tabla-ubicaciones {
     display: block;
@@ -421,10 +446,10 @@ const cantidadArticulosInexistentes = computed(() => {
   }
 
   .tabla-ubicaciones tbody tr {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     border: 1px solid var(--color-borde);
-    border-radius: 12px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.75rem;
     background: var(--color-superficie);
   }
 
@@ -438,36 +463,25 @@ const cantidadArticulosInexistentes = computed(() => {
   }
 
   .tabla-ubicaciones td {
-    padding: 0.6rem 0;
+    padding: 0.4rem 0;
     border: none;
     text-align: left;
   }
 
-  .tabla-ubicaciones td::before {
-    content: attr(data-label);
+  .campo-responsive {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Mostrar labels en mobile */
+  .label-responsive {
+    display: block;
     font-weight: 600;
     color: var(--color-primario-claro);
-    display: block;
-    margin-bottom: 0.4rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-
-  .celda-nombre-codigo::before {
-    content: 'Nombre y Código:';
-  }
-
-  .celda-ubicacion::before {
-    content: 'Ubicación:';
-  }
-
-  .celda-cantidad::before {
-    content: 'Cantidad:';
-  }
-
-  .celda-acciones::before {
-    content: 'Acciones:';
+    margin-bottom: 0.3rem;
   }
 
   .globito-ubicacion {
@@ -475,14 +489,58 @@ const cantidadArticulosInexistentes = computed(() => {
     width: 100%;
     white-space: normal;
     max-width: 100%;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .contenedor-nombre-codigo {
+    gap: 0.15rem;
+  }
+
+  .nombre-articulo {
+    font-size: 0.9rem;
+  }
+
+  .codigo-articulo {
+    font-size: 0.75rem;
   }
 
   .control-cantidad {
     justify-content: flex-start;
+    gap: 0.4rem;
+  }
+
+  .boton-cantidad {
+    width: 32px;
+    height: 32px;
+  }
+
+  .input-cantidad {
+    width: 45px;
+    padding: 0.25rem;
+    font-size: 0.85rem;
   }
 
   .acciones-ubicacion {
     justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .icono-ubicacion {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sin-etiquetas {
+    padding: 2rem 1rem;
+  }
+
+  .sin-etiquetas p {
+    font-size: 1rem;
+  }
+
+  .texto-ayuda {
+    font-size: 0.85rem;
   }
 }
 </style>
