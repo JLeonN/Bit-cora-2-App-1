@@ -1,58 +1,69 @@
 <template>
-  <div class="contenedor-tabla">
-    <div class="header-tabla">
-      <h2 class="titulo-tabla">Etiquetas para imprimir</h2>
-      <div class="acciones-header">
-        <span class="contador-etiquetas" v-if="etiquetas.length > 0">
-          {{ totalCopias }} etiqueta{{ totalCopias !== 1 ? 's' : '' }} en total
-        </span>
-        <button
-          v-if="etiquetas.length > 0"
-          class="boton-limpiar"
-          @click="confirmarLimpiar"
-          title="Limpiar todas las etiquetas"
-        >
-          <IconTrash :size="18" :stroke="2" />
-        </button>
-      </div>
+  <div>
+    <div class="encabezado-tabla">
+      <p v-if="etiquetas.length > 0" class="texto-secundario">
+        Etiquetas totales: {{ etiquetas.length }}
+      </p>
+      <p v-if="etiquetas.length > 0" class="texto-secundario">Copias totales: {{ totalCopias }}</p>
+      <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos">
+        Códigos repetidos: {{ cantidadCodigosRepetidos }}
+      </p>
+      <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente">
+        Artículos inexistentes: {{ cantidadArticulosInexistentes }}
+      </p>
     </div>
 
-    <div v-if="etiquetas.length === 0" class="sin-etiquetas">
-      <IconTag :size="48" :stroke="1.5" class="icono-vacio" />
-      <p>No hay etiquetas agregadas</p>
-      <span class="texto-ayuda">Agregá etiquetas usando el formulario de arriba</span>
+    <div class="contenedor-boton-borrar-todo" v-if="etiquetas.length > 0">
+      <IconTrash
+        class="icono-accion icono-borrar-todo"
+        @click="confirmarLimpiar"
+        title="Limpiar todas las etiquetas"
+      />
     </div>
 
-    <table v-else class="tabla-etiquetas">
+    <table class="tabla-ubicaciones" v-if="etiquetas.length > 0">
       <thead>
         <tr>
-          <th class="columna-codigo">Código</th>
-          <th class="columna-descripcion">Descripción</th>
+          <th class="columna-nombre-codigo">Nombre y Código</th>
           <th class="columna-ubicacion">Ubicación</th>
           <th class="columna-cantidad">Cantidad</th>
           <th class="columna-acciones">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(etiqueta, indice) in etiquetas" :key="etiqueta.id" class="fila-etiqueta">
-          <!-- Código -->
-          <td class="celda-codigo">
-            <span class="texto-codigo">{{ etiqueta.codigo }}</span>
-          </td>
-
-          <!-- Descripción -->
-          <td class="celda-descripcion">
-            <span class="texto-descripcion" :title="etiqueta.descripcion">
-              {{ etiqueta.descripcion }}
+        <tr
+          v-for="(etiqueta, indice) in etiquetas"
+          :key="etiqueta.id"
+          class="fila-ubicacion"
+          :class="{
+            'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
+            'fila-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
+          }"
+        >
+          <td class="celda-nombre-codigo">
+            <span
+              class="globito-ubicacion"
+              :class="{
+                'texto-duplicado': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
+                'texto-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
+              }"
+              :title="`${obtenerNombreArticulo(etiqueta.codigo)} - ${etiqueta.codigo}`"
+            >
+              <div class="contenedor-nombre-codigo">
+                <div class="nombre-articulo">
+                  {{ obtenerNombreArticulo(etiqueta.codigo) }}
+                </div>
+                <div class="codigo-articulo">{{ etiqueta.codigo }}</div>
+              </div>
             </span>
           </td>
 
-          <!-- Ubicación -->
           <td class="celda-ubicacion">
-            <span class="texto-ubicacion">{{ etiqueta.ubicacion }}</span>
+            <span class="globito-ubicacion" :title="etiqueta.ubicacion || 'Sin ubicación'">
+              {{ etiqueta.ubicacion || 'Sin ubicación' }}
+            </span>
           </td>
 
-          <!-- Cantidad -->
           <td class="celda-cantidad">
             <div class="control-cantidad">
               <button
@@ -63,7 +74,6 @@
               >
                 <IconMinus :size="16" :stroke="2" />
               </button>
-
               <input
                 type="number"
                 min="1"
@@ -71,7 +81,6 @@
                 @change="actualizarCantidad(indice)"
                 class="input-cantidad"
               />
-
               <button
                 type="button"
                 class="boton-cantidad boton-mas"
@@ -82,22 +91,17 @@
             </div>
           </td>
 
-          <!-- Acciones -->
           <td class="celda-acciones">
-            <div class="acciones-etiqueta">
+            <div class="acciones-ubicacion">
               <IconPencil
-                class="icono-accion icono-editar"
-                :size="20"
-                :stroke="2"
+                class="icono-ubicacion icono-editar"
                 @click="editarEtiqueta(indice)"
-                title="Editar"
+                title="Editar etiqueta"
               />
               <IconTrash
-                class="icono-accion icono-borrar"
-                :size="20"
-                :stroke="2"
+                class="icono-ubicacion icono-borrar"
                 @click="eliminarEtiqueta(indice)"
-                title="Eliminar"
+                title="Eliminar etiqueta"
               />
             </div>
           </td>
@@ -105,7 +109,12 @@
       </tbody>
     </table>
 
-    <!-- Modal Editar Etiqueta -->
+    <div v-if="etiquetas.length === 0" class="sin-etiquetas">
+      <IconTag :size="48" :stroke="1.5" class="icono-vacio" />
+      <p>No hay etiquetas agregadas</p>
+      <span class="texto-ayuda">Agregá etiquetas usando el formulario de arriba</span>
+    </div>
+
     <ModalEditarEtiqueta
       v-if="mostrarModalEditar"
       :etiqueta="etiquetaEditando"
@@ -117,8 +126,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { IconTag, IconPencil, IconTrash, IconPlus, IconMinus } from '@tabler/icons-vue'
+import { IconPencil, IconTrash, IconPlus, IconMinus, IconTag } from '@tabler/icons-vue'
 import ModalEditarEtiqueta from '../../Modales/ModalEditarEtiqueta.vue'
+import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
   etiquetas: {
@@ -136,7 +146,7 @@ const indiceEditando = ref(null)
 
 // --- COMPUTED ---
 const totalCopias = computed(() => {
-  return props.etiquetas.reduce((total, etiqueta) => total + etiqueta.cantidad, 0)
+  return props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0)
 })
 
 // --- FUNCIONES ---
@@ -156,7 +166,7 @@ function decrementarCantidad(indice) {
 
 function actualizarCantidad(indice) {
   const etiquetaActualizada = { ...props.etiquetas[indice] }
-  if (etiquetaActualizada.cantidad < 1) {
+  if (etiquetaActualizada.cantidad < 1 || !etiquetaActualizada.cantidad) {
     etiquetaActualizada.cantidad = 1
   }
   emit('editar-etiqueta', etiquetaActualizada)
@@ -188,6 +198,118 @@ function confirmarLimpiar() {
     emit('limpiar-todo')
   }
 }
+
+// --- Función para normalizar solo el código ---
+function normalizarCodigo(codigo) {
+  if (!codigo || typeof codigo !== 'string') {
+    return ''
+  }
+  return codigo.trim().toUpperCase()
+}
+
+// --- Función para obtener el nombre del artículo ---
+function obtenerNombreArticulo(codigo) {
+  if (!codigo || typeof codigo !== 'string') {
+    return 'Artículo inexistente'
+  }
+
+  try {
+    const articulosCargados = obtenerArticulosCargados()
+    if (!Array.isArray(articulosCargados)) {
+      return 'Base de datos no cargada'
+    }
+
+    const articuloEncontrado = articulosCargados.find(
+      (articulo) =>
+        articulo &&
+        articulo.codigo &&
+        typeof articulo.codigo === 'string' &&
+        articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+    )
+
+    // Si no lo encuentra, usa la descripción de la etiqueta como fallback
+    const etiquetaActual = props.etiquetas.find((e) => e.codigo === codigo)
+    return articuloEncontrado?.nombre || etiquetaActual?.descripcion || 'Artículo inexistente'
+  } catch (error) {
+    console.error('[obtenerNombreArticulo] Error:', error)
+    return 'Error al buscar artículo'
+  }
+}
+
+// --- Función para verificar si un artículo existe ---
+function esArticuloInexistente(codigo) {
+  if (!codigo || typeof codigo !== 'string') {
+    return true
+  }
+
+  try {
+    const articulosCargados = obtenerArticulosCargados()
+    if (!Array.isArray(articulosCargados)) {
+      return true
+    }
+
+    return !articulosCargados.some(
+      (articulo) =>
+        articulo &&
+        articulo.codigo &&
+        typeof articulo.codigo === 'string' &&
+        articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+    )
+  } catch (error) {
+    console.error('[esArticuloInexistente] Error:', error)
+    return true
+  }
+}
+
+// --- Lógica de duplicados ---
+const codigosDuplicados = computed(() => {
+  try {
+    const conteo = new Map()
+    for (const etiqueta of props.etiquetas) {
+      if (!etiqueta || !etiqueta.codigo) continue
+      const codigoNormalizado = normalizarCodigo(etiqueta.codigo)
+      if (codigoNormalizado) {
+        conteo.set(codigoNormalizado, (conteo.get(codigoNormalizado) || 0) + 1)
+      }
+    }
+    const duplicados = new Set()
+    for (const [codigo, cantidad] of conteo.entries()) {
+      if (cantidad > 1) {
+        duplicados.add(codigo)
+      }
+    }
+    return duplicados
+  } catch (error) {
+    console.error('[codigosDuplicados] Error:', error)
+    return new Set()
+  }
+})
+
+// --- Conteo de etiquetas con códigos repetidos ---
+const cantidadCodigosRepetidos = computed(() => {
+  try {
+    return props.etiquetas.filter(
+      (etiqueta) =>
+        etiqueta &&
+        etiqueta.codigo &&
+        codigosDuplicados.value.has(normalizarCodigo(etiqueta.codigo)),
+    ).length
+  } catch (error) {
+    console.error('[cantidadCodigosRepetidos] Error:', error)
+    return 0
+  }
+})
+
+// --- Conteo de artículos inexistentes ---
+const cantidadArticulosInexistentes = computed(() => {
+  try {
+    return props.etiquetas.filter((etiqueta) => etiqueta && esArticuloInexistente(etiqueta.codigo))
+      .length
+  } catch (error) {
+    console.error('[cantidadArticulosInexistentes] Error:', error)
+    return 0
+  }
+})
 </script>
 
 <style scoped>
