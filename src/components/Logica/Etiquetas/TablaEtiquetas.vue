@@ -390,6 +390,24 @@ const cantidadArticulosInexistentes = computed(() => {
 .label-responsive {
   display: none;
 }
+/* ===== COLUMNAS ===== */
+.columna-nombre-codigo {
+  width: 35%;
+}
+.columna-ubicacion {
+  width: 10%;
+}
+.columna-cantidad {
+  width: 20%;
+  padding-left: 5rem !important;
+}
+.columna-acciones {
+  width: 10%;
+  text-align: center;
+}
+.celda-cantidad {
+  padding-left: 1rem;
+}
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .tabla-ubicaciones {
@@ -412,7 +430,6 @@ const cantidadArticulosInexistentes = computed(() => {
   }
   .texto-secundario {
     width: 100%;
-    text-align: center;
     padding: 0.3rem 0.6rem;
     font-size: 0.85rem;
   }
