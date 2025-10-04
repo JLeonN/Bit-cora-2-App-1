@@ -386,65 +386,54 @@ const cantidadArticulosInexistentes = computed(() => {
   font-size: 0.9rem;
   font-style: italic;
 }
-
 /* Ocultar labels en desktop */
 .label-responsive {
   display: none;
 }
-
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .tabla-ubicaciones {
     font-size: 0.85rem;
   }
-
   .tabla-ubicaciones th,
   .tabla-ubicaciones td {
     padding: 0.7rem 0.8rem;
   }
-
   .globito-ubicacion {
     padding: 0.4rem 0.6rem;
     font-size: 0.85rem;
   }
 }
-
 @media (max-width: 600px) {
   .encabezado-tabla {
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.5rem;
   }
-
   .texto-secundario {
     width: 100%;
     text-align: center;
     padding: 0.3rem 0.6rem;
     font-size: 0.85rem;
   }
-
   .contenedor-boton-borrar-todo {
     margin-bottom: 0.5rem;
   }
-
   /* Tabla responsive - Modo cards */
   .tabla-ubicaciones {
     display: block;
     border: none;
     background: transparent;
   }
-
   .tabla-ubicaciones thead {
     display: none;
   }
-
   .tabla-ubicaciones tbody,
   .tabla-ubicaciones tr,
   .tabla-ubicaciones td {
     display: block;
     width: 100%;
   }
-
   .tabla-ubicaciones tbody tr {
     margin-bottom: 0.75rem;
     border: 1px solid var(--color-borde);
@@ -452,27 +441,24 @@ const cantidadArticulosInexistentes = computed(() => {
     padding: 0.75rem;
     background: var(--color-superficie);
   }
-
   /* Colores en responsive */
   .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
     background-color: rgba(255, 152, 0, 0.1);
   }
-
   .tabla-ubicaciones tbody tr.fila-articulo-inexistente {
     background-color: rgba(244, 67, 54, 0.1);
   }
-
   .tabla-ubicaciones td {
     padding: 0.4rem 0;
     border: none;
     text-align: left;
   }
-
   .campo-responsive {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
   }
-
   /* Mostrar labels en mobile */
   .label-responsive {
     display: block;
@@ -481,64 +467,55 @@ const cantidadArticulosInexistentes = computed(() => {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 100px;
   }
-
   .globito-ubicacion {
     display: block;
-    width: 100%;
+    flex: 1;
     white-space: normal;
-    max-width: 100%;
     padding: 0.4rem 0.6rem;
     font-size: 0.85rem;
   }
-
   .contenedor-nombre-codigo {
     gap: 0.15rem;
   }
-
   .nombre-articulo {
     font-size: 0.9rem;
   }
-
   .codigo-articulo {
     font-size: 0.75rem;
   }
-
   .control-cantidad {
     justify-content: flex-start;
     gap: 0.4rem;
+    flex: 1;
   }
-
   .boton-cantidad {
     width: 32px;
     height: 32px;
   }
-
   .input-cantidad {
     width: 45px;
     padding: 0.25rem;
     font-size: 0.85rem;
   }
-
   .acciones-ubicacion {
     justify-content: flex-start;
     gap: 10px;
+    flex: 1;
   }
-
   .icono-ubicacion {
     width: 20px;
     height: 20px;
   }
-
   .sin-etiquetas {
     padding: 2rem 1rem;
   }
-
   .sin-etiquetas p {
     font-size: 1rem;
   }
-
   .texto-ayuda {
     font-size: 0.85rem;
   }
