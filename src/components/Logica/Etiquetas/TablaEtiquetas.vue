@@ -40,7 +40,7 @@
             'fila-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
           }"
         >
-          <td class="celda-nombre-codigo" data-label="Artículo:">
+          <td class="celda-nombre-codigo">
             <span
               class="globito-ubicacion"
               :class="{
@@ -58,13 +58,13 @@
             </span>
           </td>
 
-          <td class="celda-ubicacion" data-label="Ubicación:">
+          <td class="celda-ubicacion">
             <span class="globito-ubicacion" :title="etiqueta.ubicacion || 'Sin ubicación'">
               {{ etiqueta.ubicacion || 'Sin ubicación' }}
             </span>
           </td>
 
-          <td class="celda-cantidad" data-label="Cantidad:">
+          <td class="celda-cantidad">
             <div class="control-cantidad">
               <button
                 type="button"
@@ -91,7 +91,7 @@
             </div>
           </td>
 
-          <td class="celda-acciones" data-label="Acciones:">
+          <td class="celda-acciones">
             <div class="acciones-ubicacion">
               <IconPencil
                 class="icono-ubicacion icono-editar"
@@ -227,7 +227,6 @@ function obtenerNombreArticulo(codigo) {
         articulo.codigo.toLowerCase() === codigo.toLowerCase(),
     )
 
-    // Si no lo encuentra, usa la descripción de la etiqueta como fallback
     const etiquetaActual = props.etiquetas.find((e) => e.codigo === codigo)
     return articuloEncontrado?.nombre || etiquetaActual?.descripcion || 'Artículo inexistente'
   } catch (error) {
@@ -313,142 +312,13 @@ const cantidadArticulosInexistentes = computed(() => {
 </script>
 
 <style scoped>
-.contenedor-tabla {
-  background-color: var(--color-superficie);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  margin-bottom: 1.5rem;
-}
-.encabezado-tabla {
-  /* Clase para los contadores */
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  margin-bottom: 1rem;
-}
-.texto-secundario {
-  font-size: 0.9rem;
-  color: var(--color-texto-secundario);
-  background: var(--color-fondo);
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-weight: 500;
-}
-.texto-repetidos {
-  color: var(--color-alerta);
-  background-color: var(--color-alerta-fondo);
-}
-.texto-inexistente {
-  color: var(--color-error);
-  background-color: var(--color-error-fondo);
-}
-/* Botón borrar toda la tabla */
-.contenedor-boton-borrar-todo {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
-.icono-borrar-todo {
-  cursor: pointer;
-  color: var(--color-error);
-  transition: transform 0.2s ease;
-}
-.icono-borrar-todo:hover {
-  transform: scale(1.1);
-}
-/* Sin etiquetas */
-.sin-etiquetas {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--color-texto-secundario);
-}
-.icono-vacio {
-  color: var(--color-texto-secundario);
-  opacity: 0.5;
-  margin-bottom: 1rem;
-}
-.sin-etiquetas p {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-  color: var(--color-texto-principal);
-}
-.texto-ayuda {
-  font-size: 0.9rem;
-  font-style: italic;
-}
-/* Tabla - Usando clases de TablaUbicaciones */
-.tabla-ubicaciones {
-  width: 100%;
-  border-collapse: collapse;
-}
-.tabla-ubicaciones th,
-.tabla-ubicaciones td {
-  padding: 12px;
-  border-bottom: 1px solid var(--color-borde);
-  text-align: left;
-  color: var(--color-texto-principal);
-  vertical-align: middle;
-}
-.tabla-ubicaciones th {
-  color: var(--color-primario-claro);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-.tabla-ubicaciones tbody tr:last-child td {
-  border-bottom: none;
-}
-.columna-nombre-codigo {
-  width: 40%;
-}
-.columna-ubicacion {
-  width: 25%;
-}
-.columna-cantidad {
-  width: 20%;
-  text-align: center;
-}
-.columna-acciones {
-  width: 15%;
-  text-align: center;
-}
-/* Estilos para estado de fila */
-.fila-ubicacion-duplicada {
-  background-color: var(--color-alerta-fondo);
-}
-.fila-articulo-inexistente {
-  background-color: var(--color-error-fondo);
-}
-.texto-duplicado {
-  color: var(--color-alerta);
-}
-.texto-articulo-inexistente {
-  color: var(--color-error);
-}
-/* Contenido de celda */
-.contenedor-nombre-codigo {
-  display: flex;
-  flex-direction: column;
-}
-.nombre-articulo {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-.codigo-articulo {
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  color: var(--color-texto-secundario);
-}
-.celda-cantidad {
-  text-align: center;
-}
-/* Control de cantidad */
 .control-cantidad {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   justify-content: center;
 }
+
 .boton-cantidad {
   width: 28px;
   height: 28px;
@@ -463,6 +333,18 @@ const cantidadArticulosInexistentes = computed(() => {
   transition: all 0.2s ease;
   padding: 0;
 }
+
+.boton-cantidad:hover:not(:disabled) {
+  background: var(--color-superficie);
+  border-color: var(--color-primario);
+  color: var(--color-primario);
+}
+
+.boton-cantidad:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .input-cantidad {
   width: 50px;
   padding: 0.3rem;
@@ -473,103 +355,134 @@ const cantidadArticulosInexistentes = computed(() => {
   border-radius: 4px;
   font-size: 0.9rem;
 }
-/* Acciones */
-.acciones-ubicacion {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  align-items: center;
-}
-.icono-ubicacion {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-.icono-ubicacion:hover {
-  transform: scale(1.2);
-}
-.icono-editar {
-  color: var(--color-acento);
-}
-.icono-borrar {
-  color: var(--color-error);
+
+.input-cantidad:focus {
+  outline: none;
+  border-color: var(--color-primario);
 }
 
-/* Responsive */
+.sin-etiquetas {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-texto-secundario);
+}
+
+.icono-vacio {
+  color: var(--color-texto-secundario);
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.sin-etiquetas p {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: var(--color-texto-principal);
+}
+
+.texto-ayuda {
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* RESPONSIVE */
 @media (max-width: 900px) {
   .tabla-ubicaciones {
     font-size: 0.85rem;
   }
+
   .tabla-ubicaciones th,
   .tabla-ubicaciones td {
-    padding: 8px;
+    padding: 0.7rem 0.8rem;
+  }
+
+  .globito-ubicacion {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
   }
 }
 
-/* OPTIMIZACIÓN MÓVIL (Compactar campos) */
 @media (max-width: 600px) {
-  .contenedor-tabla {
-    padding: 1rem;
-    overflow-x: auto;
-  }
+  /* Tabla responsive - Modo cards */
   .tabla-ubicaciones {
     display: block;
-    overflow-x: auto;
+    border: none;
+    background: transparent;
   }
+
   .tabla-ubicaciones thead {
     display: none;
   }
+
   .tabla-ubicaciones tbody,
   .tabla-ubicaciones tr,
   .tabla-ubicaciones td {
     display: block;
     width: 100%;
   }
-  .tabla-ubicaciones tr {
+
+  .tabla-ubicaciones tbody tr {
     margin-bottom: 1rem;
     border: 1px solid var(--color-borde);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1rem;
-    background: var(--color-fondo);
-  }
-  .tabla-ubicaciones td {
-    padding: 0.2rem 0; /* Menos padding vertical para compactar */
-    border: none;
-    text-align: left;
-    display: flex; /* Habilitar Flexbox en la celda */
-    align-items: center;
+    background: var(--color-superficie);
   }
 
-  /* Estilo de la etiqueta del campo (Ej: 'Ubicación:') */
+  /* Colores en responsive */
+  .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
+    background-color: rgba(255, 152, 0, 0.1);
+  }
+
+  .tabla-ubicaciones tbody tr.fila-articulo-inexistente {
+    background-color: rgba(244, 67, 54, 0.1);
+  }
+
+  .tabla-ubicaciones td {
+    padding: 0.6rem 0;
+    border: none;
+    text-align: left;
+  }
+
   .tabla-ubicaciones td::before {
     content: attr(data-label);
     font-weight: 600;
     color: var(--color-primario-claro);
-    display: inline-block; /* Mostrar en línea con el valor */
-    margin-right: 0.5rem; /* Espacio después de los dos puntos */
-    font-size: 0.9rem;
-    min-width: 85px; /* Ancho fijo para alinear etiquetas como 'Ubicación:', 'Cantidad:' */
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  /* Excepción para la celda de Nombre y Código (Artículo) */
-  .celda-nombre-codigo {
-    display: block; /* Vuelve a ser bloque para que el contenido (nombre/código) use todo el ancho */
-  }
   .celda-nombre-codigo::before {
-    content: attr(data-label);
-    display: block; /* La etiqueta ('Artículo:') va en su propia línea */
-    margin-bottom: 0.3rem;
-    min-width: 0; /* Desactiva el min-width */
+    content: 'Nombre y Código:';
   }
 
-  /* Ajuste para controles dentro de celdas compactas */
-  .celda-cantidad {
-    text-align: left; /* Alinea el contenido a la izquierda del flexbox */
+  .celda-ubicacion::before {
+    content: 'Ubicación:';
   }
+
+  .celda-cantidad::before {
+    content: 'Cantidad:';
+  }
+
+  .celda-acciones::before {
+    content: 'Acciones:';
+  }
+
+  .globito-ubicacion {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    max-width: 100%;
+  }
+
   .control-cantidad {
-    justify-content: flex-start; /* Alinea los botones a la izquierda */
+    justify-content: flex-start;
   }
+
   .acciones-ubicacion {
-    justify-content: flex-start; /* Alinea los iconos a la izquierda */
+    justify-content: flex-start;
   }
 }
 </style>
