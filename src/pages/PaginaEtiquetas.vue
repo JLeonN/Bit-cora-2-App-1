@@ -29,18 +29,11 @@
       :etiquetas="listaEtiquetas"
       @editar-etiqueta="editarEtiqueta"
       @eliminar-etiqueta="eliminarEtiqueta"
+      @limpiar-todo="limpiarTodo"
     />
 
     <!-- BARRA INFERIOR DE BOTONES -->
-    <BarraBotonesInferior
-      :mostrar-atras="true"
-      :mostrar-agregar="false"
-      :mostrar-enviar="true"
-      :botones-personalizados="botonesPersonalizados"
-      @atras="volverAtras"
-      @enviar="generarWord"
-      @boton-personalizado="manejarBotonPersonalizado"
-    />
+    <BarraBotonesInferior @enviar="generarWord" />
 
     <!-- MODAL ELIMINAR -->
     <ModalEliminar
@@ -53,8 +46,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
@@ -63,7 +55,6 @@ import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasWord.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 
-const router = useRouter()
 const $q = useQuasar()
 
 // --- ESTADO REACTIVO ---
@@ -73,17 +64,6 @@ const mostrarModalEliminar = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
-
-// --- BOTONES PERSONALIZADOS ---
-const botonesPersonalizados = computed(() => [
-  {
-    id: 'limpiar',
-    icono: 'IconTrash',
-    texto: 'Limpiar todo',
-    color: 'rojo',
-    deshabilitado: listaEtiquetas.value.length === 0,
-  },
-])
 
 // --- FUNCIONES ---
 function agregarEtiqueta(etiqueta) {
@@ -182,24 +162,50 @@ async function generarWord() {
   }
 }
 
-function manejarBotonPersonalizado(idBoton) {
-  if (idBoton === 'limpiar') {
-    limpiarTodo()
-  }
-}
-
-function volverAtras() {
-  router.push('/')
-}
-
 // --- LIFECYCLE ---
 onMounted(() => {
-  console.log('[PaginaEtiquetas] Componente montado')
+  emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
 })
 
 onUnmounted(() => {
-  console.log('[PaginaEtiquetas] Componente desmontado')
+  emit(
+    'configurar-barra',
+    {
+      mostrarAtras: false,
+      mostrarInicio: false,
+      mostrarAgregar: false,
+      mostrarEnviar: false,
+      puedeEnviar: false,
+      botonesPersonalizados: [],
+    },
+    null,
+  )
 })
+
+const emit = defineEmits(['configurar-barra'])
+
+const configuracionBarra = computed(() => ({
+  mostrarAtras: true,
+  mostrarInicio: true,
+  mostrarAgregar: false,
+  mostrarEnviar: listaEtiquetas.value.length > 0,
+  puedeEnviar: listaEtiquetas.value.length > 0,
+  botonesPersonalizados: [],
+}))
+
+const metodosParaBarra = {
+  onEnviar: () => generarWord(),
+  onAgregar: () => {},
+  onAccionPersonalizada: () => {},
+}
+
+watch(
+  () => listaEtiquetas.value.length,
+  () => {
+    emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped>

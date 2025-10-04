@@ -1,16 +1,26 @@
 <template>
   <div class="contenedor-tabla">
     <div class="header-tabla">
-      <h2 class="titulo-tabla">Etiqueta para imprimir</h2>
-      <span class="contador-etiquetas" v-if="etiquetas.length > 0">
-        {{ totalCopias }} etiqueta{{ totalCopias !== 1 ? 's' : '' }} en total
-      </span>
+      <h2 class="titulo-tabla">Etiquetas para imprimir</h2>
+      <div class="acciones-header">
+        <span class="contador-etiquetas" v-if="etiquetas.length > 0">
+          {{ totalCopias }} etiqueta{{ totalCopias !== 1 ? 's' : '' }} en total
+        </span>
+        <button
+          v-if="etiquetas.length > 0"
+          class="boton-limpiar"
+          @click="confirmarLimpiar"
+          title="Limpiar todas las etiquetas"
+        >
+          <IconTrash :size="18" :stroke="2" />
+        </button>
+      </div>
     </div>
 
     <div v-if="etiquetas.length === 0" class="sin-etiquetas">
       <IconTag :size="48" :stroke="1.5" class="icono-vacio" />
-      <p>No hay etiqueta agregadas</p>
-      <span class="texto-ayuda">Agregá etiqueta usando el formulario de arriba</span>
+      <p>No hay etiquetas agregadas</p>
+      <span class="texto-ayuda">Agregá etiquetas usando el formulario de arriba</span>
     </div>
 
     <table v-else class="tabla-etiquetas">
@@ -117,7 +127,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta'])
+const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta', 'limpiar-todo'])
 
 // --- ESTADO REACTIVO ---
 const mostrarModalEditar = ref(false)
@@ -172,6 +182,12 @@ function cerrarModalEditar() {
 function eliminarEtiqueta(indice) {
   emit('eliminar-etiqueta', indice)
 }
+
+function confirmarLimpiar() {
+  if (confirm('¿Estás seguro de que querés limpiar todas las etiquetas?')) {
+    emit('limpiar-todo')
+  }
+}
 </script>
 
 <style scoped>
@@ -190,6 +206,12 @@ function eliminarEtiqueta(indice) {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+.acciones-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 .titulo-tabla {
   font-size: 1.3rem;
   font-weight: 600;
@@ -203,6 +225,24 @@ function eliminarEtiqueta(indice) {
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
   font-weight: 500;
+}
+.boton-limpiar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-error);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.boton-limpiar:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
 }
 /* Sin etiquetas */
 .sin-etiquetas {
@@ -372,6 +412,10 @@ function eliminarEtiqueta(indice) {
   .header-tabla {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .acciones-header {
+    width: 100%;
+    justify-content: space-between;
   }
   .tabla-etiquetas {
     display: block;
