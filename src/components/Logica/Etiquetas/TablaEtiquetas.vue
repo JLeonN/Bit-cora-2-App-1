@@ -40,7 +40,7 @@
             'fila-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
           }"
         >
-          <td class="celda-nombre-codigo">
+          <td class="celda-nombre-codigo" data-label="Artículo:">
             <span
               class="globito-ubicacion"
               :class="{
@@ -58,13 +58,13 @@
             </span>
           </td>
 
-          <td class="celda-ubicacion">
+          <td class="celda-ubicacion" data-label="Ubicación:">
             <span class="globito-ubicacion" :title="etiqueta.ubicacion || 'Sin ubicación'">
               {{ etiqueta.ubicacion || 'Sin ubicación' }}
             </span>
           </td>
 
-          <td class="celda-cantidad">
+          <td class="celda-cantidad" data-label="Cantidad:">
             <div class="control-cantidad">
               <button
                 type="button"
@@ -91,7 +91,7 @@
             </div>
           </td>
 
-          <td class="celda-acciones">
+          <td class="celda-acciones" data-label="Acciones:">
             <div class="acciones-ubicacion">
               <IconPencil
                 class="icono-ubicacion icono-editar"
@@ -320,27 +320,14 @@ const cantidadArticulosInexistentes = computed(() => {
   border: 1px solid var(--color-borde);
   margin-bottom: 1.5rem;
 }
-.header-tabla {
+.encabezado-tabla {
+  /* Clase para los contadores */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
-.acciones-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.titulo-tabla {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--color-texto-principal);
-  margin: 0;
-}
-.contador-etiquetas {
+.texto-secundario {
   font-size: 0.9rem;
   color: var(--color-texto-secundario);
   background: var(--color-fondo);
@@ -348,23 +335,27 @@ const cantidadArticulosInexistentes = computed(() => {
   border-radius: 6px;
   font-weight: 500;
 }
-.boton-limpiar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--color-error);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+.texto-repetidos {
+  color: var(--color-alerta);
+  background-color: var(--color-alerta-fondo);
 }
-.boton-limpiar:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
+.texto-inexistente {
+  color: var(--color-error);
+  background-color: var(--color-error-fondo);
+}
+/* Botón borrar toda la tabla */
+.contenedor-boton-borrar-todo {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+.icono-borrar-todo {
+  cursor: pointer;
+  color: var(--color-error);
+  transition: transform 0.2s ease;
+}
+.icono-borrar-todo:hover {
+  transform: scale(1.1);
 }
 /* Sin etiquetas */
 .sin-etiquetas {
@@ -386,61 +377,70 @@ const cantidadArticulosInexistentes = computed(() => {
   font-size: 0.9rem;
   font-style: italic;
 }
-/* Tabla */
-.tabla-etiquetas {
+/* Tabla - Usando clases de TablaUbicaciones */
+.tabla-ubicaciones {
   width: 100%;
   border-collapse: collapse;
 }
-.tabla-etiquetas th,
-.tabla-etiquetas td {
+.tabla-ubicaciones th,
+.tabla-ubicaciones td {
   padding: 12px;
   border-bottom: 1px solid var(--color-borde);
   text-align: left;
   color: var(--color-texto-principal);
   vertical-align: middle;
 }
-.tabla-etiquetas th {
+.tabla-ubicaciones th {
   color: var(--color-primario-claro);
   font-weight: 600;
   font-size: 0.9rem;
 }
-.tabla-etiquetas tbody tr:last-child td {
+.tabla-ubicaciones tbody tr:last-child td {
   border-bottom: none;
 }
-/* Columnas */
-.columna-codigo {
-  width: 15%;
-}
-.columna-descripcion {
-  width: 35%;
+.columna-nombre-codigo {
+  width: 40%;
 }
 .columna-ubicacion {
-  width: 20%;
+  width: 25%;
 }
 .columna-cantidad {
-  width: 15%;
+  width: 20%;
+  text-align: center;
 }
 .columna-acciones {
   width: 15%;
   text-align: center;
 }
-/* Celdas */
-.celda-codigo .texto-codigo {
-  font-family: 'Courier New', monospace;
+/* Estilos para estado de fila */
+.fila-ubicacion-duplicada {
+  background-color: var(--color-alerta-fondo);
+}
+.fila-articulo-inexistente {
+  background-color: var(--color-error-fondo);
+}
+.texto-duplicado {
+  color: var(--color-alerta);
+}
+.texto-articulo-inexistente {
+  color: var(--color-error);
+}
+/* Contenido de celda */
+.contenedor-nombre-codigo {
+  display: flex;
+  flex-direction: column;
+}
+.nombre-articulo {
   font-weight: 600;
-  color: var(--color-primario-claro);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
-.celda-descripcion .texto-descripcion {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-texto-principal);
-}
-.celda-ubicacion .texto-ubicacion {
+.codigo-articulo {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
   color: var(--color-texto-secundario);
-  font-size: 0.9rem;
+}
+.celda-cantidad {
+  text-align: center;
 }
 /* Control de cantidad */
 .control-cantidad {
@@ -463,15 +463,6 @@ const cantidadArticulosInexistentes = computed(() => {
   transition: all 0.2s ease;
   padding: 0;
 }
-.boton-cantidad:hover:not(:disabled) {
-  background: var(--color-superficie);
-  border-color: var(--color-primario);
-  color: var(--color-primario);
-}
-.boton-cantidad:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
 .input-cantidad {
   width: 50px;
   padding: 0.3rem;
@@ -482,22 +473,18 @@ const cantidadArticulosInexistentes = computed(() => {
   border-radius: 4px;
   font-size: 0.9rem;
 }
-.input-cantidad:focus {
-  outline: none;
-  border-color: var(--color-primario);
-}
 /* Acciones */
-.acciones-etiqueta {
+.acciones-ubicacion {
   display: flex;
   gap: 12px;
   justify-content: center;
   align-items: center;
 }
-.icono-accion {
+.icono-ubicacion {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
-.icono-accion:hover {
+.icono-ubicacion:hover {
   transform: scale(1.2);
 }
 .icono-editar {
@@ -506,93 +493,83 @@ const cantidadArticulosInexistentes = computed(() => {
 .icono-borrar {
   color: var(--color-error);
 }
+
 /* Responsive */
 @media (max-width: 900px) {
-  .tabla-etiquetas {
+  .tabla-ubicaciones {
     font-size: 0.85rem;
   }
-  .tabla-etiquetas th,
-  .tabla-etiquetas td {
+  .tabla-ubicaciones th,
+  .tabla-ubicaciones td {
     padding: 8px;
   }
-  .control-cantidad {
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-  .boton-cantidad {
-    width: 100%;
-  }
-  .input-cantidad {
-    width: 100%;
-  }
 }
+
+/* OPTIMIZACIÓN MÓVIL (Compactar campos) */
 @media (max-width: 600px) {
   .contenedor-tabla {
     padding: 1rem;
     overflow-x: auto;
   }
-  .header-tabla {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .acciones-header {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .tabla-etiquetas {
+  .tabla-ubicaciones {
     display: block;
     overflow-x: auto;
   }
-  .tabla-etiquetas thead {
+  .tabla-ubicaciones thead {
     display: none;
   }
-  .tabla-etiquetas tbody,
-  .tabla-etiquetas tr,
-  .tabla-etiquetas td {
+  .tabla-ubicaciones tbody,
+  .tabla-ubicaciones tr,
+  .tabla-ubicaciones td {
     display: block;
     width: 100%;
   }
-  .tabla-etiquetas tr {
+  .tabla-ubicaciones tr {
     margin-bottom: 1rem;
     border: 1px solid var(--color-borde);
     border-radius: 8px;
     padding: 1rem;
     background: var(--color-fondo);
   }
-  .tabla-etiquetas td {
-    padding: 0.5rem 0;
+  .tabla-ubicaciones td {
+    padding: 0.2rem 0; /* Menos padding vertical para compactar */
     border: none;
     text-align: left;
+    display: flex; /* Habilitar Flexbox en la celda */
+    align-items: center;
   }
-  .tabla-etiquetas td::before {
+
+  /* Estilo de la etiqueta del campo (Ej: 'Ubicación:') */
+  .tabla-ubicaciones td::before {
     content: attr(data-label);
     font-weight: 600;
     color: var(--color-primario-claro);
-    display: block;
+    display: inline-block; /* Mostrar en línea con el valor */
+    margin-right: 0.5rem; /* Espacio después de los dos puntos */
+    font-size: 0.9rem;
+    min-width: 85px; /* Ancho fijo para alinear etiquetas como 'Ubicación:', 'Cantidad:' */
+  }
+
+  /* Excepción para la celda de Nombre y Código (Artículo) */
+  .celda-nombre-codigo {
+    display: block; /* Vuelve a ser bloque para que el contenido (nombre/código) use todo el ancho */
+  }
+  .celda-nombre-codigo::before {
+    content: attr(data-label);
+    display: block; /* La etiqueta ('Artículo:') va en su propia línea */
     margin-bottom: 0.3rem;
-    font-size: 0.85rem;
+    min-width: 0; /* Desactiva el min-width */
   }
-  .celda-codigo::before {
-    content: 'Código:';
-  }
-  .celda-descripcion::before {
-    content: 'Descripción:';
-  }
-  .celda-ubicacion::before {
-    content: 'Ubicación:';
-  }
-  .celda-cantidad::before {
-    content: 'Cantidad:';
-  }
-  .celda-acciones::before {
-    content: 'Acciones:';
+
+  /* Ajuste para controles dentro de celdas compactas */
+  .celda-cantidad {
+    text-align: left; /* Alinea el contenido a la izquierda del flexbox */
   }
   .control-cantidad {
-    flex-direction: row;
-    justify-content: flex-start;
+    justify-content: flex-start; /* Alinea los botones a la izquierda */
   }
-  .acciones-etiqueta {
-    justify-content: flex-start;
+  .acciones-ubicacion {
+    justify-content: flex-start; /* Alinea los iconos a la izquierda */
   }
 }
 </style>
