@@ -1,0 +1,270 @@
+### **Módulo de Configuración - Bitácora II**
+
+Sistema completo para gestionar la configuración personalizada del usuario y nombres personalizados en archivos exportados.
+
+---
+
+### 📦 **Componentes Principales**
+
+#### **PaginaConfiguracion.vue**
+- **Página principal** de configuración
+- **Ruta**: `/configuracion`
+- **Accesible desde**: Botón en footer del drawer en MainLayout
+- **Contiene**: ConfiguracionUsuario.vue
+- **Responsive design** adaptativo
+
+#### **ConfiguracionUsuario.vue**
+- **Formulario completo** para gestionar nombre de usuario
+- **Input limpio** con placeholder dinámico (no pre-rellena el campo)
+- **Placeholder**: "Ingresá tu nombre de usuario"
+- **Validaciones**:
+  - Mínimo 2 caracteres
+  - Debe ser diferente al actual
+  - Feedback visual de errores
+- **Botón guardar**: Persiste el nuevo nombre
+- **Botón resetear**: Abre modal de confirmación para volver a "Usua des"
+- **Modal de confirmación**: Usa ModalEliminar.vue (componente reutilizable)
+- **Feedback visual**: Notificaciones de éxito/error con Quasar Notify
+- **Persistencia automática**: Guarda inmediatamente en @capacitor/preferences
+
+---
+
+### 💾 **Almacenamiento y Persistencia**
+
+#### **usoAlmacenamientoConfiguracion.js**
+- **Módulo dedicado** para persistir configuración de usuario
+- **Almacenamiento**: @capacitor/preferences
+- **Key**: `"configuracionUsuario"`
+- **Valor por defecto**: "Usua des"
+
+**Funciones principales**:
+guardarConfiguracion(config)       // Guarda objeto completo de configuración
+obtenerConfiguracion()             // Recupera configuración guardada
+limpiarConfiguracion()             // Resetea a valores por defecto
+guardarNombreUsuario(nombre)       // Guarda solo el nombre de usuario
+obtenerNombreUsuario()             // Recupera solo el nombre de usuario
+
+**Estructura de configuración**:
+{
+  nombreUsuario: "Usua des"        // Nombre del usuario (string)
+}
+
+**Características**:
+- **Persistencia automática**: Los cambios se guardan inmediatamente
+- **Recuperación automática**: Se carga al iniciar la aplicación
+- **Valores por defecto**: Si no hay configuración guardada, usa "Usua des"
+- **Validación**: Verifica que los datos sean válidos antes de guardar
+
+---
+
+### 🔄 **Integración con MainLayout**
+
+#### **MainLayout.vue - Header**
+- **Nombre dinámico** en toolbar: `<q-toolbar-title>{{ nombreUsuario }}</q-toolbar-title>`
+- **Carga automática** del nombre con polling cada 5 segundos
+- **Actualización reactiva**: Cuando cambia en configuración, se actualiza automáticamente
+
+#### **MainLayout.vue - Drawer (Avatar)**
+- **Avatar dinámico**: `@{{ nombreUsuario }}`
+- **Posición**: En la parte superior del drawer
+- **Estilo**: Avatar circular con fondo primario
+
+#### **MainLayout.vue - Drawer (Botón Configuración)**
+- **Posición**: Footer del drawer
+- **Icono**: IconSettings de @tabler/icons-vue
+- **Animación**: Rotación al hacer hover
+- **Acción**: Navega a `/configuracion`
+- **Label**: "Configuración"
+- **Separación adecuada** en dispositivos móviles
+
+**Código de carga del nombre**:
+import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+
+const nombreUsuario = ref('Usua des')
+
+const cargarNombreUsuario = async () => {
+  const nombre = await obtenerNombreUsuario()
+  nombreUsuario.value = nombre || 'Usua des'
+}
+
+// Polling cada 5 segundos
+setInterval(cargarNombreUsuario, 5000)
+
+---
+
+### 📁 **Sistema de Nombres Personalizados en Archivos**
+
+**Integración completa del nombre de usuario en TODOS los archivos exportados.**
+
+#### **Pedidos**
+- **Con rango de fechas**: `Pedi [Usuario] DD-MM-AAAA - DD-MM-AAAA.xlsx`
+  - Ejemplo: `Pedi Juan 01-01-2024 - 31-01-2024.xlsx`
+- **Mensuales**: `Pedi [Usuario] - MM-AAAA.xlsx`
+  - Ejemplo: `Pedi Juan - 01-2024.xlsx`
+- **Nombre de hoja**: Solo el nombre del usuario
+  - Ejemplo: Hoja llamada "Juan"
+
+#### **Ubicaciones**
+- **Formato**: `Ubic [Usuario].xlsx`
+  - Ejemplo: `Ubic Juan.xlsx`
+- **Nombre de hoja**: Solo el nombre del usuario
+  - Ejemplo: Hoja llamada "Juan"
+
+#### **Etiquetas**
+- **Formato**: `etiquetas_[timestamp].docx`
+  - Ejemplo: `etiquetas_1704067200000.docx`
+- **Sin nombre de usuario** (es un documento Word, no Excel)
+
+**Implementación en exportadores**:
+- ExportarPedidosExcel.js → Importa `obtenerNombreUsuario()`
+- ExportarUbicacionesExcel.js → Importa `obtenerNombreUsuario()`
+- Ambos llaman a la función antes de generar el archivo
+- Si no hay nombre configurado, usan "Usua des" por defecto
+
+---
+
+### 🔄 **Integración con Barra de Botones**
+
+#### **PaginaConfiguracion.vue**
+configuracionBarra: {
+  mostrarAtras: true,
+  mostrarInicio: true,
+  mostrarAgregar: false,
+  mostrarEnviar: false,
+  puedeEnviar: false,
+  botonesPersonalizados: []
+}
+
+---
+
+### ✅ **Flujo de Trabajo Típico**
+
+1. **Acceder a configuración**:
+   - Abrir drawer (menú lateral)
+   - Click en botón "Configuración" (con icono de engranaje)
+   - Se abre PaginaConfiguracion.vue
+
+2. **Cambiar nombre de usuario**:
+   - Ver nombre actual en el formulario (placeholder)
+   - Escribir nuevo nombre (mínimo 2 caracteres)
+   - Click en "Guardar"
+   - **Validación**: Si es igual al actual → error
+   - **Éxito**: Notificación verde + actualización inmediata
+   - **El nombre se actualiza** en header y drawer automáticamente
+
+3. **Resetear nombre**:
+   - Click en botón "Resetear nombre"
+   - Se abre modal de confirmación
+   - Confirmar → Vuelve a "Usua des"
+   - **Notificación** de éxito
+
+4. **Ver cambios en archivos exportados**:
+   - Al exportar pedidos → archivo tiene tu nombre
+   - Al exportar ubicaciones → archivo tiene tu nombre
+   - La hoja Excel tiene tu nombre como título
+
+---
+
+### 📊 **Estructura de Datos**
+
+#### **Configuración Completa**
+{
+  nombreUsuario: "Juan"            // Nombre del usuario configurado
+}
+
+#### **Almacenamiento en Capacitor Preferences**
+Key: "configuracionUsuario"
+Value: { "nombreUsuario": "Juan" }
+
+#### **Valor por Defecto**
+Si no hay configuración guardada:
+{
+  nombreUsuario: "Usua des"
+}
+
+---
+
+### 🎨 **Características de UI/UX**
+
+#### **Formulario de configuración**
+- **Diseño limpio**: Input con placeholder dinámico
+- **Sin pre-llenado**: El campo está vacío hasta que escribís
+- **Validaciones en tiempo real**: Muestra errores inmediatamente
+- **Botones claros**: "Guardar" (verde) y "Resetear nombre" (rojo)
+- **Modal de confirmación**: Previene reseteos accidentales
+- **Notificaciones**: Feedback visual inmediato
+
+#### **Botón en drawer**
+- **Icono de engranaje**: IconSettings rotando al hover
+- **Posición fija**: Footer del drawer
+- **Separación responsive**: Se adapta a móviles
+- **Transición suave**: Animación de rotación 0.3s
+
+#### **Header dinámico**
+- **Actualización automática**: Polling cada 5s
+- **Sin recargar página**: Reactivo con Vue
+- **Visible siempre**: En todas las páginas de la app
+
+---
+
+### 🔧 **Dependencias Específicas**
+
+- **@capacitor/preferences**: Persistencia de datos
+- **Quasar Notify**: Notificaciones de éxito/error
+- **@tabler/icons-vue**: Iconografía (IconSettings)
+- **Vue Router**: Navegación a `/configuracion`
+
+---
+
+### 🚀 **Posibles Expansiones Futuras**
+
+**Ideas para agregar al módulo de configuración:**
+
+1. **Tema visual**:
+   - Modo claro/oscuro
+   - Colores personalizados
+   - Tamaño de fuente
+
+2. **Preferencias de exportación**:
+   - Formato de fecha preferido
+   - Idioma de archivos
+   - Carpeta de destino por defecto
+
+3. **Notificaciones**:
+   - Activar/desactivar sonidos
+   - Duración de notificaciones
+   - Tipo de alertas
+
+4. **Permisos**:
+   - Gestión de cámara
+   - Gestión de archivos
+   - Gestión de ubicación
+
+5. **Datos de empresa**:
+   - Logo personalizado
+   - Información de contacto
+   - Datos fiscales
+
+6. **Respaldos**:
+   - Exportar toda la configuración
+   - Importar configuración
+   - Sincronización en la nube
+
+7. **Seguridad**:
+   - PIN de acceso
+   - Huella digital
+   - Timeout de sesión
+
+---
+
+### 📝 **Notas Importantes**
+
+- La configuración se **carga automáticamente** al iniciar la app
+- El **polling cada 5 segundos** asegura que el nombre esté siempre actualizado
+- El **modal de confirmación** previene reseteos accidentales
+- El **valor por defecto** "Usua des" garantiza que siempre haya un nombre
+- Los **archivos exportados** usan el nombre configurado automáticamente
+- La **validación de mínimo 2 caracteres** evita nombres muy cortos
+- El **placeholder dinámico** mejora la UX al no pre-llenar el campo
+- El **botón en el drawer** es accesible desde cualquier página
+- La **estructura JSON** facilita agregar más configuraciones en el futuro

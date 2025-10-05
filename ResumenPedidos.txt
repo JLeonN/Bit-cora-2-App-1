@@ -1,0 +1,251 @@
+### **Módulo de Pedidos - Bitácora II**
+
+Sistema completo para gestión de pedidos diarios con historial, exportación y sistema gamificado de recompensas.
+
+---
+
+### 📦 **Componentes Principales**
+
+#### **TablaPedidos.vue**
+- **Pantalla principal** del módulo de pedidos
+- **Tabla de últimos 3 pedidos** realizados
+- **Integración completa** con ContadorPedidosDiarios
+- **Botón agregar** para abrir ModalNuevoPedido
+- **Navegación** a PedidosRealizados y HistorialPedidos
+- **Responsive** con diseño adaptativo
+
+#### **ModalNuevoPedido.vue**
+- **Modal para agregar pedidos** manualmente
+- **Input manual**: agrega un solo pedido y cierra automáticamente
+- **Botón de cámara**: abre CamaraPedidos.vue para escanear múltiples códigos
+- **Validaciones** con feedback visual
+- **Integración** con sistema de persistencia
+
+#### **CamaraPedidos.vue**
+- **Modal con cámara embebida** en un `<div>` + botones personalizados
+- **@zxing/library** para escaneo en tiempo real
+- **Escaneo de códigos de barra y QR**
+- **Miniatura de última captura**
+- **Manejo de permisos** de cámara
+- **Lista de códigos escaneados** con opción de eliminar
+- **Botones**: finalizar (confirma todos), cancelar
+
+#### **PedidosRealizados.vue**
+- **Lista completa** de todos los pedidos guardados
+- **Ordenados por fecha** (más recientes primero)
+- **Botón enviar Excel** con todos los pedidos
+- **Acciones individuales**: editar y eliminar
+- **Modal de edición** integrado
+- **Confirmación** antes de eliminar
+- **Contador total** de pedidos
+
+#### **HistorialPedidos.vue**
+- **Agrupación de pedidos por fechas**
+- **Vista expandible** por fecha
+- **Exportación por rango** de fechas seleccionado
+- **Botón enviar Excel** del rango
+- **Contador de pedidos** por fecha
+- **Diseño tipo acordeón** para mejor visualización
+
+#### **✅ ContadorPedidosDiarios.vue - Sistema Gamificado**
+- **Contador automático** de pedidos del día actual
+- **Reinicio a medianoche** automático (verificación cada minuto)
+- **🎯 Sistema de recompensas**: Iconos dinámicos según productividad
+  - 👍 **1-9 pedidos**: Buen comienzo (fin de semana) / Necesita más esfuerzo (laborable)
+  - 🔥 **10-19 pedidos**: Bien (fin de semana) / Buen ritmo (laborable)
+  - ⚡ **20-29 pedidos**: Excelente (fin de semana) / Muy productivo (laborable)
+  - ⭐ **30-39 pedidos**: Increíble (fin de semana) / Excelente día (laborable)
+  - 💎 **50+ pedidos**: Corona del día
+- **Lógica diferenciada**: Fin de semana vs días laborables
+- **5 niveles de logros**: Progresión motivacional
+- **Persistencia** entre sesiones con `@capacitor/preferences`
+- **Integración completa** con TablaPedidos.vue
+- **Actualización automática** al agregar pedidos
+- **Responsive design** para móviles
+
+---
+
+### 📁 **Lógica de Exportación**
+
+#### **ExportarPedidosExcel.js**
+- **Generación de Excel** con pedidos
+- **Dos modos**:
+  - **Rango de fechas**: `Pedi Usuario DD-MM-AAAA - DD-MM-AAAA.xlsx`
+  - **Mes actual**: `Pedi Usuario - MM-AAAA.xlsx`
+- **Nombre de hoja**: Nombre del usuario
+- **Columnas**: Fecha, Código del pedido
+- **Formato de fecha**: DD/MM/AAAA
+- **Ordenamiento**: Por fecha descendente
+- **Integración** con nombre de usuario de configuración
+
+#### **GeneraExcel.js**
+- **Módulo reutilizable** para generar Excel
+- **Función principal**: `generarYGuardarExcelTemporal()`
+- **Recibe**: datos, nombre del archivo, nombre de hoja
+- **Genera**: archivo Excel en memoria con `xlsx`
+- **Guarda**: en `Directory.Cache` con `@capacitor/filesystem`
+- **Retorna**: URI del archivo temporal
+- **Formato**: Base64 para compatibilidad con Capacitor
+
+#### **CompartirExcel.js** (en Logica/Pedidos/)
+- **Función**: `compartirArchivo(rutaArchivo, nombreArchivo)`
+- **Share API nativa** de Capacitor
+- **Título**: "Exportar pedidos"
+- **Manejo de errores** con logs detallados
+- **Compatible** con todas las apps de compartir del sistema
+
+---
+
+### 💾 **Almacenamiento y Persistencia**
+
+#### **usoAlmacenamientoPedidos.js**
+- **Módulo especializado** para pedidos
+- **Funciones principales**:
+  - `guardarPedidos(pedidos)`: Guarda array de pedidos
+  - `obtenerPedidos()`: Recupera todos los pedidos
+  - `agregarPedido(codigo)`: Agrega un pedido con fecha actual
+  - `eliminarPedido(id)`: Elimina un pedido específico
+  - `editarPedido(id, nuevoCodigo)`: Modifica un pedido
+  - `limpiarPedidos()`: Elimina todos los pedidos
+- **Estructura de pedido**:
+  {
+    id: timestamp,
+    codigo: "ABC123",
+    fecha: "AAAA-MM-DD"
+  }
+- **Persistencia** en `@capacitor/preferences`
+- **Key**: `"pedidos"`
+
+---
+
+### 🎯 **Sistema de Logros Gamificado**
+
+#### **Lógica de Niveles**
+- **Detección automática** de fin de semana (sábado/domingo)
+- **Umbrales diferentes** según día de la semana
+- **Reconocimiento cada 10 pedidos** con cambio de icono
+- **Persistencia del contador** durante todo el día
+- **Reset automático** a las 00:00
+
+#### **Mensajes Motivacionales**
+- **Fin de semana**: Mensajes más relajados
+- **Días laborables**: Mensajes enfocados en productividad
+- **Progresión clara**: El usuario ve su avance en tiempo real
+
+---
+
+### 🔄 **Integración con Barra de Botones**
+
+#### **TablaPedidos.vue**
+configuracionBarra: {
+  mostrarAtras: true,
+  mostrarInicio: true,
+  mostrarAgregar: true,
+  mostrarEnviar: false,
+  puedeEnviar: false,
+  botonesPersonalizados: []
+}
+
+#### **PedidosRealizados.vue**
+configuracionBarra: {
+  mostrarAtras: true,
+  mostrarInicio: true,
+  mostrarAgregar: false,
+  mostrarEnviar: pedidos.length > 0,
+  puedeEnviar: pedidos.length > 0,
+  botonesPersonalizados: []
+}
+
+#### **HistorialPedidos.vue**
+configuracionBarra: {
+  mostrarAtras: true,
+  mostrarInicio: true,
+  mostrarAgregar: false,
+  mostrarEnviar: hayRangoSeleccionado,
+  puedeEnviar: hayRangoSeleccionado,
+  botonesPersonalizados: []
+}
+
+---
+
+### ✅ **Flujo de Trabajo Típico**
+
+1. **Usuario entra a TablaPedidos**
+   - Ve los últimos 3 pedidos
+   - Ve su contador del día con icono de logro
+   
+2. **Agregar pedidos**:
+   - **Opción A**: Click en botón agregar → Modal → Input manual → Confirmar
+   - **Opción B**: Click en botón agregar → Modal → Botón cámara → Escanear múltiples → Finalizar
+   
+3. **Ver todos los pedidos**:
+   - Navega a PedidosRealizados
+   - Ve lista completa ordenada
+   - Puede editar o eliminar
+   
+4. **Exportar pedidos**:
+   - **Desde PedidosRealizados**: Exporta todos los pedidos
+   - **Desde HistorialPedidos**: Selecciona rango de fechas → Exporta rango
+   
+5. **Sistema de logros**:
+   - El contador se actualiza automáticamente
+   - El icono cambia cada 10 pedidos
+   - Reset automático al día siguiente
+
+---
+
+### 📊 **Estructura de Datos**
+
+#### **Pedido Individual**
+{
+  id: 1704067200000,           // timestamp único
+  codigo: "ABC123",             // código del artículo
+  fecha: "2024-01-01"          // formato AAAA-MM-DD
+}
+
+#### **Array de Pedidos (en localStorage)**
+[
+  { id: 1704067200000, codigo: "ABC123", fecha: "2024-01-01" },
+  { id: 1704067201000, codigo: "XYZ789", fecha: "2024-01-01" },
+  { id: 1704153600000, codigo: "DEF456", fecha: "2024-01-02" }
+]
+
+#### **Datos del Contador Diario**
+{
+  fecha: "2024-01-01",         // fecha actual
+  cantidad: 15                 // pedidos del día
+}
+
+---
+
+### 🎨 **Características de UI/UX**
+
+- **Tabla responsive** con diseño de cards en móvil
+- **Animaciones suaves** en transiciones
+- **Feedback visual** inmediato al agregar/eliminar
+- **Iconos consistentes** con @tabler/icons-vue
+- **Estados de carga** con spinners
+- **Notificaciones** de éxito/error con Quasar Notify
+- **Confirmaciones** antes de acciones destructivas
+- **Colores temáticos** según logro alcanzado
+
+---
+
+### 🔧 **Dependencias Específicas**
+
+- **xlsx**: Generación de archivos Excel
+- **@capacitor/filesystem**: Guardado de archivos
+- **@capacitor/share**: Compartir archivos
+- **@capacitor/preferences**: Persistencia de datos
+- **@zxing/library**: Escaneo de códigos
+- **@tabler/icons-vue**: Iconografía
+
+---
+
+### 📝 **Notas Importantes**
+
+- Los pedidos se guardan **automáticamente** al agregarlos
+- El contador diario se **resetea solo** a medianoche
+- Los archivos Excel se generan en **memoria** y se guardan temporalmente
+- El **nombre de usuario** de configuración se integra en nombres de archivo
+- El sistema de logros **motiva** la productividad sin ser intrusivo
