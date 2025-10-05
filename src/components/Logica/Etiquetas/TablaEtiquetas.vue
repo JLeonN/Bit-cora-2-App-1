@@ -127,11 +127,20 @@
       <span class="texto-ayuda">Agregá etiquetas usando el formulario de arriba</span>
     </div>
 
+    <!-- MODAL PARA EDITAR ETIQUETA INDIVIDUAL -->
     <ModalEditarEtiqueta
       v-if="mostrarModalEditar"
       :etiqueta="etiquetaEditando"
       @guardar="guardarEdicion"
       @cerrar="cerrarModalEditar"
+    />
+
+    <!-- MODAL PARA CONFIRMAR ELIMINAR TODAS LAS ETIQUETAS -->
+    <ModalEliminar
+      v-if="mostrarModalLimpiarTodo"
+      texto="todas las etiquetas"
+      @confirmar="confirmarLimpiarTodo"
+      @cerrar="cerrarModalLimpiarTodo"
     />
   </div>
 </template>
@@ -140,6 +149,7 @@
 import { ref, computed } from 'vue'
 import { IconPencil, IconTrash, IconPlus, IconMinus, IconTag } from '@tabler/icons-vue'
 import ModalEditarEtiqueta from '../../Modales/ModalEditarEtiqueta.vue'
+import ModalEliminar from '../../Modales/ModalEliminar.vue' // 👈 IMPORTAR ModalEliminar
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
@@ -151,17 +161,19 @@ const props = defineProps({
 
 const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta', 'limpiar-todo'])
 
-// --- ESTADO REACTIVO ---
-const mostrarModalEditar = ref(false)
+// --- ESTADO REACTIVO PARA MODALES ---
+const mostrarModalEditar = ref(false) // Modal para editar etiqueta individual
 const etiquetaEditando = ref(null)
 const indiceEditando = ref(null)
+
+const mostrarModalLimpiarTodo = ref(false) // Modal para confirmar limpiar todo
 
 // --- COMPUTED ---
 const totalCopias = computed(() => {
   return props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0)
 })
 
-// --- FUNCIONES ---
+// --- FUNCIONES DE CANTIDAD ---
 function incrementarCantidad(indice) {
   const etiquetaActualizada = { ...props.etiquetas[indice] }
   etiquetaActualizada.cantidad++
@@ -184,6 +196,7 @@ function actualizarCantidad(indice) {
   emit('editar-etiqueta', etiquetaActualizada)
 }
 
+// --- FUNCIONES MODAL EDITAR ETIQUETA INDIVIDUAL ---
 function editarEtiqueta(indice) {
   etiquetaEditando.value = { ...props.etiquetas[indice] }
   indiceEditando.value = indice
@@ -201,14 +214,26 @@ function cerrarModalEditar() {
   indiceEditando.value = null
 }
 
+// --- FUNCIONES ELIMINAR ETIQUETA INDIVIDUAL ---
 function eliminarEtiqueta(indice) {
   emit('eliminar-etiqueta', indice)
 }
 
+// --- FUNCIONES MODAL LIMPIAR TODO ---
+// Abre el modal de confirmación para limpiar todas las etiquetas
 function confirmarLimpiar() {
-  if (confirm('¿Estás seguro de que querés limpiar todas las etiquetas?')) {
-    emit('limpiar-todo')
-  }
+  mostrarModalLimpiarTodo.value = true
+}
+
+// Se ejecuta cuando el usuario confirma en el modal
+function confirmarLimpiarTodo() {
+  emit('limpiar-todo')
+  mostrarModalLimpiarTodo.value = false
+}
+
+// Se ejecuta cuando el usuario cancela en el modal
+function cerrarModalLimpiarTodo() {
+  mostrarModalLimpiarTodo.value = false
 }
 
 // --- Función para normalizar solo el código ---

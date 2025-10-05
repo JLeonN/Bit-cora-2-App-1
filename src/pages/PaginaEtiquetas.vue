@@ -107,10 +107,8 @@ function cerrarModalEliminar() {
 function limpiarTodo() {
   if (listaEtiquetas.value.length === 0) return
 
-  if (confirm('¿Estás seguro de que querés limpiar todas las etiquetas?')) {
-    listaEtiquetas.value = []
-    console.log('[PaginaEtiquetas] Lista de etiquetas limpiada')
-  }
+  listaEtiquetas.value = []
+  console.log('[PaginaEtiquetas] Lista de etiquetas limpiada')
 }
 
 async function generarWord() {

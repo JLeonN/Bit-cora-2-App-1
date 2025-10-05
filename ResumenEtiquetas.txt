@@ -52,6 +52,7 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **✅ Detección de códigos duplicados** (fondo naranja)
 - **✅ Detección de artículos inexistentes** (fondo rojo)
 - **Controles de cantidad inline**: Incrementar/decrementar sin modal
+- **✅ Modal personalizado para confirmar limpieza**: Usa ModalEliminar en lugar de confirm() nativo
 - **Botón limpiar todo** con confirmación
 - **Responsive** con diseño de cards en móvil
 - **Integración con base de datos** para mostrar nombres
