@@ -460,10 +460,10 @@ const cantidadArticulosInexistentes = computed(() => {
   }
   /* Colores en responsive */
   .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
-    background-color: rgba(231, 202, 159, 0.1);
+    background: color-mix(in oklab, var(--color-error) 10%, transparent);
   }
   .tabla-ubicaciones tbody tr.fila-articulo-inexistente {
-    background-color: rgba(244, 67, 54, 0.1);
+    background: color-mix(in oklab, var(--color-carga) 10%, transparent);
   }
   .tabla-ubicaciones td {
     padding: 0.4rem 0;

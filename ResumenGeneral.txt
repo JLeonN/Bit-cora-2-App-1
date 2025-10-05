@@ -222,6 +222,32 @@ src/
 
 ---
 
+/* Variables */
+:root {
+  --color-fondo: #121214; /* Fondo principal */
+  --color-superficie: #1c1c20; /* Cartas / contenedores */
+  --color-texto-principal: #f5f5f5; /* Texto principal */
+  --color-texto-secundario: #b4b4be; /* Texto secundario */
+
+  --color-primario: #1e88e5; /* Azul principal */
+  --color-primario-claro: #64b5f6;
+  --color-primario-oscuro: #1565c0;
+
+  --color-acento: #03a9f4; /* Azul acento (botones, enlaces) */
+  --color-borde: #3c3c46; /* Bordes suaves */
+
+  --color-error: #f44336; /* Rojo para errores */
+  --color-exito: #4caf50; /* Verde para éxito */
+  --color-desactivado: #666; /* Gris usado en botones inactivos */
+
+  --sombra-boton: rgba(0, 0, 0, 0.4);
+  --borde-boton: rgba(255, 255, 255, 0.12);
+
+  --color-carga: #ff9800; /* Naranja para carga */
+  --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
+  --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
+}
+
 ### 📚 **Archivos de Documentación Relacionados**
 
 - **ResumenPedidos.txt**: Todo sobre el módulo de pedidos
