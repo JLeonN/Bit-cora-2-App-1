@@ -10,7 +10,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **PedidosRealizados.vue:** Muestra todos los pedidos guardados y ofrece un botón para **enviar** el Excel.  
 - **HistorialPedidos.vue:** Historial de pedidos agrupados por fechas, también con botón de **Enviar**.  
 - **TablaPedidos.vue:** Pantalla principal de pedidos con tabla de últimos 3 pedidos e integración completa con ContadorPedidosDiarios.
-- **Inicio.vue (PanelInicio.vue):** Pantalla principal de navegación hacia las distintas funciones.  
+- **Inicio.vue (PanelInicio.vue):** Pantalla principal de navegación hacia las distintas funciones (Pedidos, Ubicaciones, **Etiquetas**).  
 - **ModalNuevoPedido.vue:** Modal para agregar pedidos manuales, con input, botón de cámara y confirmación.  
   - Input manual: agrega un solo pedido y cierra el modal automáticamente.  
   - Botón de cámara: abre **CamaraPedidos.vue** para escanear múltiples pedidos.  
@@ -50,6 +50,58 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ---
 
+#### 🏷️ **Sistema de Etiquetas (NUEVO)**
+- **PaginaEtiquetas.vue:** Página principal para generación de etiquetas con códigos de barras.
+  - **Selector de tamaño** (chico, mediano, grande) con interfaz visual.
+  - **Lista de etiquetas** con contador de copias totales.
+  - **Detección de códigos duplicados** y artículos inexistentes.
+  - **Integración con BarraBotonesInferior** para navegación y exportación.
+  - **Ruta**: `/etiquetas` agregada al sistema de routing.
+
+- **FormularioEtiqueta.vue:** Formulario completo para agregar etiquetas.
+  - **Campo código** con buscador inteligente integrado (CodigoMasNombre.vue).
+  - **Botón de cámara** para escanear códigos.
+  - **Autocompletado** de descripción y ubicación desde base de datos Excel.
+  - **Campo cantidad** de copias (mínimo 1).
+  - **Validaciones** con feedback visual y animaciones de error.
+  - **Formateo automático** de ubicaciones (espacios → guiones).
+
+- **TablaEtiquetas.vue:** Tabla completa de etiquetas agregadas.
+  - **Contador de etiquetas** y copias totales.
+  - **Detección visual** de códigos duplicados (fondo naranja).
+  - **Detección de artículos inexistentes** (fondo rojo).
+  - **Controles de cantidad** inline con botones +/-.
+  - **Acciones**: editar y eliminar etiquetas individuales.
+  - **Botón limpiar todo** con confirmación.
+  - **Responsive** con diseño de cards en móvil.
+
+- **GeneradorEtiquetasWord.js:** Motor de generación de documentos Word.
+  - **Biblioteca**: `docx` para generar archivos .docx.
+  - **Formato de página**: 10cm x 15cm personalizado.
+  - **Contenido por etiqueta**:
+    - Código del artículo (arriba, centrado, grande).
+    - Código de barras PNG (centrado, 280x100px).
+    - Descripción (tamaño automático 40-60pt según longitud).
+    - Ubicación (esquina inferior izquierda, pequeña).
+  - **Salto de página** automático entre etiquetas.
+  - **Respeta cantidad de copias** generando páginas duplicadas.
+  - **Guardado temporal** con Capacitor Filesystem.
+
+- **GeneradorCodigoBarra.js:** Generación de códigos de barras.
+  - **Biblioteca**: `jsbarcode` para generar códigos Code 39.
+  - **Formato**: PNG base64 para integración con docx.
+  - **Tamaños configurables** (chico, mediano, grande).
+  - **Configuración automática** de altura, ancho y fuente según tamaño.
+  - **Sin texto inferior** (se agrega manualmente en el documento).
+  - **Validación y limpieza** de códigos compatibles con Code 39.
+
+- **ModalEditarEtiqueta.vue:** Modal para editar etiquetas existentes.
+  - **Campos editables**: código, descripción, ubicación, cantidad.
+  - **Validaciones** completas con feedback visual.
+  - **Botones**: guardar y cancelar.
+
+---
+
 #### 📁 **Lógica de Exportación y Guardado de Archivos**
 
 #### ✅ **Nombres Personalizados en Excel**
@@ -57,7 +109,8 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 - **Pedidos con rango**: `Pedi Usuario DD-MM-AAAA - DD-MM-AAAA.xlsx` (rango de fechas).
 - **Pedidos mensuales**: `Pedi Usuario - MM-AAAA.xlsx` (mes actual).
 - **Ubicaciones**: `Ubic Usuario.xlsx` (sin fecha).
-- **Nombre de hoja**: Solo el nombre del usuario en todos los archivos.
+- **Etiquetas**: `etiquetas_[timestamp].docx` (documento Word).
+- **Nombre de hoja**: Solo el nombre del usuario en todos los archivos Excel.
 - **Valor por defecto**: "Usua des" cuando no hay usuario configurado.
 - **Persistencia automática**: El nombre se carga desde configuración guardada.
 
@@ -85,9 +138,11 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 
 ### 📁 **Exportación y Guardado de Archivos**
 - Uso de **xlsx** para generar datos Excel en memoria.  
+- Uso de **docx** para generar documentos Word con etiquetas.
+- Uso de **jsbarcode** para generar códigos de barras Code 39.
 - Descarga directa en la web (`ExportarPedidosExcel.js`).  
 - Módulo reutilizable (`GeneraExcel.js`) con función `generarYGuardarExcelTemporal`.  
-- Uso de **@capacitor/filesystem** para guardar Excel en Base64 en `Directory.Cache`.  
+- Uso de **@capacitor/filesystem** para guardar archivos en Base64 en `Directory.Cache`.  
 - **✅ ExportarUbicacionesExcel.js MEJORADO:**
   - **Anchos optimizados** para todas las columnas según contenido real.
   - **Columna H "Info"** con sistema de emojis para identificación rápida.
@@ -111,7 +166,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 #### 📷 **Integración de Cámara y Escaneo**
 - Implementación con **@zxing/library** dentro de un `<div>` con botones personalizados.  
 - **CamaraPedidos.vue** maneja permisos de cámara, escaneo en tiempo real y muestra miniatura de la última captura.  
-- **CamaraEscaneo.vue** y **CamaraUbicaciones.vue** para escaneo específico de ubicaciones.
+- **CamaraEscaneo.vue** y **CamaraUbicaciones.vue** para escaneo específico de ubicaciones y etiquetas.
 - Optimización del escaneo para códigos de barra y QR ✅.
 - **Funcionalidad mejorada**: Recordar última ubicación durante escaneos consecutivos.
 
@@ -249,17 +304,28 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Modal reutilizable** para confirmaciones importantes.
   - **Placeholder dinámico** que mejora la UX del formulario.
 
+- **✅ Etiquetas con retroalimentación visual**:
+  - **Códigos duplicados** resaltados en naranja.
+  - **Artículos inexistentes** resaltados en rojo.
+  - **Contador de errores** en header de tabla.
+  - **Validaciones con animaciones** de sacudida.
+
 ---
 
 ### ✅ **Resumen de Logros Actuales**
 - Persistencia de pedidos y ubicaciones.  
 - Generación y guardado de Excel con Capacitor.  
-- Envío de Excel por apps nativas.  
+- **Generación de documentos Word con códigos de barras** para etiquetas.
+- Envío de archivos por apps nativas (Excel y Word).
 - Escaneo de códigos en tiempo real funcionando.  
 - Interfaz modular (UI, datos, cámara, exportación).  
 - Reutilización de componentes (botones, modales, cámara).  
 - Feedback al usuario con notificaciones.  
 - Gestión completa de ubicaciones.  
+- **✅ Sistema completo de generación de etiquetas con códigos de barras**.
+- **✅ Documentos Word personalizados con formato 10x15cm**.
+- **✅ Códigos de barras Code 39 en formato PNG**.
+- **✅ Detección de duplicados y artículos inexistentes en etiquetas**.
 - **✅ Sistema completo de carga y gestión de base de datos Excel**.
 - **✅ Búsqueda inteligente de artículos con coincidencias dinámicas y base de datos**.
 - **✅ Exportación mejorada con nombres automáticos de artículos**.
@@ -297,6 +363,14 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
   - **Modal reutilizable** para confirmaciones críticas sin duplicar código.
   - **✅ Integración completa con exportadores Excel** - Nombres personalizados en todos los archivos.
   - **Navegación integrada** desde drawer con efectos visuales profesionales.
+- **🏷️ Sistema completo de etiquetas**:
+  - **Generación de códigos de barras Code 39** en formato PNG.
+  - **Documentos Word personalizados** con formato 10x15cm.
+  - **Tamaños configurables** (chico, mediano, grande).
+  - **Formulario inteligente** con autocompletado desde base de datos.
+  - **Detección de duplicados** y artículos inexistentes.
+  - **Control de copias** individual por etiqueta.
+  - **Exportación directa** a Word con compartir nativo.
 
 ---
 
@@ -311,7 +385,8 @@ src/
 │   ├── AjustarUbicaciones.vue
 │   ├── ErrorNotFound.vue
 │   ├── TablaPedidos.vue
-│   └── PaginaConfiguracion.vue
+│   ├── PaginaConfiguracion.vue
+│   └── PaginaEtiquetas.vue
 ├── router/
 │   ├── index.js
 │   └── routes.js
@@ -334,6 +409,11 @@ src/
     ├── Logica/
     │   ├── Envios/
     │   │   └── CompartirExcel.js
+    │   ├── Etiquetas/
+    │   │   ├── FormularioEtiqueta.vue
+    │   │   ├── TablaEtiquetas.vue
+    │   │   ├── GeneradorEtiquetasWord.js
+    │   │   └── GeneradorCodigoBarra.js
     │   ├── Pedidos/
     │   │   ├── CamaraPedidos.vue
     │   │   ├── CompartirExcel.js
@@ -354,6 +434,7 @@ src/
     └── Modales/
         ├── ModalEditarPedido.vue
         ├── ModalEditarUbicacion.vue
+        ├── ModalEditarEtiqueta.vue
         ├── ModalEliminar.vue
         └── ModalNuevoPedido.vue
 
@@ -363,6 +444,8 @@ src/
 - **Framework**: Vue 3 + Quasar
 - **Capacitor**: Filesystem, Preferences
 - **XLSX**: Procesamiento de archivos Excel
+- **docx**: Generación de documentos Word
+- **jsbarcode**: Generación de códigos de barras Code 39
 - **@zxing/library**: Escaneo de códigos
 - **@tabler/icons-vue**: Iconografía
 - **Target**: Android en Play Store

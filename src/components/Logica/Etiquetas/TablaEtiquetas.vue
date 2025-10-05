@@ -392,7 +392,7 @@ const cantidadArticulosInexistentes = computed(() => {
 }
 /* ===== COLUMNAS ===== */
 .columna-nombre-codigo {
-  width: 35%;
+  width: 40%;
 }
 .columna-ubicacion {
   width: 10%;
@@ -460,7 +460,7 @@ const cantidadArticulosInexistentes = computed(() => {
   }
   /* Colores en responsive */
   .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
-    background-color: rgba(255, 152, 0, 0.1);
+    background-color: rgba(231, 202, 159, 0.1);
   }
   .tabla-ubicaciones tbody tr.fila-articulo-inexistente {
     background-color: rgba(244, 67, 54, 0.1);
