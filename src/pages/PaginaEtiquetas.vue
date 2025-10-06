@@ -42,6 +42,14 @@
       @confirmar="confirmarEliminar"
       @cerrar="cerrarModalEliminar"
     />
+
+    <!-- MODAL ELIMINAR TODO -->
+    <ModalEliminar
+      v-if="mostrarModalLimpiarTodo"
+      texto="todas las etiquetas"
+      @confirmar="confirmarLimpiarTodo"
+      @cerrar="cerrarModalLimpiarTodo"
+    />
   </div>
 </template>
 
@@ -54,16 +62,44 @@ import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasWord.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import {
+  guardarEtiquetas,
+  obtenerEtiquetas,
+  eliminarEtiquetas,
+} from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
 
 // --- ESTADO REACTIVO ---
 const tamanoSeleccionado = ref('grande')
 const listaEtiquetas = ref([])
 const mostrarModalEliminar = ref(false)
+const mostrarModalLimpiarTodo = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
 
 const emit = defineEmits(['configurar-barra'])
+
+// --- FUNCIONES DE PERSISTENCIA ---
+async function cargarEtiquetasGuardadas() {
+  try {
+    const etiquetasGuardadas = await obtenerEtiquetas()
+    if (etiquetasGuardadas && etiquetasGuardadas.length > 0) {
+      listaEtiquetas.value = etiquetasGuardadas
+      console.log('[PaginaEtiquetas] Etiquetas cargadas:', etiquetasGuardadas.length)
+    }
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error cargando etiquetas:', error)
+  }
+}
+
+async function persistirEtiquetas() {
+  try {
+    await guardarEtiquetas(listaEtiquetas.value)
+    console.log('[PaginaEtiquetas] Etiquetas persistidas:', listaEtiquetas.value.length)
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error persistiendo etiquetas:', error)
+  }
+}
 
 // --- FUNCIONES ---
 function agregarEtiqueta(etiqueta) {
@@ -76,6 +112,9 @@ function agregarEtiqueta(etiqueta) {
 
   listaEtiquetas.value.push(etiquetaConTamano)
   console.log('[PaginaEtiquetas] Etiqueta agregada:', etiquetaConTamano)
+
+  // Guardar automáticamente
+  persistirEtiquetas()
 }
 
 function editarEtiqueta(etiquetaEditada) {
@@ -83,6 +122,9 @@ function editarEtiqueta(etiquetaEditada) {
   if (indice !== -1) {
     listaEtiquetas.value[indice] = etiquetaEditada
     console.log('[PaginaEtiquetas] Etiqueta editada:', etiquetaEditada)
+
+    // Guardar automáticamente
+    persistirEtiquetas()
   }
 }
 
@@ -95,6 +137,10 @@ function eliminarEtiqueta(indice) {
 function confirmarEliminar() {
   listaEtiquetas.value.splice(indiceAEliminar.value, 1)
   console.log('[PaginaEtiquetas] Etiqueta eliminada')
+
+  // Guardar automáticamente
+  persistirEtiquetas()
+
   cerrarModalEliminar()
 }
 
@@ -106,9 +152,21 @@ function cerrarModalEliminar() {
 
 function limpiarTodo() {
   if (listaEtiquetas.value.length === 0) return
+  mostrarModalLimpiarTodo.value = true
+}
 
+async function confirmarLimpiarTodo() {
   listaEtiquetas.value = []
   console.log('[PaginaEtiquetas] Lista de etiquetas limpiada')
+
+  // Eliminar del almacenamiento
+  await eliminarEtiquetas()
+
+  cerrarModalLimpiarTodo()
+}
+
+function cerrarModalLimpiarTodo() {
+  mostrarModalLimpiarTodo.value = false
 }
 
 async function generarWord() {
@@ -147,6 +205,8 @@ async function generarWord() {
         timeout: 2000,
       })
     }
+
+    // NO borramos las etiquetas, quedan guardadas
   } catch (error) {
     console.error('[PaginaEtiquetas] ❌ Error generando Word:', error)
     Loading.hide()
@@ -177,7 +237,10 @@ const metodosParaBarra = {
 }
 
 // --- LIFECYCLE ---
-onMounted(() => {
+onMounted(async () => {
+  // Cargar etiquetas guardadas
+  await cargarEtiquetasGuardadas()
+
   emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
 })
 

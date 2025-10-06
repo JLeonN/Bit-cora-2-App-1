@@ -397,6 +397,7 @@ src/
     │   ├── usoAlmacenamientoCapacitor.js
     │   ├── usoAlmacenamientoPedidos.js
     │   ├── usoAlmacenamientoUbicaciones.js
+    │   ├── usoAlmacenamientoEtiquetas.js
     │   ├── usoAlmacenamientoConfiguracion.js
     │   └── LectorExcel.js
     ├── Botones/

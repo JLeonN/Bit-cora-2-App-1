@@ -319,6 +319,34 @@ configuracionBarra: {
 
 ---
 
+### 💾 **Sistema de Persistencia de Etiquetas**
+
+**Las etiquetas se guardan automáticamente usando `@capacitor/preferences`**
+
+#### **usoAlmacenamientoEtiquetas.js**
+- **Ubicación**: `src/components/BaseDeDatos/usoAlmacenamientoEtiquetas.js`
+- **Clave de almacenamiento**: `historial_etiquetas`
+
+**Funciones exportadas**:
+```javascript
+guardarEtiquetas(etiquetas)      // Guarda array de etiquetas
+obtenerEtiquetas()               // Retorna array de etiquetas guardadas
+eliminarEtiquetas()              // Borra todas las etiquetas del storage
+
+[
+  {
+    id: 1704067200000,
+    codigo: "ABC123",
+    descripcion: "Producto 1",
+    ubicacion: "A-1-2",
+    cantidad: 2,
+    tamano: "grande"
+  },
+  // ... más etiquetas
+]
+
+---
+
 ### 🔧 **Dependencias Específicas**
 
 - **docx**: Generación de documentos Word
