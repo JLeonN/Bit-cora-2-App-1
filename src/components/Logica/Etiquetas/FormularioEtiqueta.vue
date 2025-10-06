@@ -67,10 +67,12 @@
         <label for="cantidad-copias">Cantidad de copias</label>
         <input
           id="cantidad-copias"
+          ref="inputCantidad"
           type="number"
           min="1"
           v-model.number="cantidadCopias"
           placeholder="1"
+          @focus="seleccionarCantidad"
           :class="{ 'input-error': mostrarErrorCantidad }"
         />
       </div>
@@ -118,6 +120,9 @@ const animarErrorCodigo = ref(false)
 // Referencia al input
 const inputCodigo = ref(null)
 
+// Referencia al input de cantidad
+const inputCantidad = ref(null)
+
 // --- FUNCIONES ---
 
 // Manejar búsqueda en tiempo real
@@ -128,6 +133,11 @@ function manejarBusqueda() {
   } else {
     mostrarResultados.value = false
   }
+}
+
+// Función para seleccionar el contenido del input
+function seleccionarCantidad() {
+  inputCantidad.value?.select()
 }
 
 // Seleccionar artículo del buscador
