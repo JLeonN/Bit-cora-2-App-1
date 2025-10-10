@@ -69,7 +69,7 @@ const crearPaginaEtiqueta = async (etiqueta) => {
         new ImageRun({
           data: bufferImagen,
           transformation: {
-            width: 280, // Ancho en pixels
+            width: 500, // Ancho en pixels
             height: 100, // Alto en pixels
           },
         }),
@@ -155,8 +155,8 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas) => {
         {
           properties: {
             page: {
-              width: convertMillimetersToTwip(100), // 10cm de ancho
-              height: convertMillimetersToTwip(150), // 15cm de alto
+              width: convertMillimetersToTwip(297), // 15cm de largo
+              height: convertMillimetersToTwip(210), // 10cm de alto
               margin: {
                 top: convertMillimetersToTwip(5),
                 right: convertMillimetersToTwip(5),

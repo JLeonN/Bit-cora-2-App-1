@@ -60,7 +60,7 @@ import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiquet
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
-import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasWord.js'
+import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   guardarEtiquetas,
