@@ -59,13 +59,13 @@ const crearPaginaEtiqueta = async (pdf, etiqueta) => {
   pdf.text(codigo, (anchoHoja - anchoCodigo) / 2, 15)
 
   // CÓDIGO DE BARRAS (centrado, más largo, menos espacio arriba)
-  const anchoBarra = 125 // ancho de la imagen del código de barras (más largo)
+  const anchoBarra = 120 // ancho de la imagen del código de barras (más largo)
   const altoBarra = 20 // alto de la imagen del código de barras (igual)
   pdf.addImage(
     imagenCodigoBarra,
     'PNG',
     (anchoHoja - anchoBarra) / 2,
-    22, // más cerca del código de arriba
+    18, // más cerca del código de arriba
     anchoBarra,
     altoBarra,
   )
