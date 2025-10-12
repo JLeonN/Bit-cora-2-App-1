@@ -4,6 +4,26 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 import { generarCodigoBarraPNG } from './GeneradorCodigoBarra.js'
 
 /**
+ * Detecta si estamos en un navegador web o en una app móvil
+ */
+const esNavegador = () => {
+  return !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+}
+
+/**
+ * Descarga el PDF directamente en el navegador
+ */
+const descargarPDFEnNavegador = (pdf, nombreArchivo) => {
+  const blob = pdf.output('blob')
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = nombreArchivo
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
  * Calcula el tamaño de fuente óptimo para la descripción según configuración
  * @param {string} descripcion - Texto de la descripción
  * @param {Object} configDescripcion - Configuración de descripción
@@ -81,12 +101,32 @@ const crearPaginaEtiqueta = async (pdf, etiqueta, configuracion) => {
   const anchoHoja = pagina.ancho
   const margen = pagina.margenes.todos
 
-  // ===== DIV 1: CÓDIGO DEL ARTÍCULO (arriba) =====
+  // ===== DIV 1: CÓDIGO DEL ARTÍCULO (arriba - ADAPTATIVO) =====
   pdf.setFont(codigoArticulo.fuenteNombre, codigoArticulo.fuenteEstilo)
-  pdf.setFontSize(codigoArticulo.tamanoFuente)
 
-  const xCentro = anchoHoja / 2
-  pdf.text(codigo, xCentro, codigoArticulo.posicionY, { align: codigoArticulo.alineacion })
+  // Calcular tamaño según longitud del código
+  let tamanoCodigoFuente = 50 // default
+  if (codigoArticulo.tamanosAutomaticos) {
+    const longitudCodigo = codigo.length
+    const { tamanosAutomaticos } = codigoArticulo
+
+    if (longitudCodigo <= tamanosAutomaticos.corto.hasta) {
+      tamanoCodigoFuente = tamanosAutomaticos.corto.tamano
+    } else if (longitudCodigo <= tamanosAutomaticos.mediano.hasta) {
+      tamanoCodigoFuente = tamanosAutomaticos.mediano.tamano
+    } else if (longitudCodigo <= tamanosAutomaticos.largo.hasta) {
+      tamanoCodigoFuente = tamanosAutomaticos.largo.tamano
+    } else {
+      tamanoCodigoFuente = tamanosAutomaticos.muyLargo.tamano
+    }
+  } else {
+    tamanoCodigoFuente = codigoArticulo.tamanoFuente || 50
+  }
+
+  pdf.setFontSize(tamanoCodigoFuente)
+
+  const xCodigo = codigoArticulo.posicionX !== undefined ? codigoArticulo.posicionX : anchoHoja / 2
+  pdf.text(codigo, xCodigo, codigoArticulo.posicionY, { align: codigoArticulo.alineacion })
 
   // ===== DIV 2: CÓDIGO DE BARRAS =====
   try {
@@ -130,12 +170,13 @@ const crearPaginaEtiqueta = async (pdf, etiqueta, configuracion) => {
     pdf.text(linea, (anchoHoja - anchoLinea) / 2, yDescripcion + index * interlineado)
   })
 
-  // ===== DIV 4: UBICACIÓN (fija abajo izquierda) =====
+  // ===== DIV 4: UBICACIÓN (abajo) =====
   pdf.setFontSize(configUbic.tamanoFuente)
   pdf.setFont(configUbic.fuenteNombre, configUbic.fuenteEstilo)
 
   const textoUbicacion = ubicacion || 'Sin ubicación'
-  pdf.text(textoUbicacion, configUbic.posicionX, configUbic.posicionY, {
+  const xUbicacion = configUbic.posicionX !== undefined ? configUbic.posicionX : anchoHoja / 2
+  pdf.text(textoUbicacion, xUbicacion, configUbic.posicionY, {
     align: configUbic.alineacion,
   })
 }
@@ -167,9 +208,9 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
 
     // Crear PDF con dimensiones personalizadas (en mm)
     const pdf = new jsPDF({
-      orientation: 'portrait',
+      orientation: 'landscape',
       unit: 'mm',
-      format: [pagina.ancho, pagina.alto],
+      format: [pagina.alto, pagina.ancho],
     })
 
     // Configurar propiedades del documento
@@ -190,7 +231,7 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
       for (let i = 0; i < cantidadCopias; i++) {
         // Agregar nueva página (excepto la primera)
         if (!esPrimeraPagina) {
-          pdf.addPage([pagina.ancho, pagina.alto])
+          pdf.addPage([pagina.alto, pagina.ancho])
         }
         esPrimeraPagina = false
 
@@ -199,11 +240,27 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
       }
     }
 
+    const nombreArchivo = `etiquetas_${configuracion.id}_${new Date().getTime()}.pdf`
+
+    // ===== SI ESTAMOS EN NAVEGADOR, DESCARGAR DIRECTAMENTE =====
+    if (esNavegador()) {
+      descargarPDFEnNavegador(pdf, nombreArchivo)
+
+      console.log('[GeneradorEtiquetasPDF] ✅ PDF descargado en navegador')
+
+      return {
+        exito: true,
+        mensaje: 'PDF descargado correctamente',
+        rutaArchivo: null,
+        nombreArchivo,
+      }
+    }
+
+    // ===== SI ESTAMOS EN MÓVIL, USAR CAPACITOR =====
     // Convertir PDF a base64
     const pdfBase64 = pdf.output('datauristring').split(',')[1]
 
     // Guardar en filesystem temporal
-    const nombreArchivo = `etiquetas_${configuracion.id}_${new Date().getTime()}.pdf`
     const resultado = await Filesystem.writeFile({
       path: nombreArchivo,
       data: pdfBase64,

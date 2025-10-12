@@ -1,6 +1,4 @@
 // ConfiguracionEtiqueta10x15.js
-// Configuración completa para etiquetas de 10x15 cm
-
 export const configuracionEtiqueta10x15 = {
   // ===== IDENTIFICACIÓN =====
   nombre: '10x15 cm',
@@ -8,29 +6,34 @@ export const configuracionEtiqueta10x15 = {
 
   // ===== DIMENSIONES DE PÁGINA =====
   pagina: {
-    ancho: 150, // 15cm en mm
-    alto: 100, // 10cm en mm
+    ancho: 150, // 15cm de largo (horizontal)
+    alto: 100, // 10cm de ancho (vertical)
     margenes: {
-      todos: 4, // 4mm en todos los bordes
+      todos: 4,
     },
   },
 
-  // ===== DIV 1: CÓDIGO DEL ARTÍCULO (arriba) =====
+  // ===== DIV 1: CÓDIGO DEL ARTÍCULO (arriba centrado - ADAPTATIVO) =====
   codigoArticulo: {
-    tamanoFuente: 50, // 50pt
+    // Tamaños automáticos según longitud del código
+    tamanosAutomaticos: {
+      corto: { hasta: 13, tamano: 50 }, // <= 13 chars → 50pt (normal)
+      mediano: { hasta: 18, tamano: 40 }, // <= 18 chars → 42pt
+      largo: { hasta: 23, tamano: 36 }, // <= 23 chars → 36pt
+      muyLargo: { desde: 24, tamano: 25 }, // >= 24 chars → 30pt
+    },
     fuenteNombre: 'helvetica',
     fuenteEstilo: 'bold',
     alineacion: 'center',
     posicionY: 15, // mm desde arriba
   },
-
-  // ===== DIV 2: CÓDIGO DE BARRAS =====
+  // ===== DIV 2: CÓDIGO DE BARRAS (centro) =====
   codigoBarra: {
-    ancho: 80, // mm
-    alto: 25, // mm
-    posicionY: 30, // mm desde arriba
+    ancho: 110, // Cambiá esto (en mm)
+    alto: 17, // Cambiá esto (en mm)
+    posicionY: 16, // Cambiá esto (mm desde arriba)
     centrado: true,
-    tamanoBarras: 'grande', // Para GeneradorCodigoBarra.js
+    tamanoBarras: 'grande',
   },
 
   // ===== DIV 3: DESCRIPCIÓN (centrada, tamaño y posición adaptativa) =====
@@ -49,19 +52,19 @@ export const configuracionEtiqueta10x15 = {
     fuenteNombre: 'helvetica',
     fuenteEstilo: 'bold',
     alineacion: 'center',
-    anchoMaximo: 90, // mm (para multilínea)
+    anchoMaximo: 140, // mm (más ancho disponible en horizontal)
     interlineadoFactor: 0.35, // Factor de espaciado entre líneas
     maximoLineas: 7, // Máximo 7 líneas
 
     // Posiciones Y dinámicas según cantidad de líneas
     posicionesYPorLineas: {
       1: 55, // 1 línea: más abajo
-      2: 55, // 2 líneas: igual
-      3: 52, // 3 líneas: un poco más arriba
-      4: 50, // 4 líneas: más arriba
-      5: 48, // 5 líneas: bastante arriba
-      6: 46, // 6 líneas: muy arriba
-      7: 44, // 7 líneas: super arriba para que entre todo
+      2: 56, // 2 líneas: un poco más arriba
+      3: 45, // 3 líneas: más arriba
+      4: 46, // 4 líneas: más arriba
+      5: 44, // 5 líneas: bastante arriba
+      6: 41, // 6 líneas: muy arriba
+      7: 40, // 7 líneas: super arriba para que entre todo
     },
   },
 
@@ -72,7 +75,7 @@ export const configuracionEtiqueta10x15 = {
     fuenteEstilo: 'normal',
     alineacion: 'left',
     posicionX: 4, // margen izquierdo (mm)
-    posicionY: 146, // mm desde arriba (altoHoja - margen)
+    posicionY: 96, // mm desde arriba (100mm - 4mm de margen)
   },
 
   // ===== CONFIGURACIONES ADICIONALES =====
