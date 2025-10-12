@@ -1,153 +1,183 @@
 // GeneradorEtiquetasPDF.js
-import jsPDF from 'jspdf'
+import { jsPDF } from 'jspdf'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { generarCodigoBarraPNG } from './GeneradorCodigoBarra.js'
 
 /**
- * Calcula el tamaño de fuente óptimo para la descripción
+ * Calcula el tamaño de fuente óptimo para la descripción según configuración
  * @param {string} descripcion - Texto de la descripción
- * @returns {number} - Tamaño de fuente en puntos (20-60)
+ * @param {Object} configDescripcion - Configuración de descripción
+ * @returns {number} - Tamaño de fuente en puntos
  */
-const calcularTamanoFuenteDescripcion = (descripcion) => {
+const calcularTamanoFuenteDescripcion = (descripcion, configDescripcion) => {
   const longitud = descripcion.length
+  const { tamanosAutomaticos } = configDescripcion
 
-  // Lógica de ajuste automático - MÁS NIVELES
-  if (longitud <= 15) return 60 // Descripciones muy cortas
-  if (longitud <= 25) return 52 // Descripciones cortas
-  if (longitud <= 35) return 46 // Descripciones medianas
-  if (longitud <= 45) return 40 // Descripciones un poco largas
-  if (longitud <= 60) return 34 // Descripciones largas
-  if (longitud <= 80) return 28 // Descripciones muy largas
-  if (longitud <= 100) return 24 // Descripciones extra largas
-  return 20 // Descripciones gigantes
+  if (longitud <= tamanosAutomaticos.muyCorta.hasta) {
+    return tamanosAutomaticos.muyCorta.tamano
+  }
+  if (longitud <= tamanosAutomaticos.corta.hasta) {
+    return tamanosAutomaticos.corta.tamano
+  }
+  if (longitud <= tamanosAutomaticos.mediana.hasta) {
+    return tamanosAutomaticos.mediana.tamano
+  }
+  if (longitud <= tamanosAutomaticos.larga.hasta) {
+    return tamanosAutomaticos.larga.tamano
+  }
+  if (longitud <= tamanosAutomaticos.muyLarga.hasta) {
+    return tamanosAutomaticos.muyLarga.tamano
+  }
+  if (longitud <= tamanosAutomaticos.extraLarga.hasta) {
+    return tamanosAutomaticos.extraLarga.tamano
+  }
+  return tamanosAutomaticos.gigante.tamano
 }
 
 /**
- * Calcula el tamaño del código numérico según su longitud
- * @param {string} codigo - Código del artículo
- * @returns {number} - Tamaño de fuente (40, 45 o 50pt)
+ * Divide texto en múltiples líneas según ancho máximo
+ * @param {jsPDF} pdf - Instancia de jsPDF
+ * @param {string} texto - Texto a dividir
+ * @param {number} anchoMaximo - Ancho máximo en mm
+ * @returns {Array<string>} - Array de líneas
  */
-const calcularTamanoCodigoNumerico = (codigo) => {
-  const longitud = codigo.length
+const dividirTextoEnLineas = (pdf, texto, anchoMaximo) => {
+  const palabras = texto.split(' ')
+  const lineas = []
+  let lineaActual = ''
 
-  // Si la descripción es muy larga, reducir el código de arriba
-  if (longitud <= 13) return 50 // Códigos cortos
-  if (longitud <= 15) return 45 // Códigos medianos
-  return 40 // Códigos largos (más de 15)
+  palabras.forEach((palabra) => {
+    const lineaPrueba = lineaActual ? `${lineaActual} ${palabra}` : palabra
+    const anchoLineaPrueba = pdf.getTextWidth(lineaPrueba)
+
+    if (anchoLineaPrueba <= anchoMaximo) {
+      lineaActual = lineaPrueba
+    } else {
+      if (lineaActual) lineas.push(lineaActual)
+      lineaActual = palabra
+    }
+  })
+
+  if (lineaActual) lineas.push(lineaActual)
+  return lineas
 }
 
 /**
- * Crea una página de etiqueta individual en PDF
- * @param {Object} pdf - Instancia de jsPDF
+ * Crea una página de etiqueta individual en el PDF
+ * @param {jsPDF} pdf - Instancia de jsPDF
  * @param {Object} etiqueta - Datos de la etiqueta
+ * @param {Object} configuracion - Configuración de la etiqueta
  */
-const crearPaginaEtiqueta = async (pdf, etiqueta) => {
+const crearPaginaEtiqueta = async (pdf, etiqueta, configuracion) => {
   const { codigo, descripcion, ubicacion } = etiqueta
+  const {
+    pagina,
+    codigoArticulo,
+    codigoBarra,
+    descripcion: configDesc,
+    ubicacion: configUbic,
+  } = configuracion
 
-  // Generar código de barras
-  const imagenCodigoBarra = await generarCodigoBarraPNG(codigo, 'grande')
-
-  // Calcular tamaños de fuente
-  const tamanoDescripcion = calcularTamanoFuenteDescripcion(descripcion)
-  const tamanoCodigoNumerico = calcularTamanoCodigoNumerico(descripcion)
-
-  // Dimensiones de la página (15cm x 10cm = 150mm x 100mm)
-  const anchoHoja = 150 // mm
-  const altoHoja = 100 // mm
-  const margen = 4 // mm - Margen en todos los bordes
-
-  // CÓDIGO DEL ARTÍCULO (arriba, centrado, ajustable)
-  // Área útil (descontando márgenes)
-  const anchoUtil = anchoHoja - margen * 2 // 150 - 8 = 142mm
+  const anchoHoja = pagina.ancho
+  const margen = pagina.margenes.todos
 
   // ===== DIV 1: CÓDIGO DEL ARTÍCULO (arriba) =====
-  // Para ajustar posición vertical: modificá "margen + 11"
-  // Para ajustar tamaño: modificá la función calcularTamanoCodigoNumerico()
-  pdf.setFontSize(tamanoCodigoNumerico)
-  pdf.setFont('helvetica', 'bold')
-  const anchoCodigo = pdf.getTextWidth(codigo)
-  pdf.text(codigo, (anchoHoja - anchoCodigo) / 2, margen + 11)
+  pdf.setFont(codigoArticulo.fuenteNombre, codigoArticulo.fuenteEstilo)
+  pdf.setFontSize(codigoArticulo.tamanoFuente)
+
+  const xCentro = anchoHoja / 2
+  pdf.text(codigo, xCentro, codigoArticulo.posicionY, { align: codigoArticulo.alineacion })
 
   // ===== DIV 2: CÓDIGO DE BARRAS =====
-  // Para ajustar posición: modificá "margen + 14"
-  // Para ajustar tamaño: modificá anchoBarra y altoBarra
-  const anchoBarra = 120
-  const altoBarra = 20
-  pdf.addImage(
-    imagenCodigoBarra,
-    'PNG',
-    (anchoHoja - anchoBarra) / 2,
-    margen + 14,
-    anchoBarra,
-    altoBarra,
-  )
+  try {
+    const imagenCodigoBarra = await generarCodigoBarraPNG(codigo, codigoBarra.tamanoBarras)
+    const base64Data = imagenCodigoBarra.split(',')[1]
 
-  // ===== DIV 3: DESCRIPCIÓN (adaptativa) =====
+    const xCodigoBarra = codigoBarra.centrado ? (anchoHoja - codigoBarra.ancho) / 2 : margen
+
+    pdf.addImage(
+      `data:image/png;base64,${base64Data}`,
+      'PNG',
+      xCodigoBarra,
+      codigoBarra.posicionY,
+      codigoBarra.ancho,
+      codigoBarra.alto,
+    )
+  } catch (error) {
+    console.error('[crearPaginaEtiqueta] Error al agregar código de barras:', error)
+  }
+
+  // ===== DIV 3: DESCRIPCIÓN (centrada, tamaño y posición adaptativa) =====
+  const tamanoDescripcion = calcularTamanoFuenteDescripcion(descripcion, configDesc)
+  pdf.setFont(configDesc.fuenteNombre, configDesc.fuenteEstilo)
   pdf.setFontSize(tamanoDescripcion)
-  pdf.setFont('helvetica', 'bold')
 
-  // Dividir texto respetando márgenes (máximo 7 líneas)
-  const maxAncho = anchoUtil - 4
-  const lineasDescripcion = pdf.splitTextToSize(descripcion, maxAncho)
+  // Dividir texto en líneas
+  const lineasDescripcion = dividirTextoEnLineas(pdf, descripcion, configDesc.anchoMaximo)
 
-  // Limitar a máximo 7 líneas
-  const lineasMaximas = lineasDescripcion.slice(0, 7)
+  // Limitar a máximo de líneas configurado
+  const lineasMaximas = lineasDescripcion.slice(0, configDesc.maximoLineas)
 
   // Calcular posición Y dinámica según cantidad de líneas
-  let yDescripcion
-  if (lineasMaximas.length === 1) {
-    yDescripcion = 55 // 1 línea: más abajo
-  } else if (lineasMaximas.length === 2) {
-    yDescripcion = 55 // 2 líneas: igual
-  } else if (lineasMaximas.length === 3) {
-    yDescripcion = 52 // 3 líneas: un poco más arriba
-  } else if (lineasMaximas.length === 4) {
-    yDescripcion = 50 // 4 líneas: más arriba
-  } else if (lineasMaximas.length === 5) {
-    yDescripcion = 48 // 5 líneas: bastante arriba
-  } else if (lineasMaximas.length === 6) {
-    yDescripcion = 46 // 6 líneas: muy arriba
-  } else {
-    yDescripcion = 44 // 7 líneas: super arriba para que entre todo
-  }
+  const cantidadLineas = lineasMaximas.length
+  const yDescripcion =
+    configDesc.posicionesYPorLineas[cantidadLineas] || configDesc.posicionesYPorLineas[7] // Default: posición para 7 líneas
 
   // Renderizar líneas centradas
   lineasMaximas.forEach((linea, index) => {
     const anchoLinea = pdf.getTextWidth(linea)
-    const interlineado = tamanoDescripcion * 0.35
+    const interlineado = tamanoDescripcion * configDesc.interlineadoFactor
     pdf.text(linea, (anchoHoja - anchoLinea) / 2, yDescripcion + index * interlineado)
   })
 
-  // UBICACIÓN (esquina inferior izquierda, pequeño)
   // ===== DIV 4: UBICACIÓN (fija abajo izquierda) =====
-  pdf.setFontSize(10)
-  pdf.setFont('helvetica', 'normal')
-  pdf.text(ubicacion || 'Sin ubicación', margen, altoHoja - margen)
+  pdf.setFontSize(configUbic.tamanoFuente)
+  pdf.setFont(configUbic.fuenteNombre, configUbic.fuenteEstilo)
+
+  const textoUbicacion = ubicacion || 'Sin ubicación'
+  pdf.text(textoUbicacion, configUbic.posicionX, configUbic.posicionY, {
+    align: configUbic.alineacion,
+  })
 }
 
 /**
- * Genera documento PDF con todas las etiquetas
+ * Genera documento PDF con todas las etiquetas usando la configuración especificada
  * @param {Array} listaEtiquetas - Array de etiquetas a imprimir
- * @returns {Promise<Object>} - {exito, mensaje, rutaArchivo}
+ * @param {Object} configuracion - Configuración de etiqueta (ConfiguracionEtiqueta10x15, etc.)
+ * @returns {Promise<Object>} - {exito, mensaje, rutaArchivo, nombreArchivo}
  */
-export const generarDocumentoEtiquetas = async (listaEtiquetas) => {
+export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) => {
   try {
     console.log(
       '[GeneradorEtiquetasPDF] Generando documento con',
       listaEtiquetas.length,
-      'etiquetas',
+      'etiquetas usando configuración:',
+      configuracion.nombre,
     )
 
     if (!listaEtiquetas || listaEtiquetas.length === 0) {
       throw new Error('No hay etiquetas para generar')
     }
 
-    // Crear PDF con tamaño personalizado (15cm x 10cm)
-    // jsPDF usa milímetros por defecto
+    if (!configuracion) {
+      throw new Error('No se proporcionó configuración de etiqueta')
+    }
+
+    const { pagina } = configuracion
+
+    // Crear PDF con dimensiones personalizadas (en mm)
     const pdf = new jsPDF({
-      orientation: 'landscape', // horizontal
+      orientation: 'portrait',
       unit: 'mm',
-      format: [100, 150], // [alto, ancho] en mm
+      format: [pagina.ancho, pagina.alto],
+    })
+
+    // Configurar propiedades del documento
+    pdf.setProperties({
+      title: `Etiquetas ${configuracion.nombre}`,
+      subject: 'Etiquetas con códigos de barras',
+      author: 'Sistema de Etiquetas',
+      creator: 'GeneradorEtiquetasPDF',
     })
 
     let esPrimeraPagina = true
@@ -160,12 +190,12 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas) => {
       for (let i = 0; i < cantidadCopias; i++) {
         // Agregar nueva página (excepto la primera)
         if (!esPrimeraPagina) {
-          pdf.addPage([100, 150], 'landscape')
+          pdf.addPage([pagina.ancho, pagina.alto])
         }
         esPrimeraPagina = false
 
         // Crear contenido de la etiqueta
-        await crearPaginaEtiqueta(pdf, etiqueta)
+        await crearPaginaEtiqueta(pdf, etiqueta, configuracion)
       }
     }
 
@@ -173,7 +203,7 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas) => {
     const pdfBase64 = pdf.output('datauristring').split(',')[1]
 
     // Guardar en filesystem temporal
-    const nombreArchivo = `etiquetas_${new Date().getTime()}.pdf`
+    const nombreArchivo = `etiquetas_${configuracion.id}_${new Date().getTime()}.pdf`
     const resultado = await Filesystem.writeFile({
       path: nombreArchivo,
       data: pdfBase64,

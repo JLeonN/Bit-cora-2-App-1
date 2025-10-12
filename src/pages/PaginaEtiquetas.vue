@@ -7,16 +7,8 @@
       <div class="selector-tamano">
         <span class="label-tamano">Tamaño:</span>
         <label class="opcion-tamano">
-          <input type="radio" name="tamano" value="chico" v-model="tamanoSeleccionado" />
-          <span>Chico</span>
-        </label>
-        <label class="opcion-tamano">
-          <input type="radio" name="tamano" value="mediano" v-model="tamanoSeleccionado" />
-          <span>Mediano</span>
-        </label>
-        <label class="opcion-tamano">
-          <input type="radio" name="tamano" value="grande" v-model="tamanoSeleccionado" checked />
-          <span>Grande</span>
+          <input type="radio" name="tamano" value="10x15cm" v-model="tamanoSeleccionado" checked />
+          <span>10x15 cm</span>
         </label>
       </div>
     </div>
@@ -33,9 +25,9 @@
     />
 
     <!-- BARRA INFERIOR DE BOTONES -->
-    <BarraBotonesInferior @enviar="generarWord" />
+    <BarraBotonesInferior @enviar="generarPDF" />
 
-    <!-- MODAL ELIMINAR -->
+    <!-- MODAL ELIMINAR ETIQUETA INDIVIDUAL -->
     <ModalEliminar
       v-if="mostrarModalEliminar"
       :texto="`la etiqueta del artículo ${etiquetaAEliminar?.codigo}`"
@@ -61,6 +53,7 @@ import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
+import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   guardarEtiquetas,
@@ -69,7 +62,7 @@ import {
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
 
 // --- ESTADO REACTIVO ---
-const tamanoSeleccionado = ref('grande')
+const tamanoSeleccionado = ref('10x15cm')
 const listaEtiquetas = ref([])
 const mostrarModalEliminar = ref(false)
 const mostrarModalLimpiarTodo = ref(false)
@@ -78,6 +71,17 @@ const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
 
 const emit = defineEmits(['configurar-barra'])
+
+// --- FUNCIÓN PARA OBTENER CONFIGURACIÓN SEGÚN TAMAÑO ---
+function obtenerConfiguracionPorTamano(tamano) {
+  const configuraciones = {
+    '10x15cm': configuracionEtiqueta10x15,
+    // Aquí agregarás más configuraciones en el futuro:
+    // 'otraTamano': configuracionEtiquetaOtra,
+  }
+
+  return configuraciones[tamano] || configuracionEtiqueta10x15
+}
 
 // --- FUNCIONES DE PERSISTENCIA ---
 async function cargarEtiquetasGuardadas() {
@@ -169,7 +173,7 @@ function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
 }
 
-async function generarWord() {
+async function generarPDF() {
   if (listaEtiquetas.value.length === 0) return
 
   try {
@@ -177,14 +181,19 @@ async function generarWord() {
 
     // Mostrar notificación de generación
     Loading.show({
-      message: 'Generando documento Word...',
+      message: 'Generando documento PDF...',
       spinnerColor: 'primary',
     })
 
-    console.log('[PaginaEtiquetas] Generando Word con', listaEtiquetas.value.length, 'etiquetas')
+    console.log('[PaginaEtiquetas] Generando PDF con', listaEtiquetas.value.length, 'etiquetas')
+
+    // Obtener configuración según tamaño seleccionado
+    const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
+
+    console.log('[PaginaEtiquetas] Usando configuración:', configuracion.nombre)
 
     // Generar documento
-    const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value)
+    const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value, configuracion)
 
     Loading.hide()
 
@@ -208,7 +217,7 @@ async function generarWord() {
 
     // NO borramos las etiquetas, quedan guardadas
   } catch (error) {
-    console.error('[PaginaEtiquetas] ❌ Error generando Word:', error)
+    console.error('[PaginaEtiquetas] ❌ Error generando PDF:', error)
     Loading.hide()
     Notify.create({
       type: 'negative',
@@ -231,7 +240,7 @@ const configuracionBarra = computed(() => ({
 }))
 
 const metodosParaBarra = {
-  onEnviar: () => generarWord(),
+  onEnviar: () => generarPDF(),
   onAgregar: () => {},
   onAccionPersonalizada: () => {},
 }
