@@ -9,7 +9,7 @@ Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora 
 La aplicación se divide en 5 módulos principales:
 - **Pedidos**: Gestión de pedidos diarios (ver `ResumenPedidos.txt`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `ResumenUbicaciones.txt`)
-- **Etiquetas**: Generación de etiquetas con códigos de barras (ver `ResumenEtiquetas.txt`)
+- **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `ResumenEtiquetas.txt`)
 - **Configuración**: Sistema de configuración de usuario (ver `ResumenConfiguracion.txt`)
 - **Inicio**: Pantalla principal de navegación
 
@@ -55,7 +55,7 @@ La aplicación se divide en 5 módulos principales:
 #### ✅ **TresBotones.vue:** 
 - Para formularios y modales (confirmar, cancelar, eliminar).
 
-#### 🔄 **Sistema de Configuración Dinámica:**
+#### 📄 **Sistema de Configuración Dinámica:**
 - **Configuración por página**: Cada página emite su configuración de botones.
 - **Watchers reactivos**: Los botones se actualizan automáticamente según el estado.
 - **Métodos de callback**: Las páginas definen qué hacer cuando se presiona cada botón.
@@ -92,11 +92,16 @@ La aplicación se divide en 5 módulos principales:
 ### 📁 **Exportación y Guardado de Archivos**
 
 - **xlsx**: Generación de archivos Excel en memoria
-- **docx**: Generación de documentos Word
+- **jsPDF**: Generación de documentos PDF con etiquetas
 - **jsbarcode**: Generación de códigos de barras Code 39
 - **@capacitor/filesystem**: Guardado en Base64 en `Directory.Cache`
 - **Módulo reutilizable**: `GeneraExcel.js` con función `generarYGuardarExcelTemporal`
 - **Nombres personalizados**: Integración con configuración de usuario
+
+**Formatos de exportación**:
+- **Pedidos**: Excel (.xlsx)
+- **Ubicaciones**: Excel (.xlsx)
+- **Etiquetas**: PDF (.pdf) con códigos de barras Code 39
 
 ---
 
@@ -105,9 +110,10 @@ La aplicación se divide en 5 módulos principales:
 - **@capacitor/preferences**: Persistencia de datos
 - **almacenamiento.js**: Manejo centralizado
 - **Módulos específicos**:
-  - `usoAlmacenamientoPedidos.js`
-  - `usoAlmacenamientoUbicaciones.js`
-  - `usoAlmacenamientoConfiguracion.js`
+  - `usoAlmacenamientoPedidos.js`: Persistencia de pedidos
+  - `usoAlmacenamientoUbicaciones.js`: Persistencia de ubicaciones
+  - `usoAlmacenamientoEtiquetas.js`: Persistencia de etiquetas
+  - `usoAlmacenamientoConfiguracion.js`: Persistencia de configuración
 
 ---
 
@@ -129,6 +135,7 @@ La aplicación se divide en 5 módulos principales:
 - **Estados visuales claros**: Iconos, colores, animaciones
 - **Feedback al usuario**: Barras de progreso, mensajes específicos
 - **UI Simplificada**: Información esencial sin redundancia
+- **Persistencia automática**: Datos guardados en cada operación
 
 ---
 
@@ -144,6 +151,7 @@ La aplicación se divide en 5 módulos principales:
 
 ### 📂 **Estructura de Archivos**
 
+```
 src/
 ├── App.vue
 ├── css/
@@ -166,6 +174,7 @@ src/
     │   ├── usoAlmacenamientoCapacitor.js
     │   ├── usoAlmacenamientoPedidos.js
     │   ├── usoAlmacenamientoUbicaciones.js
+    │   ├── usoAlmacenamientoEtiquetas.js
     │   ├── usoAlmacenamientoConfiguracion.js
     │   └── LectorExcel.js
     ├── Botones/
@@ -181,8 +190,10 @@ src/
     │   ├── Etiquetas/
     │   │   ├── FormularioEtiqueta.vue
     │   │   ├── TablaEtiquetas.vue
-    │   │   ├── GeneradorEtiquetasWord.js
-    │   │   └── GeneradorCodigoBarra.js
+    │   │   ├── GeneradorEtiquetasPDF.js
+    │   │   ├── GeneradorCodigoBarra.js
+    │   │   └── ConfiguracionesDeEtiquetas/
+    │   │       └── ConfiguracionEtiqueta10x15.js
     │   ├── Pedidos/
     │   │   ├── CamaraPedidos.vue
     │   │   ├── CompartirExcel.js
@@ -206,6 +217,7 @@ src/
         ├── ModalEditarEtiqueta.vue
         ├── ModalEliminar.vue
         └── ModalNuevoPedido.vue
+```
 
 ---
 
@@ -214,7 +226,7 @@ src/
 - **Framework**: Vue 3 + Quasar
 - **Capacitor**: Filesystem, Preferences, Share
 - **XLSX**: Procesamiento de archivos Excel
-- **docx**: Generación de documentos Word
+- **jsPDF**: Generación de documentos PDF
 - **jsbarcode**: Generación de códigos de barras Code 39
 - **@zxing/library**: Escaneo de códigos
 - **@tabler/icons-vue**: Iconografía
@@ -222,6 +234,9 @@ src/
 
 ---
 
+### 🎨 **Sistema de Colores (CSS Variables)**
+
+```css
 /* Variables */
 :root {
   --color-fondo: #121214; /* Fondo principal */
@@ -247,10 +262,94 @@ src/
   --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
   --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
 }
+```
+
+---
 
 ### 📚 **Archivos de Documentación Relacionados**
 
 - **ResumenPedidos.txt**: Todo sobre el módulo de pedidos
 - **ResumenUbicaciones.txt**: Todo sobre el módulo de ubicaciones
-- **ResumenEtiquetas.txt**: Todo sobre el módulo de etiquetas
+- **ResumenEtiquetas.txt**: Todo sobre el módulo de etiquetas (PDF con códigos de barras)
 - **ResumenConfiguracion.txt**: Todo sobre el módulo de configuración
+
+---
+
+### 📋 **Características Clave por Módulo**
+
+#### **Pedidos**
+- Generación de pedidos con escaneo de códigos
+- Historial de pedidos diarios
+- Exportación a Excel
+- Persistencia automática
+- Sistema de límite de pedidos diarios
+
+#### **Ubicaciones**
+- Ajuste de ubicaciones de artículos
+- Búsqueda inteligente con priorización
+- Integración con base de datos Excel
+- Formateo automático de ubicaciones
+- Exportación a Excel
+- Persistencia automática
+
+#### **Etiquetas**
+- Generación de etiquetas con códigos de barras Code 39
+- Documentos PDF personalizados
+- Sistema de configuración modular (actualmente 10x15cm)
+- Tamaño de fuente automático según longitud de texto
+- Control de cantidad de copias
+- Detección de duplicados y artículos inexistentes
+- Persistencia automática
+- Las etiquetas permanecen después de generar PDF
+
+#### **Configuración**
+- Personalización de nombre de usuario
+- Integración en toda la aplicación
+- Nombres personalizados en archivos exportados
+- Persistencia automática
+
+---
+
+### 🚀 **Flujo General de la Aplicación**
+
+1. **Inicio**: Usuario entra a la aplicación
+2. **Configuración inicial**: Puede configurar su nombre (opcional)
+3. **Carga de base de datos**: Se carga automáticamente la base de datos Excel
+4. **Navegación**: Usa el panel de inicio o la barra inferior
+5. **Trabajo en módulos**:
+   - **Pedidos**: Escanea/agrega → Genera Excel → Comparte
+   - **Ubicaciones**: Escanea/agrega → Genera Excel → Comparte
+   - **Etiquetas**: Escanea/agrega → Genera PDF → Comparte
+6. **Persistencia**: Todo se guarda automáticamente
+7. **Continuidad**: Puede retomar trabajo en cualquier momento
+
+---
+
+### 💡 **Características Destacadas**
+
+- ✅ **Persistencia total**: Todos los datos se guardan automáticamente
+- ✅ **Escaneo múltiple**: Integración con cámara en todos los módulos
+- ✅ **Búsqueda inteligente**: Priorización de resultados exactos
+- ✅ **Formateo automático**: Ubicaciones y códigos
+- ✅ **Validaciones visuales**: Feedback inmediato al usuario
+- ✅ **Exportación flexible**: Excel y PDF según necesidad
+- ✅ **Responsive total**: Funciona perfectamente en móviles
+- ✅ **Nombres personalizados**: Archivos con nombre del usuario
+- ✅ **Sistema modular**: Fácil agregar nuevas funcionalidades
+- ✅ **Códigos de barras Code 39**: Compatibilidad industrial
+- ✅ **Detección de problemas**: Duplicados y artículos inexistentes
+
+---
+
+### 📝 **Notas Importantes Generales**
+
+- La aplicación está **optimizada para móviles Android**
+- Todos los módulos usan **@capacitor/preferences** para persistencia
+- Los archivos se guardan temporalmente en **Directory.Cache**
+- El sistema de **Share API** permite compartir con cualquier app
+- La **base de datos Excel** debe cargarse para funcionalidad completa
+- Los **nombres de usuario** personalizan toda la experiencia
+- El sistema de **etiquetas** usa PDF en lugar de Word
+- Los **códigos de barras** son Code 39 para compatibilidad industrial
+- Todas las **configuraciones** son modulares y extensibles
+- La **UI es consistente** en todos los módulos

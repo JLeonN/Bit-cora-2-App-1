@@ -1,6 +1,6 @@
 ### **Módulo de Etiquetas - Bitácora II**
 
-Sistema completo para generar etiquetas con códigos de barras Code 39 en documentos Word personalizados.
+Sistema completo para generar etiquetas con códigos de barras Code 39 en documentos PDF personalizados.
 
 ---
 
@@ -10,11 +10,12 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Página principal** del módulo de etiquetas
 - **Ruta**: `/etiquetas`
 - **Header con título** y selector de tamaño
-- **Selector de tamaño**: Chico, Mediano, Grande (default: Grande)
+- **Selector de tamaño**: Actualmente solo 10x15cm (preparado para futuras medidas)
 - **FormularioEtiqueta** para agregar etiquetas
 - **TablaEtiquetas** con lista de etiquetas
 - **Integración con BarraBotonesInferior** para navegación
 - **Modal de confirmación** para eliminar etiquetas
+- **Persistencia automática** de etiquetas
 - **Responsive design** adaptativo
 
 #### **FormularioEtiqueta.vue**
@@ -68,60 +69,123 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 ### 📄 **Sistema de Generación de Documentos**
 
-#### **GeneradorEtiquetasWord.js**
-- **Motor principal** para generar documentos Word
-- **Biblioteca**: `docx` para crear archivos .docx
+#### **GeneradorEtiquetasPDF.js**
+- **Motor principal** para generar documentos PDF
+- **Biblioteca**: `jsPDF` para crear archivos PDF
 
-**Formato de página personalizado**:
-- **Tamaño**: 10cm x 15cm
-- **Márgenes**: 5mm en todos los lados
-- **Orientación**: Vertical
+**Características del sistema**:
+- **Configuración modular**: Usa archivos de configuración externos (ConfiguracionEtiqueta10x15.js)
+- **Dimensiones personalizadas**: Cada configuración define tamaño de página
+- **Layout adaptativo**: Ajusta elementos según configuración
 
 **Contenido por etiqueta** (una página por etiqueta):
 1. **Código del artículo**:
-   - Posición: Arriba, centrado
-   - Fuente: Arial, 50pt, bold
-   - Espaciado: 200 before, 100 after
+   - Posición: Según configuración
+   - Fuente: Configurable (por defecto Arial, bold)
+   - Tamaño: Configurable (por defecto 50pt)
+   - Alineación: Centrado
 
 2. **Código de barras**:
-   - Posición: Centro
-   - Formato: PNG (280x100 pixels)
-   - Espaciado: 100 before, 100 after
+   - Posición: Configurable
+   - Formato: PNG generado por GeneradorCodigoBarra.js
+   - Dimensiones: Según configuración
+   - Centrado: Opcional
 
 3. **Descripción**:
-   - Posición: Centro
-   - Fuente: Arial, **tamaño automático 40-60pt** según longitud
-   - Bold: Sí
-   - Espaciado: 150 before, 400 after
+   - Posición: Dinámica según cantidad de líneas
+   - Fuente: Configurable (por defecto Arial, bold)
+   - **Tamaño automático**: Ajuste inteligente según longitud del texto
+   - **Multilínea**: División automática de texto largo
+   - **Interlineado configurable**: Factor de espaciado entre líneas
+   - **Máximo de líneas**: Configurable (por defecto 7)
 
 4. **Ubicación**:
-   - Posición: Esquina inferior izquierda
-   - Fuente: Arial, 10pt
-   - Espaciado: 600 before
+   - Posición: Configurable (por defecto esquina inferior izquierda)
+   - Fuente: Configurable (por defecto Arial, 10pt)
+   - Tamaño: Configurable
 
-**Lógica de tamaño automático de descripción**:
-longitud ≤ 15 → 60pt  // Descripciones cortas
-longitud ≤ 25 → 52pt  // Descripciones medianas
-longitud ≤ 35 → 46pt  // Descripciones un poco largas
-longitud ≤ 45 → 42pt  // Descripciones largas
-longitud > 45 → 40pt  // Descripciones muy largas
+**Sistema de tamaño automático de descripción**:
+- Evalúa longitud del texto
+- Aplica tamaños según rangos configurados
+- Sistema de 7 niveles (muy corta a gigante)
+- Posicionamiento dinámico según cantidad de líneas
 
-**Características**:
+**Características avanzadas**:
 - **Salto de página** automático entre etiquetas
 - **Respeta cantidad de copias**: Genera páginas duplicadas
 - **Guardado temporal** con `@capacitor/filesystem` en `Directory.Cache`
+- **Conversión a base64** para compatibilidad con Capacitor
 - **Retorna**: URI del archivo + nombre del archivo
 
 **Función principal**:
-generarDocumentoEtiquetas(listaEtiquetas)
+```javascript
+generarDocumentoEtiquetas(listaEtiquetas, configuracion)
 // Retorna: { exito, mensaje, rutaArchivo, nombreArchivo }
+```
+
+#### **ConfiguracionEtiqueta10x15.js**
+- **Archivo de configuración** para etiquetas de 10x15 cm
+- **Sistema modular**: Permite agregar fácilmente nuevas configuraciones
+
+**Secciones de configuración**:
+1. **Identificación**:
+   - nombre: '10x15 cm'
+   - id: '10x15cm'
+
+2. **Dimensiones de página**:
+   - ancho: 150mm (15cm)
+   - alto: 100mm (10cm)
+   - márgenes: 4mm todos los lados
+
+3. **Código del artículo**:
+   - tamaño: 50pt
+   - fuente: helvetica bold
+   - posición Y: 15mm
+
+4. **Código de barras**:
+   - ancho: 80mm
+   - alto: 25mm
+   - posición Y: 30mm
+   - centrado: true
+   - tamaño: 'grande' (para GeneradorCodigoBarra.js)
+
+5. **Descripción**:
+   - **Tamaños automáticos** (7 niveles):
+     - Muy corta (≤15 chars): 60pt
+     - Corta (≤25 chars): 52pt
+     - Mediana (≤35 chars): 46pt
+     - Larga (≤45 chars): 40pt
+     - Muy larga (≤60 chars): 34pt
+     - Extra larga (≤80 chars): 28pt
+     - Gigante (>80 chars): 24pt
+   - fuente: helvetica bold
+   - anchoMaximo: 90mm
+   - interlineadoFactor: 0.35
+   - maximoLineas: 7
+   - **Posiciones Y dinámicas** según cantidad de líneas (1-7)
+
+6. **Ubicación**:
+   - tamaño: 10pt
+   - fuente: helvetica normal
+   - posición X: 4mm
+   - posición Y: 146mm (esquina inferior izquierda)
+
+7. **Extras**:
+   - mostrarBordes: false (para debug)
+   - colorFondo: RGB blanco
+   - mostrarGuias: false (para desarrollo)
+
+**Extensibilidad**:
+- Preparado para agregar nuevas configuraciones
+- Sistema plug-and-play para diferentes tamaños
 
 #### **GeneradorCodigoBarra.js**
 - **Generación de códigos de barras** en formato PNG base64
 - **Biblioteca**: `jsbarcode` para crear códigos Code 39
 - **Formato**: Code 39 (compatible con escáneres industriales)
 
-**Tamaños configurables**:
+**Tamaños configurables** (uso interno):
+```javascript
 grande: {
   height: 80,
   fontSize: 26,
@@ -140,6 +204,7 @@ chico: {
   width: 2,
   margin: 5
 }
+```
 
 **Características**:
 - **Fondo blanco**, barras negras
@@ -149,9 +214,11 @@ chico: {
 - **Validación** de caracteres compatibles con Code 39
 
 **Funciones exportadas**:
+```javascript
 generarCodigoBarraPNG(codigo, tamano)       // Genera PNG base64
 validarCodigoParaBarra(codigo)              // Valida compatibilidad
 limpiarCodigoParaBarra(codigo)              // Limpia caracteres inválidos
+```
 
 **Caracteres válidos Code 39**:
 - A-Z, 0-9
@@ -194,30 +261,71 @@ limpiarCodigoParaBarra(codigo)              // Limpia caracteres inválidos
 
 ---
 
+### 💾 **Sistema de Persistencia de Etiquetas**
+
+**Las etiquetas se guardan automáticamente usando `@capacitor/preferences`**
+
+#### **usoAlmacenamientoEtiquetas.js**
+- **Ubicación**: `src/components/BaseDeDatos/usoAlmacenamientoEtiquetas.js`
+- **Clave de almacenamiento**: `historial_etiquetas`
+
+**Funciones exportadas**:
+```javascript
+guardarEtiquetas(etiquetas)      // Guarda array de etiquetas
+obtenerEtiquetas()               // Retorna array de etiquetas guardadas
+eliminarEtiquetas()              // Borra todas las etiquetas del storage
+```
+
+**Persistencia automática**:
+- Se guarda al agregar nueva etiqueta
+- Se guarda al editar etiqueta existente
+- Se guarda al eliminar etiqueta
+- Se carga automáticamente al entrar a la página
+- Permite continuar trabajo en sesiones posteriores
+
+**Formato de datos guardados**:
+```javascript
+[
+  {
+    id: 1704067200000,
+    codigo: "ABC123",
+    descripcion: "Producto 1",
+    ubicacion: "A-1-2",
+    cantidad: 2,
+    tamano: "10x15cm"
+  },
+  // ... más etiquetas
+]
+```
+
+---
+
 ### 📁 **Exportación y Compartir**
 
 #### **Nombre de archivo**
-- **Formato**: `etiquetas_[timestamp].docx`
-- **Ejemplo**: `etiquetas_1704067200000.docx`
+- **Formato**: `etiquetas_[id_configuracion]_[timestamp].pdf`
+- **Ejemplo**: `etiquetas_10x15cm_1704067200000.pdf`
 
 #### **Proceso de exportación**:
 1. Usuario click en botón "Enviar"
-2. **Loading** con mensaje "Generando documento Word..."
-3. Se genera documento con `GeneradorEtiquetasWord.js`
+2. **Loading** con mensaje "Generando documento PDF..."
+3. Se genera documento con `GeneradorEtiquetasPDF.js`
 4. Se guarda en `Directory.Cache` con Capacitor
 5. Se comparte con **Share API** nativa de Capacitor
 6. **Notificación** de éxito o error
+7. **Las etiquetas NO se borran** después de generar el PDF
 
 #### **CompartirExcel.js** (reutilizado)
-- Mismo módulo usado en Pedidos
+- Mismo módulo usado en Pedidos y Ubicaciones
 - **Share API nativa** de Capacitor
-- Compatible con Word (.docx)
+- Compatible con PDF
 
 ---
 
 ### 🔄 **Integración con Barra de Botones**
 
 #### **PaginaEtiquetas.vue**
+```javascript
 configuracionBarra: {
   mostrarAtras: true,
   mostrarInicio: true,
@@ -226,21 +334,22 @@ configuracionBarra: {
   puedeEnviar: etiquetas.length > 0,
   botonesPersonalizados: []
 }
+```
 
 ---
 
 ### ✅ **Flujo de Trabajo Típico**
 
-1. **Seleccionar tamaño** (opcional, default: Grande):
-   - Chico: Para etiquetas pequeñas
-   - Mediano: Tamaño estándar
-   - Grande: Máxima legibilidad
+1. **Cargar etiquetas guardadas**:
+   - Al entrar a la página se cargan etiquetas de sesiones anteriores
+   - Permite continuar trabajo pendiente
 
 2. **Agregar etiquetas manualmente**:
    - Escribir código → Se activa buscador
    - Seleccionar artículo → Autocompleta todo
    - Ajustar cantidad de copias (si necesita más de 1)
    - Click en agregar
+   - **Se guarda automáticamente**
 
 3. **Agregar etiquetas con cámara**:
    - Click en botón cámara
@@ -249,42 +358,67 @@ configuracionBarra: {
    - Autocompleta descripción y ubicación
    - Ajustar cantidad
    - Agregar
+   - **Se guarda automáticamente**
 
 4. **Editar etiquetas**:
    - Click en icono lápiz
    - Modificar campos necesarios
    - Guardar
+   - **Se guarda automáticamente**
 
 5. **Ajustar cantidades**:
    - Usar botones +/- directamente en la tabla
    - O editar número manualmente
+   - **Se guarda automáticamente**
 
-6. **Generar documento Word**:
+6. **Generar documento PDF**:
    - Click en botón "Enviar"
    - Esperar generación
    - Compartir con app deseada (WhatsApp, Gmail, Drive, etc.)
+   - **Las etiquetas permanecen guardadas**
+
+7. **Limpiar todo**:
+   - Click en botón limpiar (icono basura)
+   - Confirmar en modal
+   - **Se elimina del almacenamiento**
 
 ---
 
 ### 📊 **Estructura de Datos**
 
 #### **Etiqueta Individual**
+```javascript
 {
   id: timestamp,                    // ID único
   codigo: "ABC123",                 // código del artículo
   descripcion: "Nombre producto",   // descripción/nombre
   ubicacion: "A-1-2",              // ubicación física
   cantidad: 3,                      // cantidad de copias
-  tamano: "grande"                  // tamaño seleccionado
+  tamano: "10x15cm"                 // tamaño seleccionado
 }
+```
 
-#### **Array de Etiquetas (en memoria)**
+#### **Array de Etiquetas (persistido)**
+```javascript
 [
-  { id: 1704067200000, codigo: "ABC123", descripcion: "Producto 1", ubicacion: "A-1-2", cantidad: 2, tamano: "grande" },
-  { id: 1704067201000, codigo: "XYZ789", descripcion: "Producto 2", ubicacion: "B-3-1", cantidad: 1, tamano: "grande" }
+  { 
+    id: 1704067200000, 
+    codigo: "ABC123", 
+    descripcion: "Producto 1", 
+    ubicacion: "A-1-2", 
+    cantidad: 2, 
+    tamano: "10x15cm" 
+  },
+  { 
+    id: 1704067201000, 
+    codigo: "XYZ789", 
+    descripcion: "Producto 2", 
+    ubicacion: "B-3-1", 
+    cantidad: 1, 
+    tamano: "10x15cm" 
+  }
 ]
-
-**Nota**: Las etiquetas se mantienen **solo en memoria** mientras se trabaja. No se persisten en `@capacitor/preferences`.
+```
 
 ---
 
@@ -306,7 +440,7 @@ configuracionBarra: {
 
 ### 🎨 **Características de UI/UX**
 
-- **Selector de tamaño** con radio buttons visuales
+- **Selector de tamaño** con radio buttons visuales (preparado para futuras medidas)
 - **Formulario responsive** con grid adaptativo
 - **Tabla responsive** con diseño de cards en móvil
 - **Controles de cantidad inline** con botones +/-
@@ -316,43 +450,17 @@ configuracionBarra: {
 - **Notificaciones** de éxito/error
 - **Confirmaciones** antes de acciones destructivas
 - **Iconos consistentes** con @tabler/icons-vue
-
----
-
-### 💾 **Sistema de Persistencia de Etiquetas**
-
-**Las etiquetas se guardan automáticamente usando `@capacitor/preferences`**
-
-#### **usoAlmacenamientoEtiquetas.js**
-- **Ubicación**: `src/components/BaseDeDatos/usoAlmacenamientoEtiquetas.js`
-- **Clave de almacenamiento**: `historial_etiquetas`
-
-**Funciones exportadas**:
-```javascript
-guardarEtiquetas(etiquetas)      // Guarda array de etiquetas
-obtenerEtiquetas()               // Retorna array de etiquetas guardadas
-eliminarEtiquetas()              // Borra todas las etiquetas del storage
-
-[
-  {
-    id: 1704067200000,
-    codigo: "ABC123",
-    descripcion: "Producto 1",
-    ubicacion: "A-1-2",
-    cantidad: 2,
-    tamano: "grande"
-  },
-  // ... más etiquetas
-]
+- **Persistencia visual**: Las etiquetas permanecen después de generar PDF
 
 ---
 
 ### 🔧 **Dependencias Específicas**
 
-- **docx**: Generación de documentos Word
+- **jsPDF**: Generación de documentos PDF
 - **jsbarcode**: Generación de códigos de barras Code 39
 - **@capacitor/filesystem**: Guardado de archivos temporales
 - **@capacitor/share**: Compartir archivos generados
+- **@capacitor/preferences**: Persistencia de etiquetas
 - **@zxing/library**: Escaneo de códigos (en CamaraEscaneo)
 - **@tabler/icons-vue**: Iconografía
 
@@ -360,13 +468,16 @@ eliminarEtiquetas()              // Borra todas las etiquetas del storage
 
 ### 📝 **Notas Importantes**
 
-- Las etiquetas **no se persisten** - solo existen mientras se trabaja en la página
+- Las etiquetas **SÍ se persisten** automáticamente en cada operación
 - El **tamaño de fuente** de la descripción se ajusta automáticamente según longitud
 - Los **códigos de barras** son formato Code 39 (estándar industrial)
-- El **documento Word** tiene formato personalizado 10x15cm
+- El **documento PDF** tiene formato personalizado según configuración
+- Actualmente solo hay **una configuración**: 10x15cm (más medidas en el futuro)
 - Cada etiqueta ocupa **una página completa** del documento
 - Las **copias** se generan como páginas duplicadas consecutivas
 - Los **artículos inexistentes** se pueden agregar (útil para nuevos productos)
 - El **sistema de ubicaciones** es opcional - puede dejarse "Sin ubicación"
 - El **buscador inteligente** facilita encontrar artículos rápidamente
 - La **base de datos Excel** debe estar cargada para autocompletado óptimo
+- Los **tamaños del código de barras** (chico/mediano/grande) son configuración interna
+- El **sistema es modular**: Fácil agregar nuevas configuraciones de tamaño
