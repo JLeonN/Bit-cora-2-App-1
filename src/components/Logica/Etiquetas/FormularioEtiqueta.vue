@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-tabla">
-    <form @submit.prevent="agregarEtiqueta" class="formulario-etiqueta">
+    <form ref="formularioRef" @submit.prevent="agregarEtiqueta" class="formulario-etiqueta">
       <!-- Campo Código con buscador integrado -->
       <div class="campo-con-buscador">
         <label for="codigo-etiqueta">Código del artículo</label>
@@ -12,7 +12,8 @@
             v-model="codigoIngresado"
             placeholder="Escaneá o ingresá el código"
             @input="manejarBusqueda"
-            @focus="mostrarResultados = true"
+            @focus="manejarEnfoqueCodigo"
+            @blur="manejarDesenfoqueCodigo"
             :class="{ 'input-error': mostrarErrorCodigo, 'animar-error': animarErrorCodigo }"
           />
           <button type="button" class="boton-camara" @click="abrirCamara" title="Escanear código">
@@ -36,6 +37,7 @@
           type="text"
           v-model="descripcionIngresada"
           placeholder="Descripción del artículo"
+          @focus="moverFormularioArriba"
           :class="{ 'input-error': mostrarErrorDescripcion }"
         />
       </div>
@@ -49,6 +51,7 @@
             type="text"
             v-model="ubicacionIngresada"
             placeholder="Ubicación"
+            @focus="moverFormularioArriba"
           />
           <button
             v-if="ubicacionIngresada"
@@ -72,7 +75,7 @@
           min="1"
           v-model.number="cantidadCopias"
           placeholder="1"
-          @focus="seleccionarCantidad"
+          @focus="manejarEnfoqueCantidad"
           :class="{ 'input-error': mostrarErrorCantidad }"
         />
       </div>
@@ -117,26 +120,63 @@ const mostrarErrorDescripcion = ref(false)
 const mostrarErrorCantidad = ref(false)
 const animarErrorCodigo = ref(false)
 
-// Referencia al input
+// Referencias
+const formularioRef = ref(null)
 const inputCodigo = ref(null)
-
-// Referencia al input de cantidad
 const inputCantidad = ref(null)
 
+// Estado del buscador
+const inputEnfocado = ref(false)
+
 // --- FUNCIONES ---
+
+// Función para mover el formulario arriba suavemente
+function moverFormularioArriba() {
+  if (!formularioRef.value) return
+
+  const rect = formularioRef.value.getBoundingClientRect()
+  const offset = 82 // píxeles desde arriba
+
+  window.scrollTo({
+    top: window.scrollY + rect.top - offset,
+    behavior: 'smooth',
+  })
+}
 
 // Manejar búsqueda en tiempo real
 function manejarBusqueda() {
   mostrarErrorCodigo.value = false
-  if (codigoIngresado.value.length >= 3) {
+  if (inputEnfocado.value && codigoIngresado.value.length >= 3) {
     mostrarResultados.value = true
   } else {
     mostrarResultados.value = false
   }
 }
 
-// Función para seleccionar el contenido del input
-function seleccionarCantidad() {
+// Manejar enfoque del código
+function manejarEnfoqueCodigo() {
+  inputEnfocado.value = true
+  moverFormularioArriba()
+
+  if (codigoIngresado.value.length >= 3) {
+    mostrarResultados.value = true
+  }
+}
+
+// Manejar desenfoque del código
+function manejarDesenfoqueCodigo() {
+  inputEnfocado.value = false
+
+  setTimeout(() => {
+    if (!inputEnfocado.value) {
+      mostrarResultados.value = false
+    }
+  }, 200)
+}
+
+// Manejar enfoque de cantidad
+function manejarEnfoqueCantidad() {
+  moverFormularioArriba()
   inputCantidad.value?.select()
 }
 
@@ -155,6 +195,7 @@ function seleccionarArticulo(articulo) {
   }
 
   mostrarResultados.value = false
+  inputEnfocado.value = false
 
   // Focus en cantidad
   document.getElementById('cantidad-copias')?.focus()
@@ -163,6 +204,7 @@ function seleccionarArticulo(articulo) {
 // Abrir cámara
 function abrirCamara() {
   mostrarCamara.value = true
+  mostrarResultados.value = false
 }
 
 // Cerrar cámara
@@ -376,6 +418,26 @@ function cerrarResultadosFuera(event) {
   background-color: var(--color-exito);
   filter: brightness(1.1);
   transform: translateY(-2px);
+}
+.ubicacion-campo {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.boton-limpiar-ubicacion {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--color-texto-secundario);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+.boton-limpiar-ubicacion:hover {
+  color: var(--color-error);
 }
 /* Estados de error */
 .input-error {

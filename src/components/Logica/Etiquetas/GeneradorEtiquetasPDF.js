@@ -240,7 +240,7 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
       }
     }
 
-    const nombreArchivo = `etiquetas_${configuracion.id}_${new Date().getTime()}.pdf`
+    const nombreArchivo = `Etiquetas - ${configuracion.nombre}.pdf`
 
     // ===== SI ESTAMOS EN NAVEGADOR, DESCARGAR DIRECTAMENTE =====
     if (esNavegador()) {

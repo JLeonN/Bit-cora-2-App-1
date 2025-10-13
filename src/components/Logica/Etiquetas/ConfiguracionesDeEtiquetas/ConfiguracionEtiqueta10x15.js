@@ -29,7 +29,7 @@ export const configuracionEtiqueta10x15 = {
   },
   // ===== DIV 2: CÓDIGO DE BARRAS (centro) =====
   codigoBarra: {
-    ancho: 110, // Cambiá esto (en mm)
+    ancho: 90, // Cambiá esto (en mm)
     alto: 17, // Cambiá esto (en mm)
     posicionY: 16, // Cambiá esto (mm desde arriba)
     centrado: true,
