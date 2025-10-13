@@ -10,6 +10,14 @@
           <input type="radio" name="tamano" value="10x15cm" v-model="tamanoSeleccionado" checked />
           <span>10x15 cm</span>
         </label>
+        <label class="opcion-tamano">
+          <input type="radio" name="tamano" value="5x10cm" v-model="tamanoSeleccionado" />
+          <span>5x10 cm</span>
+        </label>
+        <label class="opcion-tamano">
+          <input type="radio" name="tamano" value="2.5x6.7cm" v-model="tamanoSeleccionado" />
+          <span>2.5x6.7 cm</span>
+        </label>
       </div>
     </div>
 
@@ -54,6 +62,8 @@ import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
+import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
+import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   guardarEtiquetas,
@@ -76,8 +86,8 @@ const emit = defineEmits(['configurar-barra'])
 function obtenerConfiguracionPorTamano(tamano) {
   const configuraciones = {
     '10x15cm': configuracionEtiqueta10x15,
-    // Aquí agregarás más configuraciones en el futuro:
-    // 'otraTamano': configuracionEtiquetaOtra,
+    '5x10cm': configuracionEtiqueta5x10,
+    '2.5x6.7cm': configuracionEtiqueta2_5x6_7,
   }
 
   return configuraciones[tamano] || configuracionEtiqueta10x15
@@ -308,6 +318,7 @@ watch(
   background: var(--color-fondo);
   border-radius: 8px;
   border: 1px solid var(--color-borde);
+  flex-wrap: wrap;
 }
 .label-tamano {
   font-weight: 600;
