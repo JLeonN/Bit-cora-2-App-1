@@ -2,6 +2,7 @@
 import { jsPDF } from 'jspdf'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { generarCodigoBarraPNG } from './GeneradorCodigoBarra.js'
+import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 /**
  * Detecta si estamos en un navegador web o en una app móvil
@@ -240,7 +241,14 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
       }
     }
 
-    const nombreArchivo = `Etiquetas - ${configuracion.nombre}.pdf`
+    // Obtener nombre de usuario
+    const nombreUsuario = await obtenerNombreUsuario()
+
+    // Formatear el ID de configuración sin espacios (10x15 cm -> 10x15cm)
+    const idConfiguracionFormateado = configuracion.id.replace(/\s/g, '')
+
+    // Construir nombre del archivo
+    const nombreArchivo = `Etiquetas - ${nombreUsuario} - ${idConfiguracionFormateado}.pdf`
 
     // ===== SI ESTAMOS EN NAVEGADOR, DESCARGAR DIRECTAMENTE =====
     if (esNavegador()) {
