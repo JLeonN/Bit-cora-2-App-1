@@ -32,12 +32,6 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **✅ Formateo automático** de ubicaciones (espacios → guiones)
 - **✅ Botón IconTrash** para limpiar ubicación cuando cambia de zona
 
-**Workflow del formulario**:
-1. Escanear o escribir código → Buscador se activa
-2. Seleccionar artículo → Autocompleta descripción y ubicación
-3. Ajustar cantidad de copias
-4. Agregar → Limpia formulario y mantiene foco
-
 #### **TablaEtiquetas.vue**
 - **Lista completa** de etiquetas agregadas
 - **Header con contadores**:
@@ -72,37 +66,19 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 #### **GeneradorEtiquetasPDF.js**
 - **Motor principal** para generar documentos PDF
 - **Biblioteca**: `jsPDF` para crear archivos PDF
-
-**Características del sistema**:
-- **Configuración modular**: Usa archivos de configuración externos (ConfiguracionEtiqueta10x15.js)
+- **Configuración modular**: Usa archivos de configuración externos
 - **Dimensiones personalizadas**: Cada configuración define tamaño de página
 - **Layout adaptativo**: Ajusta elementos según configuración
 
 **Contenido por etiqueta** (una página por etiqueta):
-1. **Código del artículo**:
-   - Posición: Según configuración
-   - Fuente: Configurable (por defecto Arial, bold)
-   - Tamaño: Configurable (por defecto 50pt)
-   - Alineación: Centrado
-
-2. **Código de barras**:
-   - Posición: Configurable
-   - Formato: PNG generado por GeneradorCodigoBarra.js
-   - Dimensiones: Según configuración
-   - Centrado: Opcional
-
-3. **Descripción**:
-   - Posición: Dinámica según cantidad de líneas
-   - Fuente: Configurable (por defecto Arial, bold)
+1. **Código del artículo**: Posición, fuente y tamaño configurables
+2. **Código de barras**: PNG generado por GeneradorCodigoBarra.js
+3. **Descripción**: 
    - **Tamaño automático**: Ajuste inteligente según longitud del texto
    - **Multilínea**: División automática de texto largo
-   - **Interlineado configurable**: Factor de espaciado entre líneas
-   - **Máximo de líneas**: Configurable (por defecto 7)
-
-4. **Ubicación**:
-   - Posición: Configurable (por defecto esquina inferior izquierda)
-   - Fuente: Configurable (por defecto Arial, 10pt)
-   - Tamaño: Configurable
+   - **Interlineado configurable**
+   - **Máximo de líneas configurable**
+4. **Ubicación**: Posición configurable (por defecto esquina inferior izquierda)
 
 **Sistema de tamaño automático de descripción**:
 - Evalúa longitud del texto
@@ -117,94 +93,35 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Conversión a base64** para compatibilidad con Capacitor
 - **Retorna**: URI del archivo + nombre del archivo
 
-**Función principal**:
-```javascript
-generarDocumentoEtiquetas(listaEtiquetas, configuracion)
-// Retorna: { exito, mensaje, rutaArchivo, nombreArchivo }
-```
+**Función principal**: `generarDocumentoEtiquetas(listaEtiquetas, configuracion)`
 
 #### **ConfiguracionEtiqueta10x15.js**
 - **Archivo de configuración** para etiquetas de 10x15 cm
 - **Sistema modular**: Permite agregar fácilmente nuevas configuraciones
 
 **Secciones de configuración**:
-1. **Identificación**:
-   - nombre: '10x15 cm'
-   - id: '10x15cm'
-
-2. **Dimensiones de página**:
-   - ancho: 150mm (15cm)
-   - alto: 100mm (10cm)
-   - márgenes: 4mm todos los lados
-
-3. **Código del artículo**:
-   - tamaño: 50pt
-   - fuente: helvetica bold
-   - posición Y: 15mm
-
-4. **Código de barras**:
-   - ancho: 80mm
-   - alto: 25mm
-   - posición Y: 30mm
-   - centrado: true
-   - tamaño: 'grande' (para GeneradorCodigoBarra.js)
-
-5. **Descripción**:
-   - **Tamaños automáticos** (7 niveles):
-     - Muy corta (≤15 chars): 60pt
-     - Corta (≤25 chars): 52pt
-     - Mediana (≤35 chars): 46pt
-     - Larga (≤45 chars): 40pt
-     - Muy larga (≤60 chars): 34pt
-     - Extra larga (≤80 chars): 28pt
-     - Gigante (>80 chars): 24pt
+1. **Identificación**: nombre: '10x15 cm', id: '10x15cm'
+2. **Dimensiones de página**: ancho: 150mm, alto: 100mm, márgenes: 4mm
+3. **Código del artículo**: tamaño: 50pt, fuente: helvetica bold, posición Y: 15mm
+4. **Código de barras**: ancho: 80mm, alto: 25mm, posición Y: 30mm, centrado: true
+5. **Descripción**: 
+   - **Tamaños automáticos** (7 niveles según longitud)
    - fuente: helvetica bold
    - anchoMaximo: 90mm
    - interlineadoFactor: 0.35
    - maximoLineas: 7
    - **Posiciones Y dinámicas** según cantidad de líneas (1-7)
+6. **Ubicación**: tamaño: 10pt, posición esquina inferior izquierda
+7. **Extras**: mostrarBordes, colorFondo, mostrarGuias (para desarrollo)
 
-6. **Ubicación**:
-   - tamaño: 10pt
-   - fuente: helvetica normal
-   - posición X: 4mm
-   - posición Y: 146mm (esquina inferior izquierda)
-
-7. **Extras**:
-   - mostrarBordes: false (para debug)
-   - colorFondo: RGB blanco
-   - mostrarGuias: false (para desarrollo)
-
-**Extensibilidad**:
-- Preparado para agregar nuevas configuraciones
-- Sistema plug-and-play para diferentes tamaños
+**Extensibilidad**: Preparado para agregar nuevas configuraciones
 
 #### **GeneradorCodigoBarra.js**
 - **Generación de códigos de barras** en formato PNG base64
 - **Biblioteca**: `jsbarcode` para crear códigos Code 39
 - **Formato**: Code 39 (compatible con escáneres industriales)
 
-**Tamaños configurables** (uso interno):
-```javascript
-grande: {
-  height: 80,
-  fontSize: 26,
-  width: 3,
-  margin: 10
-}
-mediano: {
-  height: 60,
-  fontSize: 20,
-  width: 2,
-  margin: 8
-}
-chico: {
-  height: 40,
-  fontSize: 16,
-  width: 2,
-  margin: 5
-}
-```
+**Tamaños configurables** (uso interno): grande, mediano, chico
 
 **Características**:
 - **Fondo blanco**, barras negras
@@ -214,15 +131,11 @@ chico: {
 - **Validación** de caracteres compatibles con Code 39
 
 **Funciones exportadas**:
-```javascript
-generarCodigoBarraPNG(codigo, tamano)       // Genera PNG base64
-validarCodigoParaBarra(codigo)              // Valida compatibilidad
-limpiarCodigoParaBarra(codigo)              // Limpia caracteres inválidos
-```
+- `generarCodigoBarraPNG(codigo, tamano)`
+- `validarCodigoParaBarra(codigo)`
+- `limpiarCodigoParaBarra(codigo)`
 
-**Caracteres válidos Code 39**:
-- A-Z, 0-9
-- Símbolos: `-`, `.`, `$`, `/`, `+`, `%`, espacio
+**Caracteres válidos Code 39**: A-Z, 0-9, símbolos: `-`, `.`, `$`, `/`, `+`, `%`, espacio
 
 ---
 
@@ -270,11 +183,9 @@ limpiarCodigoParaBarra(codigo)              // Limpia caracteres inválidos
 - **Clave de almacenamiento**: `historial_etiquetas`
 
 **Funciones exportadas**:
-```javascript
-guardarEtiquetas(etiquetas)      // Guarda array de etiquetas
-obtenerEtiquetas()               // Retorna array de etiquetas guardadas
-eliminarEtiquetas()              // Borra todas las etiquetas del storage
-```
+- `guardarEtiquetas(etiquetas)`
+- `obtenerEtiquetas()`
+- `eliminarEtiquetas()`
 
 **Persistencia automática**:
 - Se guarda al agregar nueva etiqueta
@@ -283,20 +194,7 @@ eliminarEtiquetas()              // Borra todas las etiquetas del storage
 - Se carga automáticamente al entrar a la página
 - Permite continuar trabajo en sesiones posteriores
 
-**Formato de datos guardados**:
-```javascript
-[
-  {
-    id: 1704067200000,
-    codigo: "ABC123",
-    descripcion: "Producto 1",
-    ubicacion: "A-1-2",
-    cantidad: 2,
-    tamano: "10x15cm"
-  },
-  // ... más etiquetas
-]
-```
+**Formato de datos guardados**: `{ id, codigo, descripcion, ubicacion, cantidad, tamano }`
 
 ---
 
@@ -304,7 +202,6 @@ eliminarEtiquetas()              // Borra todas las etiquetas del storage
 
 #### **Nombre de archivo**
 - **Formato**: `etiquetas_[id_configuracion]_[timestamp].pdf`
-- **Ejemplo**: `etiquetas_10x15cm_1704067200000.pdf`
 
 #### **Proceso de exportación**:
 1. Usuario click en botón "Enviar"
@@ -325,100 +222,10 @@ eliminarEtiquetas()              // Borra todas las etiquetas del storage
 ### 🔄 **Integración con Barra de Botones**
 
 #### **PaginaEtiquetas.vue**
-```javascript
-configuracionBarra: {
-  mostrarAtras: true,
-  mostrarInicio: true,
-  mostrarAgregar: false,
-  mostrarEnviar: etiquetas.length > 0,
-  puedeEnviar: etiquetas.length > 0,
-  botonesPersonalizados: []
-}
-```
-
----
-
-### ✅ **Flujo de Trabajo Típico**
-
-1. **Cargar etiquetas guardadas**:
-   - Al entrar a la página se cargan etiquetas de sesiones anteriores
-   - Permite continuar trabajo pendiente
-
-2. **Agregar etiquetas manualmente**:
-   - Escribir código → Se activa buscador
-   - Seleccionar artículo → Autocompleta todo
-   - Ajustar cantidad de copias (si necesita más de 1)
-   - Click en agregar
-   - **Se guarda automáticamente**
-
-3. **Agregar etiquetas con cámara**:
-   - Click en botón cámara
-   - Escanear código
-   - Sistema busca en base de datos
-   - Autocompleta descripción y ubicación
-   - Ajustar cantidad
-   - Agregar
-   - **Se guarda automáticamente**
-
-4. **Editar etiquetas**:
-   - Click en icono lápiz
-   - Modificar campos necesarios
-   - Guardar
-   - **Se guarda automáticamente**
-
-5. **Ajustar cantidades**:
-   - Usar botones +/- directamente en la tabla
-   - O editar número manualmente
-   - **Se guarda automáticamente**
-
-6. **Generar documento PDF**:
-   - Click en botón "Enviar"
-   - Esperar generación
-   - Compartir con app deseada (WhatsApp, Gmail, Drive, etc.)
-   - **Las etiquetas permanecen guardadas**
-
-7. **Limpiar todo**:
-   - Click en botón limpiar (icono basura)
-   - Confirmar en modal
-   - **Se elimina del almacenamiento**
-
----
-
-### 📊 **Estructura de Datos**
-
-#### **Etiqueta Individual**
-```javascript
-{
-  id: timestamp,                    // ID único
-  codigo: "ABC123",                 // código del artículo
-  descripcion: "Nombre producto",   // descripción/nombre
-  ubicacion: "A-1-2",              // ubicación física
-  cantidad: 3,                      // cantidad de copias
-  tamano: "10x15cm"                 // tamaño seleccionado
-}
-```
-
-#### **Array de Etiquetas (persistido)**
-```javascript
-[
-  { 
-    id: 1704067200000, 
-    codigo: "ABC123", 
-    descripcion: "Producto 1", 
-    ubicacion: "A-1-2", 
-    cantidad: 2, 
-    tamano: "10x15cm" 
-  },
-  { 
-    id: 1704067201000, 
-    codigo: "XYZ789", 
-    descripcion: "Producto 2", 
-    ubicacion: "B-3-1", 
-    cantidad: 1, 
-    tamano: "10x15cm" 
-  }
-]
-```
+- `mostrarAtras: true`
+- `mostrarInicio: true`
+- `mostrarAgregar: false`
+- `mostrarEnviar: etiquetas.length > 0`
 
 ---
 

@@ -38,16 +38,13 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 - **Valor por defecto**: "Usua des"
 
 **Funciones principales**:
-guardarConfiguracion(config)       // Guarda objeto completo de configuración
-obtenerConfiguracion()             // Recupera configuración guardada
-limpiarConfiguracion()             // Resetea a valores por defecto
-guardarNombreUsuario(nombre)       // Guarda solo el nombre de usuario
-obtenerNombreUsuario()             // Recupera solo el nombre de usuario
+- `guardarConfiguracion(config)`
+- `obtenerConfiguracion()`
+- `limpiarConfiguracion()`
+- `guardarNombreUsuario(nombre)`
+- `obtenerNombreUsuario()`
 
-**Estructura de configuración**:
-{
-  nombreUsuario: "Usua des"        // Nombre del usuario (string)
-}
+**Estructura de configuración**: `{ nombreUsuario: "string" }`
 
 **Características**:
 - **Persistencia automática**: Los cambios se guardan inmediatamente
@@ -60,7 +57,7 @@ obtenerNombreUsuario()             // Recupera solo el nombre de usuario
 ### 🔄 **Integración con MainLayout**
 
 #### **MainLayout.vue - Header**
-- **Nombre dinámico** en toolbar: `<q-toolbar-title>{{ nombreUsuario }}</q-toolbar-title>`
+- **Nombre dinámico** en toolbar
 - **Carga automática** del nombre con polling cada 5 segundos
 - **Actualización reactiva**: Cuando cambia en configuración, se actualiza automáticamente
 
@@ -75,20 +72,6 @@ obtenerNombreUsuario()             // Recupera solo el nombre de usuario
 - **Animación**: Rotación al hacer hover
 - **Acción**: Navega a `/configuracion`
 - **Label**: "Configuración"
-- **Separación adecuada** en dispositivos móviles
-
-**Código de carga del nombre**:
-import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
-
-const nombreUsuario = ref('Usua des')
-
-const cargarNombreUsuario = async () => {
-  const nombre = await obtenerNombreUsuario()
-  nombreUsuario.value = nombre || 'Usua des'
-}
-
-// Polling cada 5 segundos
-setInterval(cargarNombreUsuario, 5000)
 
 ---
 
@@ -98,27 +81,20 @@ setInterval(cargarNombreUsuario, 5000)
 
 #### **Pedidos**
 - **Con rango de fechas**: `Pedi [Usuario] DD-MM-AAAA - DD-MM-AAAA.xlsx`
-  - Ejemplo: `Pedi Juan 01-01-2024 - 31-01-2024.xlsx`
 - **Mensuales**: `Pedi [Usuario] - MM-AAAA.xlsx`
-  - Ejemplo: `Pedi Juan - 01-2024.xlsx`
 - **Nombre de hoja**: Solo el nombre del usuario
-  - Ejemplo: Hoja llamada "Juan"
 
 #### **Ubicaciones**
 - **Formato**: `Ubic [Usuario].xlsx`
-  - Ejemplo: `Ubic Juan.xlsx`
 - **Nombre de hoja**: Solo el nombre del usuario
-  - Ejemplo: Hoja llamada "Juan"
 
 #### **Etiquetas**
-- **Formato**: `etiquetas_[timestamp].docx`
-  - Ejemplo: `etiquetas_1704067200000.docx`
-- **Sin nombre de usuario** (es un documento Word, no Excel)
+- **Formato**: `etiquetas_[timestamp].pdf`
+- **Sin nombre de usuario** (es un documento PDF, no Excel)
 
 **Implementación en exportadores**:
 - ExportarPedidosExcel.js → Importa `obtenerNombreUsuario()`
 - ExportarUbicacionesExcel.js → Importa `obtenerNombreUsuario()`
-- Ambos llaman a la función antes de generar el archivo
 - Si no hay nombre configurado, usan "Usua des" por defecto
 
 ---
@@ -126,61 +102,10 @@ setInterval(cargarNombreUsuario, 5000)
 ### 🔄 **Integración con Barra de Botones**
 
 #### **PaginaConfiguracion.vue**
-configuracionBarra: {
-  mostrarAtras: true,
-  mostrarInicio: true,
-  mostrarAgregar: false,
-  mostrarEnviar: false,
-  puedeEnviar: false,
-  botonesPersonalizados: []
-}
-
----
-
-### ✅ **Flujo de Trabajo Típico**
-
-1. **Acceder a configuración**:
-   - Abrir drawer (menú lateral)
-   - Click en botón "Configuración" (con icono de engranaje)
-   - Se abre PaginaConfiguracion.vue
-
-2. **Cambiar nombre de usuario**:
-   - Ver nombre actual en el formulario (placeholder)
-   - Escribir nuevo nombre (mínimo 2 caracteres)
-   - Click en "Guardar"
-   - **Validación**: Si es igual al actual → error
-   - **Éxito**: Notificación verde + actualización inmediata
-   - **El nombre se actualiza** en header y drawer automáticamente
-
-3. **Resetear nombre**:
-   - Click en botón "Resetear nombre"
-   - Se abre modal de confirmación
-   - Confirmar → Vuelve a "Usua des"
-   - **Notificación** de éxito
-
-4. **Ver cambios en archivos exportados**:
-   - Al exportar pedidos → archivo tiene tu nombre
-   - Al exportar ubicaciones → archivo tiene tu nombre
-   - La hoja Excel tiene tu nombre como título
-
----
-
-### 📊 **Estructura de Datos**
-
-#### **Configuración Completa**
-{
-  nombreUsuario: "Juan"            // Nombre del usuario configurado
-}
-
-#### **Almacenamiento en Capacitor Preferences**
-Key: "configuracionUsuario"
-Value: { "nombreUsuario": "Juan" }
-
-#### **Valor por Defecto**
-Si no hay configuración guardada:
-{
-  nombreUsuario: "Usua des"
-}
+- `mostrarAtras: true`
+- `mostrarInicio: true`
+- `mostrarAgregar: false`
+- `mostrarEnviar: false`
 
 ---
 
@@ -213,47 +138,6 @@ Si no hay configuración guardada:
 - **Quasar Notify**: Notificaciones de éxito/error
 - **@tabler/icons-vue**: Iconografía (IconSettings)
 - **Vue Router**: Navegación a `/configuracion`
-
----
-
-### 🚀 **Posibles Expansiones Futuras**
-
-**Ideas para agregar al módulo de configuración:**
-
-1. **Tema visual**:
-   - Modo claro/oscuro
-   - Colores personalizados
-   - Tamaño de fuente
-
-2. **Preferencias de exportación**:
-   - Formato de fecha preferido
-   - Idioma de archivos
-   - Carpeta de destino por defecto
-
-3. **Notificaciones**:
-   - Activar/desactivar sonidos
-   - Duración de notificaciones
-   - Tipo de alertas
-
-4. **Permisos**:
-   - Gestión de cámara
-   - Gestión de archivos
-   - Gestión de ubicación
-
-5. **Datos de empresa**:
-   - Logo personalizado
-   - Información de contacto
-   - Datos fiscales
-
-6. **Respaldos**:
-   - Exportar toda la configuración
-   - Importar configuración
-   - Sincronización en la nube
-
-7. **Seguridad**:
-   - PIN de acceso
-   - Huella digital
-   - Timeout de sesión
 
 ---
 

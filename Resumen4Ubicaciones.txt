@@ -90,13 +90,13 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Estado global**: artículos cargados, estado de carga, información del archivo
 
 **Funciones exportadas**:
-cargarArticulosDesdeExcel()      // Función principal de carga
-obtenerArticulosCargados()       // Retorna array de artículos
-obtenerEstadoCarga()             // Estado actual: 'no-cargado', 'cargando', 'cargado', 'error'
-obtenerInformacionArchivo()      // Info del archivo: nombre, tamaño, cantidad
-reiniciarBaseDatos()             // Limpia todo (async)
-verificarSoporteSelector()       // Valida soporte del navegador
-inicializarBaseDatos()           // Carga automática desde persistencia
+- `cargarArticulosDesdeExcel()`
+- `obtenerArticulosCargados()`
+- `obtenerEstadoCarga()`
+- `obtenerInformacionArchivo()`
+- `reiniciarBaseDatos()`
+- `verificarSoporteSelector()`
+- `inicializarBaseDatos()`
 
 **✅ Persistencia automática**:
 - Los artículos se **guardan automáticamente** en `@capacitor/preferences` después de cargar
@@ -105,12 +105,7 @@ inicializarBaseDatos()           // Carga automática desde persistencia
 - **Sin intervención del usuario** - Una vez cargado, siempre disponible
 - **Inicialización automática** al importar el módulo con `setTimeout`
 
-**Estructura de artículo**:
-{
-  codigo: "ABC123",              // código único del artículo
-  nombre: "Descripción",         // nombre/descripción
-  ubicacionAntigua: "A-1-2"     // ubicación del Excel (opcional)
-}
+**Estructura de artículo**: `{ codigo, nombre, ubicacionAntigua }`
 
 ---
 
@@ -135,9 +130,7 @@ inicializarBaseDatos()           // Carga automática desde persistencia
 - **Detección automática** de base cargada/descargada
 - **✅ Compatible con persistencia automática**
 
-**Emisión de eventos**:
-@articulo-seleccionado="seleccionarArticulo"
-// Retorna: { codigo: "ABC123", nombre: "Descripción" }
+**Emisión de eventos**: `@articulo-seleccionado` retorna `{ codigo, nombre }`
 
 ---
 
@@ -149,25 +142,15 @@ inicializarBaseDatos()           // Carga automática desde persistencia
 - **Formateo automático**: Convierte a mayúsculas y limpia espacios
 
 **Funciones principales**:
-guardarUltimaUbicacion(ubicacion)    // Persiste la ubicación
-obtenerUltimaUbicacion()             // Recupera la ubicación guardada
-limpiarUltimaUbicacion()             // Elimina la ubicación recordada
+- `guardarUltimaUbicacion(ubicacion)`
+- `obtenerUltimaUbicacion()`
+- `limpiarUltimaUbicacion()`
 
 **Workflow optimizado**:
 1. **Carga automática**: Al abrir formulario/cámara se carga la última ubicación
 2. **Solo limpia código**: Después de agregar un artículo, mantiene la ubicación
 3. **Botón IconTrash**: Para cambiar de zona rápidamente
 4. **Ideal para inventarios**: Múltiples artículos en la misma ubicación física
-
-**Ejemplo de uso**:
-import { guardarUltimaUbicacion, obtenerUltimaUbicacion } from './recordarUltimaTipografia.js'
-
-// Al agregar ubicación
-await guardarUltimaUbicacion('A-1-2')
-
-// Al cargar formulario
-const ubicacion = await obtenerUltimaUbicacion()
-// Retorna: "A-1-2" o null
 
 ---
 
@@ -207,20 +190,14 @@ const ubicacion = await obtenerUltimaUbicacion()
 #### **usoAlmacenamientoUbicaciones.js**
 - **Módulo especializado** para ubicaciones
 - **Funciones principales**:
-  - `guardarUbicaciones(ubicaciones)`: Guarda array de ubicaciones
-  - `obtenerUbicaciones()`: Recupera todas las ubicaciones
-  - `agregarUbicacion(codigo, ubicacion)`: Agrega una ubicación
-  - `eliminarUbicacion(id)`: Elimina una ubicación específica
-  - `editarUbicacion(id, codigo, ubicacion)`: Modifica una ubicación
-  - `limpiarUbicaciones()`: Elimina todas las ubicaciones
+  - `guardarUbicaciones(ubicaciones)`
+  - `obtenerUbicaciones()`
+  - `agregarUbicacion(codigo, ubicacion)`
+  - `eliminarUbicacion(id)`
+  - `editarUbicacion(id, codigo, ubicacion)`
+  - `limpiarUbicaciones()`
 
-**Estructura de ubicación**:
-{
-  id: timestamp,                 // ID único
-  codigo: "ABC123",             // código del artículo
-  ubicacion: "A-1-2",           // ubicación actual
-  fecha: "2024-01-01"           // fecha de creación/modificación
-}
+**Estructura de ubicación**: `{ id, codigo, ubicacion, fecha }`
 
 - **Persistencia** en `@capacitor/preferences`
 - **Key**: `"ubicaciones"`
@@ -230,48 +207,10 @@ const ubicacion = await obtenerUltimaUbicacion()
 ### 🔄 **Integración con Barra de Botones**
 
 #### **AjustarUbicaciones.vue**
-configuracionBarra: {
-  mostrarAtras: true,
-  mostrarInicio: true,
-  mostrarAgregar: false,
-  mostrarEnviar: ubicaciones.length > 0,
-  puedeEnviar: ubicaciones.length > 0,
-  botonesPersonalizados: []
-}
-
----
-
-### ✅ **Flujo de Trabajo Típico**
-
-1. **Primera vez**:
-   - Usuario carga archivo Excel con base de datos
-   - Sistema guarda automáticamente en persistencia
-   
-2. **Agregar ubicaciones manualmente**:
-   - Escribir código (se activa buscador si ≥3 caracteres)
-   - Seleccionar artículo del buscador (autocompleta)
-   - Escribir ubicación (se formatea automáticamente)
-   - Click en agregar
-   - **La ubicación se mantiene** para el siguiente artículo
-   
-3. **Agregar ubicaciones con cámara**:
-   - Click en botón de cámara
-   - Escanear códigos múltiples
-   - **La ubicación se mantiene** entre escaneos
-   - Finalizar cuando termine
-   
-4. **Workflow optimizado** (misma ubicación):
-   - Primera ubicación: Ingresar manualmente "A-1-2"
-   - Agregar artículo → **ubicación se mantiene**
-   - Siguiente artículo → Solo cambiar código
-   - Repetir para múltiples artículos
-   - **Botón IconTrash** para cambiar de zona
-
-5. **Exportar ubicaciones**:
-   - Click en botón enviar
-   - Se genera Excel con nombres de la base de datos
-   - Sistema de emojis marca ubicaciones problemáticas
-   - Compartir con apps del sistema
+- `mostrarAtras: true`
+- `mostrarInicio: true`
+- `mostrarAgregar: false`
+- `mostrarEnviar: ubicaciones.length > 0`
 
 ---
 

@@ -1,6 +1,6 @@
 ### **Estado Actual del Proyecto: Bitácora II**
 
-Estoy desarrollando una aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la gestión de **pedidos internos, ubicaciones e inventario**. Es un sistema de trabajo pensado para correr como aplicación móvil en Android, **ya publicada en la Play Store de Google**.
+Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la gestión de **pedidos internos, ubicaciones e inventario**. Sistema pensado para correr como aplicación móvil en Android, **ya publicada en la Play Store de Google**.
 
 ---
 
@@ -17,12 +17,13 @@ La aplicación se divide en 5 módulos principales:
 
 ### 🏠 **Componente Principal de Inicio**
 
-- **Inicio.vue (PanelInicio.vue):** Pantalla principal de navegación.
-  - **Tarjeta Pedidos**: Acceso a `/TablaPedidos`
-  - **Tarjeta Ubicaciones**: Acceso a `/AjustarUbicaciones`
-  - **Tarjeta Etiquetas**: Acceso a `/etiquetas`
-  - Diseño responsive con grid adaptativo
-  - Efectos hover y transiciones suaves
+#### **Inicio.vue (PanelInicio.vue)**
+- Pantalla principal de navegación
+- **Tarjeta Pedidos**: Acceso a `/TablaPedidos`
+- **Tarjeta Ubicaciones**: Acceso a `/AjustarUbicaciones`
+- **Tarjeta Etiquetas**: Acceso a `/etiquetas`
+- Diseño responsive con grid adaptativo
+- Efectos hover y transiciones suaves
 
 ---
 
@@ -42,24 +43,24 @@ La aplicación se divide en 5 módulos principales:
 
 ### 🔄 **Sistema de Navegación con Barra Inferior**
 
-#### ✅ **BarraBotonesInferior.vue:** **COMPONENTE PRINCIPAL DE NAVEGACIÓN**
-- **Barra flotante centrada** con diseño moderno y redondeado.
-- **Botones dinámicos**: atrás, inicio, agregar, enviar.
-- **Configuración por props**: cada página define qué botones mostrar.
-- **Botones personalizados**: sistema extensible para acciones específicas.
-- **Estados dinámicos**: habilitar/deshabilitar según contexto.
-- **Responsive design** con ajustes para pantallas pequeñas.
-- **Auto-ocultamiento**: botón "atrás" se oculta automáticamente en página inicial.
-- **Efectos visuales**: hover, active, sombras, transiciones suaves.
+#### **BarraBotonesInferior.vue - COMPONENTE PRINCIPAL DE NAVEGACIÓN**
+- **Barra flotante centrada** con diseño moderno y redondeado
+- **Botones dinámicos**: atrás, inicio, agregar, enviar
+- **Configuración por props**: cada página define qué botones mostrar
+- **Botones personalizados**: sistema extensible para acciones específicas
+- **Estados dinámicos**: habilitar/deshabilitar según contexto
+- **Responsive design** con ajustes para pantallas pequeñas
+- **Auto-ocultamiento**: botón "atrás" se oculta automáticamente en página inicial
+- **Efectos visuales**: hover, active, sombras, transiciones suaves
 
-#### ✅ **TresBotones.vue:** 
-- Para formularios y modales (confirmar, cancelar, eliminar).
+#### **TresBotones.vue**
+- Para formularios y modales (confirmar, cancelar, eliminar)
 
-#### 📄 **Sistema de Configuración Dinámica:**
-- **Configuración por página**: Cada página emite su configuración de botones.
-- **Watchers reactivos**: Los botones se actualizan automáticamente según el estado.
-- **Métodos de callback**: Las páginas definen qué hacer cuando se presiona cada botón.
-- **Cleanup automático**: Se limpia la configuración al salir de las páginas.
+#### **Sistema de Configuración Dinámica**
+- **Configuración por página**: Cada página emite su configuración de botones
+- **Watchers reactivos**: Los botones se actualizan automáticamente según el estado
+- **Métodos de callback**: Las páginas definen qué hacer cuando se presiona cada botón
+- **Cleanup automático**: Se limpia la configuración al salir de las páginas
 
 ---
 
@@ -67,10 +68,10 @@ La aplicación se divide en 5 módulos principales:
 
 **Sistema compartido** usado en Ubicaciones y Etiquetas.
 
-- **SelectorExcel.vue**: Componente para cargar archivos Excel.
-- **LectorExcel.js**: Procesa y persiste artículos automáticamente.
-- **Persistencia automática**: Los datos se guardan en `@capacitor/preferences`.
-- **Inicialización automática**: Se carga al iniciar la aplicación.
+- **SelectorExcel.vue**: Componente para cargar archivos Excel
+- **LectorExcel.js**: Procesa y persiste artículos automáticamente
+- **Persistencia automática**: Los datos se guardan en `@capacitor/preferences`
+- **Inicialización automática**: Se carga al iniciar la aplicación
 
 **Ver detalle completo en:** `ResumenUbicaciones.txt`
 
@@ -80,10 +81,10 @@ La aplicación se divide en 5 módulos principales:
 
 **Sistema compartido** usado en Ubicaciones y Etiquetas.
 
-- **CodigoMasNombre.vue**: Buscador con priorización de resultados.
-- **Búsqueda en tiempo real** con resaltado de coincidencias.
-- **Máximo 3 resultados** por búsqueda.
-- **Compatible con persistencia automática**.
+- **CodigoMasNombre.vue**: Buscador con priorización de resultados
+- **Búsqueda en tiempo real** con resaltado de coincidencias
+- **Máximo 3 resultados** por búsqueda
+- **Compatible con persistencia automática**
 
 **Ver detalle completo en:** `ResumenUbicaciones.txt`
 
@@ -150,8 +151,6 @@ La aplicación se divide en 5 módulos principales:
 ---
 
 ### 📂 **Estructura de Archivos**
-
-```
 src/
 ├── App.vue
 ├── css/
@@ -217,8 +216,6 @@ src/
         ├── ModalEditarEtiqueta.vue
         ├── ModalEliminar.vue
         └── ModalNuevoPedido.vue
-```
-
 ---
 
 ### 🔧 **Tecnologías y Dependencias**
@@ -236,7 +233,6 @@ src/
 
 ### 🎨 **Sistema de Colores (CSS Variables)**
 
-```css
 /* Variables */
 :root {
   --color-fondo: #121214; /* Fondo principal */
@@ -262,94 +258,4 @@ src/
   --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
   --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
 }
-```
-
 ---
-
-### 📚 **Archivos de Documentación Relacionados**
-
-- **ResumenPedidos.txt**: Todo sobre el módulo de pedidos
-- **ResumenUbicaciones.txt**: Todo sobre el módulo de ubicaciones
-- **ResumenEtiquetas.txt**: Todo sobre el módulo de etiquetas (PDF con códigos de barras)
-- **ResumenConfiguracion.txt**: Todo sobre el módulo de configuración
-
----
-
-### 📋 **Características Clave por Módulo**
-
-#### **Pedidos**
-- Generación de pedidos con escaneo de códigos
-- Historial de pedidos diarios
-- Exportación a Excel
-- Persistencia automática
-- Sistema de límite de pedidos diarios
-
-#### **Ubicaciones**
-- Ajuste de ubicaciones de artículos
-- Búsqueda inteligente con priorización
-- Integración con base de datos Excel
-- Formateo automático de ubicaciones
-- Exportación a Excel
-- Persistencia automática
-
-#### **Etiquetas**
-- Generación de etiquetas con códigos de barras Code 39
-- Documentos PDF personalizados
-- Sistema de configuración modular (actualmente 10x15cm)
-- Tamaño de fuente automático según longitud de texto
-- Control de cantidad de copias
-- Detección de duplicados y artículos inexistentes
-- Persistencia automática
-- Las etiquetas permanecen después de generar PDF
-
-#### **Configuración**
-- Personalización de nombre de usuario
-- Integración en toda la aplicación
-- Nombres personalizados en archivos exportados
-- Persistencia automática
-
----
-
-### 🚀 **Flujo General de la Aplicación**
-
-1. **Inicio**: Usuario entra a la aplicación
-2. **Configuración inicial**: Puede configurar su nombre (opcional)
-3. **Carga de base de datos**: Se carga automáticamente la base de datos Excel
-4. **Navegación**: Usa el panel de inicio o la barra inferior
-5. **Trabajo en módulos**:
-   - **Pedidos**: Escanea/agrega → Genera Excel → Comparte
-   - **Ubicaciones**: Escanea/agrega → Genera Excel → Comparte
-   - **Etiquetas**: Escanea/agrega → Genera PDF → Comparte
-6. **Persistencia**: Todo se guarda automáticamente
-7. **Continuidad**: Puede retomar trabajo en cualquier momento
-
----
-
-### 💡 **Características Destacadas**
-
-- ✅ **Persistencia total**: Todos los datos se guardan automáticamente
-- ✅ **Escaneo múltiple**: Integración con cámara en todos los módulos
-- ✅ **Búsqueda inteligente**: Priorización de resultados exactos
-- ✅ **Formateo automático**: Ubicaciones y códigos
-- ✅ **Validaciones visuales**: Feedback inmediato al usuario
-- ✅ **Exportación flexible**: Excel y PDF según necesidad
-- ✅ **Responsive total**: Funciona perfectamente en móviles
-- ✅ **Nombres personalizados**: Archivos con nombre del usuario
-- ✅ **Sistema modular**: Fácil agregar nuevas funcionalidades
-- ✅ **Códigos de barras Code 39**: Compatibilidad industrial
-- ✅ **Detección de problemas**: Duplicados y artículos inexistentes
-
----
-
-### 📝 **Notas Importantes Generales**
-
-- La aplicación está **optimizada para móviles Android**
-- Todos los módulos usan **@capacitor/preferences** para persistencia
-- Los archivos se guardan temporalmente en **Directory.Cache**
-- El sistema de **Share API** permite compartir con cualquier app
-- La **base de datos Excel** debe cargarse para funcionalidad completa
-- Los **nombres de usuario** personalizan toda la experiencia
-- El sistema de **etiquetas** usa PDF en lugar de Word
-- Los **códigos de barras** son Code 39 para compatibilidad industrial
-- Todas las **configuraciones** son modulares y extensibles
-- La **UI es consistente** en todos los módulos
