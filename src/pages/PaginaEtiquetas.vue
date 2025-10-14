@@ -79,6 +79,7 @@ const mostrarModalLimpiarTodo = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
+let intervaloPolling = null
 
 const emit = defineEmits(['configurar-barra'])
 
@@ -115,19 +116,37 @@ async function persistirEtiquetas() {
   }
 }
 
+// --- POLLING PARA DETECTAR ETIQUETAS AGREGADAS DESDE UBICACIONES ---
+async function verificarNuevasEtiquetas() {
+  try {
+    const etiquetasActuales = await obtenerEtiquetas()
+
+    if (!etiquetasActuales) return
+
+    // Solo actualizar si la cantidad cambió
+    if (etiquetasActuales.length !== listaEtiquetas.value.length) {
+      listaEtiquetas.value = etiquetasActuales
+      console.log(
+        '[PaginaEtiquetas] Etiquetas actualizadas desde almacenamiento:',
+        etiquetasActuales.length,
+      )
+    }
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error en polling:', error)
+  }
+}
+
 // --- FUNCIONES ---
 function agregarEtiqueta(etiqueta) {
-  // Agregar el tamaño seleccionado a la etiqueta
   const etiquetaConTamano = {
     ...etiqueta,
     tamano: tamanoSeleccionado.value,
-    id: Date.now(), // ID único para manipular después
+    id: Date.now(),
   }
 
   listaEtiquetas.value.push(etiquetaConTamano)
   console.log('[PaginaEtiquetas] Etiqueta agregada:', etiquetaConTamano)
 
-  // Guardar automáticamente
   persistirEtiquetas()
 }
 
@@ -137,7 +156,6 @@ function editarEtiqueta(etiquetaEditada) {
     listaEtiquetas.value[indice] = etiquetaEditada
     console.log('[PaginaEtiquetas] Etiqueta editada:', etiquetaEditada)
 
-    // Guardar automáticamente
     persistirEtiquetas()
   }
 }
@@ -152,7 +170,6 @@ function confirmarEliminar() {
   listaEtiquetas.value.splice(indiceAEliminar.value, 1)
   console.log('[PaginaEtiquetas] Etiqueta eliminada')
 
-  // Guardar automáticamente
   persistirEtiquetas()
 
   cerrarModalEliminar()
@@ -173,7 +190,6 @@ async function confirmarLimpiarTodo() {
   listaEtiquetas.value = []
   console.log('[PaginaEtiquetas] Lista de etiquetas limpiada')
 
-  // Eliminar del almacenamiento
   await eliminarEtiquetas()
 
   cerrarModalLimpiarTodo()
@@ -189,7 +205,6 @@ async function generarPDF() {
   try {
     generandoDocumento.value = true
 
-    // Mostrar notificación de generación
     Loading.show({
       message: 'Generando documento PDF...',
       spinnerColor: 'primary',
@@ -197,12 +212,10 @@ async function generarPDF() {
 
     console.log('[PaginaEtiquetas] Generando PDF con', listaEtiquetas.value.length, 'etiquetas')
 
-    // Obtener configuración según tamaño seleccionado
     const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
 
     console.log('[PaginaEtiquetas] Usando configuración:', configuracion.nombre)
 
-    // Generar documento
     const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value, configuracion)
 
     Loading.hide()
@@ -213,7 +226,6 @@ async function generarPDF() {
 
     console.log('[PaginaEtiquetas] ✅ Documento generado:', resultado.rutaArchivo)
 
-    // Compartir archivo
     const compartido = await compartirArchivo(resultado.rutaArchivo, resultado.nombreArchivo)
 
     if (compartido) {
@@ -224,8 +236,6 @@ async function generarPDF() {
         timeout: 2000,
       })
     }
-
-    // NO borramos las etiquetas, quedan guardadas
   } catch (error) {
     console.error('[PaginaEtiquetas] ❌ Error generando PDF:', error)
     Loading.hide()
@@ -257,13 +267,25 @@ const metodosParaBarra = {
 
 // --- LIFECYCLE ---
 onMounted(async () => {
-  // Cargar etiquetas guardadas
   await cargarEtiquetasGuardadas()
 
   emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
+
+  // Iniciar polling cada 2 segundos
+  intervaloPolling = setInterval(() => {
+    verificarNuevasEtiquetas()
+  }, 2000)
+
+  console.log('[PaginaEtiquetas] Polling iniciado')
 })
 
 onUnmounted(() => {
+  // Limpiar polling
+  if (intervaloPolling) {
+    clearInterval(intervaloPolling)
+    console.log('[PaginaEtiquetas] Polling detenido')
+  }
+
   emit(
     'configurar-barra',
     {

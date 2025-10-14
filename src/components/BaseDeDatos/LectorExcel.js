@@ -396,6 +396,24 @@ export function obtenerStock(codigo) {
   return articuloEncontrado?.stock || ''
 }
 
+// Obtener artículo completo por código
+export function obtenerArticuloPorCodigo(codigo) {
+  if (!codigo || typeof codigo !== 'string') {
+    console.warn('[obtenerArticuloPorCodigo] Código inválido:', codigo)
+    return null
+  }
+
+  const articuloEncontrado = articulosDelExcel.find(
+    (articulo) =>
+      articulo &&
+      articulo.codigo &&
+      typeof articulo.codigo === 'string' &&
+      articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  )
+
+  return articuloEncontrado || null
+}
+
 // --- FUNCIÓN PARA VERIFICAR SOPORTE DEL NAVEGADOR ---
 export function verificarSoporteSelector() {
   const tieneFileAPI = !!(window.File && window.FileReader && window.FileList && window.Blob)

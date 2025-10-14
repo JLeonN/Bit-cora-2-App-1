@@ -14,6 +14,7 @@
       @abrirModalEditar="abrirModalEditar"
       @abrirModalEliminar="abrirModalEliminar"
       @abrirModalEliminarTodas="abrirModalEliminarTodas"
+      @enviar-a-etiquetas="enviarAEtiquetas"
     />
 
     <!-- Modal: Editar Ubicación -->
@@ -49,6 +50,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { Notify } from 'quasar'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
@@ -60,12 +62,17 @@ import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
+import {
+  guardarEtiquetas,
+  obtenerEtiquetas,
+} from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
+import { obtenerArticuloPorCodigo } from '../components/BaseDeDatos/LectorExcel.js'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
 
 // --- ESTADO PRINCIPAL ---
-const ubicaciones = ref([]) // SIEMPRE inicializar como array vacío
+const ubicaciones = ref([])
 
 // Computed para garantizar que siempre sea array
 const ubicacionesArray = computed(() => {
@@ -98,11 +105,10 @@ const mensajeError = ref('')
 
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
-  mostrarAgregar: false, // Se agrega desde el formulario integrado
+  mostrarAgregar: false,
   mostrarEnviar: ubicacionesArray.value.length > 0,
   puedeEnviar: ubicacionesArray.value.length > 0,
   botonesPersonalizados: [
-    // Botón de limpiar todas las ubicaciones
     {
       icono: 'IconTrash',
       accion: 'eliminar-todas',
@@ -158,13 +164,11 @@ function manejarErrorCarga(mensaje) {
 // --- FUNCIÓN AGREGAR UBICACIÓN
 async function agregarUbicacion(datosNuevos) {
   try {
-    // Asegurar que ubicaciones.value es un array
     if (!Array.isArray(ubicaciones.value)) {
       console.warn('[agregarUbicacion] Reinicializando ubicaciones como array')
       ubicaciones.value = []
     }
 
-    // Validar datos nuevos
     if (!datosNuevos || !datosNuevos.codigo || !datosNuevos.ubicacion) {
       console.error('[agregarUbicacion] Datos inválidos:', datosNuevos)
       mensajeError.value = 'Datos de ubicación inválidos'
@@ -186,6 +190,47 @@ async function agregarUbicacion(datosNuevos) {
     console.error('[agregarUbicacion] Error:', error)
     mensajeError.value = 'Error al agregar ubicación: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3000)
+  }
+}
+
+// --- ENVIAR A ETIQUETAS ---
+async function enviarAEtiquetas(ubicacion) {
+  try {
+    const articulo = obtenerArticuloPorCodigo(ubicacion.codigo)
+    const nombreArticulo = articulo ? articulo.nombre : 'Artículo desconocido'
+
+    const nuevaEtiqueta = {
+      id: Date.now(),
+      codigo: ubicacion.codigo,
+      descripcion: nombreArticulo,
+      ubicacion: ubicacion.ubicacion,
+      cantidad: 1,
+      tamano: '10x15cm',
+    }
+
+    const etiquetasActuales = await obtenerEtiquetas()
+    const listaActualizada = etiquetasActuales
+      ? [...etiquetasActuales, nuevaEtiqueta]
+      : [nuevaEtiqueta]
+
+    await guardarEtiquetas(listaActualizada)
+
+    console.log('[AjustarUbicaciones] Etiqueta enviada:', nuevaEtiqueta)
+
+    Notify.create({
+      type: 'positive',
+      message: '✅ Etiqueta agregada correctamente',
+      position: 'top',
+      timeout: 2000,
+    })
+  } catch (error) {
+    console.error('[AjustarUbicaciones] Error enviando a etiquetas:', error)
+    Notify.create({
+      type: 'negative',
+      message: '❌ Error al agregar etiqueta',
+      position: 'top',
+      timeout: 2000,
+    })
   }
 }
 
@@ -358,7 +403,6 @@ onMounted(async () => {
   try {
     console.log('[AjustarUbicaciones] Montando componente...')
 
-    // Cargar ubicaciones con validación
     const ubicacionesCargadas = await obtenerUbicaciones()
 
     if (Array.isArray(ubicacionesCargadas)) {
@@ -369,21 +413,19 @@ onMounted(async () => {
         '[AjustarUbicaciones] obtenerUbicaciones() no devolvió array:',
         ubicacionesCargadas,
       )
-      ubicaciones.value = [] // Fallback seguro
+      ubicaciones.value = []
     }
 
-    // Configurar la barra inferior
     actualizarConfiguracionBarra()
   } catch (error) {
     console.error('[AjustarUbicaciones] Error en onMounted:', error)
-    ubicaciones.value = [] // Fallback en caso de error
+    ubicaciones.value = []
     mensajeError.value = 'Error al cargar ubicaciones: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3000)
   }
 })
 
 onUnmounted(() => {
-  // Limpiar configuración de la barra al salir de la página
   emit(
     'configurar-barra',
     {

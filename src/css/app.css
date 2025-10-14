@@ -1178,6 +1178,9 @@ button {
 .texto-articulo-inexistente .codigo-articulo {
   color: var(--color-carga);
 }
+.icono-etiqueta {
+  color: var(--color-exito);
+}
 /* -------------------------------------------------------------------------- */
 /* BuscarExcel.vue - Estilos para carga de base de datos */
 .contenedor-buscar-excel {

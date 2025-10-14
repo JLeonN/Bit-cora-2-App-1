@@ -65,6 +65,12 @@
           </td>
           <td class="celda-acciones">
             <div class="acciones-ubicacion">
+              <IconTag
+                class="icono-ubicacion icono-etiqueta"
+                @click="$emit('enviar-a-etiquetas', item)"
+                title="Enviar a etiquetas"
+                :stroke="2"
+              />
               <IconPencil
                 class="icono-ubicacion icono-editar"
                 @click="$emit('abrirModalEditar', index)"
@@ -90,7 +96,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { IconPencil, IconTrash } from '@tabler/icons-vue'
+import { IconPencil, IconTrash, IconTag } from '@tabler/icons-vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
