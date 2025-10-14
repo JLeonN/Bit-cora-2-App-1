@@ -10,7 +10,10 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Página principal** del módulo de etiquetas
 - **Ruta**: `/etiquetas`
 - **Header con título** y selector de tamaño
-- **Selector de tamaño**: Actualmente solo 10x15cm (preparado para futuras medidas)
+- **Selector de tamaño**: 
+  - **10x15 cm** (por defecto)
+  - **5x10 cm**
+  - **2.5x6.7 cm**
 - **FormularioEtiqueta** para agregar etiquetas
 - **TablaEtiquetas** con lista de etiquetas
 - **Integración con BarraBotonesInferior** para navegación
@@ -69,15 +72,22 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Configuración modular**: Usa archivos de configuración externos
 - **Dimensiones personalizadas**: Cada configuración define tamaño de página
 - **Layout adaptativo**: Ajusta elementos según configuración
+- **✅ Detección de entorno**: Navegador web vs app móvil
+- **✅ Descarga directa en navegador**: Sin usar Capacitor Filesystem
+- **✅ Nombres personalizados**: Integra nombre de usuario desde configuración
 
 **Contenido por etiqueta** (una página por etiqueta):
-1. **Código del artículo**: Posición, fuente y tamaño configurables
+1. **Código del artículo**: 
+   - Posición, fuente y tamaño configurables
+   - **Sistema adaptativo**: Tamaño de fuente cambia según longitud del código
+   - 4 niveles: corto, mediano, largo, muy largo
 2. **Código de barras**: PNG generado por GeneradorCodigoBarra.js
 3. **Descripción**: 
    - **Tamaño automático**: Ajuste inteligente según longitud del texto
    - **Multilínea**: División automática de texto largo
    - **Interlineado configurable**
    - **Máximo de líneas configurable**
+   - **7 niveles de tamaño**: muy corta, corta, mediana, larga, muy larga, extra larga, gigante
 4. **Ubicación**: Posición configurable (por defecto esquina inferior izquierda)
 
 **Sistema de tamaño automático de descripción**:
@@ -89,39 +99,93 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 **Características avanzadas**:
 - **Salto de página** automático entre etiquetas
 - **Respeta cantidad de copias**: Genera páginas duplicadas
-- **Guardado temporal** con `@capacitor/filesystem` en `Directory.Cache`
-- **Conversión a base64** para compatibilidad con Capacitor
+- **Guardado temporal** con `@capacitor/filesystem` en `Directory.Cache` (solo móvil)
+- **Descarga directa en navegador**: No requiere Capacitor
+- **Conversión a base64** para compatibilidad con Capacitor (solo móvil)
 - **Retorna**: URI del archivo + nombre del archivo
 
 **Función principal**: `generarDocumentoEtiquetas(listaEtiquetas, configuracion)`
 
+---
+
+### 📐 **Configuraciones de Etiquetas Disponibles**
+
+El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas. Cada configuración define propiedades específicas para cada tamaño.
+
 #### **ConfiguracionEtiqueta10x15.js**
-- **Archivo de configuración** para etiquetas de 10x15 cm
-- **Sistema modular**: Permite agregar fácilmente nuevas configuraciones
+- **Tamaño**: 10x15 cm (100mm x 150mm)
+- **Orientación**: Horizontal (landscape)
+- **Márgenes**: 4mm
+- **Código de artículo**:
+  - Tamaños adaptativos: 50pt, 40pt, 36pt, 25pt
+  - Posición Y: 15mm
+- **Código de barras**: 
+  - Dimensiones: 90mm x 17mm
+  - Posición Y: 16mm
+  - Tamaño interno: 'grande'
+- **Descripción**:
+  - Tamaños: 60pt → 24pt (7 niveles)
+  - Ancho máximo: 140mm
+  - Máximo líneas: 7
+  - Interlineado: factor 0.35
+- **Ubicación**: 10pt, esquina inferior izquierda
 
-**Secciones de configuración**:
-1. **Identificación**: nombre: '10x15 cm', id: '10x15cm'
-2. **Dimensiones de página**: ancho: 150mm, alto: 100mm, márgenes: 4mm
-3. **Código del artículo**: tamaño: 50pt, fuente: helvetica bold, posición Y: 15mm
-4. **Código de barras**: ancho: 80mm, alto: 25mm, posición Y: 30mm, centrado: true
-5. **Descripción**: 
-   - **Tamaños automáticos** (7 niveles según longitud)
-   - fuente: helvetica bold
-   - anchoMaximo: 90mm
-   - interlineadoFactor: 0.35
-   - maximoLineas: 7
-   - **Posiciones Y dinámicas** según cantidad de líneas (1-7)
-6. **Ubicación**: tamaño: 10pt, posición esquina inferior izquierda
-7. **Extras**: mostrarBordes, colorFondo, mostrarGuias (para desarrollo)
+#### **ConfiguracionEtiqueta5x10.js**
+- **Tamaño**: 5x10 cm (50mm x 100mm)
+- **Orientación**: Horizontal (landscape)
+- **Márgenes**: 2.5mm
+- **Código de artículo**:
+  - Tamaños adaptativos: 25pt, 20pt, 18pt, 12pt
+  - Posición Y: 7.5mm
+- **Código de barras**: 
+  - Dimensiones: 73mm x 11mm
+  - Posición Y: 10.5mm
+  - Tamaño interno: 'mediano'
+- **Descripción**:
+  - Tamaños: 30pt → 12pt (7 niveles)
+  - Ancho máximo: 93mm
+  - Máximo líneas: 5
+  - Interlineado: factor 0.35
+- **Ubicación**: 6.5pt, esquina inferior izquierda
 
-**Extensibilidad**: Preparado para agregar nuevas configuraciones
+#### **ConfiguracionEtiqueta2.5x6.7.js**
+- **Tamaño**: 2.5x6.7 cm (25mm x 67mm)
+- **Orientación**: Horizontal (landscape)
+- **Márgenes**: 1.5mm
+- **Código de artículo**:
+  - Tamaños adaptativos: 12pt, 10pt, 9pt, 7pt
+  - Posición Y: 4mm
+- **Código de barras**: 
+  - Dimensiones: 50mm x 6mm
+  - Posición Y: 5.5mm
+  - Tamaño interno: 'chico'
+- **Descripción**:
+  - Tamaños: 15pt → 6pt (7 niveles)
+  - Ancho máximo: 62mm
+  - Máximo líneas: 4
+  - Interlineado: factor 0.35
+- **Ubicación**: 4.5pt, esquina inferior izquierda
+
+**Características comunes de todas las configuraciones**:
+- Sistema de tamaños automáticos para código y descripción
+- Posiciones Y dinámicas según cantidad de líneas
+- Fuente: Helvetica Bold
+- Alineación: Center (código y descripción)
+- Fondo blanco, sin bordes (configurables para debug)
+
+**Extensibilidad**: Sistema preparado para agregar nuevas configuraciones fácilmente
+
+---
 
 #### **GeneradorCodigoBarra.js**
 - **Generación de códigos de barras** en formato PNG base64
 - **Biblioteca**: `jsbarcode` para crear códigos Code 39
 - **Formato**: Code 39 (compatible con escáneres industriales)
 
-**Tamaños configurables** (uso interno): grande, mediano, chico
+**Tamaños configurables** (uso interno): 
+- `grande`: height 80, fontSize 26, width 3
+- `mediano`: height 60, fontSize 20, width 2
+- `chico`: height 40, fontSize 16, width 2
 
 **Características**:
 - **Fondo blanco**, barras negras
@@ -201,14 +265,17 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 ### 📁 **Exportación y Compartir**
 
 #### **Nombre de archivo**
-- **Formato**: `etiquetas_[id_configuracion]_[timestamp].pdf`
+- **Formato**: `Etiquetas - [nombre_usuario] - [id_configuracion].pdf`
+- **Ejemplo 10x15**: `Etiquetas - Leo - 10x15cm.pdf`
+- **Ejemplo 5x10**: `Etiquetas - Leo - 5x10cm.pdf`
+- **Ejemplo 2.5x6.7**: `Etiquetas - Leo - 2.5x6.7cm.pdf`
 
 #### **Proceso de exportación**:
 1. Usuario click en botón "Enviar"
 2. **Loading** con mensaje "Generando documento PDF..."
 3. Se genera documento con `GeneradorEtiquetasPDF.js`
-4. Se guarda en `Directory.Cache` con Capacitor
-5. Se comparte con **Share API** nativa de Capacitor
+4. **En navegador**: Descarga directa del PDF
+5. **En móvil**: Se guarda en `Directory.Cache` con Capacitor y se comparte
 6. **Notificación** de éxito o error
 7. **Las etiquetas NO se borran** después de generar el PDF
 
@@ -216,6 +283,7 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - Mismo módulo usado en Pedidos y Ubicaciones
 - **Share API nativa** de Capacitor
 - Compatible con PDF
+- Solo se usa en móvil
 
 ---
 
@@ -247,7 +315,7 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 ### 🎨 **Características de UI/UX**
 
-- **Selector de tamaño** con radio buttons visuales (preparado para futuras medidas)
+- **Selector de tamaño** con radio buttons visuales (3 opciones disponibles)
 - **Formulario responsive** con grid adaptativo
 - **Tabla responsive** con diseño de cards en móvil
 - **Controles de cantidad inline** con botones +/-
@@ -265,8 +333,8 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 - **jsPDF**: Generación de documentos PDF
 - **jsbarcode**: Generación de códigos de barras Code 39
-- **@capacitor/filesystem**: Guardado de archivos temporales
-- **@capacitor/share**: Compartir archivos generados
+- **@capacitor/filesystem**: Guardado de archivos temporales (solo móvil)
+- **@capacitor/share**: Compartir archivos generados (solo móvil)
 - **@capacitor/preferences**: Persistencia de etiquetas
 - **@zxing/library**: Escaneo de códigos (en CamaraEscaneo)
 - **@tabler/icons-vue**: Iconografía
@@ -276,10 +344,11 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 ### 📝 **Notas Importantes**
 
 - Las etiquetas **SÍ se persisten** automáticamente en cada operación
-- El **tamaño de fuente** de la descripción se ajusta automáticamente según longitud
+- El **tamaño de fuente del código** se ajusta automáticamente según longitud
+- El **tamaño de fuente de la descripción** se ajusta automáticamente según longitud
 - Los **códigos de barras** son formato Code 39 (estándar industrial)
-- El **documento PDF** tiene formato personalizado según configuración
-- Actualmente solo hay **una configuración**: 10x15cm (más medidas en el futuro)
+- El **documento PDF** tiene formato personalizado según configuración seleccionada
+- Hay **tres configuraciones disponibles**: 10x15cm, 5x10cm y 2.5x6.7cm
 - Cada etiqueta ocupa **una página completa** del documento
 - Las **copias** se generan como páginas duplicadas consecutivas
 - Los **artículos inexistentes** se pueden agregar (útil para nuevos productos)
@@ -288,3 +357,6 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - La **base de datos Excel** debe estar cargada para autocompletado óptimo
 - Los **tamaños del código de barras** (chico/mediano/grande) son configuración interna
 - El **sistema es modular**: Fácil agregar nuevas configuraciones de tamaño
+- **Funciona en navegador y móvil**: Detección automática de entorno
+- El **tamaño seleccionado** se guarda con cada etiqueta individual
+- Los **nombres de archivo** incluyen el nombre de usuario configurado
