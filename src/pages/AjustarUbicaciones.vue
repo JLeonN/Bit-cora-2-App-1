@@ -15,6 +15,7 @@
       @abrirModalEliminar="abrirModalEliminar"
       @abrirModalEliminarTodas="abrirModalEliminarTodas"
       @enviar-a-etiquetas="enviarAEtiquetas"
+      @enviar-todas-a-etiquetas="enviarTodasAEtiquetas"
     />
 
     <!-- Modal: Editar Ubicación -->
@@ -228,6 +229,32 @@ async function enviarAEtiquetas(ubicacion) {
     Notify.create({
       type: 'negative',
       message: '❌ Error al agregar etiqueta',
+      position: 'top',
+      timeout: 2000,
+    })
+  }
+}
+
+async function enviarTodasAEtiquetas(etiquetas) {
+  try {
+    const etiquetasActuales = await obtenerEtiquetas()
+    const listaActualizada = etiquetasActuales
+      ? [...etiquetasActuales, ...etiquetas]
+      : [...etiquetas]
+
+    await guardarEtiquetas(listaActualizada)
+
+    Notify.create({
+      type: 'positive',
+      message: `✅ ${etiquetas.length} etiquetas agregadas correctamente`,
+      position: 'top',
+      timeout: 2000,
+    })
+  } catch (error) {
+    console.error('[AjustarUbicaciones] Error enviando todas a etiquetas:', error)
+    Notify.create({
+      type: 'negative',
+      message: '❌ Error al agregar etiquetas',
       position: 'top',
       timeout: 2000,
     })

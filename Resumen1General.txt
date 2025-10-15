@@ -280,3 +280,17 @@ src/
   --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
 }
 ---
+1) Si usemos Quasar Notify
+2) Si que sea como un "copiar" 
+3) Manda todo
+
+
+
+El botón de enviar todo teve aparecer si ahi algo pare enviar. Quiero que funcione igual que el de borrar todo
+Me explico?
+
+Otra cosa que quiero es que el mensaje de éxito al momento de enviar una etiqueta sean dos uno para cuando mandas de forma individual y otro para cuando mandes todo lo de la tambala
+
+Con todo esto tienes más preguntas?
+Quieres que te pase algún código o ya tienes todo lo necesario?
+Si tienes que editar mas de un componente dámelos de a uno yo te voy pidiendo 

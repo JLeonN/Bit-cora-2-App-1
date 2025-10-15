@@ -13,6 +13,13 @@
 
     <!-- Botón borrar toda la tabla -->
     <div class="contenedor-boton-borrar-todo" v-if="ubicacionesArray.length > 0">
+      <IconTag
+        class="icono-accion icono-etiqueta"
+        @click="enviarTodasEtiquetas"
+        title="Enviar todas a etiquetas"
+        :stroke="2"
+        style="margin-right: 16px"
+      />
       <IconTrash
         class="icono-accion icono-borrar-todo"
         @click="$emit('abrirModalEliminarTodas')"
@@ -252,4 +259,42 @@ const cantidadArticulosInexistentes = computed(() => {
     return 0
   }
 })
+
+// --- Función para enviar todas las ubicaciones a etiquetas ---
+function enviarTodasEtiquetas() {
+  // Envía todas las ubicaciones con cantidad 1 y tamaño 10x15cm
+  const etiquetas = ubicacionesArray.value.map((item) => ({
+    codigo: item.codigo,
+    descripcion: obtenerNombreArticulo(item.codigo),
+    ubicacion: item.ubicacion,
+    cantidad: 1,
+    tamano: '10x15cm',
+    id: Date.now() + Math.random(), // id único
+  }))
+  // Emitir evento interno
+  // Puedes cambiar el nombre del evento si lo necesitas
+  // El padre debe escuchar 'enviar-todas-a-etiquetas'
+  // Si prefieres otro nombre, avísame
+  if (etiquetas.length > 0) {
+    // Emitir todas las etiquetas
+    // El padre debe manejar la recepción y la notificación
+    // Aquí solo se emite
+    // Puedes agregar lógica de notificación aquí si lo deseas
+    // (lo agrego en el siguiente paso)
+    //
+    // Emitir evento:
+    // $emit('enviar-todas-a-etiquetas', etiquetas)
+    //
+    // Como estamos en <script setup>, usamos defineEmits:
+    emit('enviar-todas-a-etiquetas', etiquetas)
+  }
+}
+
+const emit = defineEmits([
+  'abrirModalEliminarTodas',
+  'enviar-a-etiquetas',
+  'abrirModalEditar',
+  'abrirModalEliminar',
+  'enviar-todas-a-etiquetas', // nuevo evento
+])
 </script>
