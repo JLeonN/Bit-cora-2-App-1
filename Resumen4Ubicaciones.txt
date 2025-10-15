@@ -13,6 +13,7 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Selector de base de datos Excel** en la parte superior
 - **Formulario de ubicaciones** responsive
 - **Tabla de ubicaciones** con acciones
+- **Envío a etiquetas**: Integración directa con módulo de etiquetas
 - **Responsive design** adaptativo
 
 #### **FormularioUbicacion.vue**
@@ -23,19 +24,22 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Scroll automático** al enfocar inputs
 - **Formateo automático** de ubicaciones (espacios → guiones)
 - **Integración con CodigoMasNombre.vue** para autocompletado
-- **✅ Recordar última ubicación** - Carga automáticamente la última ubicación usada
-- **✅ Botón IconTrash** para limpiar ubicación recordada cuando se cambia de zona
-- **✅ Mantener ubicación** entre artículos consecutivos (solo limpia el código)
+- **Recordar última ubicación** - Carga automáticamente la última ubicación usada
+- **Botón IconTrash** para limpiar ubicación recordada cuando se cambia de zona
+- **Mantener ubicación** entre artículos consecutivos (solo limpia el código)
 - **Validaciones** con feedback visual
 - **Botones**: agregar manual o abrir cámara
 
 #### **TablaUbicaciones.vue**
 - **Lista completa** de ubicaciones guardadas
 - **Muestra nombres de artículos** obtenidos de la base de datos Excel
-- **✅ Detección visual de códigos duplicados** (fondo naranja)
+- **Detección visual de códigos duplicados** (fondo naranja)
 - **Contador de códigos duplicados** en header
 - **Columnas**: Nombre y Código, Ubicación, Acciones
-- **Acciones**: editar y eliminar ubicaciones individuales
+- **Acciones**: 
+  - **Enviar a etiquetas** (botón verde IconTag)
+  - **Editar** ubicación
+  - **Eliminar** ubicación individual
 - **Botón limpiar todo** con confirmación
 - **Responsive** con diseño de cards en móvil
 - **Sin ubicaciones antiguas** en UI (solo en Excel exportado)
@@ -51,8 +55,8 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 
 #### **CamaraUbicaciones.vue**
 - **Modal específico** para escaneo rápido de ubicaciones
-- **✅ Recordar ubicación** durante escaneos múltiples
-- **✅ Mantener ubicación** entre artículos (workflow optimizado)
+- **Recordar ubicación** durante escaneos múltiples
+- **Mantener ubicación** entre artículos (workflow optimizado)
 - **Campo de ubicación** editable durante el escaneo
 - **Escaneo continuo** sin cerrar modal
 - **Botones**: finalizar, cancelar
@@ -63,6 +67,24 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Validaciones** completas con feedback visual
 - **Botones**: guardar y cancelar
 - **Integración** con sistema de persistencia
+
+---
+
+### 🔗 **Integración con Etiquetas**
+
+#### **Botón "Enviar a Etiquetas"**
+- **Icono**: IconTag (verde)
+- **Posición**: Primera acción en cada fila
+- **Función**: Envía código, descripción y ubicación al módulo de etiquetas
+- **Datos enviados**:
+  - `codigo`: Código del artículo
+  - `descripcion`: Nombre obtenido de base de datos
+  - `ubicacion`: Ubicación actual (no la antigua)
+  - `cantidad`: 1 (por defecto)
+  - `tamano`: 10x15cm (por defecto)
+- **Sin cambio de página**: Usuario permanece en ubicaciones
+- **Notificación**: Mensaje de confirmación al agregar
+- **Persistencia**: Se guarda automáticamente en almacenamiento de etiquetas
 
 ---
 
@@ -80,7 +102,7 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Acciones**: cambiar archivo, limpiar base de datos
 - **Modal de confirmación** para limpiar base
 - **Preview de datos** (modo desarrollo)
-- **✅ Carga automática** al montar el componente
+- **Carga automática** al montar el componente
 
 #### **LectorExcel.js**
 - **Módulo central** para procesar archivos Excel
@@ -92,20 +114,23 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 **Funciones exportadas**:
 - `cargarArticulosDesdeExcel()`
 - `obtenerArticulosCargados()`
+- `obtenerArticuloPorCodigo(codigo)` - **Nueva función**
 - `obtenerEstadoCarga()`
 - `obtenerInformacionArchivo()`
+- `obtenerUbicacionAntigua(codigo)`
+- `obtenerStock(codigo)`
 - `reiniciarBaseDatos()`
 - `verificarSoporteSelector()`
 - `inicializarBaseDatos()`
 
-**✅ Persistencia automática**:
+**Persistencia automática**:
 - Los artículos se **guardan automáticamente** en `@capacitor/preferences` después de cargar
 - Se **restauran automáticamente** al inicializar el módulo
 - **Limpieza automática** si hay errores o datos corruptos
 - **Sin intervención del usuario** - Una vez cargado, siempre disponible
 - **Inicialización automática** al importar el módulo con `setTimeout`
 
-**Estructura de artículo**: `{ codigo, nombre, ubicacionAntigua }`
+**Estructura de artículo**: `{ codigo, nombre, ubicacionAntigua, stock }`
 
 ---
 
@@ -128,7 +153,7 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Estados**: "Artículos encontrados", "Artículo inexistente", "Base de datos no cargada"
 - **Máximo 3 resultados** por búsqueda
 - **Detección automática** de base cargada/descargada
-- **✅ Compatible con persistencia automática**
+- **Compatible con persistencia automática**
 
 **Emisión de eventos**: `@articulo-seleccionado` retorna `{ codigo, nombre }`
 
@@ -160,7 +185,7 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Generación de Excel** con ubicaciones
 - **Nombre de archivo**: `Ubic Usuario.xlsx`
 - **Nombre de hoja**: Nombre del usuario
-- **✅ Anchos optimizados** para todas las columnas según contenido real
+- **Anchos optimizados** para todas las columnas según contenido real
 
 **Columnas del Excel**:
 - **A - Código**: Código del artículo (ancho optimizado)
@@ -246,6 +271,7 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - **Confirmaciones** antes de acciones destructivas
 - **Botón IconTrash** para limpiar ubicación recordada
 - **Visual feedback** para códigos duplicados
+- **Botón verde IconTag** para enviar a etiquetas
 
 ---
 
@@ -269,3 +295,5 @@ Sistema completo para gestionar ubicaciones de artículos con base de datos Exce
 - Los **códigos duplicados** se detectan automáticamente
 - El **sistema de emojis** en Excel facilita identificación rápida de problemas
 - El **formateo automático** convierte espacios en guiones (A 1 2 → A-1-2)
+- El **botón de etiquetas** permite workflow rápido: ubicar y etiquetar sin cambiar de página
+- Las **etiquetas enviadas** usan la ubicación actual, no la de la base de datos

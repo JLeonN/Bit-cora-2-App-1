@@ -72,6 +72,11 @@ La aplicación se divide en 5 módulos principales:
 - **LectorExcel.js**: Procesa y persiste artículos automáticamente
 - **Persistencia automática**: Los datos se guardan en `@capacitor/preferences`
 - **Inicialización automática**: Se carga al iniciar la aplicación
+- **Funciones principales**: 
+  - `obtenerArticulosCargados()`: Retorna array de artículos
+  - `obtenerArticuloPorCodigo(codigo)`: Retorna artículo completo
+  - `obtenerUbicacionAntigua(codigo)`: Retorna ubicación antigua
+  - `obtenerStock(codigo)`: Retorna stock
 
 **Ver detalle completo en:** `ResumenUbicaciones.txt`
 
@@ -87,6 +92,22 @@ La aplicación se divide en 5 módulos principales:
 - **Compatible con persistencia automática**
 
 **Ver detalle completo en:** `ResumenUbicaciones.txt`
+
+---
+
+### 🔗 **Integración entre Módulos**
+
+#### **Ubicaciones → Etiquetas**
+- **Botón verde IconTag** en cada fila de TablaUbicaciones
+- **Envío directo**: Código, descripción y ubicación se envían a etiquetas
+- **Notificación**: Feedback visual al agregar etiqueta
+- **Sin cambio de página**: Usuario continúa en ubicaciones
+- **Datos actualizados**: Usa ubicación actual, no la de base de datos
+
+#### **Sistema de Polling en Etiquetas**
+- **Verificación cada 2 segundos**: Detecta etiquetas agregadas desde ubicaciones
+- **Actualización automática**: Lista se actualiza sin intervención del usuario
+- **Convivencia de fuentes**: Etiquetas manuales + enviadas desde ubicaciones
 
 ---
 

@@ -20,6 +20,7 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Modal de confirmación** para eliminar etiquetas
 - **Persistencia automática** de etiquetas
 - **Responsive design** adaptativo
+- **Sistema de polling**: Verifica cada 2 segundos si hay nuevas etiquetas desde ubicaciones
 
 #### **FormularioEtiqueta.vue**
 - **Formulario completo** para agregar etiquetas
@@ -32,8 +33,8 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Integración con CamaraEscaneo.vue** para múltiples escaneos
 - **Autocompletado completo**: Al seleccionar artículo del buscador, autocompleta descripción y ubicación
 - **Validaciones** con feedback visual y animaciones de error
-- **✅ Formateo automático** de ubicaciones (espacios → guiones)
-- **✅ Botón IconTrash** para limpiar ubicación cuando cambia de zona
+- **Formateo automático** de ubicaciones (espacios → guiones)
+- **Botón IconTrash** para limpiar ubicación cuando cambia de zona
 
 #### **TablaEtiquetas.vue**
 - **Lista completa** de etiquetas agregadas
@@ -47,10 +48,10 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
   - **Ubicación**: Ubicación del artículo
   - **Cantidad**: Control inline con botones +/-
   - **Acciones**: Editar y eliminar
-- **✅ Detección de códigos duplicados** (fondo naranja)
-- **✅ Detección de artículos inexistentes** (fondo rojo)
+- **Detección de códigos duplicados** (fondo naranja)
+- **Detección de artículos inexistentes** (fondo rojo)
 - **Controles de cantidad inline**: Incrementar/decrementar sin modal
-- **✅ Modal personalizado para confirmar limpieza**: Usa ModalEliminar en lugar de confirm() nativo
+- **Modal personalizado para confirmar limpieza**: Usa ModalEliminar en lugar de confirm() nativo
 - **Botón limpiar todo** con confirmación
 - **Responsive** con diseño de cards en móvil
 - **Integración con base de datos** para mostrar nombres
@@ -64,6 +65,25 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 ---
 
+### 🔗 **Integración con Ubicaciones**
+
+#### **Sistema de Recepción de Etiquetas**
+- **Polling cada 2 segundos**: Detecta cambios en almacenamiento
+- **Actualización automática**: Lista se actualiza sin intervención del usuario
+- **Convivencia de fuentes**: Etiquetas manuales + enviadas desde ubicaciones
+- **Sin distinción visual**: Ambas fuentes se muestran igual en la tabla
+- **Persistencia compartida**: Usa mismo almacenamiento (`usoAlmacenamientoEtiquetas.js`)
+
+**Datos recibidos desde ubicaciones**:
+- `codigo`: Código del artículo
+- `descripcion`: Nombre obtenido de base de datos
+- `ubicacion`: Ubicación actual (no la antigua)
+- `cantidad`: 1 (por defecto)
+- `tamano`: 10x15cm (por defecto)
+- `id`: Timestamp único
+
+---
+
 ### 📄 **Sistema de Generación de Documentos**
 
 #### **GeneradorEtiquetasPDF.js**
@@ -72,9 +92,9 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - **Configuración modular**: Usa archivos de configuración externos
 - **Dimensiones personalizadas**: Cada configuración define tamaño de página
 - **Layout adaptativo**: Ajusta elementos según configuración
-- **✅ Detección de entorno**: Navegador web vs app móvil
-- **✅ Descarga directa en navegador**: Sin usar Capacitor Filesystem
-- **✅ Nombres personalizados**: Integra nombre de usuario desde configuración
+- **Detección de entorno**: Navegador web vs app móvil
+- **Descarga directa en navegador**: Sin usar Capacitor Filesystem
+- **Nombres personalizados**: Integra nombre de usuario desde configuración
 
 **Contenido por etiqueta** (una página por etiqueta):
 1. **Código del artículo**: 
@@ -89,12 +109,6 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
    - **Máximo de líneas configurable**
    - **7 niveles de tamaño**: muy corta, corta, mediana, larga, muy larga, extra larga, gigante
 4. **Ubicación**: Posición configurable (por defecto esquina inferior izquierda)
-
-**Sistema de tamaño automático de descripción**:
-- Evalúa longitud del texto
-- Aplica tamaños según rangos configurados
-- Sistema de 7 niveles (muy corta a gigante)
-- Posicionamiento dinámico según cantidad de líneas
 
 **Características avanzadas**:
 - **Salto de página** automático entre etiquetas
@@ -116,54 +130,27 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Tamaño**: 10x15 cm (100mm x 150mm)
 - **Orientación**: Horizontal (landscape)
 - **Márgenes**: 4mm
-- **Código de artículo**:
-  - Tamaños adaptativos: 50pt, 40pt, 36pt, 25pt
-  - Posición Y: 15mm
-- **Código de barras**: 
-  - Dimensiones: 90mm x 17mm
-  - Posición Y: 16mm
-  - Tamaño interno: 'grande'
-- **Descripción**:
-  - Tamaños: 60pt → 24pt (7 niveles)
-  - Ancho máximo: 140mm
-  - Máximo líneas: 7
-  - Interlineado: factor 0.35
+- **Código de artículo**: Tamaños adaptativos: 50pt, 40pt, 36pt, 25pt
+- **Código de barras**: Dimensiones: 90mm x 17mm, Tamaño interno: 'grande'
+- **Descripción**: Tamaños: 60pt → 24pt (7 niveles), Ancho máximo: 140mm, Máximo líneas: 7
 - **Ubicación**: 10pt, esquina inferior izquierda
 
 #### **ConfiguracionEtiqueta5x10.js**
 - **Tamaño**: 5x10 cm (50mm x 100mm)
 - **Orientación**: Horizontal (landscape)
 - **Márgenes**: 2.5mm
-- **Código de artículo**:
-  - Tamaños adaptativos: 25pt, 20pt, 18pt, 12pt
-  - Posición Y: 7.5mm
-- **Código de barras**: 
-  - Dimensiones: 73mm x 11mm
-  - Posición Y: 10.5mm
-  - Tamaño interno: 'mediano'
-- **Descripción**:
-  - Tamaños: 30pt → 12pt (7 niveles)
-  - Ancho máximo: 93mm
-  - Máximo líneas: 5
-  - Interlineado: factor 0.35
+- **Código de artículo**: Tamaños adaptativos: 25pt, 20pt, 18pt, 12pt
+- **Código de barras**: Dimensiones: 73mm x 11mm, Tamaño interno: 'mediano'
+- **Descripción**: Tamaños: 30pt → 12pt (7 niveles), Ancho máximo: 93mm, Máximo líneas: 5
 - **Ubicación**: 6.5pt, esquina inferior izquierda
 
 #### **ConfiguracionEtiqueta2.5x6.7.js**
 - **Tamaño**: 2.5x6.7 cm (25mm x 67mm)
 - **Orientación**: Horizontal (landscape)
 - **Márgenes**: 1.5mm
-- **Código de artículo**:
-  - Tamaños adaptativos: 12pt, 10pt, 9pt, 7pt
-  - Posición Y: 4mm
-- **Código de barras**: 
-  - Dimensiones: 50mm x 6mm
-  - Posición Y: 5.5mm
-  - Tamaño interno: 'chico'
-- **Descripción**:
-  - Tamaños: 15pt → 6pt (7 niveles)
-  - Ancho máximo: 62mm
-  - Máximo líneas: 4
-  - Interlineado: factor 0.35
+- **Código de artículo**: Tamaños adaptativos: 12pt, 10pt, 9pt, 7pt
+- **Código de barras**: Dimensiones: 50mm x 6mm, Tamaño interno: 'chico'
+- **Descripción**: Tamaños: 15pt → 6pt (7 niveles), Ancho máximo: 62mm, Máximo líneas: 4
 - **Ubicación**: 4.5pt, esquina inferior izquierda
 
 **Características comunes de todas las configuraciones**:
@@ -257,6 +244,7 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - Se guarda al eliminar etiqueta
 - Se carga automáticamente al entrar a la página
 - Permite continuar trabajo en sesiones posteriores
+- **Recibe etiquetas desde ubicaciones** mediante polling
 
 **Formato de datos guardados**: `{ id, codigo, descripcion, ubicacion, cantidad, tamano }`
 
@@ -266,9 +254,6 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 
 #### **Nombre de archivo**
 - **Formato**: `Etiquetas - [nombre_usuario] - [id_configuracion].pdf`
-- **Ejemplo 10x15**: `Etiquetas - Leo - 10x15cm.pdf`
-- **Ejemplo 5x10**: `Etiquetas - Leo - 5x10cm.pdf`
-- **Ejemplo 2.5x6.7**: `Etiquetas - Leo - 2.5x6.7cm.pdf`
 
 #### **Proceso de exportación**:
 1. Usuario click en botón "Enviar"
@@ -326,6 +311,7 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Confirmaciones** antes de acciones destructivas
 - **Iconos consistentes** con @tabler/icons-vue
 - **Persistencia visual**: Las etiquetas permanecen después de generar PDF
+- **Actualización automática**: Polling detecta etiquetas agregadas desde ubicaciones
 
 ---
 
@@ -360,3 +346,5 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Funciona en navegador y móvil**: Detección automática de entorno
 - El **tamaño seleccionado** se guarda con cada etiqueta individual
 - Los **nombres de archivo** incluyen el nombre de usuario configurado
+- El **polling cada 2 segundos** permite recibir etiquetas desde ubicaciones sin recargar página
+- Las **etiquetas de ambas fuentes** conviven en la misma lista sin distinción visual
