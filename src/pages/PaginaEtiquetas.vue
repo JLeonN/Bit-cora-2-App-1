@@ -4,21 +4,24 @@
     <div class="header-etiquetas">
       <h2 class="titulo-tabla">Etiquetas</h2>
 
-      <div class="selector-tamano">
-        <span class="label-tamano">Tamaño:</span>
-        <label class="opcion-tamano">
-          <input type="radio" name="tamano" value="10x15cm" v-model="tamanoSeleccionado" checked />
-          <span>10x15 cm</span>
-        </label>
-        <label class="opcion-tamano">
-          <input type="radio" name="tamano" value="5x10cm" v-model="tamanoSeleccionado" />
-          <span>5x10 cm</span>
-        </label>
-        <label class="opcion-tamano">
-          <input type="radio" name="tamano" value="2.5x6.7cm" v-model="tamanoSeleccionado" />
-          <span>2.5x6.7 cm</span>
-        </label>
-      </div>
+      <!--
+  <div class="selector-tamano">
+    <span class="label-tamano">Tamaño:</span>
+    <label class="opcion-tamano">
+      <input type="radio" name="tamano" value="10x15cm" v-model="tamanoSeleccionado" checked />
+      <span>10x15 cm</span>
+    </label>
+    <label class="opcion-tamano">
+      <input type="radio" name="tamano" value="5x10cm" v-model="tamanoSeleccionado" />
+      <span>5x10 cm</span>
+    </label>
+    <label class="opcion-tamano">
+      <input type="radio" name="tamano" value="2.5x6.7cm" v-model="tamanoSeleccionado" />
+      <span>2.5x6.7 cm</span>
+    </label>
+  </div>
+  -->
+      <p class="texto-info-tamano">Las etiquetas se generan en formato <strong>10x15 cm</strong></p>
     </div>
 
     <!-- FORMULARIO DE ENTRADA -->
@@ -138,14 +141,13 @@ async function verificarNuevasEtiquetas() {
 
 // --- FUNCIONES ---
 function agregarEtiqueta(etiqueta) {
-  const etiquetaConTamano = {
+  const etiquetaConId = {
     ...etiqueta,
-    tamano: tamanoSeleccionado.value,
     id: Date.now(),
   }
 
-  listaEtiquetas.value.push(etiquetaConTamano)
-  console.log('[PaginaEtiquetas] Etiqueta agregada:', etiquetaConTamano)
+  listaEtiquetas.value.push(etiquetaConId)
+  console.log('[PaginaEtiquetas] Etiqueta agregada:', etiquetaConId)
 
   persistirEtiquetas()
 }
@@ -210,11 +212,13 @@ async function generarPDF() {
       spinnerColor: 'primary',
     })
 
+    console.log('🔍 Tamaño seleccionado:', tamanoSeleccionado.value)
     console.log('[PaginaEtiquetas] Generando PDF con', listaEtiquetas.value.length, 'etiquetas')
 
     const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
 
-    console.log('[PaginaEtiquetas] Usando configuración:', configuracion.nombre)
+    console.log('📐 Configuración usada:', configuracion.nombre)
+    console.log('📏 Dimensiones:', configuracion.pagina)
 
     const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value, configuracion)
 
@@ -400,5 +404,18 @@ watch(
   .titulo-tabla {
     font-size: 1.8rem;
   }
+}
+.texto-info-tamano {
+  text-align: center;
+  color: var(--color-texto-secundario);
+  font-size: 0.95rem;
+  margin: 0;
+  padding: 0.5rem;
+  background: var(--color-fondo);
+  border-radius: 6px;
+}
+.texto-info-tamano strong {
+  color: var(--color-primario);
+  font-weight: 600;
 }
 </style>
