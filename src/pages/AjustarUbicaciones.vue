@@ -194,7 +194,7 @@ async function agregarUbicacion(datosNuevos) {
   }
 }
 
-// --- ENVIAR A ETIQUETAS ---
+// Mensaje específico para envío individual
 async function enviarAEtiquetas(ubicacion) {
   try {
     const articulo = obtenerArticuloPorCodigo(ubicacion.codigo)
@@ -218,9 +218,10 @@ async function enviarAEtiquetas(ubicacion) {
 
     console.log('[AjustarUbicaciones] Etiqueta enviada:', nuevaEtiqueta)
 
+    // Mensaje específico para envío individual
     Notify.create({
       type: 'positive',
-      message: '✅ Etiqueta agregada correctamente',
+      message: '✅ Etiqueta enviada correctamente',
       position: 'top',
       timeout: 2000,
     })
@@ -228,13 +229,14 @@ async function enviarAEtiquetas(ubicacion) {
     console.error('[AjustarUbicaciones] Error enviando a etiquetas:', error)
     Notify.create({
       type: 'negative',
-      message: '❌ Error al agregar etiqueta',
+      message: '❌ Error al enviar etiqueta',
       position: 'top',
       timeout: 2000,
     })
   }
 }
 
+// Mensaje específico para envío masivo
 async function enviarTodasAEtiquetas(etiquetas) {
   try {
     const etiquetasActuales = await obtenerEtiquetas()
@@ -244,17 +246,18 @@ async function enviarTodasAEtiquetas(etiquetas) {
 
     await guardarEtiquetas(listaActualizada)
 
+    // Mensaje específico para envío masivo
     Notify.create({
       type: 'positive',
-      message: `✅ ${etiquetas.length} etiquetas agregadas correctamente`,
+      message: `✅ ${etiquetas.length} etiquetas enviadas correctamente`,
       position: 'top',
-      timeout: 2000,
+      timeout: 2500,
     })
   } catch (error) {
     console.error('[AjustarUbicaciones] Error enviando todas a etiquetas:', error)
     Notify.create({
       type: 'negative',
-      message: '❌ Error al agregar etiquetas',
+      message: '❌ Error al enviar etiquetas',
       position: 'top',
       timeout: 2000,
     })

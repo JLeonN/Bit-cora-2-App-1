@@ -44,6 +44,8 @@
           :class="{
             'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(item.codigo)),
             'fila-articulo-inexistente': esArticuloInexistente(item.codigo),
+            'animacion-envio-individual': filaAnimandose === index,
+            'animacion-envio-todas': todasAnimandose,
           }"
         >
           <td class="celda-nombre-codigo">
@@ -74,7 +76,7 @@
             <div class="acciones-ubicacion">
               <IconTag
                 class="icono-ubicacion icono-etiqueta"
-                @click="$emit('enviar-a-etiquetas', item)"
+                @click="enviarEtiquetaIndividual(item, index)"
                 title="Enviar a etiquetas"
                 :stroke="2"
               />
@@ -102,7 +104,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { IconPencil, IconTrash, IconTag } from '@tabler/icons-vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
@@ -113,6 +115,10 @@ const props = defineProps({
     default: () => [],
   },
 })
+
+// Refs para controlar animaciones
+const filaAnimandose = ref(null)
+const todasAnimandose = ref(false)
 
 // Computed para asegurar que siempre sea un array válido
 const ubicacionesArray = computed(() => {
@@ -260,34 +266,44 @@ const cantidadArticulosInexistentes = computed(() => {
   }
 })
 
-// --- Función para enviar todas las ubicaciones a etiquetas ---
+// Función para enviar etiqueta individual con animación
+function enviarEtiquetaIndividual(item, index) {
+  // Activar animación
+  filaAnimandose.value = index
+
+  // Emitir evento
+  emit('enviar-a-etiquetas', item)
+
+  // Desactivar animación después de 500ms
+  setTimeout(() => {
+    filaAnimandose.value = null
+  }, 500)
+}
+
+// Función para enviar todas las etiquetas con animación
 function enviarTodasEtiquetas() {
-  // Envía todas las ubicaciones con cantidad 1 y tamaño 10x15cm
+  // Activar animación de toda la tabla
+  todasAnimandose.value = true
+
+  // Crear array de etiquetas
   const etiquetas = ubicacionesArray.value.map((item) => ({
     codigo: item.codigo,
     descripcion: obtenerNombreArticulo(item.codigo),
     ubicacion: item.ubicacion,
     cantidad: 1,
     tamano: '10x15cm',
-    id: Date.now() + Math.random(), // id único
+    id: Date.now() + Math.random(),
   }))
-  // Emitir evento interno
-  // Puedes cambiar el nombre del evento si lo necesitas
-  // El padre debe escuchar 'enviar-todas-a-etiquetas'
-  // Si prefieres otro nombre, avísame
+
+  // Emitir evento
   if (etiquetas.length > 0) {
-    // Emitir todas las etiquetas
-    // El padre debe manejar la recepción y la notificación
-    // Aquí solo se emite
-    // Puedes agregar lógica de notificación aquí si lo deseas
-    // (lo agrego en el siguiente paso)
-    //
-    // Emitir evento:
-    // $emit('enviar-todas-a-etiquetas', etiquetas)
-    //
-    // Como estamos en <script setup>, usamos defineEmits:
     emit('enviar-todas-a-etiquetas', etiquetas)
   }
+
+  // Desactivar animación después de 600ms
+  setTimeout(() => {
+    todasAnimandose.value = false
+  }, 600)
 }
 
 const emit = defineEmits([
@@ -295,6 +311,6 @@ const emit = defineEmits([
   'enviar-a-etiquetas',
   'abrirModalEditar',
   'abrirModalEliminar',
-  'enviar-todas-a-etiquetas', // nuevo evento
+  'enviar-todas-a-etiquetas',
 ])
 </script>
