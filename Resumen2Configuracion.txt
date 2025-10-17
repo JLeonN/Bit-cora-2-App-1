@@ -1,6 +1,6 @@
 ### **Módulo de Configuración - Bitácora II**
 
-Sistema completo para gestionar la configuración personalizada del usuario y nombres personalizados en archivos exportados.
+Sistema completo para gestionar la configuración personalizada del usuario, nombres personalizados en archivos exportados y tutoriales integrados.
 
 ---
 
@@ -10,22 +10,51 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 - **Página principal** de configuración
 - **Ruta**: `/configuracion`
 - **Accesible desde**: Botón en footer del drawer en MainLayout
-- **Contiene**: ConfiguracionUsuario.vue
+- **Secciones con tarjetas colapsables**:
+  - Información Personal (expandida por defecto)
+  - Tutoriales y Ayuda (colapsada por defecto)
 - **Responsive design** adaptativo
 
 #### **ConfiguracionUsuario.vue**
 - **Formulario completo** para gestionar nombre de usuario
 - **Input limpio** con placeholder dinámico (no pre-rellena el campo)
-- **Placeholder**: "Ingresá tu nombre de usuario"
-- **Validaciones**:
-  - Mínimo 2 caracteres
-  - Debe ser diferente al actual
-  - Feedback visual de errores
+- **Validaciones**: Mínimo 2 caracteres, debe ser diferente al actual
 - **Botón guardar**: Persiste el nuevo nombre
-- **Botón resetear**: Abre modal de confirmación para volver a "Usua des"
-- **Modal de confirmación**: Usa ModalEliminar.vue (componente reutilizable)
+- **Botón resetear**: Abre modal de confirmación para volver a "Usua desconocido"
+- **Sección tutorial integrada**: Explica para qué sirve el nombre (aparece en archivos exportados)
 - **Feedback visual**: Notificaciones de éxito/error con Quasar Notify
 - **Persistencia automática**: Guarda inmediatamente en @capacitor/preferences
+
+#### **TarjetaSeccion.vue**
+- **Componente reutilizable** para secciones colapsables
+- **Props**: título, icono, expandidaPorDefecto
+- **Animaciones suaves** de expansión/colapso
+- **Efectos hover** y transiciones
+- **Slot** para contenido personalizado
+
+#### **SeccionTutoriales.vue**
+- **Contiene acordeones** de los 3 tutoriales
+- **Solo uno expandido** a la vez
+- **Iconos consistentes** con el drawer (IconTableRow, IconMapRoute, IconTag)
+- **Importa**: TutorialPedidos, TutorialUbicaciones, TutorialEtiquetas
+
+#### **TutorialPedidos.vue**
+- **Tutorial completo** del módulo de Pedidos
+- **4 pasos básicos**: Agregar, elegir método, ver pedidos, exportar
+- **3 tips útiles**: Sistema de logros, reseteo automático, edición rápida
+- **Iconos visuales** para mejor comprensión
+
+#### **TutorialUbicaciones.vue**
+- **Tutorial completo** del módulo de Ubicaciones
+- **5 pasos básicos**: Cargar base de datos, agregar ubicaciones, recordar ubicación, enviar a etiquetas, exportar
+- **4 tips útiles**: Buscador inteligente, botón de limpieza, códigos duplicados, sistema de emojis
+- **Mención a integración** con etiquetas
+
+#### **TutorialEtiquetas.vue**
+- **Tutorial completo** del módulo de Etiquetas
+- **5 pasos básicos**: Tamaño disponible (10x15cm), agregar etiquetas, autocompletado, ajustar copias, generar PDF
+- **5 tips útiles**: Code 39, tamaños automáticos, códigos duplicados, artículos nuevos, persistencia
+- **Explicación de características únicas**
 
 ---
 
@@ -35,7 +64,7 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 - **Módulo dedicado** para persistir configuración de usuario
 - **Almacenamiento**: @capacitor/preferences
 - **Key**: `"configuracionUsuario"`
-- **Valor por defecto**: "Usua des"
+- **Valor por defecto**: "Usua desconocido"
 
 **Funciones principales**:
 - `guardarConfiguracion(config)`
@@ -45,12 +74,6 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 - `obtenerNombreUsuario()`
 
 **Estructura de configuración**: `{ nombreUsuario: "string" }`
-
-**Características**:
-- **Persistencia automática**: Los cambios se guardan inmediatamente
-- **Recuperación automática**: Se carga al iniciar la aplicación
-- **Valores por defecto**: Si no hay configuración guardada, usa "Usua des"
-- **Validación**: Verifica que los datos sean válidos antes de guardar
 
 ---
 
@@ -64,7 +87,6 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 #### **MainLayout.vue - Drawer (Avatar)**
 - **Avatar dinámico**: `@{{ nombreUsuario }}`
 - **Posición**: En la parte superior del drawer
-- **Estilo**: Avatar circular con fondo primario
 
 #### **MainLayout.vue - Drawer (Botón Configuración)**
 - **Posición**: Footer del drawer
@@ -89,13 +111,31 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 - **Nombre de hoja**: Solo el nombre del usuario
 
 #### **Etiquetas**
-- **Formato**: `etiquetas_[timestamp].pdf`
-- **Sin nombre de usuario** (es un documento PDF, no Excel)
+- **Formato**: `Etiquetas - [Usuario] - tamaño.pdf`
 
 **Implementación en exportadores**:
 - ExportarPedidosExcel.js → Importa `obtenerNombreUsuario()`
 - ExportarUbicacionesExcel.js → Importa `obtenerNombreUsuario()`
-- Si no hay nombre configurado, usan "Usua des" por defecto
+- GeneradorEtiquetasPDF.js → Importa `obtenerNombreUsuario()`
+- Si no hay nombre configurado, usan "Usua desconocido" por defecto
+
+---
+
+### 🎨 **Sistema de Tutoriales**
+
+#### **Características**
+- **Acordeones internos** dentro de la sección de tutoriales
+- **Pasos numerados** con círculos visuales
+- **Iconos descriptivos** en cada paso
+- **Tips destacados** con fondo coloreado y borde izquierdo
+- **Responsive** adaptativo
+- **Todos colapsados** por defecto
+
+#### **Contenido de tutoriales**
+- **Descripción breve** del módulo
+- **Pasos básicos** con numeración visual
+- **Tips útiles** con iconos específicos
+- **Mención de integraciones** entre módulos
 
 ---
 
@@ -109,35 +149,11 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 
 ---
 
-### 🎨 **Características de UI/UX**
-
-#### **Formulario de configuración**
-- **Diseño limpio**: Input con placeholder dinámico
-- **Sin pre-llenado**: El campo está vacío hasta que escribís
-- **Validaciones en tiempo real**: Muestra errores inmediatamente
-- **Botones claros**: "Guardar" (verde) y "Resetear nombre" (rojo)
-- **Modal de confirmación**: Previene reseteos accidentales
-- **Notificaciones**: Feedback visual inmediato
-
-#### **Botón en drawer**
-- **Icono de engranaje**: IconSettings rotando al hover
-- **Posición fija**: Footer del drawer
-- **Separación responsive**: Se adapta a móviles
-- **Transición suave**: Animación de rotación 0.3s
-
-#### **Header dinámico**
-- **Actualización automática**: Polling cada 5s
-- **Sin recargar página**: Reactivo con Vue
-- **Visible siempre**: En todas las páginas de la app
-
----
-
 ### 🔧 **Dependencias Específicas**
 
 - **@capacitor/preferences**: Persistencia de datos
 - **Quasar Notify**: Notificaciones de éxito/error
-- **@tabler/icons-vue**: Iconografía (IconSettings)
-- **Vue Router**: Navegación a `/configuracion`
+- **@tabler/icons-vue**: Iconografía completa
 
 ---
 
@@ -146,9 +162,11 @@ Sistema completo para gestionar la configuración personalizada del usuario y no
 - La configuración se **carga automáticamente** al iniciar la app
 - El **polling cada 5 segundos** asegura que el nombre esté siempre actualizado
 - El **modal de confirmación** previene reseteos accidentales
-- El **valor por defecto** "Usua des" garantiza que siempre haya un nombre
+- El **valor por defecto** "Usua desconocido" garantiza que siempre haya un nombre
 - Los **archivos exportados** usan el nombre configurado automáticamente
 - La **validación de mínimo 2 caracteres** evita nombres muy cortos
 - El **placeholder dinámico** mejora la UX al no pre-llenar el campo
 - El **botón en el drawer** es accesible desde cualquier página
-- La **estructura JSON** facilita agregar más configuraciones en el futuro
+- La **estructura de tarjetas** es extensible para futuras secciones (Preferencias)
+- Los **tutoriales integrados** reducen la curva de aprendizaje
+- **Información Personal expandida** por defecto para acceso rápido

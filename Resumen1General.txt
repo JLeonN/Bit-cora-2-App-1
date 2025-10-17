@@ -29,10 +29,13 @@ La aplicación se divide en 5 módulos principales:
 
 ### ✅ **Sistema de Configuración de Usuario (breve)**
 
-**Sistema completo de configuración personalizada del usuario.**
+**Sistema completo de configuración personalizada del usuario con tutoriales integrados.**
 
-- **PaginaConfiguracion.vue**: Página principal de configuración
-- **ConfiguracionUsuario.vue**: Formulario para gestionar nombre de usuario
+- **PaginaConfiguracion.vue**: Página principal con secciones colapsables
+- **ConfiguracionUsuario.vue**: Formulario para gestionar nombre de usuario con guía integrada
+- **TarjetaSeccion.vue**: Componente reutilizable para secciones colapsables
+- **SeccionTutoriales.vue**: Acordeones con tutoriales de Pedidos, Ubicaciones y Etiquetas
+- **Tutoriales individuales**: Pasos básicos y tips para cada módulo
 - **usoAlmacenamientoConfiguracion.js**: Persistencia de configuración
 - **Integración en MainLayout**: Nombre dinámico en header y drawer
 - **Nombres personalizados**: Todos los archivos exportados usan el nombre configurado

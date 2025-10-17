@@ -1,7 +1,5 @@
 <template>
   <div class="configuracion-usuario">
-    <h3 class="titulo-seccion">Información Personal</h3>
-
     <form @submit.prevent="guardarNombre" class="formulario-config">
       <div class="modal-campo">
         <label for="nombreUsuario">Tu nombre</label>
@@ -49,6 +47,38 @@
       {{ mensajeEstado.texto }}
     </div>
 
+    <!-- NUEVA SECCIÓN: Descripción/Tutorial -->
+    <div class="seccion-tutorial">
+      <div class="tutorial-header">
+        <IconInfoCircle :stroke="2" class="icono-info" />
+        <h4 class="tutorial-titulo">¿Para qué sirve tu nombre?</h4>
+      </div>
+      <div class="tutorial-contenido">
+        <p class="tutorial-parrafo">
+          El nombre que configures aquí se usará para
+          <strong>personalizar todos los archivos</strong> que exportes desde la aplicación:
+        </p>
+        <ul class="tutorial-lista">
+          <li>
+            <IconFileSpreadsheet :stroke="2" class="icono-lista" />
+            <span><strong>Pedidos:</strong> "Pedi [Tu Nombre] - fecha.xlsx"</span>
+          </li>
+          <li>
+            <IconFileSpreadsheet :stroke="2" class="icono-lista" />
+            <span><strong>Ubicaciones:</strong> "Ubic [Tu Nombre].xlsx"</span>
+          </li>
+          <li>
+            <IconFileTypePdf :stroke="2" class="icono-lista" />
+            <span><strong>Etiquetas:</strong> "Etiquetas - [Tu Nombre] - tamaño.pdf"</span>
+          </li>
+        </ul>
+        <p class="tutorial-nota">
+          💡 <strong>Tip:</strong> Usá un nombre corto y descriptivo para identificar fácilmente tus
+          archivos.
+        </p>
+      </div>
+    </div>
+
     <!-- Modal de confirmación para resetear -->
     <ModalEliminar
       v-if="mostrarModal"
@@ -67,6 +97,7 @@ import {
   limpiarConfiguracionUsuario,
 } from '../BaseDeDatos/usoAlmacenamientoConfiguracion'
 import ModalEliminar from '../Modales/ModalEliminar.vue'
+import { IconInfoCircle, IconFileSpreadsheet, IconFileTypePdf } from '@tabler/icons-vue'
 
 const nombreEditado = ref('')
 const nombreActual = ref('Usua desconocido')
@@ -151,14 +182,7 @@ onMounted(() => {
 
 <style scoped>
 .configuracion-usuario {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 20px;
-}
-.titulo-seccion {
-  color: var(--color-texto-principal);
-  margin-bottom: 20px;
-  text-align: center;
+  width: 100%;
 }
 .formulario-config {
   background: var(--color-superficie);
@@ -219,6 +243,7 @@ onMounted(() => {
   border-radius: 8px;
   text-align: center;
   font-weight: 500;
+  margin-bottom: 20px;
 }
 .mensaje-estado.exito {
   background: var(--color-exito);
@@ -228,13 +253,82 @@ onMounted(() => {
   background: var(--color-error);
   color: white;
 }
+/* NUEVA SECCIÓN: Tutorial */
+.seccion-tutorial {
+  background: var(--color-fondo);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+}
+.tutorial-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.icono-info {
+  color: var(--color-acento);
+  flex-shrink: 0;
+}
+.tutorial-titulo {
+  margin: 0;
+  color: var(--color-texto-principal);
+  font-size: 16px;
+  font-weight: 600;
+}
+.tutorial-contenido {
+  color: var(--color-texto-secundario);
+  line-height: 1.6;
+}
+.tutorial-parrafo {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+}
+.tutorial-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 15px 0;
+}
+.tutorial-lista li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+.icono-lista {
+  color: var(--color-primario);
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+.tutorial-nota {
+  margin: 0;
+  padding: 12px;
+  background: rgba(30, 136, 229, 0.1);
+  border-left: 3px solid var(--color-primario);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--color-texto-principal);
+}
 /* Responsive */
 @media (max-width: 600px) {
   .configuracion-usuario {
-    padding: 15px;
+    padding: 0;
   }
   .contenedor-botones-config {
     flex-direction: column;
+  }
+  .formulario-config,
+  .seccion-tutorial {
+    padding: 15px;
+  }
+  .tutorial-titulo {
+    font-size: 14px;
+  }
+  .tutorial-parrafo,
+  .tutorial-lista li {
+    font-size: 13px;
   }
 }
 </style>
