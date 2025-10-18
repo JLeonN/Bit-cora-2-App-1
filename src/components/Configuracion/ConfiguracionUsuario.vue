@@ -47,6 +47,23 @@
       {{ mensajeEstado.texto }}
     </div>
 
+    <!-- NUEVA SECCIÓN: Botón VIP -->
+    <div class="seccion-vip">
+      <button v-if="!esUsuarioVIP" type="button" class="boton-vip" @click="abrirDialogVIP">
+        <IconDiamond :stroke="2" class="icono-vip" />
+        <span>Acceso Premium</span>
+      </button>
+
+      <!-- Estado VIP activo -->
+      <div v-else class="vip-activo">
+        <IconCircleCheck :stroke="2" class="icono-check" />
+        <span class="texto-vip-activo">Acceso Premium Activo</span>
+        <button type="button" class="boton-desactivar-vip" @click="desactivarVIP">
+          Desactivar
+        </button>
+      </div>
+    </div>
+
     <!-- NUEVA SECCIÓN: Descripción/Tutorial -->
     <div class="seccion-tutorial">
       <div class="tutorial-header">
@@ -86,6 +103,53 @@
       @cerrar="cerrarModal"
       @confirmar="confirmarLimpieza"
     />
+
+    <!-- NUEVO: Dialog para ingresar clave VIP -->
+    <q-dialog v-model="dialogVIPAbierto" persistent>
+      <q-card class="dialog-vip">
+        <q-card-section class="dialog-header">
+          <div class="dialog-titulo">
+            <IconDiamond :stroke="2" class="icono-dialog" />
+            <h3>Acceso Premium</h3>
+          </div>
+        </q-card-section>
+
+        <q-card-section>
+          <p class="dialog-descripcion">
+            Ingresá tu clave de acceso premium para disfrutar de la aplicación sin publicidad.
+          </p>
+
+          <div class="modal-campo">
+            <label for="claveVIP">Clave de acceso</label>
+            <input
+              id="claveVIP"
+              type="text"
+              v-model="claveIngresada"
+              placeholder="Ingresa tu clave premium"
+              @keyup.enter="validarYGuardarClave"
+            />
+          </div>
+
+          <div v-if="errorClaveVIP" class="mensaje-error-clave">
+            {{ errorClaveVIP }}
+          </div>
+        </q-card-section>
+
+        <q-card-actions class="dialog-acciones">
+          <button type="button" class="boton-cancelar-dialog" @click="cerrarDialogVIP">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="boton-validar-dialog"
+            @click="validarYGuardarClave"
+            :disabled="!claveIngresada.trim()"
+          >
+            Validar
+          </button>
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -96,8 +160,20 @@ import {
   obtenerNombreUsuario,
   limpiarConfiguracionUsuario,
 } from '../BaseDeDatos/usoAlmacenamientoConfiguracion'
+import {
+  validarClaveVIP,
+  guardarClaveVIP,
+  tieneAccesoVIP,
+  eliminarClaveVIP,
+} from '../BaseDeDatos/usoAlmacenamientoVIP'
 import ModalEliminar from '../Modales/ModalEliminar.vue'
-import { IconInfoCircle, IconFileSpreadsheet, IconFileTypePdf } from '@tabler/icons-vue'
+import {
+  IconInfoCircle,
+  IconFileSpreadsheet,
+  IconFileTypePdf,
+  IconDiamond,
+  IconCircleCheck,
+} from '@tabler/icons-vue'
 
 const nombreEditado = ref('')
 const nombreActual = ref('Usua desconocido')
@@ -110,6 +186,12 @@ const mensajeEstado = ref({
   texto: '',
 })
 
+// Estados VIP
+const dialogVIPAbierto = ref(false)
+const claveIngresada = ref('')
+const errorClaveVIP = ref('')
+const esUsuarioVIP = ref(false)
+
 // Computadas
 const puedeGuardar = computed(() => {
   const nombre = nombreEditado.value.trim()
@@ -119,7 +201,6 @@ const puedeGuardar = computed(() => {
 // Métodos
 const cargarNombreActual = async () => {
   nombreActual.value = await obtenerNombreUsuario()
-  // Input siempre empieza vacío, el nombre actual se muestra como placeholder
   nombreEditado.value = ''
 }
 
@@ -130,10 +211,8 @@ const guardarNombre = async () => {
 
   if (exito) {
     nombreActual.value = nombreEditado.value.trim()
-    nombreEditado.value = '' // Limpiar input después de guardar
+    nombreEditado.value = ''
     mostrarMensaje('exito', '¡Nombre guardado correctamente!')
-
-    // Emitir evento para que el MainLayout se actualice
     emit('nombre-actualizado', nombreActual.value)
   } else {
     mostrarMensaje('error', 'Error al guardar el nombre')
@@ -155,7 +234,6 @@ const confirmarLimpieza = async () => {
     nombreActual.value = 'Usua desconocido'
     nombreEditado.value = ''
     mostrarMensaje('exito', 'Nombre reseteado correctamente')
-
     emit('nombre-actualizado', nombreActual.value)
   } else {
     mostrarMensaje('error', 'Error al resetear el nombre')
@@ -171,12 +249,67 @@ const mostrarMensaje = (tipo, texto) => {
   }, 3000)
 }
 
+// Métodos VIP
+const verificarEstadoVIP = async () => {
+  esUsuarioVIP.value = await tieneAccesoVIP()
+}
+
+const abrirDialogVIP = () => {
+  dialogVIPAbierto.value = true
+  claveIngresada.value = ''
+  errorClaveVIP.value = ''
+}
+
+const cerrarDialogVIP = () => {
+  dialogVIPAbierto.value = false
+  claveIngresada.value = ''
+  errorClaveVIP.value = ''
+}
+
+const validarYGuardarClave = async () => {
+  const clave = claveIngresada.value.trim()
+
+  if (!clave) {
+    errorClaveVIP.value = 'Por favor ingresá una clave'
+    return
+  }
+
+  // Validar clave
+  if (!validarClaveVIP(clave)) {
+    errorClaveVIP.value = 'Clave incorrecta. Verificá e intentá nuevamente.'
+    return
+  }
+
+  // Guardar clave
+  const exito = await guardarClaveVIP(clave)
+
+  if (exito) {
+    esUsuarioVIP.value = true
+    cerrarDialogVIP()
+    mostrarMensaje('exito', '¡Acceso Premium activado! Reiniciá la app para quitar la publicidad.')
+  } else {
+    errorClaveVIP.value = 'Error al activar el acceso premium. Intentá de nuevo.'
+  }
+}
+
+const desactivarVIP = async () => {
+  const exito = await eliminarClaveVIP()
+
+  if (exito) {
+    esUsuarioVIP.value = false
+    mostrarMensaje('exito', 'Acceso Premium desactivado. Reiniciá la app para ver los cambios.')
+  } else {
+    mostrarMensaje('error', 'Error al desactivar el acceso premium')
+  }
+}
+
 // Eventos
 const emit = defineEmits(['nombre-actualizado'])
 
 // Ciclo de vida
 onMounted(() => {
   cargarNombreActual()
+  verificarEstadoVIP()
 })
 </script>
 
@@ -253,7 +386,142 @@ onMounted(() => {
   background: var(--color-error);
   color: white;
 }
-/* NUEVA SECCIÓN: Tutorial */
+/* NUEVA SECCIÓN VIP */
+.seccion-vip {
+  margin-bottom: 20px;
+}
+.boton-vip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+.boton-vip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+.icono-vip {
+  flex-shrink: 0;
+}
+.vip-activo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-superficie);
+  border-radius: 12px;
+  border: 2px solid var(--color-exito);
+}
+.icono-check {
+  color: var(--color-exito);
+  flex-shrink: 0;
+}
+.texto-vip-activo {
+  flex: 1;
+  color: var(--color-texto-principal);
+  font-weight: 600;
+}
+.boton-desactivar-vip {
+  padding: 8px 16px;
+  background: var(--color-error);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.boton-desactivar-vip:hover {
+  opacity: 0.8;
+}
+/* Dialog VIP */
+.dialog-vip {
+  min-width: 320px;
+  max-width: 400px;
+  background: var(--color-superficie);
+  border-radius: 12px;
+}
+.dialog-header {
+  padding: 20px 20px 10px 20px;
+}
+.dialog-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icono-dialog {
+  color: #667eea;
+  flex-shrink: 0;
+}
+.dialog-titulo h3 {
+  margin: 0;
+  color: var(--color-texto-principal);
+  font-size: 20px;
+  font-weight: 600;
+}
+.dialog-descripcion {
+  color: var(--color-texto-secundario);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+.mensaje-error-clave {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--color-error);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.dialog-acciones {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  gap: 10px;
+}
+.boton-cancelar-dialog,
+.boton-validar-dialog {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.boton-cancelar-dialog {
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+}
+.boton-cancelar-dialog:hover {
+  background: var(--color-borde);
+}
+.boton-validar-dialog {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.boton-validar-dialog:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+.boton-validar-dialog:disabled {
+  background: var(--color-desactivado);
+  cursor: not-allowed;
+}
+/* SECCIÓN TUTORIAL */
 .seccion-tutorial {
   background: var(--color-fondo);
   padding: 20px;
@@ -329,6 +597,9 @@ onMounted(() => {
   .tutorial-parrafo,
   .tutorial-lista li {
     font-size: 13px;
+  }
+  .dialog-vip {
+    min-width: 280px;
   }
 }
 </style>
