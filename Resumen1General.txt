@@ -191,6 +191,8 @@ src/
 │   ├── index.js
 │   └── routes.js
 └── components/
+    ├── AdMob/
+    │   └── BannerAdMob.vue
     ├── BaseDeDatos/
     │   ├── CodigosArticulos.js
     │   ├── almacenamiento.js
@@ -199,12 +201,20 @@ src/
     │   ├── usoAlmacenamientoUbicaciones.js
     │   ├── usoAlmacenamientoEtiquetas.js
     │   ├── usoAlmacenamientoConfiguracion.js
+    │   ├── usoAlmacenamientoVIP.js
     │   └── LectorExcel.js
     ├── Botones/
     │   ├── BarraBotonesInferior.vue
     │   └── TresBotones.vue
     ├── Configuracion/
-    │   └── ConfiguracionUsuario.vue
+    │   ├── ConfiguracionUsuario.vue
+    │   └── Tutoriales/
+    │       ├── TarjetaSeccion.vue
+    │       ├── SeccionTutoriales.vue
+    │       └── LosTutoriales/
+    │           ├── TutorialPedidos.vue
+    │           ├── TutorialUbicaciones.vue
+    │           └── TutorialEtiquetas.vue
     ├── Inicio/
     │   └── PanelInicio.vue
     ├── Logica/
