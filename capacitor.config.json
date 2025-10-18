@@ -10,6 +10,10 @@
       "showSpinner": false,
       "splashFullScreen": true,
       "splashImmersive": true
+    },
+    "AdMob": {
+      "appId": "ca-app-pub-3940256099942544~3347511713",
+      "testDevices": ["YOUR_TEST_DEVICE_ID"]
     }
   }
 }

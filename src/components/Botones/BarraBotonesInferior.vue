@@ -1,5 +1,5 @@
 <template>
-  <div class="barra-botones-inferior">
+  <div class="barra-botones-inferior" :class="{ 'con-banner': hayBannerVisible }">
     <!-- Botón Atrás -->
     <button
       v-if="mostrarAtrasCalculado"
@@ -83,6 +83,15 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  botonesPersonalizados: {
+    type: Array,
+    default: () => [],
+  },
+  // Prop para saber si hay banner
+  hayBannerVisible: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 // Emits
@@ -120,25 +129,29 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 <style scoped>
 .barra-botones-inferior {
   position: fixed;
-  bottom: 26px; /* Levantamos la barra del fondo */
-  left: 50%; /* La centramos horizontalmente */
+  bottom: 26px; /* Posición por defecto (sin banner) */
+  left: 50%;
   transform: translateX(-50%);
-  width: 90%; /* Hacemos que ocupe el 90% del ancho */
-  max-width: 500px; /* Un ancho máximo para pantallas grandes */
-  border-radius: 30px; /* Redondeamos las esquinas */
+  width: 90%;
+  max-width: 500px;
+  border-radius: 30px;
   height: 60px;
   background-color: var(--color-superficie);
-  border: 1px solid var(--color-borde); /* Cambiado de border-top a border para que se vea completo */
+  border: 1px solid var(--color-borde);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 24px;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra un poco más pronunciada */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   padding: 0 16px;
-  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+  box-sizing: border-box;
+  transition: bottom 0.3s ease; /* Transición suave */
 }
-
+/* CLASE DINÁMICA: Cuando hay banner visible */
+.barra-botones-inferior.con-banner {
+  bottom: 86px; /* 26px original + 60px del banner */
+}
 .boton-barra {
   width: 48px;
   height: 48px;
@@ -189,7 +202,10 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     gap: 16px;
     height: 56px;
     padding: 0 12px;
-    width: 92%; /* Ajuste de ancho para pantallas pequeñas */
+    width: 92%;
+  }
+  .barra-botones-inferior.con-banner {
+    bottom: 82px;
   }
   .boton-barra {
     width: 44px;
@@ -208,28 +224,12 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     gap: 12px;
     padding: 0 8px;
   }
+  .barra-botones-inferior.con-banner {
+    bottom: 80px;
+  }
   .boton-barra {
     width: 40px;
     height: 40px;
   }
-}
-/* Clases CSS extra para botones personalizados del futuro */
-.boton-camara {
-  background-color: #9c27b0;
-}
-.boton-camara:hover:not(:disabled) {
-  background-color: #7b1fa2;
-}
-.boton-descarga {
-  background-color: #ff9800;
-}
-.boton-descarga:hover:not(:disabled) {
-  background-color: #f57c00;
-}
-.boton-configuracion {
-  background-color: #607d8b;
-}
-.boton-configuracion:hover:not(:disabled) {
-  background-color: #455a64;
 }
 </style>

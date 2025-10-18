@@ -91,10 +91,14 @@
         :mostrar-enviar="configuracionBarra.mostrarEnviar"
         :puede-enviar="configuracionBarra.puedeEnviar"
         :botones-personalizados="configuracionBarra.botonesPersonalizados"
+        :hay-banner-visible="hayBannerVisible"
         @agregar="manejarAgregar"
         @enviar="manejarEnviar"
         @accion-personalizada="manejarAccionPersonalizada"
       />
+
+      <!-- BANNER DE ADMOB -->
+      <BannerAdMob @banner-visible="actualizarEstadoBanner" />
     </q-layout>
   </div>
 </template>
@@ -103,12 +107,16 @@
 import { ref, reactive, onMounted } from 'vue'
 import { IconTableRow, IconMapRoute, IconTag, IconSettings } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
+import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 const drawer = ref(false)
 
 // NOMBRE DE USUARIO REACTIVO
 const nombreUsuario = ref('Usua desconocido')
+
+// Estado del banner
+const hayBannerVisible = ref(false)
 
 // Estado centralizado de la barra inferior
 const configuracionBarra = reactive({
@@ -140,6 +148,11 @@ const cargarNombreUsuario = async () => {
   }
 }
 
+// Método para actualizar estado del banner
+const actualizarEstadoBanner = (estaVisible) => {
+  hayBannerVisible.value = estaVisible
+}
+
 // Método para que las páginas configuren la barra
 const manejarConfiguracionBarra = (configuracion, refPagina) => {
   Object.assign(configuracionBarra, configuracion)
@@ -167,10 +180,11 @@ const manejarAccionPersonalizada = (accion) => {
 </script>
 
 <style scoped>
-/* Contenedor con padding para barra inferior */
+/* Contenedor con padding para barra inferior Y banner */
 .contenedor-con-barra-inferior {
-  padding-bottom: 80px;
+  padding-bottom: 140px; /* 80px botones + 60px banner */
 }
+
 /* FOOTER DEL DRAWER */
 .drawer-footer {
   position: absolute;

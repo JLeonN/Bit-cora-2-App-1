@@ -5,7 +5,7 @@ import { Preferences } from '@capacitor/preferences'
 const CLAVE_VIP = 'acceso_vip_usuario'
 
 // ⚠️ CLAVE MAESTRA - Cambia esto por tu clave secreta
-const CLAVE_MAESTRA = 'BITACORA_PRO_2024'
+const CLAVE_MAESTRA = '1234'
 
 /**
  * Valida si una clave ingresada es correcta

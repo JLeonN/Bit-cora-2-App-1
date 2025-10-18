@@ -18,6 +18,7 @@
     "cap:android": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^7.0.3",
     "@capacitor-community/camera-preview": "^7.0.2",
     "@capacitor/android": "^7.4.2",
     "@capacitor/camera": "^7.0.2",
