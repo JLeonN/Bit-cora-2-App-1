@@ -16,7 +16,10 @@ let bannerInicializado = ref(false)
 const emit = defineEmits(['banner-visible'])
 
 // ID de prueba de Google (cambiar en producción)
-const BANNER_AD_UNIT_ID = 'ca-app-pub-3940256099942544/6300978111'
+// const BANNER_AD_UNIT_ID = 'ca-app-pub-3940256099942544/6300978111'
+
+// ID de producción
+const BANNER_AD_UNIT_ID = 'ca-app-pub-7620083100302566/1645913333'
 
 onMounted(async () => {
   console.log('[AdMob] Inicializando componente banner...')
@@ -86,7 +89,7 @@ const mostrarBannerPublicitario = async () => {
       adSize: BannerAdSize.BANNER, // 320x50
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
-      isTesting: true, // Cambiar a false en producción
+      isTesting: false, // Cambiar a false en producción
     }
 
     await AdMob.showBanner(opciones)
@@ -109,7 +112,6 @@ const mostrarBannerPublicitario = async () => {
   justify-content: center;
   border-top: 1px solid var(--color-borde);
 }
-
 .banner-admob {
   width: 100%;
   height: 50px;
