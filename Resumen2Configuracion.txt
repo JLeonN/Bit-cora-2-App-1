@@ -1,172 +1,201 @@
 ### **Módulo de Configuración - Bitácora II**
 
-Sistema completo para gestionar la configuración personalizada del usuario, nombres personalizados en archivos exportados y tutoriales integrados.
+Sistema completo para gestionar configuración personalizada del usuario, nombres en archivos exportados, tutoriales integrados y sistema VIP con monetización AdMob.
 
 ---
 
 ### 📦 **Componentes Principales**
 
 #### **PaginaConfiguracion.vue**
-- **Página principal** de configuración
-- **Ruta**: `/configuracion`
-- **Accesible desde**: Botón en footer del drawer en MainLayout
-- **Secciones con tarjetas colapsables**:
-  - Información Personal (expandida por defecto)
-  - Tutoriales y Ayuda (colapsada por defecto)
-- **Responsive design** adaptativo
+- Página principal de configuración en `/configuracion`
+- Accesible desde botón en footer del drawer
+- Secciones colapsables: Información Personal (expandida) y Tutoriales (colapsada)
+- Diseño responsive
 
 #### **ConfiguracionUsuario.vue**
-- **Formulario completo** para gestionar nombre de usuario
-- **Input limpio** con placeholder dinámico (no pre-rellena el campo)
-- **Validaciones**: Mínimo 2 caracteres, debe ser diferente al actual
-- **Botón guardar**: Persiste el nuevo nombre
-- **Botón resetear**: Abre modal de confirmación para volver a "Usua desconocido"
-- **Sección tutorial integrada**: Explica para qué sirve el nombre (aparece en archivos exportados)
-- **Feedback visual**: Notificaciones de éxito/error con Quasar Notify
-- **Persistencia automática**: Guarda inmediatamente en @capacitor/preferences
+- Formulario para gestionar nombre de usuario
+- Validaciones: mínimo 2 caracteres, diferente al actual
+- Botones: guardar, resetear (con modal confirmación)
+- **Sección VIP integrada**: Botón "Acceso Premium" para ingresar clave
+- **Dialog VIP**: Input con validación en tiempo real
+- **Estado VIP activo**: Badge verde con opción de desactivar
+- Tutorial integrado explicando uso del nombre en archivos
+- Notificaciones de éxito/error con Quasar Notify
+- Persistencia automática en @capacitor/preferences
 
 #### **TarjetaSeccion.vue**
-- **Componente reutilizable** para secciones colapsables
-- **Props**: título, icono, expandidaPorDefecto
-- **Animaciones suaves** de expansión/colapso
-- **Efectos hover** y transiciones
-- **Slot** para contenido personalizado
+- Componente reutilizable para secciones colapsables
+- Props: título, icono, expandidaPorDefecto
+- Animaciones suaves y efectos hover
 
 #### **SeccionTutoriales.vue**
-- **Contiene acordeones** de los 3 tutoriales
-- **Solo uno expandido** a la vez
-- **Iconos consistentes** con el drawer (IconTableRow, IconMapRoute, IconTag)
-- **Importa**: TutorialPedidos, TutorialUbicaciones, TutorialEtiquetas
+- Contiene acordeones de 3 tutoriales (Pedidos, Ubicaciones, Etiquetas)
+- Solo uno expandido a la vez
+- Iconos consistentes con el drawer
 
-#### **TutorialPedidos.vue**
-- **Tutorial completo** del módulo de Pedidos
-- **4 pasos básicos**: Agregar, elegir método, ver pedidos, exportar
-- **3 tips útiles**: Sistema de logros, reseteo automático, edición rápida
-- **Iconos visuales** para mejor comprensión
-
-#### **TutorialUbicaciones.vue**
-- **Tutorial completo** del módulo de Ubicaciones
-- **5 pasos básicos**: Cargar base de datos, agregar ubicaciones, recordar ubicación, enviar a etiquetas, exportar
-- **4 tips útiles**: Buscador inteligente, botón de limpieza, códigos duplicados, sistema de emojis
-- **Mención a integración** con etiquetas
-
-#### **TutorialEtiquetas.vue**
-- **Tutorial completo** del módulo de Etiquetas
-- **5 pasos básicos**: Tamaño disponible (10x15cm), agregar etiquetas, autocompletado, ajustar copias, generar PDF
-- **5 tips útiles**: Code 39, tamaños automáticos, códigos duplicados, artículos nuevos, persistencia
-- **Explicación de características únicas**
+#### **Tutoriales Individuales**
+- **TutorialPedidos.vue**: 4 pasos básicos + 3 tips útiles
+- **TutorialUbicaciones.vue**: 5 pasos básicos + 4 tips útiles
+- **TutorialEtiquetas.vue**: 5 pasos básicos + 5 tips útiles
+- Pasos numerados con iconos visuales
 
 ---
 
-### 💾 **Almacenamiento y Persistencia**
+### 💎 **Sistema VIP y Monetización**
 
-#### **usoAlmacenamientoConfiguracion.js**
-- **Módulo dedicado** para persistir configuración de usuario
-- **Almacenamiento**: @capacitor/preferences
-- **Key**: `"configuracionUsuario"`
-- **Valor por defecto**: "Usua desconocido"
+#### **usoAlmacenamientoVIP.js**
+- Gestión de acceso VIP mediante clave maestra configurable
+- Almacenamiento en @capacitor/preferences con key `"acceso_vip_usuario"`
 
 **Funciones principales**:
-- `guardarConfiguracion(config)`
-- `obtenerConfiguracion()`
-- `limpiarConfiguracion()`
-- `guardarNombreUsuario(nombre)`
-- `obtenerNombreUsuario()`
+- `validarClaveVIP(claveIngresada)`: Valida clave
+- `guardarClaveVIP(clave)`: Guarda en preferences
+- `tieneAccesoVIP()`: Verifica si usuario tiene acceso activo
+- `obtenerConfiguracionVIP()`: Info completa del acceso
+- `eliminarClaveVIP()`: Elimina acceso (testing/reseteo)
 
-**Estructura de configuración**: `{ nombreUsuario: "string" }`
+**Estructura guardada**:
+- claveActiva (boolean)
+- fechaActivacion (ISO date)
+- version
+
+#### **BannerAdMob.vue**
+- Banner publicitario integrado con @capacitor-community/admob
+- Verificación automática de estado VIP antes de mostrar
+- Emite evento `banner-visible` al padre
+- IDs configurables: Application ID y Banner Ad Unit ID
+- Flag `isTesting` para desarrollo seguro
+- Inicialización en `onMounted`, limpieza en `onUnmounted`
+- Altura fija: 60px, posición `BOTTOM_CENTER`
+
+#### **Integración en ConfiguracionUsuario.vue**
+- Botón VIP con gradiente morado/azul e IconDiamond
+- Dialog con q-card de Quasar
+- Validación en tiempo real con mensajes de error
+- Mensaje de éxito incluye "Reiniciá la app"
+- Badge verde con IconCircleCheck cuando está activo
+- Botón desactivar para testing
+
+---
+
+### 💾 **Almacenamiento**
+
+#### **usoAlmacenamientoConfiguracion.js**
+- Key: `"configuracion_usuario"`
+- Valor por defecto: "Usua desconocido"
+- Funciones: `guardarNombreUsuario()`, `obtenerNombreUsuario()`, `limpiarConfiguracionUsuario()`, `obtenerConfiguracionCompleta()`
+- Estructura: nombreUsuario + fechaActualizacion
+
+#### **usoAlmacenamientoVIP.js**
+- Key: `"acceso_vip_usuario"`
+- Validación de claves y gestión de estado premium
 
 ---
 
 ### 🔄 **Integración con MainLayout**
 
-#### **MainLayout.vue - Header**
-- **Nombre dinámico** en toolbar
-- **Carga automática** del nombre con polling cada 5 segundos
-- **Actualización reactiva**: Cuando cambia en configuración, se actualiza automáticamente
+#### **Header**
+- Nombre dinámico en toolbar
+- Polling cada 5 segundos para actualización automática
 
-#### **MainLayout.vue - Drawer (Avatar)**
-- **Avatar dinámico**: `@{{ nombreUsuario }}`
-- **Posición**: En la parte superior del drawer
+#### **Drawer**
+- Avatar dinámico con `@{{ nombreUsuario }}`
+- Botón Configuración en footer con IconSettings
+- Animación de rotación al hover
 
-#### **MainLayout.vue - Drawer (Botón Configuración)**
-- **Posición**: Footer del drawer
-- **Icono**: IconSettings de @tabler/icons-vue
-- **Animación**: Rotación al hacer hover
-- **Acción**: Navega a `/configuracion`
-- **Label**: "Configuración"
-
----
-
-### 📁 **Sistema de Nombres Personalizados en Archivos**
-
-**Integración completa del nombre de usuario en TODOS los archivos exportados.**
-
-#### **Pedidos**
-- **Con rango de fechas**: `Pedi [Usuario] DD-MM-AAAA - DD-MM-AAAA.xlsx`
-- **Mensuales**: `Pedi [Usuario] - MM-AAAA.xlsx`
-- **Nombre de hoja**: Solo el nombre del usuario
-
-#### **Ubicaciones**
-- **Formato**: `Ubic [Usuario].xlsx`
-- **Nombre de hoja**: Solo el nombre del usuario
-
-#### **Etiquetas**
-- **Formato**: `Etiquetas - [Usuario] - tamaño.pdf`
-
-**Implementación en exportadores**:
-- ExportarPedidosExcel.js → Importa `obtenerNombreUsuario()`
-- ExportarUbicacionesExcel.js → Importa `obtenerNombreUsuario()`
-- GeneradorEtiquetasPDF.js → Importa `obtenerNombreUsuario()`
-- Si no hay nombre configurado, usan "Usua desconocido" por defecto
+#### **Banner AdMob**
+- Integrado después de BarraBotonesInferior
+- Recibe evento `@banner-visible` desde BannerAdMob
+- Pasa prop `hayBannerVisible` a botones
+- Padding dinámico: 140px (80px botones + 60px banner)
 
 ---
 
-### 🎨 **Sistema de Tutoriales**
+### 🎨 **Botones con AdMob**
 
-#### **Características**
-- **Acordeones internos** dentro de la sección de tutoriales
-- **Pasos numerados** con círculos visuales
-- **Iconos descriptivos** en cada paso
-- **Tips destacados** con fondo coloreado y borde izquierdo
-- **Responsive** adaptativo
-- **Todos colapsados** por defecto
-
-#### **Contenido de tutoriales**
-- **Descripción breve** del módulo
-- **Pasos básicos** con numeración visual
-- **Tips útiles** con iconos específicos
-- **Mención de integraciones** entre módulos
+#### **BarraBotonesInferior.vue**
+- Prop: `hayBannerVisible` (Boolean)
+- Clase dinámica: `.con-banner` cuando hay banner
+- Transición suave: `transition: bottom 0.3s ease`
+- Posición adaptativa:
+  - Sin banner: `bottom: 26px`
+  - Con banner: `bottom: 86px`
+- Responsive con ajustes en media queries
 
 ---
 
-### 🔄 **Integración con Barra de Botones**
+### 📁 **Nombres Personalizados en Archivos**
 
-#### **PaginaConfiguracion.vue**
-- `mostrarAtras: true`
-- `mostrarInicio: true`
-- `mostrarAgregar: false`
-- `mostrarEnviar: false`
+Todos los exportadores usan `obtenerNombreUsuario()`:
+
+- **Pedidos**: `Pedi [Usuario] DD-MM-AAAA.xlsx`
+- **Ubicaciones**: `Ubic [Usuario].xlsx`
+- **Etiquetas**: `Etiquetas - [Usuario] - tamaño.pdf`
+
+Implementado en: ExportarPedidosExcel.js, ExportarUbicacionesExcel.js, GeneradorEtiquetasPDF.js
 
 ---
 
-### 🔧 **Dependencias Específicas**
+### 📱 **Configuración AdMob**
 
-- **@capacitor/preferences**: Persistencia de datos
-- **Quasar Notify**: Notificaciones de éxito/error
-- **@tabler/icons-vue**: Iconografía completa
+#### **capacitor.config.json**
+- Plugin AdMob con appId y testDevices
+
+#### **AndroidManifest.xml**
+- Permisos: INTERNET, ACCESS_NETWORK_STATE
+- Meta-data con APPLICATION_ID de AdMob
+
+#### **IDs necesarios**
+1. **Application ID** (termina con `~`): En config y manifest
+2. **Banner Ad Unit ID** (termina con `/`): En BannerAdMob.vue
+
+#### **Modos**
+- Desarrollo: `isTesting: true` (anuncios de prueba)
+- Producción: `isTesting: false` (anuncios reales)
+
+---
+
+### 🔧 **Dependencias**
+
+- @capacitor/preferences: Persistencia
+- @capacitor-community/admob: SDK de AdMob
+- Quasar Notify: Notificaciones
+- @tabler/icons-vue: Iconografía (IconDiamond, IconCircleCheck, etc.)
 
 ---
 
 ### 📝 **Notas Importantes**
 
-- La configuración se **carga automáticamente** al iniciar la app
-- El **polling cada 5 segundos** asegura que el nombre esté siempre actualizado
-- El **modal de confirmación** previene reseteos accidentales
-- El **valor por defecto** "Usua desconocido" garantiza que siempre haya un nombre
-- Los **archivos exportados** usan el nombre configurado automáticamente
-- La **validación de mínimo 2 caracteres** evita nombres muy cortos
-- El **placeholder dinámico** mejora la UX al no pre-llenar el campo
-- El **botón en el drawer** es accesible desde cualquier página
-- La **estructura de tarjetas** es extensible para futuras secciones (Preferencias)
-- Los **tutoriales integrados** reducen la curva de aprendizaje
-- **Información Personal expandida** por defecto para acceso rápido
+- Carga automática al iniciar con polling cada 5s
+- Modal de confirmación previene reseteos accidentales
+- Placeholder dinámico mejora UX
+- Sistema VIP usa clave maestra en código
+- Banner se oculta automáticamente para VIP
+- Barra de botones sube/baja automáticamente según banner
+- AdMob solo funciona en móviles (Android/iOS), no en web
+- IDs de prueba obligatorios durante desarrollo
+- Mensaje de reinicio al activar/desactivar VIP
+- Validación case-insensitive de claves
+- Sin límite de intentos de clave
+- Persistencia local sin conexión internet
+
+---
+
+### 🎯 **Flujo Usuario VIP**
+
+1. Entra a Configuración
+2. Clic en "Acceso Premium"
+3. Dialog se abre con input
+4. Ingresa clave y valida
+5. Si correcta: guarda, muestra éxito, reiniciar app oculta banner
+6. Si incorrecta: mensaje de error, puede reintentar
+
+---
+
+### 💰 **Estrategia Monetización**
+
+- Banner permanente en todas las páginas (usuarios estándar)
+- Posición fija abajo, no intrusiva
+- Sistema VIP por invitación con clave única
+- Sin pagos integrados (distribución manual)
+- IDs de prueba en desarrollo, producción al publicar
