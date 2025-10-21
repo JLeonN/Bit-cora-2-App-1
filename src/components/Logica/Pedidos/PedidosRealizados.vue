@@ -155,19 +155,10 @@ const etiquetaMes = computed(() => {
 
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
-  mostrarAgregar: false, // PedidosRealizados no agrega, solo muestra
+  mostrarAgregar: false,
   mostrarEnviar: pedidosRealizados.value.length > 0,
   puedeEnviar: pedidosRealizados.value.length > 0,
-  botonesPersonalizados: [
-    // Botón de descargar como personalizado
-    {
-      icono: 'IconDownload',
-      accion: 'descargar',
-      titulo: 'Descargar Excel',
-      claseCSS: 'boton-descarga',
-      desactivado: pedidosRealizados.value.length === 0,
-    },
-  ],
+  botonesPersonalizados: [],
 }))
 
 // Métodos que la barra inferior va a llamar

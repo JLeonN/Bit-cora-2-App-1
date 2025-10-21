@@ -35,9 +35,6 @@
       @limpiar-todo="limpiarTodo"
     />
 
-    <!-- BARRA INFERIOR DE BOTONES -->
-    <BarraBotonesInferior @enviar="generarPDF" />
-
     <!-- MODAL ELIMINAR ETIQUETA INDIVIDUAL -->
     <ModalEliminar
       v-if="mostrarModalEliminar"
@@ -61,7 +58,6 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Loading, Notify } from 'quasar'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
-import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'

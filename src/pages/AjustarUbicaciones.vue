@@ -109,30 +109,16 @@ const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: ubicacionesArray.value.length > 0,
   puedeEnviar: ubicacionesArray.value.length > 0,
-  botonesPersonalizados: [
-    {
-      icono: 'IconTrash',
-      accion: 'eliminar-todas',
-      titulo: 'Eliminar todas las ubicaciones',
-      claseCSS: 'boton-eliminar',
-      desactivado: ubicacionesArray.value.length === 0,
-    },
-  ],
+  botonesPersonalizados: [],
 }))
 
 // Métodos que la barra inferior va a llamar
 const metodosParaBarra = {
-  onAgregar: () => {
-    // No se usa porque el formulario ya está integrado
-  },
+  onAgregar: () => {},
   onEnviar: () => {
     enviarUbicacionesExcel()
   },
-  onAccionPersonalizada: (accion) => {
-    if (accion === 'eliminar-todas') {
-      abrirModalEliminarTodas()
-    }
-  },
+  onAccionPersonalizada: () => {},
 }
 
 // Función para actualizar la configuración de la barra
