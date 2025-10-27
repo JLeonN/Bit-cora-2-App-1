@@ -47,24 +47,7 @@
       {{ mensajeEstado.texto }}
     </div>
 
-    <!-- NUEVA SECCIÓN: Botón VIP -->
-    <div class="seccion-vip">
-      <button v-if="!esUsuarioVIP" type="button" class="boton-vip" @click="abrirDialogVIP">
-        <IconDiamond :stroke="2" class="icono-vip" />
-        <span>Acceso Premium</span>
-      </button>
-
-      <!-- Estado VIP activo -->
-      <div v-else class="vip-activo">
-        <IconCircleCheck :stroke="2" class="icono-check" />
-        <span class="texto-vip-activo">Acceso Premium Activo</span>
-        <button type="button" class="boton-desactivar-vip" @click="desactivarVIP">
-          Desactivar
-        </button>
-      </div>
-    </div>
-
-    <!-- NUEVA SECCIÓN: Descripción/Tutorial -->
+    <!-- Descripción/Tutorial -->
     <div class="seccion-tutorial">
       <div class="tutorial-header">
         <IconInfoCircle :stroke="2" class="icono-info" />
@@ -96,6 +79,23 @@
       </div>
     </div>
 
+    <!-- Botón VIP -->
+    <div class="seccion-vip">
+      <button v-if="!esUsuarioVIP" type="button" class="boton-vip" @click="abrirDialogVIP">
+        <IconDiamond :stroke="2" class="icono-vip" />
+        <span>Acceso Premium</span>
+      </button>
+
+      <!-- Estado VIP activo -->
+      <div v-else class="vip-activo">
+        <IconCircleCheck :stroke="2" class="icono-check" />
+        <span class="texto-vip-activo">Acceso Premium Activo</span>
+        <button type="button" class="boton-desactivar-vip" @click="desactivarVIP">
+          Desactivar
+        </button>
+      </div>
+    </div>
+
     <!-- Modal de confirmación para resetear -->
     <ModalEliminar
       v-if="mostrarModal"
@@ -104,7 +104,7 @@
       @confirmar="confirmarLimpieza"
     />
 
-    <!-- NUEVO: Dialog para ingresar clave VIP -->
+    <!-- Dialog para ingresar clave VIP -->
     <q-dialog v-model="dialogVIPAbierto" persistent>
       <q-card class="dialog-vip">
         <q-card-section class="dialog-header">
@@ -386,9 +386,10 @@ onMounted(() => {
   background: var(--color-error);
   color: white;
 }
-/* NUEVA SECCIÓN VIP */
+/* SECCIÓN VIP */
 .seccion-vip {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  padding-top: 25px;
 }
 .boton-vip {
   display: flex;
