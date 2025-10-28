@@ -121,9 +121,9 @@ async function cargarHistorial() {
   // Convertimos el objeto en array
   historialDeRangos.value = Object.values(agrupado).sort((a, b) => {
     if (a.anio === b.anio) {
-      return a.mes - b.mes
+      return b.mes - a.mes
     }
-    return a.anio - b.anio
+    return b.anio - a.anio
   })
 }
 
