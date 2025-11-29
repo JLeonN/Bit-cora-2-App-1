@@ -10,13 +10,7 @@
       </q-header>
 
       <!-- DRAWER CON NAVEGACIÓN Y CONFIGURACIÓN -->
-      <q-drawer
-        v-model="drawer"
-        show-if-above
-        :width="200"
-        :breakpoint="400"
-        class="bg-superficie texto-principal"
-      >
+      <q-drawer v-model="drawer" :width="200" class="bg-superficie texto-principal">
         <!-- ÁREA DE NAVEGACIÓN PRINCIPAL -->
         <q-scroll-area
           style="
