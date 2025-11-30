@@ -18,6 +18,13 @@ const routes = [
         name: 'PedidosRealizados',
         component: () => import('../components/Logica/Pedidos/PedidosRealizados.vue'),
       },
+      // ESTADÍSTICAS DE PEDIDOS - Análisis y métricas de pedidos
+      {
+        path: '/estadisticas-pedidos',
+        name: 'EstadisticasPedidos',
+        component: () =>
+          import('../components/Logica/Pedidos/Estadisticas/EstadisticasPedidos.vue'),
+      },
       // UBICACIONES - Gestión completa de ubicaciones de artículos
       { path: '/AjustarUbicaciones', component: () => import('src/pages/AjustarUbicaciones.vue') },
       // CONFIGURACIÓN - Ajustes de usuario y preferencias de la app

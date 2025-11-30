@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-contador">
-    <div class="tarjeta-contador">
+    <div class="tarjeta-contador" @click="irAEstadisticas">
       <div class="icono-contador">
         <component :is="obtenerIconoContador" size="24" />
       </div>
@@ -8,12 +8,16 @@
         <p class="texto-contador">{{ textoContador }}</p>
         <p class="fecha-actual">{{ fechaFormateada }}</p>
       </div>
+      <div class="icono-estadisticas">
+        <IconChartBar :size="18" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   IconCalendarEvent,
   IconThumbUp,
@@ -21,12 +25,20 @@ import {
   IconBolt,
   IconTornado,
   IconDiamond,
+  IconChartBar,
 } from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../BaseDeDatos/almacenamiento.js'
+
+const router = useRouter()
 
 // Estado reactivo
 const pedidosDelDia = ref(0)
 const fechaActual = ref(new Date())
+
+// Función para navegar a estadísticas
+function irAEstadisticas() {
+  router.push({ name: 'EstadisticasPedidos' })
+}
 
 // Función para obtener el día de la semana
 function esFinesDeSemana(fecha) {
@@ -73,6 +85,7 @@ const obtenerIconoContador = computed(() => {
 
   return IconCalendarEvent // 1-9 calendario normal
 })
+
 // Texto dinámico del contador mejorado
 const textoContador = computed(() => {
   const esFinde = esFinesDeSemana(fechaActual.value)
@@ -183,10 +196,15 @@ defineExpose({
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  cursor: pointer;
+  position: relative;
 }
 .tarjeta-contador:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px var(--sombra-boton);
+}
+.tarjeta-contador:active {
+  transform: translateY(0px);
 }
 .icono-contador {
   background: var(--color-superficie);
@@ -199,6 +217,18 @@ defineExpose({
 }
 .info-contador {
   flex: 1;
+}
+.icono-estadisticas {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  color: var(--color-texto-secundario);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+.tarjeta-contador:hover .icono-estadisticas {
+  opacity: 1;
+  color: var(--color-acento);
 }
 .texto-contador {
   font-size: 1.1rem;
@@ -224,6 +254,10 @@ defineExpose({
   }
   .icono-contador {
     padding: 0.625rem;
+  }
+  .icono-estadisticas {
+    top: 0.625rem;
+    right: 0.625rem;
   }
   .texto-contador {
     font-size: 1rem;
