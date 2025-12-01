@@ -1,11 +1,7 @@
 <template>
   <div class="contenedor-tabla">
     <!-- Componente de estadísticas -->
-    <ResumenMensual
-      v-if="mesSeleccionado !== null"
-      :mes="mesSeleccionado"
-      :anio="anioSeleccionado"
-    />
+    <ResumenMensual :pedidos="pedidosRealizados" />
 
     <div class="encabezado-pedidos">
       <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
@@ -90,8 +86,6 @@ const route = useRoute()
 
 // Estado principal
 const pedidosRealizados = ref([])
-const mesSeleccionado = ref(null)
-const anioSeleccionado = ref(null)
 
 // Estados de modales
 const mostrarModalEditar = ref(false)
@@ -310,10 +304,6 @@ onMounted(async () => {
   if (inicio && fin) {
     const fechaInicio = new Date(inicio)
     const fechaFin = new Date(fin)
-
-    // Extraer mes y año del filtro para pasarlos a ResumenMensual
-    mesSeleccionado.value = fechaInicio.getMonth() // 0-11
-    anioSeleccionado.value = fechaInicio.getFullYear()
 
     datos = datos.filter((pedido) => {
       const fechaPedido = parsearFechaDDMMYYYY(pedido.fecha)

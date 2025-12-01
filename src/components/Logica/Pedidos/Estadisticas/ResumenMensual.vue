@@ -36,19 +36,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { IconPackage, IconCalendarCheck, IconChartLine } from '@tabler/icons-vue'
-import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
 
-// Props opcionales: si no se pasan, usa el mes actual
+// Props: recibe el array de pedidos filtrados directamente
 const props = defineProps({
-  mes: {
-    type: Number,
-    default: null, // 0-11 (null = usar mes actual)
-  },
-  anio: {
-    type: Number,
-    default: null, // YYYY (null = usar año actual)
+  pedidos: {
+    type: Array,
+    default: () => [],
   },
 })
 
@@ -56,22 +51,6 @@ const props = defineProps({
 const totalPedidosMes = ref(0)
 const diasTrabajados = ref(0)
 const promedioPorDia = ref('0')
-
-// Función para obtener el mes y año a usar
-function obtenerMesYAnio() {
-  if (props.mes !== null && props.anio !== null) {
-    return {
-      mes: props.mes,
-      anio: props.anio,
-    }
-  }
-  // Si no hay props, usar mes actual
-  const fecha = new Date()
-  return {
-    mes: fecha.getMonth(), // 0-11
-    anio: fecha.getFullYear(),
-  }
-}
 
 // Función para parsear fecha DD/MM/YYYY
 function parsearFechaDDMMYYYY(fechaStr) {
@@ -92,57 +71,46 @@ function parsearFechaDDMMYYYY(fechaStr) {
   return null
 }
 
-// Función para calcular estadísticas del mes especificado
-async function calcularEstadisticasMes() {
-  try {
-    const todosPedidos = await obtenerPedidos()
-    const { mes, anio } = obtenerMesYAnio()
+// Función para calcular estadísticas de los pedidos recibidos
+function calcularEstadisticas() {
+  const pedidosValidos = props.pedidos || []
 
-    // Filtrar pedidos del mes especificado
-    const pedidosDelMes = todosPedidos.filter((pedido) => {
-      const fecha = parsearFechaDDMMYYYY(pedido.fecha)
-      if (!fecha) return false
-      return fecha.getUTCMonth() === mes && fecha.getUTCFullYear() === anio
-    })
+  // Total de pedidos
+  totalPedidosMes.value = pedidosValidos.length
 
-    // Total de pedidos
-    totalPedidosMes.value = pedidosDelMes.length
-
-    // Días trabajados (días únicos con al menos 1 pedido)
-    const diasUnicos = new Set()
-    pedidosDelMes.forEach((pedido) => {
-      const fecha = parsearFechaDDMMYYYY(pedido.fecha)
-      if (fecha) {
-        // Crear clave única por día
-        const claveDia = `${fecha.getUTCDate()}-${fecha.getUTCMonth()}-${fecha.getUTCFullYear()}`
-        diasUnicos.add(claveDia)
-      }
-    })
-
-    diasTrabajados.value = diasUnicos.size
-
-    // Promedio por día trabajado
-    if (diasTrabajados.value > 0) {
-      const promedio = totalPedidosMes.value / diasTrabajados.value
-      promedioPorDia.value = Math.ceil(promedio).toString()
-    } else {
-      promedioPorDia.value = '0'
-    }
-  } catch (error) {
-    console.error('Error al calcular estadísticas del mes:', error)
-    totalPedidosMes.value = 0
+  if (pedidosValidos.length === 0) {
     diasTrabajados.value = 0
+    promedioPorDia.value = '0'
+    return
+  }
+
+  // Días trabajados (días únicos con al menos 1 pedido)
+  const diasUnicos = new Set()
+  pedidosValidos.forEach((pedido) => {
+    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
+    if (fecha) {
+      // Crear clave única por día
+      const claveDia = `${fecha.getUTCDate()}-${fecha.getUTCMonth()}-${fecha.getUTCFullYear()}`
+      diasUnicos.add(claveDia)
+    }
+  })
+
+  diasTrabajados.value = diasUnicos.size
+
+  // Promedio por día trabajado
+  if (diasTrabajados.value > 0) {
+    const promedio = totalPedidosMes.value / diasTrabajados.value
+    promedioPorDia.value = Math.ceil(promedio).toString()
+  } else {
     promedioPorDia.value = '0'
   }
 }
 
-// Recalcular cuando cambien las props
-watch([() => props.mes, () => props.anio], () => {
-  calcularEstadisticasMes()
-})
+// Recalcular cuando cambien los pedidos
+watch(() => props.pedidos, calcularEstadisticas, { deep: true })
 
 onMounted(() => {
-  calcularEstadisticasMes()
+  calcularEstadisticas()
 })
 </script>
 
