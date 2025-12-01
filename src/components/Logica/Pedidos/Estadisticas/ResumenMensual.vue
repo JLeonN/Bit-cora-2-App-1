@@ -36,17 +36,36 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { IconPackage, IconCalendarCheck, IconChartLine } from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
+
+// Props opcionales: si no se pasan, usa el mes actual
+const props = defineProps({
+  mes: {
+    type: Number,
+    default: null, // 0-11 (null = usar mes actual)
+  },
+  anio: {
+    type: Number,
+    default: null, // YYYY (null = usar año actual)
+  },
+})
 
 // Estado reactivo
 const totalPedidosMes = ref(0)
 const diasTrabajados = ref(0)
-const promedioPorDia = ref('0.0')
+const promedioPorDia = ref('0')
 
-// Función para obtener el mes y año actual
-function obtenerMesYAnioActual() {
+// Función para obtener el mes y año a usar
+function obtenerMesYAnio() {
+  if (props.mes !== null && props.anio !== null) {
+    return {
+      mes: props.mes,
+      anio: props.anio,
+    }
+  }
+  // Si no hay props, usar mes actual
   const fecha = new Date()
   return {
     mes: fecha.getMonth(), // 0-11
@@ -73,13 +92,13 @@ function parsearFechaDDMMYYYY(fechaStr) {
   return null
 }
 
-// Función para calcular estadísticas del mes actual
+// Función para calcular estadísticas del mes especificado
 async function calcularEstadisticasMes() {
   try {
     const todosPedidos = await obtenerPedidos()
-    const { mes, anio } = obtenerMesYAnioActual()
+    const { mes, anio } = obtenerMesYAnio()
 
-    // Filtrar pedidos del mes actual
+    // Filtrar pedidos del mes especificado
     const pedidosDelMes = todosPedidos.filter((pedido) => {
       const fecha = parsearFechaDDMMYYYY(pedido.fecha)
       if (!fecha) return false
@@ -113,9 +132,14 @@ async function calcularEstadisticasMes() {
     console.error('Error al calcular estadísticas del mes:', error)
     totalPedidosMes.value = 0
     diasTrabajados.value = 0
-    promedioPorDia.value = '0.0'
+    promedioPorDia.value = '0'
   }
 }
+
+// Recalcular cuando cambien las props
+watch([() => props.mes, () => props.anio], () => {
+  calcularEstadisticasMes()
+})
 
 onMounted(() => {
   calcularEstadisticasMes()

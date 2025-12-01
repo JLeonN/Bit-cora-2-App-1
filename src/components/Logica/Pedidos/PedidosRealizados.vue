@@ -1,5 +1,12 @@
 <template>
   <div class="contenedor-tabla">
+    <!-- Componente de estadísticas -->
+    <ResumenMensual
+      v-if="mesSeleccionado !== null"
+      :mes="mesSeleccionado"
+      :anio="anioSeleccionado"
+    />
+
     <div class="encabezado-pedidos">
       <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
       <p class="texto-secundario">Pedidos: {{ pedidosRealizados.length }}</p>
@@ -74,6 +81,7 @@ import { generarYGuardarExcelTemporal } from './GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Pedidos/CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
+import ResumenMensual from './Estadisticas/ResumenMensual.vue'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
@@ -82,6 +90,8 @@ const route = useRoute()
 
 // Estado principal
 const pedidosRealizados = ref([])
+const mesSeleccionado = ref(null)
+const anioSeleccionado = ref(null)
 
 // Estados de modales
 const mostrarModalEditar = ref(false)
@@ -300,6 +310,10 @@ onMounted(async () => {
   if (inicio && fin) {
     const fechaInicio = new Date(inicio)
     const fechaFin = new Date(fin)
+
+    // Extraer mes y año del filtro para pasarlos a ResumenMensual
+    mesSeleccionado.value = fechaInicio.getMonth() // 0-11
+    anioSeleccionado.value = fechaInicio.getFullYear()
 
     datos = datos.filter((pedido) => {
       const fechaPedido = parsearFechaDDMMYYYY(pedido.fecha)
