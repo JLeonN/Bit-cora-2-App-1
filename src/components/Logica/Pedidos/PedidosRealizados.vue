@@ -1,11 +1,13 @@
 <template>
   <div class="contenedor-tabla">
+    <!-- Título principal -->
+    <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
+
     <!-- Componente de estadísticas -->
     <ResumenMensual :pedidos="pedidosRealizados" />
 
+    <!-- Pedidos repetidos -->
     <div class="encabezado-pedidos">
-      <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
-      <p class="texto-secundario">Pedidos: {{ pedidosRealizados.length }}</p>
       <p v-if="cantidadPedidosRepetidos > 0" class="texto-secundario texto-repetidos">
         Pedidos repetidos: {{ cantidadPedidosRepetidos }}
       </p>

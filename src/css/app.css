@@ -69,7 +69,7 @@ button {
   margin-bottom: 16px;
   font-size: 3rem;
   font-weight: bold;
-  margin: 0;
+  margin: 0 0 1.5rem 0;
 }
 .texto-secundario {
   font-size: 0.95rem;
@@ -144,6 +144,12 @@ button {
   white-space: normal;
   font-size: 0.9rem;
   pointer-events: none;
+}
+@media (max-width: 600px) {
+  .titulo-tabla {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
 }
 /* -------------------------------------------------------------------------- */
 /* Modal */

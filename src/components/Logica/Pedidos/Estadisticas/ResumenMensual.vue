@@ -23,7 +23,7 @@
     </div>
 
     <!-- Tarjeta: Promedio por día -->
-    <div class="tarjeta-metrica destacada">
+    <div class="tarjeta-metrica">
       <div class="icono-metrica">
         <IconChartLine :size="24" />
       </div>
