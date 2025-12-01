@@ -11,6 +11,8 @@
       :total-pedidos="estadisticas.totalPedidos"
       :dias-trabajados="estadisticas.diasTrabajados"
       :promedio-por-dia="estadisticas.promedioPorDia"
+      :mejor-dia-fecha="estadisticas.mejorDiaFecha"
+      :mejor-dia-cantidad="estadisticas.mejorDiaCantidad"
     />
 
     <!-- Pedidos repetidos -->
@@ -166,10 +168,30 @@ const estadisticas = computed(() => {
     promedioPorDia = Math.ceil(promedio).toString()
   }
 
+  // Mejor día del mes (toma el primero si hay empate)
+  const conteoPorDia = {}
+  pedidos.forEach((pedido) => {
+    const fecha = pedido.fecha
+    conteoPorDia[fecha] = (conteoPorDia[fecha] || 0) + 1
+  })
+
+  let mejorDiaFecha = '-'
+  let mejorDiaCantidad = 0
+
+  for (const [fecha, cantidad] of Object.entries(conteoPorDia)) {
+    if (cantidad > mejorDiaCantidad) {
+      // Solo cambia si es MAYOR (no igual)
+      mejorDiaCantidad = cantidad
+      mejorDiaFecha = fecha
+    }
+  }
+
   return {
     totalPedidos,
     diasTrabajados,
     promedioPorDia,
+    mejorDiaFecha,
+    mejorDiaCantidad,
   }
 })
 

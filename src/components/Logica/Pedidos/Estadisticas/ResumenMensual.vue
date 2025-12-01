@@ -32,11 +32,22 @@
         <p class="label-metrica">Promedio por día</p>
       </div>
     </div>
+
+    <!-- Tarjeta: Mejor día del mes -->
+    <div class="tarjeta-metrica">
+      <div class="icono-metrica">
+        <IconTrophy :size="24" />
+      </div>
+      <div class="info-metrica">
+        <p class="valor-metrica">{{ mejorDiaCantidad }}</p>
+        <p class="label-metrica">Mejor día: {{ mejorDiaFecha }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { IconPackage, IconCalendarCheck, IconChartLine } from '@tabler/icons-vue'
+import { IconPackage, IconCalendarCheck, IconChartLine, IconTrophy } from '@tabler/icons-vue'
 
 // Props: recibe los datos ya calculados
 defineProps({
@@ -50,6 +61,14 @@ defineProps({
   },
   promedioPorDia: {
     type: String,
+    required: true,
+  },
+  mejorDiaFecha: {
+    type: String,
+    required: true,
+  },
+  mejorDiaCantidad: {
+    type: Number,
     required: true,
   },
 })
@@ -78,10 +97,6 @@ defineProps({
   transform: translateY(-2px);
   box-shadow: 0 6px 16px var(--sombra-boton);
 }
-.tarjeta-metrica.destacada {
-  background: linear-gradient(135deg, var(--color-primario-oscuro) 0%, var(--color-primario) 100%);
-  border-color: var(--color-primario);
-}
 .icono-metrica {
   background: var(--color-fondo);
   padding: 0.75rem;
@@ -91,11 +106,6 @@ defineProps({
   justify-content: center;
   border: 1px solid var(--borde-boton);
   color: var(--color-acento);
-}
-.tarjeta-metrica.destacada .icono-metrica {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: white;
 }
 .info-metrica {
   flex: 1;
@@ -107,16 +117,10 @@ defineProps({
   margin: 0;
   line-height: 1;
 }
-.tarjeta-metrica.destacada .valor-metrica {
-  color: white;
-}
 .label-metrica {
   font-size: 0.875rem;
   color: var(--color-texto-secundario);
   margin: 0.25rem 0 0 0;
-}
-.tarjeta-metrica.destacada .label-metrica {
-  color: rgba(255, 255, 255, 0.9);
 }
 /* Responsive */
 @media (max-width: 768px) {
