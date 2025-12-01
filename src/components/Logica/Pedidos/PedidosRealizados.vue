@@ -1,18 +1,26 @@
 <template>
   <div class="contenedor-tabla">
-    <!-- Título principal -->
-    <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
+    <!-- Título -->
+    <div class="encabezado-pedidos">
+      <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
+    </div>
 
     <!-- Componente de estadísticas -->
-    <ResumenMensual :pedidos="pedidosRealizados" />
+    <ResumenMensual
+      v-if="mostrarEstadisticas"
+      :total-pedidos="estadisticas.totalPedidos"
+      :dias-trabajados="estadisticas.diasTrabajados"
+      :promedio-por-dia="estadisticas.promedioPorDia"
+    />
 
     <!-- Pedidos repetidos -->
-    <div class="encabezado-pedidos">
-      <p v-if="cantidadPedidosRepetidos > 0" class="texto-secundario texto-repetidos">
+    <div v-if="cantidadPedidosRepetidos > 0" class="contenedor-repetidos">
+      <p class="texto-secundario texto-repetidos">
         Pedidos repetidos: {{ cantidadPedidosRepetidos }}
       </p>
     </div>
 
+    <!-- Tabla -->
     <table class="tabla">
       <thead>
         <tr>
@@ -88,6 +96,7 @@ const route = useRoute()
 
 // Estado principal
 const pedidosRealizados = ref([])
+const mostrarEstadisticas = ref(false)
 
 // Estados de modales
 const mostrarModalEditar = ref(false)
@@ -111,6 +120,58 @@ function normalizarNumero(numero) {
 function esPedidoDuplicado(numero) {
   return numerosDuplicados.value.has(normalizarNumero(numero))
 }
+
+// Función para parsear fechas
+function parsearFechaDDMMYYYY(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== 'string') return null
+  const partes = fechaStr.split('/')
+  if (partes.length !== 3) return null
+
+  const [dia, mes, anio] = partes.map(Number)
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
+
+  if (
+    fecha.getUTCFullYear() === anio &&
+    fecha.getUTCMonth() === mes - 1 &&
+    fecha.getUTCDate() === dia
+  ) {
+    return fecha
+  }
+  return null
+}
+
+// Computed: Calcular estadísticas
+const estadisticas = computed(() => {
+  const pedidos = pedidosRealizados.value
+
+  // Total de pedidos
+  const totalPedidos = pedidos.length
+
+  // Días trabajados (días únicos con al menos 1 pedido)
+  const diasUnicos = new Set()
+  pedidos.forEach((pedido) => {
+    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
+    if (fecha) {
+      const claveDia = `${fecha.getUTCDate()}-${fecha.getUTCMonth()}-${fecha.getUTCFullYear()}`
+      diasUnicos.add(claveDia)
+    }
+  })
+
+  const diasTrabajados = diasUnicos.size
+
+  // Promedio por día trabajado
+  let promedioPorDia = '0'
+  if (diasTrabajados > 0) {
+    const promedio = totalPedidos / diasTrabajados
+    promedioPorDia = Math.ceil(promedio).toString()
+  }
+
+  return {
+    totalPedidos,
+    diasTrabajados,
+    promedioPorDia,
+  }
+})
 
 // Computed properties
 const numerosDuplicados = computed(() => {
@@ -169,9 +230,7 @@ const configuracionBarra = computed(() => ({
 
 // Métodos que la barra inferior va a llamar
 const metodosParaBarra = {
-  onAgregar: () => {
-    // No se usa en esta página
-  },
+  onAgregar: () => {},
   onEnviar: () => {
     enviarPedidos()
   },
@@ -195,26 +254,6 @@ watch(
   },
   { deep: true },
 )
-
-// Función para parsear fechas
-function parsearFechaDDMMYYYY(fechaStr) {
-  if (!fechaStr || typeof fechaStr !== 'string') return null
-  const partes = fechaStr.split('/')
-  if (partes.length !== 3) return null
-
-  const [dia, mes, anio] = partes.map(Number)
-  // Se crea la fecha en UTC para consistencia.
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
-
-  if (
-    fecha.getUTCFullYear() === anio &&
-    fecha.getUTCMonth() === mes - 1 &&
-    fecha.getUTCDate() === dia
-  ) {
-    return fecha
-  }
-  return null
-}
 
 // Métodos de modales
 function abrirModalEditar(indice) {
@@ -252,7 +291,6 @@ async function confirmarEliminacion() {
     const pedidoAEliminar = pedidosRealizados.value[indiceEliminar.value]
     let todosLosPedidos = await obtenerPedidos()
 
-    // Buscar solo UNA coincidencia exacta
     const indiceEnListaCompleta = todosLosPedidos.findIndex(
       (p) => p.numero === pedidoAEliminar.numero && p.fecha === pedidoAEliminar.fecha,
     )
@@ -280,10 +318,8 @@ async function descargarPedidos() {
   }
 }
 
-// Botón "Enviar"
 async function enviarPedidos() {
   try {
-    // Generar el archivo temporal en el dispositivo
     const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosRealizados.value)
     if (!uri) throw new Error('No se generó el archivo correctamente.')
     await compartirArchivo(uri, nombreArchivo)
@@ -300,12 +336,13 @@ async function enviarPedidos() {
 onMounted(async () => {
   let datos = await obtenerPedidos()
 
-  // Lógica de filtrado.
   const { inicio, fin } = route.query
 
   if (inicio && fin) {
     const fechaInicio = new Date(inicio)
     const fechaFin = new Date(fin)
+
+    mostrarEstadisticas.value = true
 
     datos = datos.filter((pedido) => {
       const fechaPedido = parsearFechaDDMMYYYY(pedido.fecha)
@@ -319,12 +356,10 @@ onMounted(async () => {
 
   pedidosRealizados.value = datos.slice().reverse()
 
-  // Configurar la barra inferior
   actualizarConfiguracionBarra()
 })
 
 onUnmounted(() => {
-  // Limpiar configuración de la barra al salir de la página
   emit(
     'configurar-barra',
     {

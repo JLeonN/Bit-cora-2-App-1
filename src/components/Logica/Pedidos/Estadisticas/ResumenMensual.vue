@@ -6,7 +6,7 @@
         <IconPackage :size="24" />
       </div>
       <div class="info-metrica">
-        <p class="valor-metrica">{{ totalPedidosMes }}</p>
+        <p class="valor-metrica">{{ totalPedidos }}</p>
         <p class="label-metrica">Total de pedidos</p>
       </div>
     </div>
@@ -36,81 +36,22 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
 import { IconPackage, IconCalendarCheck, IconChartLine } from '@tabler/icons-vue'
 
-// Props: recibe el array de pedidos filtrados directamente
-const props = defineProps({
-  pedidos: {
-    type: Array,
-    default: () => [],
+// Props: recibe los datos ya calculados
+defineProps({
+  totalPedidos: {
+    type: Number,
+    required: true,
   },
-})
-
-// Estado reactivo
-const totalPedidosMes = ref(0)
-const diasTrabajados = ref(0)
-const promedioPorDia = ref('0')
-
-// Función para parsear fecha DD/MM/YYYY
-function parsearFechaDDMMYYYY(fechaStr) {
-  if (!fechaStr || typeof fechaStr !== 'string') return null
-  const partes = fechaStr.split('/')
-  if (partes.length !== 3) return null
-
-  const [dia, mes, anio] = partes.map(Number)
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia))
-
-  if (
-    fecha.getUTCFullYear() === anio &&
-    fecha.getUTCMonth() === mes - 1 &&
-    fecha.getUTCDate() === dia
-  ) {
-    return fecha
-  }
-  return null
-}
-
-// Función para calcular estadísticas de los pedidos recibidos
-function calcularEstadisticas() {
-  const pedidosValidos = props.pedidos || []
-
-  // Total de pedidos
-  totalPedidosMes.value = pedidosValidos.length
-
-  if (pedidosValidos.length === 0) {
-    diasTrabajados.value = 0
-    promedioPorDia.value = '0'
-    return
-  }
-
-  // Días trabajados (días únicos con al menos 1 pedido)
-  const diasUnicos = new Set()
-  pedidosValidos.forEach((pedido) => {
-    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
-    if (fecha) {
-      // Crear clave única por día
-      const claveDia = `${fecha.getUTCDate()}-${fecha.getUTCMonth()}-${fecha.getUTCFullYear()}`
-      diasUnicos.add(claveDia)
-    }
-  })
-
-  diasTrabajados.value = diasUnicos.size
-
-  // Promedio por día trabajado
-  if (diasTrabajados.value > 0) {
-    const promedio = totalPedidosMes.value / diasTrabajados.value
-    promedioPorDia.value = Math.ceil(promedio).toString()
-  } else {
-    promedioPorDia.value = '0'
-  }
-}
-
-// Recalcular cuando cambien los pedidos
-watch(() => props.pedidos, calcularEstadisticas, { deep: true })
-
-onMounted(() => {
-  calcularEstadisticas()
+  diasTrabajados: {
+    type: Number,
+    required: true,
+  },
+  promedioPorDia: {
+    type: String,
+    required: true,
+  },
 })
 </script>
 
