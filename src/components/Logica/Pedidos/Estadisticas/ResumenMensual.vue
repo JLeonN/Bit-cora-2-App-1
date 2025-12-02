@@ -25,7 +25,7 @@
     <!-- Tarjeta: Promedio por día -->
     <div class="tarjeta-metrica">
       <div class="icono-metrica">
-        <IconChartLine :size="24" />
+        <component :is="iconoPromedio" :size="24" />
       </div>
       <div class="info-metrica">
         <p class="valor-metrica">{{ promedioPorDia }}</p>
@@ -36,7 +36,7 @@
     <!-- Tarjeta: Mejor día del mes -->
     <div class="tarjeta-metrica">
       <div class="icono-metrica">
-        <IconTrophy :size="24" />
+        <component :is="iconoMejorDia" :size="24" />
       </div>
       <div class="info-metrica">
         <p class="valor-metrica">{{ mejorDiaCantidad }}</p>
@@ -47,10 +47,12 @@
 </template>
 
 <script setup>
-import { IconPackage, IconCalendarCheck, IconChartLine, IconTrophy } from '@tabler/icons-vue'
+import { computed } from 'vue'
+import { IconPackage, IconCalendarCheck } from '@tabler/icons-vue'
+import { obtenerIconoMejorDia, obtenerIconoPromedio } from '../obtenerIconoPorCantidad.js'
 
 // Props: recibe los datos ya calculados
-defineProps({
+const props = defineProps({
   totalPedidos: {
     type: Number,
     required: true,
@@ -71,6 +73,16 @@ defineProps({
     type: Number,
     required: true,
   },
+})
+
+// Computed para íconos dinámicos
+const iconoPromedio = computed(() => {
+  const promedioRedondeado = parseInt(props.promedioPorDia)
+  return obtenerIconoPromedio(promedioRedondeado)
+})
+
+const iconoMejorDia = computed(() => {
+  return obtenerIconoMejorDia(props.mejorDiaCantidad)
 })
 </script>
 
