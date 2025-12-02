@@ -1,7 +1,7 @@
 <template>
   <div class="contenedor-resumen-anual">
     <!-- Título con año actual -->
-    <h2 class="titulo-anual">Resumen del año {{ anioActual }}</h2>
+    <h2 class="titulo-tabla">Resumen del año {{ anioActual }}</h2>
 
     <!-- Grid de métricas -->
     <div class="contenedor-metricas">
@@ -245,13 +245,6 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
 }
-.titulo-anual {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-texto-principal);
-  margin: 0 0 2rem 0;
-  text-align: center;
-}
 /* Grid de métricas */
 .contenedor-metricas {
   display: grid;
@@ -320,10 +313,6 @@ onMounted(() => {
   .contenedor-resumen-anual {
     padding: 1rem;
   }
-  .titulo-anual {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
   .contenedor-metricas {
     grid-template-columns: 1fr;
     gap: 0.875rem;
@@ -336,9 +325,6 @@ onMounted(() => {
   }
 }
 @media (max-width: 480px) {
-  .titulo-anual {
-    font-size: 1.25rem;
-  }
   .tarjeta-metrica {
     padding: 1rem;
     gap: 0.875rem;
