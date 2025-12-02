@@ -18,11 +18,17 @@ const routes = [
         name: 'PedidosRealizados',
         component: () => import('../components/Logica/Pedidos/PedidosRealizados.vue'),
       },
-      // ESTADÍSTICAS DE PEDIDOS - Análisis y métricas de pedidos
+      // ESTADÍSTICAS DE PEDIDOS - Análisis y métricas de pedidos del día
       {
         path: '/estadisticas-pedidos',
         name: 'EstadisticasPedidos',
         component: () => import('../components/Logica/Pedidos/Estadisticas/PedidosDelDia.vue'),
+      },
+      // RESUMEN ANUAL - Estadísticas completas del año
+      {
+        path: '/resumen-anual',
+        name: 'ResumenAnual',
+        component: () => import('../components/Logica/Pedidos/Estadisticas/ResumenAnual.vue'),
       },
       // UBICACIONES - Gestión completa de ubicaciones de artículos
       { path: '/AjustarUbicaciones', component: () => import('src/pages/AjustarUbicaciones.vue') },

@@ -1,6 +1,12 @@
 <template>
   <div class="contenedor-tabla">
-    <h2 class="titulo-tabla">Pedidos</h2>
+    <!-- Header con título y botón de estadísticas -->
+    <div class="encabezado-pedidos">
+      <h2 class="titulo-tabla">Pedidos</h2>
+      <button class="boton-estadisticas-anuales" @click="irAResumenAnual" title="Ver resumen anual">
+        <IconCalendarStats :size="24" />
+      </button>
+    </div>
 
     <table class="tabla">
       <thead>
@@ -66,7 +72,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { IconPencil, IconTrash } from '@tabler/icons-vue'
+import { useRouter } from 'vue-router'
+import { IconPencil, IconTrash, IconCalendarStats } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../components/BaseDeDatos/almacenamiento'
 import ModalNuevoPedido from '../components/Modales/ModalNuevoPedido.vue'
 import ModalEditarPedido from '../components/Modales/ModalEditarPedido.vue'
@@ -74,6 +81,8 @@ import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import CamaraPedidos from '../components/Logica/Pedidos/CamaraPedidos.vue'
 import HistorialPedidos from '../components/Logica/Pedidos/HistorialPedidos.vue'
 import ContadorPedidosDiarios from '../components/Logica/Pedidos/ContadorPedidosDiarios.vue'
+
+const router = useRouter()
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
@@ -104,7 +113,7 @@ const ultimosTresPedidos = computed(() => {
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: true,
-  mostrarEnviar: false, // TablaPedidos no necesita enviar
+  mostrarEnviar: false,
   puedeEnviar: false,
   botonesPersonalizados: [],
 }))
@@ -115,7 +124,6 @@ const metodosParaBarra = {
     abrirModalAgregar()
   },
   onEnviar: () => {
-    // No necesario en TablaPedidos
     console.log('Enviar no implementado en TablaPedidos')
   },
   onAccionPersonalizada: (accion) => {
@@ -153,12 +161,10 @@ function abrirModalAgregar() {
 function agregarPedido(nuevosPedidos) {
   const fecha = formatearFecha(new Date())
 
-  // Si viene un solo pedido como objeto
   if (!Array.isArray(nuevosPedidos)) {
     nuevosPedidos = [nuevosPedidos]
   }
 
-  // Guardar todos con la fecha
   nuevosPedidos.forEach((pedido) => {
     pedidos.value.push({
       numero: pedido.numero,
@@ -169,10 +175,8 @@ function agregarPedido(nuevosPedidos) {
   guardarPedidos(pedidos.value)
   mostrarModalAgregar.value = false
 
-  // Actualizar barra después de agregar
   actualizarConfiguracionBarra()
 
-  // Actualizar el contador después de agregar pedidos
   if (contadorRef.value) {
     contadorRef.value.actualizarContador()
   }
@@ -191,7 +195,6 @@ function guardarEdicion(nuevoNumero) {
   }
   mostrarModalEditar.value = false
 
-  // Actualizar contador después de editar
   if (contadorRef.value) {
     contadorRef.value.actualizarContador()
   }
@@ -210,10 +213,8 @@ function confirmarEliminacion() {
   }
   mostrarModalEliminar.value = false
 
-  // Actualizar barra después de eliminar
   actualizarConfiguracionBarra()
 
-  // Actualizar contador después de eliminar
   if (contadorRef.value) {
     contadorRef.value.actualizarContador()
   }
@@ -235,18 +236,20 @@ function abrirModalConfirmarEscaneados(arrayPedidos) {
   mostrarModalConfirmarEscaneados.value = true
 }
 
+// Navegación a resumen anual
+function irAResumenAnual() {
+  router.push({ name: 'ResumenAnual' })
+}
+
 // Ciclo de vida
 onMounted(async () => {
-  // Cargar datos existentes
   const datos = await obtenerPedidos()
   pedidos.value = datos
 
-  // Configurar la barra inferior
   actualizarConfiguracionBarra()
 })
 
 onUnmounted(() => {
-  // Limpiar configuración de la barra al salir de la página
   emit(
     'configurar-barra',
     {
@@ -259,3 +262,55 @@ onUnmounted(() => {
   )
 })
 </script>
+
+<style scoped>
+/* Header con botón de estadísticas */
+.encabezado-pedidos {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+.titulo-tabla {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-texto-principal);
+}
+.boton-estadisticas-anuales {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-acento);
+  box-shadow: 0 2px 8px var(--sombra-boton);
+}
+.boton-estadisticas-anuales:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px var(--sombra-boton);
+  background: var(--color-fondo);
+}
+.boton-estadisticas-anuales:active {
+  transform: scale(0.95);
+}
+/* Responsive */
+@media (max-width: 600px) {
+  .encabezado-pedidos {
+    padding: 0 0.25rem;
+  }
+  .titulo-tabla {
+    font-size: 1.5rem;
+  }
+  .boton-estadisticas-anuales {
+    width: 44px;
+    height: 44px;
+  }
+}
+</style>
