@@ -7,7 +7,7 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 ### 📦 **Estructura General**
 
 La aplicación se divide en 5 módulos principales:
-- **Pedidos**: Gestión de pedidos diarios (ver `ResumenPedidos.txt`)
+- **Pedidos**: Gestión de pedidos diarios con sistema de estadísticas completo (ver `ResumenPedidos.txt`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `ResumenUbicaciones.txt`)
 - **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `ResumenEtiquetas.txt`)
 - **Configuración**: Sistema de configuración de usuario (ver `ResumenConfiguracion.txt`)
@@ -234,7 +234,12 @@ src/
     │   │   ├── ExportarPedidosExcel.js
     │   │   ├── GeneraExcel.js
     │   │   ├── HistorialPedidos.vue
-    │   │   └── PedidosRealizados.vue
+    │   │   ├── PedidosRealizados.vue
+    │   │   ├── obtenerIconoPorCantidad.js
+    │   │   └── Estadisticas/
+    │   │       ├── PedidosDelDia.vue
+    │   │       ├── ResumenMensual.vue
+    │   │       └── ResumenAnual.vue
     │   └── Ubicaciones/
     │       ├── CamaraEscaneo.vue
     │       ├── CamaraUbicaciones.vue
@@ -292,4 +297,3 @@ src/
   --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
   --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
 }
----
