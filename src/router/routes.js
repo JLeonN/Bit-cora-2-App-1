@@ -22,8 +22,7 @@ const routes = [
       {
         path: '/estadisticas-pedidos',
         name: 'EstadisticasPedidos',
-        component: () =>
-          import('../components/Logica/Pedidos/Estadisticas/EstadisticasPedidos.vue'),
+        component: () => import('../components/Logica/Pedidos/Estadisticas/PedidosDelDia.vue'),
       },
       // UBICACIONES - Gestión completa de ubicaciones de artículos
       { path: '/AjustarUbicaciones', component: () => import('src/pages/AjustarUbicaciones.vue') },
