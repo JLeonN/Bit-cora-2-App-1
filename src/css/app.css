@@ -22,6 +22,10 @@
   --color-carga: #ff9800; /* Naranja para carga */
   --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
   --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
+
+  --color-falta: #ff9800; /* Naranja para faltas */
+  --color-falta-claro: #ffb74d;
+  --color-falta-fondo: #fff3e0;
 }
 
 body {

@@ -14,6 +14,14 @@
       </div>
     </div>
 
+    <!-- Botón para marcar día no trabajado (solo visible si no hay pedidos ni faltas) -->
+    <div v-if="pedidosDelDia.length === 0 && !hayFaltaRegistrada" class="contenedor-boton-falta">
+      <button class="boton-falta" @click="registrarFalta">
+        <IconCalendarMinus :size="20" />
+        Día no trabajado
+      </button>
+    </div>
+
     <!-- Contador de duplicados -->
     <div v-if="cantidadPedidosRepetidos > 0" class="contenedor-repetidos">
       <p class="texto-secundario texto-repetidos">
@@ -22,56 +30,58 @@
     </div>
 
     <!-- Tabla de pedidos del día -->
-    <div v-if="pedidosDelDia.length > 0" class="contenedor-tabla">
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Número de Pedido</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(pedido, indice) in pedidosDelDia"
-            :key="indice"
-            :class="{
-              'fila-duplicada': esPedidoDuplicado(pedido.numero),
-            }"
-          >
-            <td>{{ pedido.fecha }}</td>
-            <td>
-              <span
-                class="globito"
-                :class="{ 'texto-duplicado': esPedidoDuplicado(pedido.numero) }"
-                :title="pedido.numero"
-              >
-                {{ pedido.numero.slice(0, 15) }}<span v-if="pedido.numero.length > 15">...</span>
-              </span>
-            </td>
-            <td class="acciones">
-              <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
-              <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(indice)" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <table v-if="pedidosDelDia.length > 0" class="tabla">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Número de Pedido</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(pedido, indice) in pedidosDelDia"
+          :key="indice"
+          :class="{
+            'fila-duplicada': esPedidoDuplicado(pedido.numero),
+          }"
+        >
+          <td>{{ pedido.fecha }}</td>
+          <td>
+            <span v-if="pedido.tipo === 'falta'" class="globito" title="Día no trabajado">
+              <IconCalendarMinus :size="16" style="margin-right: 0.25rem" />
+              {{ pedido.numero === 'FALTA' ? 'Día no trabajado' : pedido.numero }}
+            </span>
+            <span
+              v-else
+              class="globito"
+              :class="{ 'texto-duplicado': esPedidoDuplicado(pedido.numero) }"
+              :title="pedido.numero"
+            >
+              {{ pedido.numero.slice(0, 15) }}<span v-if="pedido.numero.length > 15">...</span>
+            </span>
+          </td>
+          <td class="acciones">
+            <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
+            <IconTrash
+              class="icono-accion icono-borrar"
+              @click="pedido.tipo === 'falta' ? eliminarFalta(indice) : abrirModalEliminar(indice)"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
-    <!-- Mensaje si no hay pedidos -->
-    <div v-else class="mensaje-vacio">
-      <p class="texto-secundario">No hay pedidos registrados hoy</p>
-    </div>
-
-    <!-- Modal editar -->
+    <!-- Modal editar pedido/falta -->
     <ModalEditarPedido
       v-if="mostrarModalEditar"
       :pedido="pedidoEditar.numero"
+      :es-falta="pedidoEditar.tipo === 'falta'"
       @guardar="guardarEdicion"
       @cerrar="mostrarModalEditar = false"
     />
 
-    <!-- Modal eliminar -->
+    <!-- Modal eliminar pedido -->
     <ModalEliminar
       v-if="mostrarModalEliminar"
       :texto="pedidoEliminar.numero"
@@ -92,6 +102,7 @@ import {
   IconBolt,
   IconTornado,
   IconDiamond,
+  IconCalendarMinus,
 } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
 import { generarYGuardarExcelTemporal } from '../GeneraExcel.js'
@@ -111,7 +122,7 @@ const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
 
 // Datos para editar/eliminar
-const pedidoEditar = ref({ numero: '', fecha: '' })
+const pedidoEditar = ref({ numero: '', fecha: '', tipo: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
 const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
@@ -150,10 +161,16 @@ function normalizarNumero(numero) {
   return String(numero ?? '').trim()
 }
 
-// Computed: Números duplicados
+// Computed: Verificar si hay falta registrada
+const hayFaltaRegistrada = computed(() => {
+  return pedidosDelDia.value.some((p) => p.tipo === 'falta')
+})
+
+// Computed: Números duplicados (excluyendo faltas)
 const numerosDuplicados = computed(() => {
+  const pedidosNormales = pedidosDelDia.value.filter((p) => p.tipo !== 'falta')
   const conteoPorNumero = new Map()
-  for (const p of pedidosDelDia.value) {
+  for (const p of pedidosNormales) {
     const n = normalizarNumero(p.numero)
     conteoPorNumero.set(n, (conteoPorNumero.get(n) || 0) + 1)
   }
@@ -166,7 +183,7 @@ const numerosDuplicados = computed(() => {
 
 // Computed: Cantidad de pedidos repetidos
 const cantidadPedidosRepetidos = computed(
-  () => pedidosDelDia.value.filter((p) => esPedidoDuplicado(p.numero)).length,
+  () => pedidosDelDia.value.filter((p) => p.tipo !== 'falta' && esPedidoDuplicado(p.numero)).length,
 )
 
 // Función para verificar si es duplicado
@@ -174,10 +191,10 @@ function esPedidoDuplicado(numero) {
   return numerosDuplicados.value.has(normalizarNumero(numero))
 }
 
-// Computed: Icono gamificado según cantidad
+// Computed: Icono gamificado según cantidad (sin contar faltas)
 const obtenerIconoContador = computed(() => {
   const esFinde = esFinesDeSemana(fechaActual.value)
-  const cantidad = pedidosDelDia.value.length
+  const cantidad = pedidosDelDia.value.filter((p) => p.tipo !== 'falta').length
 
   if (cantidad === 0) return IconCalendarEvent
 
@@ -198,17 +215,17 @@ const obtenerIconoContador = computed(() => {
   return IconCalendarEvent
 })
 
-// Computed: Texto dinámico
+// Computed: Texto dinámico (sin contar faltas)
 const textoPedidos = computed(() => {
-  const cantidad = pedidosDelDia.value.length
+  const cantidad = pedidosDelDia.value.filter((p) => p.tipo !== 'falta').length
   return cantidad === 1 ? 'pedido registrado hoy' : 'pedidos registrados hoy'
 })
 
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
-  mostrarEnviar: pedidosDelDia.value.length > 0,
-  puedeEnviar: pedidosDelDia.value.length > 0,
+  mostrarEnviar: pedidosDelDia.value.some((p) => p.tipo !== 'falta'),
+  puedeEnviar: pedidosDelDia.value.some((p) => p.tipo !== 'falta'),
   botonesPersonalizados: [],
 }))
 
@@ -250,6 +267,48 @@ async function cargarPedidosDelDia() {
   }
 }
 
+// Registrar día no trabajado
+async function registrarFalta() {
+  try {
+    const fechaHoyFormateada = formatearFechaHoy(fechaActual.value)
+    const todosLosPedidos = await obtenerPedidos()
+
+    // Agregar la falta
+    todosLosPedidos.push({
+      numero: 'FALTA',
+      fecha: fechaHoyFormateada,
+      tipo: 'falta',
+    })
+
+    await guardarPedidos(todosLosPedidos)
+    await cargarPedidosDelDia()
+    actualizarConfiguracionBarra()
+  } catch (error) {
+    console.error('Error al registrar falta:', error)
+  }
+}
+
+// Eliminar falta
+async function eliminarFalta(indice) {
+  try {
+    const faltaAEliminar = pedidosDelDia.value[indice]
+    let todosLosPedidos = await obtenerPedidos()
+
+    const indiceEnListaCompleta = todosLosPedidos.findIndex(
+      (p) => p.tipo === 'falta' && p.fecha === faltaAEliminar.fecha,
+    )
+
+    if (indiceEnListaCompleta !== -1) {
+      todosLosPedidos.splice(indiceEnListaCompleta, 1)
+      await guardarPedidos(todosLosPedidos)
+      await cargarPedidosDelDia()
+      actualizarConfiguracionBarra()
+    }
+  } catch (error) {
+    console.error('Error al eliminar falta:', error)
+  }
+}
+
 // Métodos de modales
 function abrirModalEditar(indice) {
   indiceEditar.value = indice
@@ -269,7 +328,10 @@ async function guardarEdicion(nuevoNumero) {
       todosLosPedidos[indiceEnListaCompleta].numero = nuevoNumero
       await guardarPedidos(todosLosPedidos)
       await cargarPedidosDelDia()
-      mensajeExito.value = 'Pedido editado correctamente'
+      mensajeExito.value =
+        pedidoModificado.tipo === 'falta'
+          ? 'Observación editada correctamente'
+          : 'Pedido editado correctamente'
       setTimeout(() => (mensajeExito.value = ''), 3000)
     }
   }
@@ -304,10 +366,11 @@ async function confirmarEliminacion() {
   actualizarConfiguracionBarra()
 }
 
-// Enviar pedidos del día
+// Enviar pedidos del día (solo pedidos normales, no faltas)
 async function enviarPedidosDelDia() {
   try {
-    const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosDelDia.value)
+    const pedidosNormales = pedidosDelDia.value.filter((p) => p.tipo !== 'falta')
+    const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosNormales)
     if (!uri) throw new Error('No se generó el archivo correctamente.')
     await compartirArchivo(uri, nombreArchivo)
     mensajeExito.value = 'Archivo generado y enviado correctamente'
@@ -393,6 +456,37 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   margin: 0.5rem 0 0 0;
 }
+
+/* Botón de falta */
+.contenedor-boton-falta {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+.boton-falta {
+  background: var(--color-falta);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+.boton-falta:hover {
+  background: var(--color-falta-claro);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
+}
+.boton-falta:active {
+  transform: translateY(0);
+}
+
 /* Contador de repetidos */
 .contenedor-repetidos {
   background: var(--color-superficie);
@@ -441,6 +535,10 @@ onUnmounted(() => {
   .valor-metrica {
     font-size: 2rem;
   }
+  .boton-falta {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+  }
 }
 @media (max-width: 480px) {
   .tarjeta-metrica-dia {
@@ -454,6 +552,10 @@ onUnmounted(() => {
     font-size: 1.75rem;
   }
   .label-metrica {
+    font-size: 0.9rem;
+  }
+  .boton-falta {
+    padding: 0.75rem 1rem;
     font-size: 0.9rem;
   }
 }
