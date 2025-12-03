@@ -31,7 +31,7 @@
       <!-- Tarjeta 3: Promedio por mes -->
       <div class="tarjeta-metrica">
         <div class="icono-metrica">
-          <component :is="iconoPromedio" :size="24" />
+          <IconChartLine :size="24" />
         </div>
         <div class="info-metrica">
           <p class="valor-metrica">{{ estadisticasAnuales.promedioPorMes }}</p>
@@ -42,7 +42,7 @@
       <!-- Tarjeta 4: Mejor mes del año -->
       <div class="tarjeta-metrica">
         <div class="icono-metrica">
-          <component :is="iconoMejorMes" :size="24" />
+          <IconTrophy :size="24" />
         </div>
         <div class="info-metrica">
           <p class="valor-metrica">{{ estadisticasAnuales.mejorMesCantidad }}</p>
@@ -60,10 +60,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { IconPackage, IconCalendarCheck } from '@tabler/icons-vue'
+import { ref, onMounted } from 'vue'
+import { IconPackage, IconCalendarCheck, IconChartLine, IconTrophy } from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
-import { obtenerIconoMejorDia, obtenerIconoPromedio } from '../obtenerIconoPorCantidad.js'
 
 // Estado principal
 const anioActual = ref(new Date().getFullYear())
@@ -114,17 +113,6 @@ function obtenerNombreMes(numeroMes) {
   ]
   return nombresMeses[numeroMes] || 'Mes inválido'
 }
-
-// Computed: Icono promedio
-const iconoPromedio = computed(() => {
-  const promedioRedondeado = parseInt(estadisticasAnuales.value.promedioPorMes)
-  return obtenerIconoPromedio(promedioRedondeado)
-})
-
-// Computed: Icono mejor mes
-const iconoMejorMes = computed(() => {
-  return obtenerIconoMejorDia(estadisticasAnuales.value.mejorMesCantidad)
-})
 
 // Calcular estadísticas del año
 async function calcularEstadisticasAnuales() {
