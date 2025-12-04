@@ -72,13 +72,21 @@
       </tbody>
     </table>
 
-    <!-- Modal editar pedido/falta -->
+    <!-- Modal editar pedido -->
     <ModalEditarPedido
-      v-if="mostrarModalEditar"
+      v-if="mostrarModalEditarPedido"
       :pedido="pedidoEditar.numero"
-      :es-falta="pedidoEditar.tipo === 'falta'"
-      @guardar="guardarEdicion"
-      @cerrar="mostrarModalEditar = false"
+      @guardar="guardarEdicionPedido"
+      @cerrar="mostrarModalEditarPedido = false"
+    />
+
+    <!-- Modal editar falta -->
+    <ModalEditarFalta
+      v-if="mostrarModalEditarFalta"
+      :observacion="pedidoEditar.numero"
+      :fecha="pedidoEditar.fecha"
+      @guardar="guardarEdicionFalta"
+      @cerrar="mostrarModalEditarFalta = false"
     />
 
     <!-- Modal eliminar pedido -->
@@ -108,6 +116,7 @@ import { guardarPedidos, obtenerPedidos } from '../../../BaseDeDatos/almacenamie
 import { generarYGuardarExcelTemporal } from '../GeneraExcel.js'
 import { compartirArchivo } from '../CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
+import ModalEditarFalta from 'src/components/Modales/ModalEditarFalta.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
 
 // Emit para configurar la barra inferior
@@ -118,7 +127,8 @@ const pedidosDelDia = ref([])
 const fechaActual = ref(new Date())
 
 // Estados de modales
-const mostrarModalEditar = ref(false)
+const mostrarModalEditarPedido = ref(false)
+const mostrarModalEditarFalta = ref(false)
 const mostrarModalEliminar = ref(false)
 
 // Datos para editar/eliminar
@@ -311,12 +321,18 @@ async function eliminarFalta(indice) {
 
 // Métodos de modales
 function abrirModalEditar(indice) {
+  const pedido = pedidosDelDia.value[indice]
   indiceEditar.value = indice
-  pedidoEditar.value = { ...pedidosDelDia.value[indice] }
-  mostrarModalEditar.value = true
+  pedidoEditar.value = { ...pedido }
+
+  if (pedido.tipo === 'falta') {
+    mostrarModalEditarFalta.value = true
+  } else {
+    mostrarModalEditarPedido.value = true
+  }
 }
 
-async function guardarEdicion(nuevoNumero) {
+async function guardarEdicionPedido(nuevoNumero) {
   if (indiceEditar.value !== null) {
     const pedidoModificado = pedidoEditar.value
     const todosLosPedidos = await obtenerPedidos()
@@ -328,14 +344,31 @@ async function guardarEdicion(nuevoNumero) {
       todosLosPedidos[indiceEnListaCompleta].numero = nuevoNumero
       await guardarPedidos(todosLosPedidos)
       await cargarPedidosDelDia()
-      mensajeExito.value =
-        pedidoModificado.tipo === 'falta'
-          ? 'Observación editada correctamente'
-          : 'Pedido editado correctamente'
+      mensajeExito.value = 'Pedido editado correctamente'
       setTimeout(() => (mensajeExito.value = ''), 3000)
     }
   }
-  mostrarModalEditar.value = false
+  mostrarModalEditarPedido.value = false
+  actualizarConfiguracionBarra()
+}
+
+async function guardarEdicionFalta(datos) {
+  if (indiceEditar.value !== null) {
+    const todosLosPedidos = await obtenerPedidos()
+    const indiceEnListaCompleta = todosLosPedidos.findIndex(
+      (p) => p.fecha === datos.fechaOriginal && p.tipo === 'falta',
+    )
+
+    if (indiceEnListaCompleta !== -1) {
+      todosLosPedidos[indiceEnListaCompleta].numero = datos.observacion
+      todosLosPedidos[indiceEnListaCompleta].fecha = datos.fecha
+      await guardarPedidos(todosLosPedidos)
+      await cargarPedidosDelDia()
+      mensajeExito.value = 'Observación editada correctamente'
+      setTimeout(() => (mensajeExito.value = ''), 3000)
+    }
+  }
+  mostrarModalEditarFalta.value = false
   actualizarConfiguracionBarra()
 }
 
