@@ -86,6 +86,9 @@ const obtenerIconoContador = computed(() => {
   return IconCalendarEvent // 1-9 calendario normal
 })
 
+// Estado para verificar si hay falta registrada
+const hayFaltaRegistrada = ref(false)
+
 // Texto dinámico del contador mejorado
 const textoContador = computed(() => {
   const esFinde = esFinesDeSemana(fechaActual.value)
@@ -100,9 +103,11 @@ const textoContador = computed(() => {
     return '¡Buen descanso!'
   }
 
-  // Entre semana sin pedidos
+  // Entre semana sin pedidos - verificar si hay falta registrada
   if (pedidosDelDia.value === 0) {
-    return 'Todavía no se ingresaron pedidos'
+    return hayFaltaRegistrada.value
+      ? 'Día marcado como no trabajado'
+      : 'Todavía no se ingresaron pedidos'
   }
 
   // Entre semana con pedidos
@@ -123,7 +128,14 @@ async function contarPedidosHoy() {
     const todosLosPedidos = await obtenerPedidos()
     const fechaHoyFormateada = formatearFechaHoy(fechaActual.value)
 
-    const pedidosHoy = todosLosPedidos.filter((pedido) => pedido.fecha === fechaHoyFormateada)
+    const pedidosHoy = todosLosPedidos.filter(
+      (pedido) => pedido.fecha === fechaHoyFormateada && pedido.tipo !== 'falta',
+    )
+
+    // Verificar si hay falta registrada
+    hayFaltaRegistrada.value = todosLosPedidos.some(
+      (p) => p.fecha === fechaHoyFormateada && p.tipo === 'falta',
+    )
 
     pedidosDelDia.value = pedidosHoy.length
   } catch (error) {

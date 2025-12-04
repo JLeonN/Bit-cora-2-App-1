@@ -228,7 +228,7 @@ const obtenerIconoContador = computed(() => {
 // Computed: Texto dinámico (sin contar faltas)
 const textoPedidos = computed(() => {
   const cantidad = pedidosDelDia.value.filter((p) => p.tipo !== 'falta').length
-  return cantidad === 1 ? 'pedido registrado hoy' : 'pedidos registrados hoy'
+  return cantidad === 1 ? 'Pedido registrado hoy' : 'Pedidos registrados hoy'
 })
 
 // Configuración dinámica de la barra inferior

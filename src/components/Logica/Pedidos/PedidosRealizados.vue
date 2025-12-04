@@ -144,7 +144,8 @@ function parsearFechaDDMMYYYY(fechaStr) {
 
 // Computed: Calcular estadísticas
 const estadisticas = computed(() => {
-  const pedidos = pedidosRealizados.value
+  // Filtrar solo pedidos normales (sin faltas)
+  const pedidos = pedidosRealizados.value.filter((p) => p.tipo !== 'falta')
 
   // Total de pedidos
   const totalPedidos = pedidos.length

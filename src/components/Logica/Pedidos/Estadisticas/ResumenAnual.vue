@@ -119,10 +119,10 @@ async function calcularEstadisticasAnuales() {
   try {
     const todosLosPedidos = await obtenerPedidos()
 
-    // Filtrar pedidos del año actual
+    // Filtrar pedidos del año actual (sin faltas)
     const pedidosDelAnio = todosLosPedidos.filter((pedido) => {
       const fecha = parsearFechaDDMMYYYY(pedido.fecha)
-      return fecha && fecha.getUTCFullYear() === anioActual.value
+      return fecha && fecha.getUTCFullYear() === anioActual.value && pedido.tipo !== 'falta'
     })
 
     // Total de pedidos
