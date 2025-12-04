@@ -68,7 +68,12 @@ Sistema completo para gestión de pedidos diarios con historial, exportación, e
 ---
 
 ### 📊 **Sistema de Estadísticas**
-
+#### **Sistema de Días No Trabajados**
+- **Registro de faltas**: Botón "Día no trabajado" visible solo cuando no hay pedidos
+- **ModalEditarFalta.vue**: Edición de observación y fecha con validaciones
+- **Exclusión total**: Las faltas NO suman a estadísticas (0 impacto en promedios/totales)
+- **Estructura**: `{ numero: "FALTA" o observación, fecha: "DD/MM/YYYY", tipo: "falta" }`
+- **Validación**: No permite registros en fechas con pedidos existentes
 #### **PedidosDelDia.vue**
 - **Pantalla de estadísticas del día actual**
 - **Tarjeta métrica gamificada**: Icono dinámico según cantidad

@@ -253,9 +253,20 @@ src/
         ├── ModalEditarPedido.vue
         ├── ModalEditarUbicacion.vue
         ├── ModalEditarEtiqueta.vue
+        ├── ModalEditarFalta.vue
         ├── ModalEliminar.vue
         └── ModalNuevoPedido.vue
 ---
+
+### 📅 **Sistema de Días No Trabajados**
+
+- **Registro de faltas**: Botón para marcar días sin actividad laboral
+- **Modal de edición**: `ModalEditarFalta.vue` con observación y fecha editable
+- **Validaciones**: No permite duplicados en misma fecha (ni pedidos ni faltas)
+- **Exclusión de estadísticas**: Las faltas NO cuentan en totales, promedios ni días trabajados
+- **Filtrado automático**: Aplicado en ContadorPedidosDiarios, PedidosRealizados, ResumenAnual
+- **Identificación visual**: Icono `IconCalendarMinus` y color naranja
+- **Estructura**: `{ numero: "FALTA", fecha: "03/12/2025", tipo: "falta" }`
 
 ### 🔧 **Tecnologías y Dependencias**
 
