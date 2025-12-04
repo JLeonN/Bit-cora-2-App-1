@@ -1,6 +1,6 @@
 <template>
   <div class="modal-fondo" @click.self="$emit('cerrar')">
-    <div :class="['modal-contenido', { activo: modalActivo }]">
+    <div class="modal-contenido">
       <h3 class="modal-titulo">Editar día no trabajado</h3>
 
       <div class="modal-campo">
@@ -10,20 +10,13 @@
           type="text"
           v-model="observacionEditada"
           placeholder="Motivo de la falta"
-          @focus="modalActivo = true"
-          @blur="modalActivo = false"
+          @keyup.enter="guardarCambios"
         />
       </div>
 
       <div class="modal-campo">
         <label for="fecha">Fecha</label>
-        <input
-          id="fecha"
-          type="date"
-          v-model="fechaEditada"
-          @focus="modalActivo = true"
-          @blur="modalActivo = false"
-        />
+        <input id="fecha" type="date" v-model="fechaEditada" @keyup.enter="guardarCambios" />
       </div>
 
       <!-- Mensaje de error -->
@@ -54,7 +47,6 @@ const emit = defineEmits(['guardar', 'cerrar'])
 
 const observacionEditada = ref(props.observacion)
 const fechaEditada = ref('')
-const modalActivo = ref(false)
 const mensajeError = ref('')
 
 // Convertir fecha de DD/MM/YYYY a YYYY-MM-DD
@@ -135,13 +127,6 @@ async function guardarCambios() {
   width: 90%;
   max-width: 400px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transform: scale(0.9);
-  opacity: 0;
-  transition: all 0.2s ease;
-}
-.modal-contenido.activo {
-  transform: scale(1);
-  opacity: 1;
 }
 .modal-titulo {
   margin: 0 0 1.5rem 0;
