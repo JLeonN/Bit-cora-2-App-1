@@ -4,39 +4,40 @@
       <h2 class="modal-titulo">Nuevo pedido</h2>
 
       <form @submit.prevent="confirmarTodosPedidos">
-        <!-- Campo número de pedido con flecha -->
-        <div class="modal-campo">
+        <!-- Fila 1: Label y botón cámara -->
+        <div class="fila-label-camara">
           <label for="numeroPedido">Número de pedido</label>
-          <div class="campo-con-boton">
-            <input
-              ref="inputRef"
-              id="numeroPedido"
-              v-model="numeroPedido"
-              type="text"
-              :placeholder="textoPlaceholder"
-              @focus="modalActivo = true"
-              @blur="modalActivo = false"
-              @input="restablecerPlaceholder"
-              @keyup.enter="agregarPedidoALista"
-              :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
-            />
+          <button type="button" class="boton-camara" @click="abrirCamara">
+            <IconCamera :stroke="2" />
+          </button>
+        </div>
 
-            <!-- Botón flecha para agregar a la lista -->
-            <button
-              type="button"
-              class="boton-flecha"
-              :class="{ 'boton-inactivo': !puedeAgregar }"
-              :disabled="!puedeAgregar"
-              @click="agregarPedidoALista"
-            >
-              <IconArrowRight :stroke="2" />
-            </button>
+        <!-- Fila 2: Input y botón flecha -->
+        <div class="fila-input-flecha">
+          <input
+            ref="inputRef"
+            id="numeroPedido"
+            v-model="numeroPedido"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            :placeholder="textoPlaceholder"
+            @focus="activarModal"
+            @blur="desactivarModal"
+            @input="restablecerPlaceholder"
+            @keyup.enter="agregarPedidoALista"
+            :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
+          />
 
-            <!-- Botón de cámara -->
-            <button type="button" class="boton-camara" @click="abrirCamara">
-              <IconCamera :stroke="2" />
-            </button>
-          </div>
+          <button
+            type="button"
+            class="boton-flecha"
+            :class="{ 'boton-inactivo': !puedeAgregar }"
+            :disabled="!puedeAgregar"
+            @click="agregarPedidoALista"
+          >
+            <IconArrowRight :stroke="2" />
+          </button>
         </div>
 
         <!-- Contador de pedidos agregados -->
@@ -52,12 +53,7 @@
         <!-- Mini lista de pedidos temporales -->
         <div v-if="pedidosTemporales.length > 0" class="contenedor-mini-lista">
           <div class="mini-lista">
-            <div
-              v-for="(pedido, index) in pedidosTemporales"
-              :key="index"
-              class="item-mini-lista"
-              :class="{ 'item-animado': index === pedidosTemporales.length - 1 }"
-            >
+            <div v-for="(pedido, index) in pedidosTemporales" :key="index" class="item-mini-lista">
               <span class="numero-pedido">{{ pedido }}</span>
               <button type="button" class="boton-eliminar-item" @click="eliminarDeLista(index)">
                 <IconX :size="18" :stroke="2" />
@@ -111,6 +107,18 @@ const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
 })
 
+// Activar/desactivar modal con delay para el blur
+const activarModal = () => {
+  modalActivo.value = true
+}
+
+const desactivarModal = () => {
+  // Delay para que no se cierre inmediatamente al tocar botones
+  setTimeout(() => {
+    modalActivo.value = false
+  }, 100)
+}
+
 // Agregar pedido a la lista temporal
 const agregarPedidoALista = () => {
   if (!puedeAgregar.value) return
@@ -126,6 +134,7 @@ const agregarPedidoALista = () => {
     nextTick(() => {
       if (inputRef.value) {
         inputRef.value.select()
+        inputRef.value.focus()
       }
     })
   } else {
@@ -189,6 +198,7 @@ const limpiarTodo = () => {
   numeroPedido.value = ''
   pedidosTemporales.value = []
   mostrarError.value = false
+  modalActivo.value = false
   restablecerPlaceholder()
 }
 
@@ -230,7 +240,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estilos existentes del modal */
+/* Modal fondo */
 .modal-fondo {
   position: fixed;
   top: 0;
@@ -243,6 +253,7 @@ onMounted(() => {
   justify-content: center;
   z-index: 1000;
 }
+/* Modal contenido */
 .modal-contenido {
   background: var(--color-superficie);
   border-radius: 16px;
@@ -250,28 +261,60 @@ onMounted(() => {
   width: 90%;
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
 }
+/* Cuando está activo (teclado abierto), todo el modal sube */
+.modal-contenido.activo {
+  transform: translateY(-65%);
+}
+/* Título del modal */
 .modal-titulo {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-texto-principal);
 }
-.modal-campo {
-  margin-bottom: 1rem;
-}
-.modal-campo label {
-  display: block;
+/* Fila 1: Label y botón cámara */
+.fila-label-camara {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 0.5rem;
+}
+.fila-label-camara label {
   font-size: 0.95rem;
   color: var(--color-texto-secundario);
+  margin: 0;
 }
-.campo-con-boton {
+/* Botón cámara */
+.boton-camara {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-acento);
+  flex-shrink: 0;
+}
+.boton-camara:hover {
+  transform: scale(1.05);
+  background: var(--color-fondo);
+}
+.boton-camara:active {
+  transform: scale(0.95);
+}
+/* Fila 2: Input y botón flecha */
+.fila-input-flecha {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
+  margin-bottom: 1rem;
 }
-.campo-con-boton input {
+.fila-input-flecha input {
   flex: 1;
   padding: 0.75rem;
   border: 1px solid var(--color-borde);
@@ -280,7 +323,7 @@ onMounted(() => {
   color: var(--color-texto-principal);
   font-size: 1rem;
 }
-.campo-con-boton input:focus {
+.fila-input-flecha input:focus {
   outline: none;
   border-color: var(--color-acento);
 }
@@ -315,6 +358,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   color: white;
+  flex-shrink: 0;
 }
 .boton-flecha:hover:not(.boton-inactivo) {
   background: var(--color-primario);
@@ -328,33 +372,11 @@ onMounted(() => {
   cursor: not-allowed;
   opacity: 0.5;
 }
-/* Botón cámara */
-.boton-camara {
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--color-acento);
-}
-.boton-camara:hover {
-  transform: scale(1.05);
-  background: var(--color-fondo);
-}
-.boton-camara:active {
-  transform: scale(0.95);
-}
 /* Contador de pedidos */
 .contador-pedidos {
   margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 .badge-contador {
   display: inline-block;
@@ -441,5 +463,11 @@ onMounted(() => {
 }
 .mini-lista::-webkit-scrollbar-thumb:hover {
   background: var(--color-texto-secundario);
+}
+/* Responsive: alinear label y botón cámara en pantallas pequeñas */
+@media (max-width: 600px) {
+  .fila-label-camara {
+    align-items: center;
+  }
 }
 </style>
