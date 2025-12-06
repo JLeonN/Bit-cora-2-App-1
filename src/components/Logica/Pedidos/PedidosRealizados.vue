@@ -28,6 +28,7 @@
         <tr>
           <th>Fecha</th>
           <th>Número de Pedido</th>
+          <th>Items</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -49,6 +50,7 @@
               {{ pedido.numero.slice(0, 15) }}<span v-if="pedido.numero.length > 15">...</span>
             </span>
           </td>
+          <td>{{ pedido.items || '-' }}</td>
           <td class="acciones">
             <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
             <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(indice)" />
