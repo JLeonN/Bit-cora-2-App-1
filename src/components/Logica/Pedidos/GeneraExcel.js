@@ -6,6 +6,7 @@ import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfigu
 const ANCHOS_COLUMNAS = [
   { wch: 11 }, // Fechas
   { wch: 11 }, // Pedidos
+  { wch: 8 }, // Items
 ]
 
 function parsearFechaDDMMYYYY(fechaStr) {
@@ -60,6 +61,7 @@ export async function generarYGuardarExcelTemporal(pedidos) {
       return {
         Fechas: pedido.fecha || 'Sin fecha',
         Pedidos: pedido.numero || 'Sin número',
+        Items: pedido.items || 1,
       }
     })
     const hojaDeTrabajo = XLSX.utils.json_to_sheet(datosParaHoja)
@@ -81,7 +83,7 @@ export async function generarYGuardarExcelTemporal(pedidos) {
 
     console.log('Archivo guardado temporalmente en:', resultadoEscritura.uri)
     console.log('Nombre de usuario:', nombreUsuario)
-    console.log('Anchos aplicados: Fechas(11), Pedidos(11)')
+    console.log('Anchos aplicados: Fechas(11), Pedidos(11), Items(8)')
 
     return { uri: resultadoEscritura.uri, nombreArchivo }
   } catch (error) {

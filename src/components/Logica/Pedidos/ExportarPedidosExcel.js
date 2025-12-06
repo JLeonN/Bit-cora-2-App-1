@@ -5,6 +5,7 @@ import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfigu
 const ANCHOS_COLUMNAS = [
   { wch: 11 }, // Fechas
   { wch: 11 }, // Pedidos
+  { wch: 8 }, // Items
 ]
 
 export async function generarYGuardarExcelParaDescarga(pedidos) {
@@ -13,6 +14,7 @@ export async function generarYGuardarExcelParaDescarga(pedidos) {
   const datosParaExportar = pedidos.map((pedido) => ({
     Fecha: pedido.fecha,
     Pedido: pedido.numero,
+    Items: pedido.items || 1,
   }))
 
   const hoja = XLSX.utils.json_to_sheet(datosParaExportar)
