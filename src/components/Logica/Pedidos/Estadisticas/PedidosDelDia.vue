@@ -4,16 +4,12 @@
     <h2 class="titulo-tabla">{{ fechaFormateada }}</h2>
 
     <!-- Tarjeta métrica con icono gamificado -->
-    <div class="tarjeta-metrica-dia">
-      <div class="icono-metrica">
-        <component :is="obtenerIconoContador" :size="32" />
-      </div>
-      <div class="info-metrica">
-        <p class="valor-metrica">{{ cantidadPedidosDelDia }}</p>
-        <p class="label-metrica">{{ textoPedidos }}</p>
-        <p class="valor-secundario">{{ totalItemsDelDia }} items</p>
-      </div>
-    </div>
+    <TarjetaEstadistica
+      :icono="obtenerIconoContador"
+      :valor-principal="cantidadPedidosDelDia"
+      :label-principal="textoPedidos"
+      :valores-secundarios="[`${totalItemsDelDia} items`]"
+    />
 
     <!-- Botón para marcar día no trabajado (solo visible si no hay pedidos ni faltas) -->
     <div v-if="pedidosDelDia.length === 0 && !hayFaltaRegistrada" class="contenedor-boton-falta">
@@ -122,6 +118,7 @@ import { compartirArchivo } from '../CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEditarFalta from 'src/components/Modales/ModalEditarFalta.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
+import TarjetaEstadistica from './TarjetaEstadistica.vue'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
@@ -458,54 +455,9 @@ onUnmounted(() => {
     text-transform: uppercase;
   }
 }
-/* Tarjeta métrica */
-.tarjeta-metrica-dia {
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+/* Espaciado de tarjeta */
+.contenedor-pedidos-dia :deep(.tarjeta-metrica) {
   margin-bottom: 1.5rem;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-.tarjeta-metrica-dia:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--sombra-boton);
-}
-.icono-metrica {
-  background: var(--color-fondo);
-  padding: 1rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--borde-boton);
-  color: var(--color-acento);
-}
-.info-metrica {
-  flex: 1;
-}
-.valor-metrica {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-texto-principal);
-  margin: 0;
-  line-height: 1;
-}
-.label-metrica {
-  font-size: 1rem;
-  color: var(--color-texto-secundario);
-  margin: 0.5rem 0 0 0;
-}
-.valor-secundario {
-  font-size: 1rem;
-  color: var(--color-acento);
-  margin: 0.5rem 0 0 0;
-  font-weight: 600;
 }
 /* Botón de falta */
 .contenedor-boton-falta {
@@ -536,7 +488,6 @@ onUnmounted(() => {
 .boton-falta:active {
   transform: translateY(0);
 }
-
 /* Contador de repetidos */
 .contenedor-repetidos {
   background: var(--color-superficie);
@@ -579,31 +530,12 @@ onUnmounted(() => {
   .contenedor-pedidos-dia {
     padding: 1rem;
   }
-  .tarjeta-metrica-dia {
-    padding: 1.25rem;
-  }
-  .valor-metrica {
-    font-size: 2rem;
-  }
   .boton-falta {
     padding: 0.875rem 1.25rem;
     font-size: 0.95rem;
   }
 }
 @media (max-width: 480px) {
-  .tarjeta-metrica-dia {
-    padding: 1rem;
-    gap: 0.75rem;
-  }
-  .icono-metrica {
-    padding: 0.75rem;
-  }
-  .valor-metrica {
-    font-size: 1.75rem;
-  }
-  .label-metrica {
-    font-size: 0.9rem;
-  }
   .boton-falta {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;

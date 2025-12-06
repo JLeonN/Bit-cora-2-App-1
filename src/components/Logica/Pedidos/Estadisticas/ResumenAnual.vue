@@ -6,84 +6,51 @@
     <!-- Grid de métricas -->
     <div class="contenedor-metricas">
       <!-- Tarjeta 1: Total de pedidos + items del año -->
-      <div class="tarjeta-metrica">
-        <div class="icono-metrica">
-          <IconPackage :size="24" />
-        </div>
-        <div class="info-metrica">
-          <p class="valor-metrica">{{ estadisticasAnuales.totalPedidos }}</p>
-          <p class="label-metrica">Total de pedidos del año</p>
-          <p class="valor-secundario">{{ estadisticasAnuales.totalItems }} items</p>
-        </div>
-      </div>
+      <TarjetaEstadistica
+        :icono="IconPackage"
+        :valor-principal="estadisticasAnuales.totalPedidos"
+        label-principal="Total de pedidos del año"
+        :valores-secundarios="[`${estadisticasAnuales.totalItems} items`]"
+      />
 
       <!-- Tarjeta 2: Meses y días trabajados -->
-      <div class="tarjeta-metrica">
-        <div class="icono-metrica">
-          <IconCalendarCheck :size="24" />
-        </div>
-        <div class="info-metrica">
-          <p class="valor-metrica">{{ estadisticasAnuales.mesesTrabajados }}</p>
-          <p class="label-metrica">Meses trabajados</p>
-          <p class="valor-secundario">{{ estadisticasAnuales.diasTrabajados }} días</p>
-        </div>
-      </div>
+      <TarjetaEstadistica
+        :icono="IconCalendarCheck"
+        :valor-principal="estadisticasAnuales.mesesTrabajados"
+        label-principal="Meses trabajados"
+        :valores-secundarios="[`${estadisticasAnuales.diasTrabajados} días`]"
+      />
 
       <!-- Tarjeta 3: Mejores días -->
-      <div class="tarjeta-metrica">
-        <div class="icono-metrica">
-          <IconTrophy :size="24" />
-        </div>
-        <div class="info-metrica">
-          <p class="valor-metrica-doble">
-            <span class="linea-metrica"
-              >Pedidos: {{ estadisticasAnuales.mejorDiaFechaPedidos }} ({{
-                estadisticasAnuales.mejorDiaCantidadPedidos
-              }})</span
-            >
-            <span class="linea-metrica"
-              >Items: {{ estadisticasAnuales.mejorDiaFechaItems }} ({{
-                estadisticasAnuales.mejorDiaCantidadItems
-              }})</span
-            >
-          </p>
-          <p class="label-metrica">Mejores días del año</p>
-        </div>
-      </div>
+      <TarjetaEstadistica
+        :icono="IconTrophy"
+        :valor-principal="[
+          `Pedidos: ${estadisticasAnuales.mejorDiaFechaPedidos} (${estadisticasAnuales.mejorDiaCantidadPedidos})`,
+          `Items: ${estadisticasAnuales.mejorDiaFechaItems} (${estadisticasAnuales.mejorDiaCantidadItems})`,
+        ]"
+        label-principal="Mejores días del año"
+      />
 
       <!-- Tarjeta 4: Promedios -->
-      <div class="tarjeta-metrica">
-        <div class="icono-metrica">
-          <IconChartLine :size="24" />
-        </div>
-        <div class="info-metrica">
-          <p class="valor-metrica-triple">
-            <span class="linea-metrica"
-              >{{ estadisticasAnuales.promedioPedidosPorMes }} pedidos/mes</span
-            >
-            <span class="linea-metrica"
-              >{{ estadisticasAnuales.promedioItemsPorMes }} items/mes</span
-            >
-            <span class="linea-metrica"
-              >{{ estadisticasAnuales.promedioItemsPorPedido }} items/pedido</span
-            >
-          </p>
-          <p class="label-metrica">Promedios del año</p>
-        </div>
-      </div>
+      <TarjetaEstadistica
+        :icono="IconChartLine"
+        :valor-principal="[
+          `${estadisticasAnuales.promedioPedidosPorMes} pedidos/mes`,
+          `${estadisticasAnuales.promedioItemsPorMes} items/mes`,
+          `${estadisticasAnuales.promedioItemsPorPedido} items/pedido`,
+        ]"
+        label-principal="Promedios del año"
+      />
 
-      <!-- Tarjeta 5: Mejor mes del año -->
-      <div class="tarjeta-metrica tarjeta-destacada">
-        <div class="icono-metrica">
-          <IconAward :size="24" />
-        </div>
-        <div class="info-metrica">
-          <p class="valor-metrica">{{ estadisticasAnuales.mejorMesCantidadPedidos }}</p>
-          <p class="label-metrica">Mejor mes: {{ estadisticasAnuales.mejorMesNombre }}</p>
-          <p class="valor-secundario">
-            {{ estadisticasAnuales.mejorMesCantidadItems }} items totales
-          </p>
-        </div>
+      <!-- Tarjeta 5: Mejor mes del año (destacada) -->
+      <div class="tarjeta-completa">
+        <TarjetaEstadistica
+          :icono="IconAward"
+          :valor-principal="estadisticasAnuales.mejorMesCantidadPedidos"
+          :label-principal="`Mejor mes: ${estadisticasAnuales.mejorMesNombre}`"
+          :valores-secundarios="[`${estadisticasAnuales.mejorMesCantidadItems} items totales`]"
+          :destacada="true"
+        />
       </div>
     </div>
 
@@ -104,6 +71,7 @@ import {
   IconAward,
 } from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
+import TarjetaEstadistica from './TarjetaEstadistica.vue'
 
 // Estado principal
 const anioActual = ref(new Date().getFullYear())
@@ -333,69 +301,9 @@ onMounted(() => {
   gap: 1rem;
   margin-bottom: 2rem;
 }
-.tarjeta-metrica {
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-.tarjeta-metrica:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--sombra-boton);
-}
-.tarjeta-destacada {
+/* Tarjeta completa ancho */
+.tarjeta-completa {
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, var(--color-superficie) 0%, var(--color-fondo) 100%);
-}
-.icono-metrica {
-  background: var(--color-fondo);
-  padding: 0.75rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--borde-boton);
-  color: var(--color-acento);
-}
-.info-metrica {
-  flex: 1;
-}
-.valor-metrica {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-texto-principal);
-  margin: 0;
-  line-height: 1;
-}
-.valor-metrica-doble,
-.valor-metrica-triple {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin: 0;
-}
-.linea-metrica {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-texto-principal);
-  line-height: 1.3;
-}
-.label-metrica {
-  font-size: 0.875rem;
-  color: var(--color-texto-secundario);
-  margin: 0.5rem 0 0 0;
-}
-.valor-secundario {
-  font-size: 1rem;
-  color: var(--color-acento);
-  margin: 0.5rem 0 0 0;
-  font-weight: 600;
 }
 /* Mensaje vacío */
 .mensaje-vacio {
@@ -414,36 +322,6 @@ onMounted(() => {
   .contenedor-metricas {
     grid-template-columns: 1fr;
     gap: 0.875rem;
-  }
-  .tarjeta-metrica {
-    padding: 1.25rem;
-  }
-  .valor-metrica {
-    font-size: 1.75rem;
-  }
-  .linea-metrica {
-    font-size: 0.85rem;
-  }
-}
-@media (max-width: 480px) {
-  .tarjeta-metrica {
-    padding: 1rem;
-    gap: 0.875rem;
-  }
-  .icono-metrica {
-    padding: 0.625rem;
-  }
-  .valor-metrica {
-    font-size: 1.5rem;
-  }
-  .linea-metrica {
-    font-size: 0.8rem;
-  }
-  .label-metrica {
-    font-size: 0.8rem;
-  }
-  .valor-secundario {
-    font-size: 0.9rem;
   }
 }
 </style>
