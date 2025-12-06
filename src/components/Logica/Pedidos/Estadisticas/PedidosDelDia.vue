@@ -78,6 +78,7 @@
     <ModalEditarPedido
       v-if="mostrarModalEditarPedido"
       :pedido="pedidoEditar.numero"
+      :items="pedidoEditar.items"
       @guardar="guardarEdicionPedido"
       @cerrar="mostrarModalEditarPedido = false"
     />
@@ -334,7 +335,7 @@ function abrirModalEditar(indice) {
   }
 }
 
-async function guardarEdicionPedido(nuevoNumero) {
+async function guardarEdicionPedido(datosEditados) {
   if (indiceEditar.value !== null) {
     const pedidoModificado = pedidoEditar.value
     const todosLosPedidos = await obtenerPedidos()
@@ -343,7 +344,8 @@ async function guardarEdicionPedido(nuevoNumero) {
     )
 
     if (indiceEnListaCompleta !== -1) {
-      todosLosPedidos[indiceEnListaCompleta].numero = nuevoNumero
+      todosLosPedidos[indiceEnListaCompleta].numero = datosEditados.numero
+      todosLosPedidos[indiceEnListaCompleta].items = datosEditados.items
       await guardarPedidos(todosLosPedidos)
       await cargarPedidosDelDia()
       mensajeExito.value = 'Pedido editado correctamente'

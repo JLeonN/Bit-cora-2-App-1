@@ -12,10 +12,10 @@
           </button>
         </div>
 
-        <!-- Fila 2: Input y botón flecha -->
+        <!-- Fila 2: Input pedido y botón flecha -->
         <div class="fila-input-flecha">
           <input
-            ref="inputRef"
+            ref="inputPedidoRef"
             id="numeroPedido"
             v-model="numeroPedido"
             type="text"
@@ -40,6 +40,21 @@
           </button>
         </div>
 
+        <!-- Fila 3: Input items -->
+        <div class="fila-items">
+          <label for="cantidadItems">Cantidad de items</label>
+          <input
+            ref="inputItemsRef"
+            id="cantidadItems"
+            v-model.number="cantidadItems"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            @focus="activarModal"
+            @blur="desactivarModal"
+          />
+        </div>
+
         <!-- Contador de pedidos agregados -->
         <div v-if="pedidosTemporales.length > 0" class="contador-pedidos">
           <span class="badge-contador"
@@ -54,7 +69,8 @@
         <div v-if="pedidosTemporales.length > 0" class="contenedor-mini-lista">
           <div class="mini-lista">
             <div v-for="(pedido, index) in pedidosTemporales" :key="index" class="item-mini-lista">
-              <span class="numero-pedido">{{ pedido }}</span>
+              <span class="numero-pedido">{{ pedido.numero }}</span>
+              <span class="badge-items">{{ pedido.items }} items</span>
               <button type="button" class="boton-eliminar-item" @click="eliminarDeLista(index)">
                 <IconX :size="18" :stroke="2" />
               </button>
@@ -91,10 +107,12 @@ import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
 const emit = defineEmits(['agregar-pedido', 'cerrar'])
 
 // Referencias
-const inputRef = ref(null)
+const inputPedidoRef = ref(null)
+const inputItemsRef = ref(null)
 
 // Estado
 const numeroPedido = ref('')
+const cantidadItems = ref(1)
 const pedidosTemporales = ref([])
 const modalActivo = ref(false)
 const mostrarError = ref(false)
@@ -113,7 +131,6 @@ const activarModal = () => {
 }
 
 const desactivarModal = () => {
-  // Delay para que no se cierre inmediatamente al tocar botones
   setTimeout(() => {
     modalActivo.value = false
   }, 100)
@@ -124,23 +141,29 @@ const agregarPedidoALista = () => {
   if (!puedeAgregar.value) return
 
   const numero = numeroPedido.value.trim()
-  pedidosTemporales.value.push(numero)
+  const items = cantidadItems.value || 1
 
-  // Auto-incremento inteligente
+  pedidosTemporales.value.push({
+    numero: numero,
+    items: items,
+  })
+
+  // Auto-incremento inteligente del número de pedido
   const ultimoNumero = parseInt(numero)
   if (!isNaN(ultimoNumero)) {
     numeroPedido.value = String(ultimoNumero + 1)
-    // Seleccionar el texto automáticamente
     nextTick(() => {
-      if (inputRef.value) {
-        inputRef.value.select()
-        inputRef.value.focus()
+      if (inputPedidoRef.value) {
+        inputPedidoRef.value.select()
+        inputPedidoRef.value.focus()
       }
     })
   } else {
-    // Si no es número, solo limpiamos
     numeroPedido.value = ''
   }
+
+  // Resetear items a 1
+  cantidadItems.value = 1
 
   // Auto-scroll al final de la lista
   nextTick(() => {
@@ -170,17 +193,14 @@ const confirmarTodosPedidos = () => {
       return
     }
     // Agregar el del input si hay algo escrito
-    pedidosTemporales.value.push(numeroPedido.value.trim())
+    pedidosTemporales.value.push({
+      numero: numeroPedido.value.trim(),
+      items: cantidadItems.value || 1,
+    })
   }
 
   // Emitir todos los pedidos al padre
-  emit(
-    'agregar-pedido',
-    pedidosTemporales.value.map((numero) => ({
-      numero: numero,
-      fecha: new Date().toISOString().split('T')[0],
-    })),
-  )
+  emit('agregar-pedido', pedidosTemporales.value)
 
   // Limpiar y cerrar
   limpiarTodo()
@@ -196,6 +216,7 @@ const cancelarYCerrar = () => {
 // Limpiar todo
 const limpiarTodo = () => {
   numeroPedido.value = ''
+  cantidadItems.value = 1
   pedidosTemporales.value = []
   mostrarError.value = false
   modalActivo.value = false
@@ -222,7 +243,7 @@ const onCodigoLeido = (codigos) => {
     'agregar-pedido',
     codigos.map((codigo) => ({
       numero: codigo,
-      fecha: new Date().toISOString().split('T')[0],
+      items: 1,
     })),
   )
   mostrarCamaraPedidos.value = false
@@ -232,8 +253,8 @@ const onCodigoLeido = (codigos) => {
 // Focus automático al montar
 onMounted(() => {
   nextTick(() => {
-    if (inputRef.value) {
-      inputRef.value.focus()
+    if (inputPedidoRef.value) {
+      inputPedidoRef.value.focus()
     }
   })
 })
@@ -372,6 +393,29 @@ onMounted(() => {
   cursor: not-allowed;
   opacity: 0.5;
 }
+/* Fila 3: Input items */
+.fila-items {
+  margin-bottom: 1rem;
+}
+.fila-items label {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--color-texto-secundario);
+  margin-bottom: 0.5rem;
+}
+.fila-items input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-size: 1rem;
+}
+.fila-items input:focus {
+  outline: none;
+  border-color: var(--color-acento);
+}
 /* Contador de pedidos */
 .contador-pedidos {
   margin-bottom: 0.75rem;
@@ -410,6 +454,7 @@ onMounted(() => {
   border: 1px solid var(--color-borde);
   opacity: 0;
   animation: fadeInSlide 0.3s ease forwards;
+  gap: 0.5rem;
 }
 .item-mini-lista:last-child {
   margin-bottom: 0;
@@ -429,6 +474,15 @@ onMounted(() => {
   font-size: 0.95rem;
   color: var(--color-texto-principal);
   font-weight: 500;
+  flex: 1;
+}
+.badge-items {
+  font-size: 0.8rem;
+  color: var(--color-acento);
+  background: rgba(3, 169, 244, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
 }
 .boton-eliminar-item {
   background: transparent;
@@ -441,6 +495,7 @@ onMounted(() => {
   padding: 0.25rem;
   border-radius: 4px;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 .boton-eliminar-item:hover {
   background: rgba(244, 67, 54, 0.1);
@@ -464,7 +519,7 @@ onMounted(() => {
 .mini-lista::-webkit-scrollbar-thumb:hover {
   background: var(--color-texto-secundario);
 }
-/* Responsive: alinear label y botón cámara en pantallas pequeñas */
+/* Responsive */
 @media (max-width: 600px) {
   .fila-label-camara {
     align-items: center;

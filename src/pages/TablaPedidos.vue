@@ -49,6 +49,7 @@
     <ModalEditarPedido
       v-if="mostrarModalEditar"
       :pedido="pedidoEditar.numero"
+      :items="pedidoEditar.items"
       @guardar="guardarEdicion"
       @cerrar="mostrarModalEditar = false"
     />
@@ -190,10 +191,11 @@ function abrirModalEditar(pedido) {
   mostrarModalEditar.value = true
 }
 
-function guardarEdicion(nuevoNumero) {
+function guardarEdicion(datosEditados) {
   const indice = pedidos.value.findIndex((p) => p.numero === pedidoEditar.value.numero)
   if (indice !== -1) {
-    pedidos.value[indice].numero = nuevoNumero
+    pedidos.value[indice].numero = datosEditados.numero
+    pedidos.value[indice].items = datosEditados.items
     guardarPedidos(pedidos.value)
   }
   mostrarModalEditar.value = false
