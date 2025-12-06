@@ -5,7 +5,7 @@
 
     <!-- Grid de métricas -->
     <div class="contenedor-metricas">
-      <!-- Tarjeta 1: Total de pedidos del año -->
+      <!-- Tarjeta 1: Total de pedidos + items del año -->
       <div class="tarjeta-metrica">
         <div class="icono-metrica">
           <IconPackage :size="24" />
@@ -13,6 +13,7 @@
         <div class="info-metrica">
           <p class="valor-metrica">{{ estadisticasAnuales.totalPedidos }}</p>
           <p class="label-metrica">Total de pedidos del año</p>
+          <p class="valor-secundario">{{ estadisticasAnuales.totalItems }} items</p>
         </div>
       </div>
 
@@ -28,26 +29,60 @@
         </div>
       </div>
 
-      <!-- Tarjeta 3: Promedio por mes -->
-      <div class="tarjeta-metrica">
-        <div class="icono-metrica">
-          <IconChartLine :size="24" />
-        </div>
-        <div class="info-metrica">
-          <p class="valor-metrica">{{ estadisticasAnuales.promedioPorMes }}</p>
-          <p class="label-metrica">Promedio por mes</p>
-        </div>
-      </div>
-
-      <!-- Tarjeta 4: Mejor mes del año -->
+      <!-- Tarjeta 3: Mejores días -->
       <div class="tarjeta-metrica">
         <div class="icono-metrica">
           <IconTrophy :size="24" />
         </div>
         <div class="info-metrica">
-          <p class="valor-metrica">{{ estadisticasAnuales.mejorMesCantidad }}</p>
+          <p class="valor-metrica-doble">
+            <span class="linea-metrica"
+              >Pedidos: {{ estadisticasAnuales.mejorDiaFechaPedidos }} ({{
+                estadisticasAnuales.mejorDiaCantidadPedidos
+              }})</span
+            >
+            <span class="linea-metrica"
+              >Items: {{ estadisticasAnuales.mejorDiaFechaItems }} ({{
+                estadisticasAnuales.mejorDiaCantidadItems
+              }})</span
+            >
+          </p>
+          <p class="label-metrica">Mejores días del año</p>
+        </div>
+      </div>
+
+      <!-- Tarjeta 4: Promedios -->
+      <div class="tarjeta-metrica">
+        <div class="icono-metrica">
+          <IconChartLine :size="24" />
+        </div>
+        <div class="info-metrica">
+          <p class="valor-metrica-triple">
+            <span class="linea-metrica"
+              >{{ estadisticasAnuales.promedioPedidosPorMes }} pedidos/mes</span
+            >
+            <span class="linea-metrica"
+              >{{ estadisticasAnuales.promedioItemsPorMes }} items/mes</span
+            >
+            <span class="linea-metrica"
+              >{{ estadisticasAnuales.promedioItemsPorPedido }} items/pedido</span
+            >
+          </p>
+          <p class="label-metrica">Promedios del año</p>
+        </div>
+      </div>
+
+      <!-- Tarjeta 5: Mejor mes del año -->
+      <div class="tarjeta-metrica tarjeta-destacada">
+        <div class="icono-metrica">
+          <IconAward :size="24" />
+        </div>
+        <div class="info-metrica">
+          <p class="valor-metrica">{{ estadisticasAnuales.mejorMesCantidadPedidos }}</p>
           <p class="label-metrica">Mejor mes: {{ estadisticasAnuales.mejorMesNombre }}</p>
-          <p class="valor-secundario">Mejor día: {{ estadisticasAnuales.mejorDiaDelMejorMes }}</p>
+          <p class="valor-secundario">
+            {{ estadisticasAnuales.mejorMesCantidadItems }} items totales
+          </p>
         </div>
       </div>
     </div>
@@ -61,19 +96,32 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { IconPackage, IconCalendarCheck, IconChartLine, IconTrophy } from '@tabler/icons-vue'
+import {
+  IconPackage,
+  IconCalendarCheck,
+  IconChartLine,
+  IconTrophy,
+  IconAward,
+} from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
 
 // Estado principal
 const anioActual = ref(new Date().getFullYear())
 const estadisticasAnuales = ref({
   totalPedidos: 0,
+  totalItems: 0,
   mesesTrabajados: 0,
   diasTrabajados: 0,
-  promedioPorMes: '0',
+  promedioPedidosPorMes: '0',
+  promedioItemsPorMes: '0',
+  promedioItemsPorPedido: '0',
+  mejorDiaFechaPedidos: '-',
+  mejorDiaCantidadPedidos: 0,
+  mejorDiaFechaItems: '-',
+  mejorDiaCantidadItems: 0,
   mejorMesNombre: '-',
-  mejorMesCantidad: 0,
-  mejorDiaDelMejorMes: '-',
+  mejorMesCantidadPedidos: 0,
+  mejorMesCantidadItems: 0,
 })
 
 // Función para parsear fechas DD/MM/YYYY
@@ -128,6 +176,9 @@ async function calcularEstadisticasAnuales() {
     // Total de pedidos
     const totalPedidos = pedidosDelAnio.length
 
+    // Total de items
+    const totalItems = pedidosDelAnio.reduce((suma, pedido) => suma + (pedido.items || 1), 0)
+
     // Días únicos trabajados
     const diasUnicos = new Set()
     pedidosDelAnio.forEach((pedido) => {
@@ -150,11 +201,60 @@ async function calcularEstadisticasAnuales() {
     })
     const mesesTrabajados = mesesUnicos.size
 
-    // Promedio por mes
-    let promedioPorMes = '0'
+    // Promedio de pedidos por mes
+    let promedioPedidosPorMes = '0'
     if (mesesTrabajados > 0) {
       const promedio = totalPedidos / mesesTrabajados
-      promedioPorMes = Math.ceil(promedio).toString()
+      promedioPedidosPorMes = Math.ceil(promedio).toString()
+    }
+
+    // Promedio de items por mes
+    let promedioItemsPorMes = '0'
+    if (mesesTrabajados > 0) {
+      const promedio = totalItems / mesesTrabajados
+      promedioItemsPorMes = Math.ceil(promedio).toString()
+    }
+
+    // Promedio de items por pedido
+    let promedioItemsPorPedido = '0'
+    if (totalPedidos > 0) {
+      const promedio = totalItems / totalPedidos
+      promedioItemsPorPedido = promedio.toFixed(1)
+    }
+
+    // Mejor día por pedidos
+    const conteoPorDiaPedidos = {}
+    pedidosDelAnio.forEach((pedido) => {
+      const fecha = pedido.fecha
+      conteoPorDiaPedidos[fecha] = (conteoPorDiaPedidos[fecha] || 0) + 1
+    })
+
+    let mejorDiaFechaPedidos = '-'
+    let mejorDiaCantidadPedidos = 0
+
+    for (const [fecha, cantidad] of Object.entries(conteoPorDiaPedidos)) {
+      if (cantidad > mejorDiaCantidadPedidos) {
+        mejorDiaCantidadPedidos = cantidad
+        mejorDiaFechaPedidos = fecha
+      }
+    }
+
+    // Mejor día por items
+    const conteoPorDiaItems = {}
+    pedidosDelAnio.forEach((pedido) => {
+      const fecha = pedido.fecha
+      const items = pedido.items || 1
+      conteoPorDiaItems[fecha] = (conteoPorDiaItems[fecha] || 0) + items
+    })
+
+    let mejorDiaFechaItems = '-'
+    let mejorDiaCantidadItems = 0
+
+    for (const [fecha, cantidad] of Object.entries(conteoPorDiaItems)) {
+      if (cantidad > mejorDiaCantidadItems) {
+        mejorDiaCantidadItems = cantidad
+        mejorDiaFechaItems = fecha
+      }
     }
 
     // Agrupar por mes para encontrar el mejor
@@ -169,52 +269,45 @@ async function calcularEstadisticasAnuales() {
         if (!conteoPorMes[claveMes]) {
           conteoPorMes[claveMes] = {
             mes,
-            cantidad: 0,
-            pedidos: [],
+            cantidadPedidos: 0,
+            cantidadItems: 0,
           }
         }
-        conteoPorMes[claveMes].cantidad++
-        conteoPorMes[claveMes].pedidos.push(pedido)
+        conteoPorMes[claveMes].cantidadPedidos++
+        conteoPorMes[claveMes].cantidadItems += pedido.items || 1
       }
     })
 
-    // Encontrar mejor mes
+    // Encontrar mejor mes por pedidos
     let mejorMesNombre = '-'
-    let mejorMesCantidad = 0
-    let mejorDiaDelMejorMes = '-'
+    let mejorMesCantidadPedidos = 0
+    let mejorMesCantidadItems = 0
 
     for (const clave in conteoPorMes) {
       const datos = conteoPorMes[clave]
-      if (datos.cantidad > mejorMesCantidad) {
-        mejorMesCantidad = datos.cantidad
+      if (datos.cantidadPedidos > mejorMesCantidadPedidos) {
+        mejorMesCantidadPedidos = datos.cantidadPedidos
+        mejorMesCantidadItems = datos.cantidadItems
         mejorMesNombre = obtenerNombreMes(datos.mes)
-
-        // Encontrar mejor día dentro de ese mes
-        const conteoPorDia = {}
-        datos.pedidos.forEach((pedido) => {
-          const fecha = pedido.fecha
-          conteoPorDia[fecha] = (conteoPorDia[fecha] || 0) + 1
-        })
-
-        let mejorDiaCantidad = 0
-        for (const [fecha, cantidad] of Object.entries(conteoPorDia)) {
-          if (cantidad > mejorDiaCantidad) {
-            mejorDiaCantidad = cantidad
-            mejorDiaDelMejorMes = fecha
-          }
-        }
       }
     }
 
     // Actualizar estado
     estadisticasAnuales.value = {
       totalPedidos,
+      totalItems,
       mesesTrabajados,
       diasTrabajados,
-      promedioPorMes,
+      promedioPedidosPorMes,
+      promedioItemsPorMes,
+      promedioItemsPorPedido,
+      mejorDiaFechaPedidos,
+      mejorDiaCantidadPedidos,
+      mejorDiaFechaItems,
+      mejorDiaCantidadItems,
       mejorMesNombre,
-      mejorMesCantidad,
-      mejorDiaDelMejorMes,
+      mejorMesCantidadPedidos,
+      mejorMesCantidadItems,
     }
   } catch (error) {
     console.error('Error al calcular estadísticas anuales:', error)
@@ -256,6 +349,10 @@ onMounted(() => {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px var(--sombra-boton);
 }
+.tarjeta-destacada {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, var(--color-superficie) 0%, var(--color-fondo) 100%);
+}
 .icono-metrica {
   background: var(--color-fondo);
   padding: 0.75rem;
@@ -276,13 +373,26 @@ onMounted(() => {
   margin: 0;
   line-height: 1;
 }
+.valor-metrica-doble,
+.valor-metrica-triple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+}
+.linea-metrica {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+  line-height: 1.3;
+}
 .label-metrica {
   font-size: 0.875rem;
   color: var(--color-texto-secundario);
-  margin: 0.25rem 0 0 0;
+  margin: 0.5rem 0 0 0;
 }
 .valor-secundario {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--color-acento);
   margin: 0.5rem 0 0 0;
   font-weight: 600;
@@ -311,6 +421,9 @@ onMounted(() => {
   .valor-metrica {
     font-size: 1.75rem;
   }
+  .linea-metrica {
+    font-size: 0.85rem;
+  }
 }
 @media (max-width: 480px) {
   .tarjeta-metrica {
@@ -323,11 +436,14 @@ onMounted(() => {
   .valor-metrica {
     font-size: 1.5rem;
   }
+  .linea-metrica {
+    font-size: 0.8rem;
+  }
   .label-metrica {
     font-size: 0.8rem;
   }
   .valor-secundario {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 }
 </style>

@@ -9,8 +9,9 @@
         <component :is="obtenerIconoContador" :size="32" />
       </div>
       <div class="info-metrica">
-        <p class="valor-metrica">{{ pedidosDelDia.length }}</p>
+        <p class="valor-metrica">{{ cantidadPedidosDelDia }}</p>
         <p class="label-metrica">{{ textoPedidos }}</p>
+        <p class="valor-secundario">{{ totalItemsDelDia }} items</p>
       </div>
     </div>
 
@@ -174,9 +175,16 @@ function normalizarNumero(numero) {
   return String(numero ?? '').trim()
 }
 
-// Computed: Verificar si hay falta registrada
-const hayFaltaRegistrada = computed(() => {
-  return pedidosDelDia.value.some((p) => p.tipo === 'falta')
+// Computed: Cantidad de pedidos del día (sin faltas)
+const cantidadPedidosDelDia = computed(() => {
+  return pedidosDelDia.value.filter((p) => p.tipo !== 'falta').length
+})
+
+// Computed: Total de items del día (sin faltas)
+const totalItemsDelDia = computed(() => {
+  return pedidosDelDia.value
+    .filter((p) => p.tipo !== 'falta')
+    .reduce((suma, pedido) => suma + (pedido.items || 1), 0)
 })
 
 // Computed: Números duplicados (excluyendo faltas)
@@ -207,7 +215,7 @@ function esPedidoDuplicado(numero) {
 // Computed: Icono gamificado según cantidad (sin contar faltas)
 const obtenerIconoContador = computed(() => {
   const esFinde = esFinesDeSemana(fechaActual.value)
-  const cantidad = pedidosDelDia.value.filter((p) => p.tipo !== 'falta').length
+  const cantidad = cantidadPedidosDelDia.value
 
   if (cantidad === 0) return IconCalendarEvent
 
@@ -230,7 +238,7 @@ const obtenerIconoContador = computed(() => {
 
 // Computed: Texto dinámico (sin contar faltas)
 const textoPedidos = computed(() => {
-  const cantidad = pedidosDelDia.value.filter((p) => p.tipo !== 'falta').length
+  const cantidad = cantidadPedidosDelDia.value
   return cantidad === 1 ? 'Pedido registrado hoy' : 'Pedidos registrados hoy'
 })
 
@@ -493,7 +501,12 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   margin: 0.5rem 0 0 0;
 }
-
+.valor-secundario {
+  font-size: 1rem;
+  color: var(--color-acento);
+  margin: 0.5rem 0 0 0;
+  font-weight: 600;
+}
 /* Botón de falta */
 .contenedor-boton-falta {
   margin-bottom: 1.5rem;

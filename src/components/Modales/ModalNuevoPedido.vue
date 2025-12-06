@@ -238,14 +238,9 @@ const cerrarCamaraYVolver = () => {
 }
 
 // Los pedidos de la cámara pueden ser varios
-const onCodigoLeido = (codigos) => {
-  emit(
-    'agregar-pedido',
-    codigos.map((codigo) => ({
-      numero: codigo,
-      items: 1,
-    })),
-  )
+const onCodigoLeido = (pedidos) => {
+  // La cámara ya emite objetos { numero, items }
+  emit('agregar-pedido', pedidos)
   mostrarCamaraPedidos.value = false
   emit('cerrar')
 }

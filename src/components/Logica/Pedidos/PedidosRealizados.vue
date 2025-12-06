@@ -9,10 +9,15 @@
     <ResumenMensual
       v-if="mostrarEstadisticas"
       :total-pedidos="estadisticas.totalPedidos"
+      :total-items="estadisticas.totalItems"
       :dias-trabajados="estadisticas.diasTrabajados"
-      :promedio-por-dia="estadisticas.promedioPorDia"
-      :mejor-dia-fecha="estadisticas.mejorDiaFecha"
-      :mejor-dia-cantidad="estadisticas.mejorDiaCantidad"
+      :promedio-pedidos-por-dia="estadisticas.promedioPedidosPorDia"
+      :promedio-items-por-dia="estadisticas.promedioItemsPorDia"
+      :promedio-items-por-pedido="estadisticas.promedioItemsPorPedido"
+      :mejor-dia-fecha-pedidos="estadisticas.mejorDiaFechaPedidos"
+      :mejor-dia-cantidad-pedidos="estadisticas.mejorDiaCantidadPedidos"
+      :mejor-dia-fecha-items="estadisticas.mejorDiaFechaItems"
+      :mejor-dia-cantidad-items="estadisticas.mejorDiaCantidadItems"
     />
 
     <!-- Pedidos repetidos -->
@@ -153,6 +158,9 @@ const estadisticas = computed(() => {
   // Total de pedidos
   const totalPedidos = pedidos.length
 
+  // Total de items
+  const totalItems = pedidos.reduce((suma, pedido) => suma + (pedido.items || 1), 0)
+
   // Días trabajados (días únicos con al menos 1 pedido)
   const diasUnicos = new Set()
   pedidos.forEach((pedido) => {
@@ -165,37 +173,73 @@ const estadisticas = computed(() => {
 
   const diasTrabajados = diasUnicos.size
 
-  // Promedio por día trabajado
-  let promedioPorDia = '0'
+  // Promedio de pedidos por día
+  let promedioPedidosPorDia = '0'
   if (diasTrabajados > 0) {
     const promedio = totalPedidos / diasTrabajados
-    promedioPorDia = Math.ceil(promedio).toString()
+    promedioPedidosPorDia = Math.ceil(promedio).toString()
   }
 
-  // Mejor día del mes (toma el primero si hay empate)
-  const conteoPorDia = {}
+  // Promedio de items por día
+  let promedioItemsPorDia = '0'
+  if (diasTrabajados > 0) {
+    const promedio = totalItems / diasTrabajados
+    promedioItemsPorDia = Math.ceil(promedio).toString()
+  }
+
+  // Promedio de items por pedido
+  let promedioItemsPorPedido = '0'
+  if (totalPedidos > 0) {
+    const promedio = totalItems / totalPedidos
+    promedioItemsPorPedido = promedio.toFixed(1)
+  }
+
+  // Mejor día por pedidos
+  const conteoPorDiaPedidos = {}
   pedidos.forEach((pedido) => {
     const fecha = pedido.fecha
-    conteoPorDia[fecha] = (conteoPorDia[fecha] || 0) + 1
+    conteoPorDiaPedidos[fecha] = (conteoPorDiaPedidos[fecha] || 0) + 1
   })
 
-  let mejorDiaFecha = '-'
-  let mejorDiaCantidad = 0
+  let mejorDiaFechaPedidos = '-'
+  let mejorDiaCantidadPedidos = 0
 
-  for (const [fecha, cantidad] of Object.entries(conteoPorDia)) {
-    if (cantidad > mejorDiaCantidad) {
-      // Solo cambia si es MAYOR (no igual)
-      mejorDiaCantidad = cantidad
-      mejorDiaFecha = fecha
+  for (const [fecha, cantidad] of Object.entries(conteoPorDiaPedidos)) {
+    if (cantidad > mejorDiaCantidadPedidos) {
+      mejorDiaCantidadPedidos = cantidad
+      mejorDiaFechaPedidos = fecha
+    }
+  }
+
+  // Mejor día por items
+  const conteoPorDiaItems = {}
+  pedidos.forEach((pedido) => {
+    const fecha = pedido.fecha
+    const items = pedido.items || 1
+    conteoPorDiaItems[fecha] = (conteoPorDiaItems[fecha] || 0) + items
+  })
+
+  let mejorDiaFechaItems = '-'
+  let mejorDiaCantidadItems = 0
+
+  for (const [fecha, cantidad] of Object.entries(conteoPorDiaItems)) {
+    if (cantidad > mejorDiaCantidadItems) {
+      mejorDiaCantidadItems = cantidad
+      mejorDiaFechaItems = fecha
     }
   }
 
   return {
     totalPedidos,
+    totalItems,
     diasTrabajados,
-    promedioPorDia,
-    mejorDiaFecha,
-    mejorDiaCantidad,
+    promedioPedidosPorDia,
+    promedioItemsPorDia,
+    promedioItemsPorPedido,
+    mejorDiaFechaPedidos,
+    mejorDiaCantidadPedidos,
+    mejorDiaFechaItems,
+    mejorDiaCantidadItems,
   }
 })
 

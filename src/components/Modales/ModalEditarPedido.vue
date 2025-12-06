@@ -136,12 +136,13 @@ function guardarCambios() {
   border-color: var(--color-acento);
 }
 /* Input number sin flechas */
-.modal-campo input[type='number']::-webkit-inner-spin-button,
-.modal-campo input[type='number']::-webkit-outer-spin-button {
+.input-items-escaneado::-webkit-inner-spin-button,
+.input-items-escaneado::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.modal-campo input[type='number'] {
+.input-items-escaneado {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 </style>
