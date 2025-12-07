@@ -239,7 +239,8 @@ src/
     │   │   └── Estadisticas/
     │   │       ├── PedidosDelDia.vue
     │   │       ├── ResumenMensual.vue
-    │   │       └── ResumenAnual.vue
+    │   │       ├── ResumenAnual.vue
+    │   │       └── TarjetaEstadistica.vue
     │   └── Ubicaciones/
     │       ├── CamaraEscaneo.vue
     │       ├── CamaraUbicaciones.vue

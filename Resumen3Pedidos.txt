@@ -4,6 +4,20 @@ Sistema completo para gestión de pedidos diarios con historial, exportación, e
 
 ---
 
+### 🔢 **Sistema de Conteo de Items**
+
+**Todos los pedidos ahora incluyen una columna "Items":**
+- **Estructura**: Cada pedido tiene `{ numero, fecha, items }`
+- **Valor por defecto**: 1 item si no se especifica
+- **Persistencia automática**: Se guarda con cada pedido
+- **Uso en estadísticas**:
+  - Total de items del día/mes/año
+  - Promedio de items por día
+  - Promedio de items por pedido
+  - Mejor día por cantidad de items
+- **Visualización**: Columna "Items" en todas las tablas de pedidos
+- **Edición**: Se puede modificar desde ModalEditarPedido
+
 ### 📦 **Componentes Principales**
 
 #### **TablaPedidos.vue**
