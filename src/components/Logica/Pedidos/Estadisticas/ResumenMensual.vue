@@ -4,14 +4,21 @@
     <TarjetaEstadistica
       :icono="IconPackage"
       :valor-principal="totalPedidos"
-      label-principal="Total de pedidos"
-      :valores-secundarios="[`${totalItems} Items`]"
+      texto-principal="Pedidos"
+      label-principal="Total de pedidos y items"
+      :valores-secundarios="[
+        {
+          numero: totalItems,
+          texto: 'Items',
+        },
+      ]"
     />
 
     <!-- Tarjeta 2: Días trabajados -->
     <TarjetaEstadistica
       :icono="IconCalendarCheck"
       :valor-principal="diasTrabajados"
+      texto-principal="Días trabajados"
       label-principal="Días trabajados"
     />
 

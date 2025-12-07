@@ -7,8 +7,14 @@
     <TarjetaEstadistica
       :icono="obtenerIconoContador"
       :valor-principal="cantidadPedidosDelDia"
-      :label-principal="textoPedidos"
-      :valores-secundarios="[`${totalItemsDelDia} Items`]"
+      texto-principal="Pedidos"
+      label-principal="Pedidos y items registrados hoy"
+      :valores-secundarios="[
+        {
+          numero: totalItemsDelDia,
+          texto: 'Items',
+        },
+      ]"
     />
 
     <!-- Botón para marcar día no trabajado (solo visible si no hay pedidos ni faltas) -->
@@ -233,10 +239,9 @@ const obtenerIconoContador = computed(() => {
   return IconCalendarEvent
 })
 
-// Computed: Texto dinámico (sin contar faltas)
-const textoPedidos = computed(() => {
-  const cantidad = cantidadPedidosDelDia.value
-  return cantidad === 1 ? 'Pedido registrado hoy' : 'Pedidos registrados hoy'
+// Computed: Verificar si hay falta registrada
+const hayFaltaRegistrada = computed(() => {
+  return pedidosDelDia.value.some((p) => p.tipo === 'falta')
 })
 
 // Configuración dinámica de la barra inferior

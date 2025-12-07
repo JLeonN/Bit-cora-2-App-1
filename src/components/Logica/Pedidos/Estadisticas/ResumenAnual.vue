@@ -9,16 +9,28 @@
       <TarjetaEstadistica
         :icono="IconPackage"
         :valor-principal="estadisticasAnuales.totalPedidos"
-        label-principal="Total de pedidos del año"
-        :valores-secundarios="[`${estadisticasAnuales.totalItems} Items`]"
+        texto-principal="Pedidos"
+        label-principal="Total de pedidos y items del año"
+        :valores-secundarios="[
+          {
+            numero: estadisticasAnuales.totalItems,
+            texto: 'Items',
+          },
+        ]"
       />
 
       <!-- Tarjeta 2: Meses y días trabajados -->
       <TarjetaEstadistica
         :icono="IconCalendarCheck"
         :valor-principal="estadisticasAnuales.mesesTrabajados"
-        label-principal="Meses trabajados"
-        :valores-secundarios="[`${estadisticasAnuales.diasTrabajados} Días`]"
+        texto-principal="Meses"
+        label-principal="Meses y días trabajados"
+        :valores-secundarios="[
+          {
+            numero: estadisticasAnuales.diasTrabajados,
+            texto: 'Días',
+          },
+        ]"
       />
 
       <!-- Tarjeta 3: Mejores días -->
@@ -42,16 +54,19 @@
         label-principal="Promedios del año"
       />
 
-      <!-- Tarjeta 5: Mejor mes del año (destacada) -->
-      <div class="tarjeta-completa">
-        <TarjetaEstadistica
-          :icono="IconAward"
-          :valor-principal="estadisticasAnuales.mejorMesCantidadPedidos"
-          :label-principal="`Mejor mes: ${estadisticasAnuales.mejorMesNombre}`"
-          :valores-secundarios="[`${estadisticasAnuales.mejorMesCantidadItems} Items totales`]"
-          :destacada="true"
-        />
-      </div>
+      <!-- Tarjeta 5: Mejor mes del año -->
+      <TarjetaEstadistica
+        :icono="IconAward"
+        :valor-principal="estadisticasAnuales.mejorMesCantidadPedidos"
+        texto-principal="Pedidos"
+        :label-principal="`Mejor mes: ${estadisticasAnuales.mejorMesNombre}`"
+        :valores-secundarios="[
+          {
+            numero: estadisticasAnuales.mejorMesCantidadItems,
+            texto: 'Items',
+          },
+        ]"
+      />
     </div>
 
     <!-- Mensaje si no hay pedidos -->
@@ -294,34 +309,114 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
 }
-/* Grid de métricas */
+
+/* Grid de métricas - RESPONSIVE COMPLETO SIN ESPACIOS */
 .contenedor-metricas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
-/* Tarjeta completa ancho */
-.tarjeta-completa {
-  grid-column: 1 / -1;
+
+/* PANTALLA GRANDE - Desktop (3 columnas) */
+@media (min-width: 1024px) {
+  .contenedor-metricas {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Primeras 3 tarjetas: 1 columna cada una */
+  .contenedor-metricas > :nth-child(1),
+  .contenedor-metricas > :nth-child(2),
+  .contenedor-metricas > :nth-child(3) {
+    grid-column: span 1;
+  }
+
+  /* Si hay exactamente 4 tarjetas (1 abajo): ocupa todo el ancho */
+  .contenedor-metricas:has(> :nth-child(4):last-child) > :nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  /* Si hay exactamente 5 tarjetas (2 abajo): cada una ocupa la mitad */
+  .contenedor-metricas:has(> :nth-child(5):last-child) > :nth-child(4),
+  .contenedor-metricas:has(> :nth-child(5):last-child) > :nth-child(5) {
+    grid-column: span 1.5;
+  }
+
+  /* Si hay 6 tarjetas (3 abajo): cada una ocupa 1 columna */
+  .contenedor-metricas:has(> :nth-child(6)) > :nth-child(4),
+  .contenedor-metricas:has(> :nth-child(6)) > :nth-child(5),
+  .contenedor-metricas:has(> :nth-child(6)) > :nth-child(6) {
+    grid-column: span 1;
+  }
+
+  /* Si hay más de 6: las siguientes se distribuyen igual */
+  .contenedor-metricas > :nth-child(n + 7) {
+    grid-column: span 1;
+  }
 }
+
+/* PANTALLA MEDIANA - Tablet grande (3 columnas pero full width abajo) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .contenedor-metricas {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Primeras 3 tarjetas: 1 columna cada una */
+  .contenedor-metricas > :nth-child(1),
+  .contenedor-metricas > :nth-child(2),
+  .contenedor-metricas > :nth-child(3) {
+    grid-column: span 1;
+  }
+
+  /* Las siguientes: ocupan todo el ancho */
+  .contenedor-metricas > :nth-child(n + 4) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* PANTALLA CHICA - Tablet (2 columnas) */
+@media (min-width: 600px) and (max-width: 767px) {
+  .contenedor-metricas {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Primeras 2 tarjetas: 1 columna cada una */
+  .contenedor-metricas > :nth-child(1),
+  .contenedor-metricas > :nth-child(2) {
+    grid-column: span 1;
+  }
+
+  /* Desde la tercera en adelante: full width */
+  .contenedor-metricas > :nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* PANTALLA MOBILE - 1 columna */
+@media (max-width: 599px) {
+  .contenedor-metricas {
+    grid-template-columns: 1fr;
+  }
+
+  .contenedor-metricas > * {
+    grid-column: span 1;
+  }
+}
+
 /* Mensaje vacío */
 .mensaje-vacio {
   text-align: center;
   padding: 3rem 1rem;
 }
+
 .texto-secundario {
   color: var(--color-texto-secundario);
   font-size: 1rem;
 }
-/* Responsive */
+
+/* Responsive del contenedor */
 @media (max-width: 768px) {
   .contenedor-resumen-anual {
     padding: 1rem;
-  }
-  .contenedor-metricas {
-    grid-template-columns: 1fr;
-    gap: 0.875rem;
   }
 }
 </style>

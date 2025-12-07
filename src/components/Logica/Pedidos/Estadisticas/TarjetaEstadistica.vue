@@ -16,16 +16,24 @@
           </div>
         </div>
 
-        <span v-else class="valor-numero">{{ valorPrincipal }}</span>
+        <!-- Valor principal: número + texto -->
+        <div v-else class="grupo-valor">
+          <span class="valor-numero">{{ valorPrincipal }}</span>
+          <span v-if="textoPrincipal" class="texto-descriptivo">{{ textoPrincipal }}</span>
+        </div>
       </div>
 
+      <!-- Valores secundarios -->
       <div v-if="valoresSecundarios && valoresSecundarios.length > 0" class="grupo-secundarios">
         <div
           v-for="(valor, index) in valoresSecundarios"
           :key="index"
           class="bloque-dato secundario"
         >
-          <span class="valor-numero secundario-texto">{{ valor }}</span>
+          <div class="grupo-valor">
+            <span class="valor-numero secundario-numero">{{ valor.numero }}</span>
+            <span class="texto-descriptivo secundario-texto">{{ valor.texto }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -39,8 +47,12 @@ defineProps({
     required: true,
   },
   valorPrincipal: {
-    type: [String, Number, Array], // Acepta arrays para la lista de promedios
+    type: [String, Number, Array],
     required: true,
+  },
+  textoPrincipal: {
+    type: String,
+    default: '',
   },
   labelPrincipal: {
     type: String,
@@ -50,7 +62,6 @@ defineProps({
     type: Array,
     default: () => [],
   },
-  // Mantenemos la prop por compatibilidad, pero ya no afecta el estilo visual
   destacada: {
     type: Boolean,
     default: false,
@@ -60,13 +71,13 @@ defineProps({
 
 <style scoped>
 .tarjeta-metrica {
-  background: var(--color-superficie); /* Asegura fondo uniforme */
-  border: 1px solid var(--color-borde); /* Borde uniforme para todas */
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Más espacio entre titulo y números */
+  gap: 1.5rem;
   height: 100%;
   position: relative;
   overflow: hidden;
@@ -74,20 +85,17 @@ defineProps({
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
-
 .tarjeta-metrica:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); /* Sombra un poco más elegante */
-  border-color: var(--color-acento); /* Solo al pasar el mouse se ilumina el borde sutilmente */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  border-color: var(--color-acento);
 }
-
 /* Header */
 .header-tarjeta {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
-
 .label-metrica {
   font-size: 0.85rem;
   font-weight: 700;
@@ -96,10 +104,9 @@ defineProps({
   color: var(--color-texto-secundario);
   margin-top: 0.25rem;
 }
-
 .icono-metrica {
   background: var(--color-fondo);
-  padding: 0.75rem; /* Contenedor del icono un poco más grande */
+  padding: 0.75rem;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -108,34 +115,46 @@ defineProps({
   color: var(--color-acento);
   flex-shrink: 0;
 }
-
 /* Datos */
 .grid-datos {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  flex: 1; /* Para que ocupe el resto de la altura */
-  justify-content: flex-end; /* Alinea los números abajo si sobra espacio */
+  flex: 1;
+  justify-content: flex-end;
 }
-
 .bloque-dato {
   display: flex;
   flex-direction: column;
 }
-
+/* Grupo de valor (número + texto) */
+.grupo-valor {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+/* Números en color acento */
 .valor-numero {
-  font-size: 2.25rem; /* Números más grandes e impactantes */
+  font-size: 2.25rem;
   font-weight: 700;
+  color: var(--color-acento);
+  line-height: 1;
+}
+/* Texto descriptivo en blanco */
+.texto-descriptivo {
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--color-texto-principal);
   line-height: 1;
 }
-
-.secundario-texto {
-  font-size: 1.5rem; /* El texto secundario (ej. "242 items") un poco más chico pero legible */
-  color: var(--color-acento);
-  font-weight: 600;
+/* Valores secundarios más pequeños */
+.secundario-numero {
+  font-size: 1.5rem;
 }
-
+.secundario-texto {
+  font-size: 1.25rem;
+}
 /* Estilos específicos para la lista (Promedios) */
 .grupo-lista {
   display: flex;
@@ -143,38 +162,39 @@ defineProps({
   gap: 0.5rem;
   width: 100%;
 }
-
 .item-lista {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Separador sutil */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-
 .item-lista:last-child {
   border-bottom: none;
 }
-
 .bullet {
   color: var(--color-acento);
   font-size: 1.2rem;
   line-height: 1;
 }
-
 .valor-texto {
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-texto-principal);
 }
-
 /* Responsive */
 @media (max-width: 768px) {
   .valor-numero {
     font-size: 1.75rem;
   }
-  .secundario-texto {
+  .texto-descriptivo {
     font-size: 1.25rem;
+  }
+  .secundario-numero {
+    font-size: 1.25rem;
+  }
+  .secundario-texto {
+    font-size: 1rem;
   }
 }
 </style>
