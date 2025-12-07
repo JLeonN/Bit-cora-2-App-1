@@ -10,7 +10,7 @@
         :icono="IconPackage"
         :valor-principal="estadisticasAnuales.totalPedidos"
         label-principal="Total de pedidos del año"
-        :valores-secundarios="[`${estadisticasAnuales.totalItems} items`]"
+        :valores-secundarios="[`${estadisticasAnuales.totalItems} Items`]"
       />
 
       <!-- Tarjeta 2: Meses y días trabajados -->
@@ -18,7 +18,7 @@
         :icono="IconCalendarCheck"
         :valor-principal="estadisticasAnuales.mesesTrabajados"
         label-principal="Meses trabajados"
-        :valores-secundarios="[`${estadisticasAnuales.diasTrabajados} días`]"
+        :valores-secundarios="[`${estadisticasAnuales.diasTrabajados} Días`]"
       />
 
       <!-- Tarjeta 3: Mejores días -->
@@ -35,9 +35,9 @@
       <TarjetaEstadistica
         :icono="IconChartLine"
         :valor-principal="[
-          `${estadisticasAnuales.promedioPedidosPorMes} pedidos/mes`,
-          `${estadisticasAnuales.promedioItemsPorMes} items/mes`,
-          `${estadisticasAnuales.promedioItemsPorPedido} items/pedido`,
+          `${estadisticasAnuales.promedioPedidosPorMes} Pedidos por mes`,
+          `${estadisticasAnuales.promedioItemsPorMes} Items por mes`,
+          `${estadisticasAnuales.promedioItemsPorPedido} Items por pedido`,
         ]"
         label-principal="Promedios del año"
       />
@@ -48,7 +48,7 @@
           :icono="IconAward"
           :valor-principal="estadisticasAnuales.mejorMesCantidadPedidos"
           :label-principal="`Mejor mes: ${estadisticasAnuales.mejorMesNombre}`"
-          :valores-secundarios="[`${estadisticasAnuales.mejorMesCantidadItems} items totales`]"
+          :valores-secundarios="[`${estadisticasAnuales.mejorMesCantidadItems} Items totales`]"
           :destacada="true"
         />
       </div>

@@ -5,7 +5,7 @@
       :icono="IconPackage"
       :valor-principal="totalPedidos"
       label-principal="Total de pedidos"
-      :valores-secundarios="[`${totalItems} items`]"
+      :valores-secundarios="[`${totalItems} Items`]"
     />
 
     <!-- Tarjeta 2: Días trabajados -->
@@ -29,9 +29,9 @@
     <TarjetaEstadistica
       :icono="iconoPromedio"
       :valor-principal="[
-        `${promedioPedidosPorDia} pedidos/día`,
-        `${promedioItemsPorDia} items/día`,
-        `${promedioItemsPorPedido} items/pedido`,
+        `${promedioPedidosPorDia} Pedidos por día`,
+        `${promedioItemsPorDia} Items por día`,
+        `${promedioItemsPorPedido} Items por pedido`,
       ]"
       label-principal="Promedios"
     />

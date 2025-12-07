@@ -8,7 +8,7 @@
       :icono="obtenerIconoContador"
       :valor-principal="cantidadPedidosDelDia"
       :label-principal="textoPedidos"
-      :valores-secundarios="[`${totalItemsDelDia} items`]"
+      :valores-secundarios="[`${totalItemsDelDia} Items`]"
     />
 
     <!-- Botón para marcar día no trabajado (solo visible si no hay pedidos ni faltas) -->
