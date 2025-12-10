@@ -43,6 +43,8 @@
       @agregar-pedido="agregarPedido"
       @cerrar="mostrarModalAgregar = false"
       @abrir-camara="abrirCamaraPedidos"
+      @camara-abierta="manejarCamaraAbierta"
+      @camara-cerrada="manejarCamaraCerrada"
     />
 
     <!-- Modal: Editar Pedido -->
@@ -103,6 +105,9 @@ const mostrarModalEliminar = ref(false)
 const mostrarCamaraPedidos = ref(false)
 const mostrarModalConfirmarEscaneados = ref(false)
 
+// NUEVO: Estado para controlar si la cámara está activa
+const camaraActiva = ref(false)
+
 // Datos para editar/eliminar
 const pedidoEditar = ref(null)
 const pedidoEliminar = ref(null)
@@ -119,6 +124,7 @@ const configuracionBarra = computed(() => ({
   mostrarEnviar: false,
   puedeEnviar: false,
   botonesPersonalizados: [],
+  camaraActiva: camaraActiva.value, // ACTUALIZADO
 }))
 
 // Métodos que la barra inferior va a llamar
@@ -147,6 +153,23 @@ watch(
   },
   { deep: true },
 )
+
+// NUEVO: Watcher para actualizar cuando cambia el estado de cámara
+watch(
+  () => camaraActiva.value,
+  () => {
+    actualizarConfiguracionBarra()
+  },
+)
+
+// NUEVO: Métodos para manejar el estado de la cámara
+const manejarCamaraAbierta = () => {
+  camaraActiva.value = true
+}
+
+const manejarCamaraCerrada = () => {
+  camaraActiva.value = false
+}
 
 // Funciones utilitarias
 function formatearFecha(fecha) {
@@ -229,10 +252,12 @@ function confirmarEliminacion() {
 function abrirCamaraPedidos() {
   mostrarModalAgregar.value = false
   mostrarCamaraPedidos.value = true
+  camaraActiva.value = true // NUEVO
 }
 
 function cerrarCamaraPedidos() {
   mostrarCamaraPedidos.value = false
+  camaraActiva.value = false // NUEVO
   pedidosEscaneados.value = []
 }
 
@@ -262,6 +287,7 @@ onUnmounted(() => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
+      camaraActiva: false,
     },
     null,
   )

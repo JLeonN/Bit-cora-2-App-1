@@ -1,5 +1,9 @@
 <template>
-  <div class="barra-botones-inferior" :class="{ 'con-banner': hayBannerVisible }">
+  <div
+    v-if="!camaraActiva"
+    class="barra-botones-inferior"
+    :class="{ 'con-banner': hayBannerVisible }"
+  >
     <!-- Botón Atrás -->
     <button
       v-if="mostrarAtrasCalculado"
@@ -89,6 +93,11 @@ const props = defineProps({
   },
   // Prop para saber si hay banner
   hayBannerVisible: {
+    type: Boolean,
+    default: false,
+  },
+  // Prop para saber si la cámara está activa
+  camaraActiva: {
     type: Boolean,
     default: false,
   },

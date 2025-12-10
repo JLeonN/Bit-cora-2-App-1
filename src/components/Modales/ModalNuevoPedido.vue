@@ -114,14 +114,14 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { IconCamera, IconArrowRight, IconX, IconMinus, IconPlus } from '@tabler/icons-vue'
 import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
 import { Keyboard } from '@capacitor/keyboard'
 import { Capacitor } from '@capacitor/core'
 
-const emit = defineEmits(['agregar-pedido', 'cerrar'])
+const emit = defineEmits(['agregar-pedido', 'cerrar', 'camara-abierta', 'camara-cerrada'])
 
 // Referencias
 const inputPedidoRef = ref(null)
@@ -142,6 +142,18 @@ const esMovil = Capacitor.isNativePlatform()
 const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
 })
+
+// NUEVO: Watcher para emitir estado de cámara
+watch(
+  () => mostrarCamaraPedidos.value,
+  (nuevoValor) => {
+    if (nuevoValor) {
+      emit('camara-abierta')
+    } else {
+      emit('camara-cerrada')
+    }
+  },
+)
 
 // Funciones para incrementar/decrementar items
 const incrementarItems = () => {
@@ -296,6 +308,8 @@ onUnmounted(() => {
   if (esMovil) {
     Keyboard.removeAllListeners()
   }
+  // Asegurar que se emita cerrada al desmontar
+  emit('camara-cerrada')
 })
 </script>
 

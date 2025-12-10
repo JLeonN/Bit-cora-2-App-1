@@ -311,12 +311,12 @@ onBeforeUnmount(() => {
   border-color: var(--color-acento);
 }
 /* Quitar flechas del input number */
-.modal-campo input[type='number']::-webkit-inner-spin-button,
-.modal-campo input[type='number']::-webkit-outer-spin-button {
+.input-items-escaneado::-webkit-inner-spin-button,
+.input-items-escaneado::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.modal-campo input[type='number'] {
+.input-items-escaneado {
   appearance: textfield;
   -moz-appearance: textfield;
 }
@@ -355,23 +355,34 @@ onBeforeUnmount(() => {
 }
 /* Caja inferior */
 .caja-inferior {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   gap: 0.75rem;
   padding: 1rem;
   background: var(--color-superficie);
-  border-top: 1px solid var(--color-borde);
+  border-top: 3px solid var(--color-acento);
+  width: 100%;
+  box-sizing: border-box;
 }
-.boton-finalizar {
+.boton-finalizar,
+.boton-cancelar {
   flex: 1;
-  background: var(--color-acento);
-  color: white;
+  height: 56px;
   border: none;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0 1rem;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boton-finalizar {
+  background: var(--color-acento);
+  color: white;
 }
 .boton-finalizar:hover:not(:disabled) {
   background: var(--color-primario);
@@ -386,16 +397,9 @@ onBeforeUnmount(() => {
   opacity: 0.5;
 }
 .boton-cancelar {
-  flex: 1;
   background: var(--color-superficie);
   color: var(--color-texto-principal);
   border: 1px solid var(--color-borde);
-  border-radius: 12px;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 .boton-cancelar:hover {
   background: var(--color-fondo);
@@ -403,6 +407,18 @@ onBeforeUnmount(() => {
 }
 .boton-cancelar:active {
   transform: scale(0.98);
+}
+/* Responsive */
+@media (max-width: 600px) {
+  .caja-inferior {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .boton-finalizar,
+  .boton-cancelar {
+    height: 52px;
+    font-size: 0.95rem;
+  }
 }
 /* Responsive */
 @media (max-width: 600px) {
@@ -419,10 +435,6 @@ onBeforeUnmount(() => {
   .input-items-escaneado {
     width: 60px;
     font-size: 0.85rem;
-  }
-  .caja-inferior {
-    padding: 0.75rem;
-    gap: 0.5rem;
   }
 }
 </style>
