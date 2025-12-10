@@ -1,46 +1,62 @@
 <template>
   <div class="modal-fondo" @click.self="$emit('cerrar')">
-    <div :class="['modal-contenido', { activo: modalActivo }]">
+    <div
+      :class="['modal-contenido']"
+      :style="
+        esMovil && alturaDesplazamiento > 0
+          ? { transform: `translateY(-${alturaDesplazamiento}%)` }
+          : {}
+      "
+    >
       <h2 class="modal-titulo">Nuevo pedido</h2>
 
       <form @submit.prevent="confirmarTodosPedidos">
-        <!-- Fila 1: Label y botón cámara -->
-        <div class="fila-label-camara">
-          <label for="numeroPedido">Número de pedido</label>
+        <!-- Contador de pedidos agregados -->
+        <div v-if="pedidosTemporales.length > 0" class="contador-pedidos-arriba">
+          <span class="badge-contador"
+            >{{ pedidosTemporales.length }} pedido{{
+              pedidosTemporales.length !== 1 ? 's' : ''
+            }}
+            agregado{{ pedidosTemporales.length !== 1 ? 's' : '' }}</span
+          >
+        </div>
+
+        <!-- Label -->
+        <label for="numeroPedido" class="label-pedido">Número de pedido</label>
+
+        <!-- Fila: Input con flecha integrada y botón cámara -->
+        <div class="fila-input-camara">
+          <div class="contenedor-input-flecha">
+            <input
+              ref="inputPedidoRef"
+              id="numeroPedido"
+              v-model="numeroPedido"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              :placeholder="textoPlaceholder"
+              @input="restablecerPlaceholder"
+              @keyup.enter="agregarPedidoALista"
+              :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
+            />
+
+            <button
+              type="button"
+              class="boton-flecha-integrado"
+              :class="{ 'boton-inactivo': !puedeAgregar }"
+              :disabled="!puedeAgregar"
+              @click="agregarPedidoALista"
+            >
+              <IconArrowRight :stroke="2" />
+            </button>
+          </div>
+
           <button type="button" class="boton-camara" @click="abrirCamara">
             <IconCamera :stroke="2" />
           </button>
         </div>
 
-        <!-- Fila 2: Input pedido y botón flecha -->
-        <div class="fila-input-flecha">
-          <input
-            ref="inputPedidoRef"
-            id="numeroPedido"
-            v-model="numeroPedido"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            :placeholder="textoPlaceholder"
-            @focus="activarModal"
-            @blur="desactivarModal"
-            @input="restablecerPlaceholder"
-            @keyup.enter="agregarPedidoALista"
-            :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
-          />
-
-          <button
-            type="button"
-            class="boton-flecha"
-            :class="{ 'boton-inactivo': !puedeAgregar }"
-            :disabled="!puedeAgregar"
-            @click="agregarPedidoALista"
-          >
-            <IconArrowRight :stroke="2" />
-          </button>
-        </div>
-
-        <!-- Fila 3: Input items -->
+        <!-- Input items -->
         <div class="fila-items">
           <label for="cantidadItems">Cantidad de items</label>
           <input
@@ -50,19 +66,7 @@
             type="number"
             inputmode="numeric"
             min="1"
-            @focus="activarModal"
-            @blur="desactivarModal"
           />
-        </div>
-
-        <!-- Contador de pedidos agregados -->
-        <div v-if="pedidosTemporales.length > 0" class="contador-pedidos">
-          <span class="badge-contador"
-            >{{ pedidosTemporales.length }} pedido{{
-              pedidosTemporales.length !== 1 ? 's' : ''
-            }}
-            agregado{{ pedidosTemporales.length !== 1 ? 's' : '' }}</span
-          >
         </div>
 
         <!-- Mini lista de pedidos temporales -->
@@ -99,10 +103,12 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { IconCamera, IconArrowRight, IconX } from '@tabler/icons-vue'
 import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
+import { Keyboard } from '@capacitor/keyboard'
+import { Capacitor } from '@capacitor/core'
 
 const emit = defineEmits(['agregar-pedido', 'cerrar'])
 
@@ -114,27 +120,17 @@ const inputItemsRef = ref(null)
 const numeroPedido = ref('')
 const cantidadItems = ref(1)
 const pedidosTemporales = ref([])
-const modalActivo = ref(false)
 const mostrarError = ref(false)
 const animarError = ref(false)
 const textoPlaceholder = ref('Número de pedido')
 const mostrarCamaraPedidos = ref(false)
+const alturaDesplazamiento = ref(0)
+const esMovil = Capacitor.isNativePlatform()
 
 // Computed
 const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
 })
-
-// Activar/desactivar modal con delay para el blur
-const activarModal = () => {
-  modalActivo.value = true
-}
-
-const desactivarModal = () => {
-  setTimeout(() => {
-    modalActivo.value = false
-  }, 100)
-}
 
 // Agregar pedido a la lista temporal
 const agregarPedidoALista = () => {
@@ -219,7 +215,6 @@ const limpiarTodo = () => {
   cantidadItems.value = 1
   pedidosTemporales.value = []
   mostrarError.value = false
-  modalActivo.value = false
   restablecerPlaceholder()
 }
 
@@ -252,6 +247,26 @@ onMounted(() => {
       inputPedidoRef.value.focus()
     }
   })
+
+  // Listener del teclado (solo en móviles)
+  if (esMovil) {
+    Keyboard.addListener('keyboardWillShow', (info) => {
+      const alturaVentana = window.innerHeight
+      const alturaTeclado = info.keyboardHeight
+      // Calcular el porcentaje de desplazamiento
+      alturaDesplazamiento.value = (alturaTeclado / alturaVentana) * 50
+    })
+
+    Keyboard.addListener('keyboardWillHide', () => {
+      alturaDesplazamiento.value = 0
+    })
+  }
+})
+
+onUnmounted(() => {
+  if (esMovil) {
+    Keyboard.removeAllListeners()
+  }
 })
 </script>
 
@@ -269,38 +284,117 @@ onMounted(() => {
   justify-content: center;
   z-index: 1000;
 }
-/* Modal contenido */
+/* Modal contenido - padding reducido */
 .modal-contenido {
   background: var(--color-superficie);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1rem;
   width: 90%;
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease;
 }
-/* Cuando está activo (teclado abierto), todo el modal sube */
-.modal-contenido.activo {
-  transform: translateY(-65%);
-}
-/* Título del modal */
+/* Título del modal - margin reducido */
 .modal-titulo {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.75rem 0;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-texto-principal);
 }
-/* Fila 1: Label y botón cámara */
-.fila-label-camara {
+/* Contador arriba a la derecha */
+.contador-pedidos-arriba {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: -25px;
 }
-.fila-label-camara label {
+.badge-contador {
+  display: inline-block;
+  background: var(--color-acento);
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+/* Label */
+.label-pedido {
+  display: block;
   font-size: 0.95rem;
   color: var(--color-texto-secundario);
-  margin: 0;
+  margin-bottom: 0.5rem;
+}
+/* Fila: Input con flecha integrada + botón cámara */
+.fila-input-camara {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+/* Contenedor del input con flecha integrada */
+.contenedor-input-flecha {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.contenedor-input-flecha input {
+  width: 100%;
+  padding: 0.75rem;
+  padding-right: 50px; /* Espacio para el botón */
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-size: 1rem;
+}
+.contenedor-input-flecha input:focus {
+  outline: none;
+  border-color: var(--color-acento);
+}
+.input-error {
+  border-color: var(--color-error) !important;
+}
+.animar-error {
+  animation: shake 0.5s;
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+/* Botón flecha integrado dentro del input */
+.boton-flecha-integrado {
+  position: absolute;
+  right: 4px;
+  background: var(--color-acento);
+  border: none;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+.boton-flecha-integrado:hover:not(.boton-inactivo) {
+  background: var(--color-primario);
+  transform: scale(1.05);
+}
+.boton-flecha-integrado:active:not(.boton-inactivo) {
+  transform: scale(0.95);
+}
+.boton-inactivo {
+  background: var(--color-desactivado);
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 /* Botón cámara */
 .boton-camara {
@@ -324,73 +418,9 @@ onMounted(() => {
 .boton-camara:active {
   transform: scale(0.95);
 }
-/* Fila 2: Input y botón flecha */
-.fila-input-flecha {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.fila-input-flecha input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-  font-size: 1rem;
-}
-.fila-input-flecha input:focus {
-  outline: none;
-  border-color: var(--color-acento);
-}
-.input-error {
-  border-color: var(--color-error) !important;
-}
-.animar-error {
-  animation: shake 0.5s;
-}
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-10px);
-  }
-  75% {
-    transform: translateX(10px);
-  }
-}
-/* Botón flecha */
-.boton-flecha {
-  background: var(--color-acento);
-  border: none;
-  border-radius: 8px;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: white;
-  flex-shrink: 0;
-}
-.boton-flecha:hover:not(.boton-inactivo) {
-  background: var(--color-primario);
-  transform: scale(1.05);
-}
-.boton-flecha:active:not(.boton-inactivo) {
-  transform: scale(0.95);
-}
-.boton-inactivo {
-  background: var(--color-desactivado);
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-/* Fila 3: Input items */
+/* Input items */
 .fila-items {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 .fila-items label {
   display: block;
@@ -411,24 +441,9 @@ onMounted(() => {
   outline: none;
   border-color: var(--color-acento);
 }
-/* Contador de pedidos */
-.contador-pedidos {
-  margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-}
-.badge-contador {
-  display: inline-block;
-  background: var(--color-acento);
-  color: white;
-  padding: 0.35rem 0.75rem;
-  border-radius: 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
 /* Mini lista de pedidos */
 .contenedor-mini-lista {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 .mini-lista {
   max-height: 150px;
@@ -516,8 +531,8 @@ onMounted(() => {
 }
 /* Responsive */
 @media (max-width: 600px) {
-  .fila-label-camara {
-    align-items: center;
+  .modal-contenido {
+    padding: 0.75rem;
   }
 }
 </style>

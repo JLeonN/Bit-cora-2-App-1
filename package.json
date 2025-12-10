@@ -25,6 +25,7 @@
     "@capacitor/cli": "^7.4.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/filesystem": "^7.1.4",
+    "@capacitor/keyboard": "^6.0.2",
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/share": "^7.0.2",
     "@capacitor/splash-screen": "^7.0.3",
