@@ -150,7 +150,7 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 }
 /* CLASE DINÁMICA: Cuando hay banner visible */
 .barra-botones-inferior.con-banner {
-  bottom: 70px; /* 26px original + 60px del banner */
+  bottom: 55px; /* 26px original + 60px del banner */
 }
 .boton-barra {
   width: 48px;

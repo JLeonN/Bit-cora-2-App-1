@@ -32,7 +32,7 @@
               id="numeroPedido"
               v-model="numeroPedido"
               type="text"
-              inputmode="numeric"
+              inputmode="text"
               autocomplete="off"
               :placeholder="textoPlaceholder"
               @input="restablecerPlaceholder"
