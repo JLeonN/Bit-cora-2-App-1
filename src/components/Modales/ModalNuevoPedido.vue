@@ -56,17 +56,28 @@
           </button>
         </div>
 
-        <!-- Input items -->
+        <!-- Fila items con botones - y + -->
         <div class="fila-items">
           <label for="cantidadItems">Cantidad de items</label>
-          <input
-            ref="inputItemsRef"
-            id="cantidadItems"
-            v-model.number="cantidadItems"
-            type="number"
-            inputmode="numeric"
-            min="1"
-          />
+          <div class="contenedor-items-botones">
+            <button type="button" class="boton-items" @click="decrementarItems">
+              <IconMinus :stroke="2" />
+            </button>
+
+            <input
+              ref="inputItemsRef"
+              id="cantidadItems"
+              v-model.number="cantidadItems"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              @input="validarItems"
+            />
+
+            <button type="button" class="boton-items" @click="incrementarItems">
+              <IconPlus :stroke="2" />
+            </button>
+          </div>
         </div>
 
         <!-- Mini lista de pedidos temporales -->
@@ -105,7 +116,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
-import { IconCamera, IconArrowRight, IconX } from '@tabler/icons-vue'
+import { IconCamera, IconArrowRight, IconX, IconMinus, IconPlus } from '@tabler/icons-vue'
 import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
 import { Keyboard } from '@capacitor/keyboard'
 import { Capacitor } from '@capacitor/core'
@@ -131,6 +142,24 @@ const esMovil = Capacitor.isNativePlatform()
 const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
 })
+
+// Funciones para incrementar/decrementar items
+const incrementarItems = () => {
+  cantidadItems.value = (cantidadItems.value || 0) + 1
+}
+
+const decrementarItems = () => {
+  if (cantidadItems.value > 1) {
+    cantidadItems.value--
+  }
+}
+
+const validarItems = () => {
+  // Asegurar que siempre sea al menos 1 y nunca negativo
+  if (!cantidadItems.value || cantidadItems.value < 1) {
+    cantidadItems.value = 1
+  }
+}
 
 // Agregar pedido a la lista temporal
 const agregarPedidoALista = () => {
@@ -305,7 +334,7 @@ onUnmounted(() => {
 .contador-pedidos-arriba {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: -25px;
+  margin-bottom: 0.5rem;
 }
 .badge-contador {
   display: inline-block;
@@ -418,7 +447,7 @@ onUnmounted(() => {
 .boton-camara:active {
   transform: scale(0.95);
 }
-/* Input items */
+/* Input items con botones */
 .fila-items {
   margin-bottom: 0.75rem;
 }
@@ -428,18 +457,48 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   margin-bottom: 0.5rem;
 }
-.fila-items input {
-  width: 100%;
+/* Contenedor de los 3 elementos: [-] [Input] [+] */
+.contenedor-items-botones {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.contenedor-items-botones input {
+  flex: 1;
   padding: 0.75rem;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-fondo);
   color: var(--color-texto-principal);
   font-size: 1rem;
+  text-align: center;
+  min-width: 0; /* Importante para que flex funcione correctamente */
 }
-.fila-items input:focus {
+.contenedor-items-botones input:focus {
   outline: none;
   border-color: var(--color-acento);
+}
+/* Botones - y + */
+.boton-items {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-acento);
+  flex-shrink: 0;
+}
+.boton-items:hover {
+  transform: scale(1.05);
+  background: var(--color-fondo);
+}
+.boton-items:active {
+  transform: scale(0.95);
 }
 /* Mini lista de pedidos */
 .contenedor-mini-lista {
