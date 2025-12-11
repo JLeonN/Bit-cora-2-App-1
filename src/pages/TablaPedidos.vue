@@ -73,6 +73,8 @@
       v-if="mostrarCamaraPedidos"
       @cancelar="cerrarCamaraPedidos"
       @guardar="abrirModalConfirmarEscaneados"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <HistorialPedidos />

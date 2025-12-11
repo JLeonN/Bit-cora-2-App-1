@@ -71,6 +71,8 @@
       :items="pedidoEditar.items"
       @guardar="guardarEdicion"
       @cerrar="mostrarModalEditar = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal eliminar -->
@@ -79,6 +81,8 @@
       :texto="pedidoEliminar.numero"
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Mensajes de notificación -->
@@ -100,7 +104,7 @@ import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
 import ResumenMensual from './Estadisticas/ResumenMensual.vue'
 
 // Emit para configurar la barra inferior
-const emit = defineEmits(['configurar-barra'])
+const emit = defineEmits(['configurar-barra', 'modal-abierto', 'modal-cerrado'])
 
 const route = useRoute()
 
@@ -112,6 +116,9 @@ const mostrarEstadisticas = ref(false)
 const mostrarModalEditar = ref(false)
 const mostrarModalEliminar = ref(false)
 
+// Estado para controlar si algún modal está activo
+const modalActivo = ref(false)
+
 // Datos para editar/eliminar
 const pedidoEditar = ref({ numero: '', fecha: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
@@ -121,6 +128,17 @@ const indiceEliminar = ref(null)
 // Estados de notificaciones
 const mensajeExito = ref('')
 const mensajeError = ref('')
+
+// Métodos para manejar el estado del modal
+const manejarModalAbierto = () => {
+  modalActivo.value = true
+  emit('modal-abierto')
+}
+
+const manejarModalCerrado = () => {
+  modalActivo.value = false
+  emit('modal-cerrado')
+}
 
 // Funciones utilitarias
 function normalizarNumero(numero) {
@@ -152,16 +170,10 @@ function parsearFechaDDMMYYYY(fechaStr) {
 
 // Computed: Calcular estadísticas
 const estadisticas = computed(() => {
-  // Filtrar solo pedidos normales (sin faltas)
   const pedidos = pedidosRealizados.value.filter((p) => p.tipo !== 'falta')
-
-  // Total de pedidos
   const totalPedidos = pedidos.length
-
-  // Total de items
   const totalItems = pedidos.reduce((suma, pedido) => suma + (pedido.items || 1), 0)
 
-  // Días trabajados (días únicos con al menos 1 pedido)
   const diasUnicos = new Set()
   pedidos.forEach((pedido) => {
     const fecha = parsearFechaDDMMYYYY(pedido.fecha)
@@ -173,28 +185,24 @@ const estadisticas = computed(() => {
 
   const diasTrabajados = diasUnicos.size
 
-  // Promedio de pedidos por día
   let promedioPedidosPorDia = '0'
   if (diasTrabajados > 0) {
     const promedio = totalPedidos / diasTrabajados
     promedioPedidosPorDia = Math.ceil(promedio).toString()
   }
 
-  // Promedio de items por día
   let promedioItemsPorDia = '0'
   if (diasTrabajados > 0) {
     const promedio = totalItems / diasTrabajados
     promedioItemsPorDia = Math.ceil(promedio).toString()
   }
 
-  // Promedio de items por pedido
   let promedioItemsPorPedido = '0'
   if (totalPedidos > 0) {
     const promedio = totalItems / totalPedidos
     promedioItemsPorPedido = promedio.toFixed(1)
   }
 
-  // Mejor día por pedidos
   const conteoPorDiaPedidos = {}
   pedidos.forEach((pedido) => {
     const fecha = pedido.fecha
@@ -211,7 +219,6 @@ const estadisticas = computed(() => {
     }
   }
 
-  // Mejor día por items
   const conteoPorDiaItems = {}
   pedidos.forEach((pedido) => {
     const fecha = pedido.fecha
@@ -296,6 +303,7 @@ const configuracionBarra = computed(() => ({
   mostrarEnviar: pedidosRealizados.value.length > 0,
   puedeEnviar: pedidosRealizados.value.length > 0,
   botonesPersonalizados: [],
+  modalActivo: modalActivo.value,
 }))
 
 // Métodos que la barra inferior va a llamar
@@ -323,6 +331,13 @@ watch(
     actualizarConfiguracionBarra()
   },
   { deep: true },
+)
+
+watch(
+  () => modalActivo.value,
+  () => {
+    actualizarConfiguracionBarra()
+  },
 )
 
 // Métodos de modales
@@ -439,6 +454,7 @@ onUnmounted(() => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
+      modalActivo: false,
     },
     null,
   )

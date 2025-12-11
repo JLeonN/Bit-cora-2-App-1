@@ -108,13 +108,15 @@
         v-if="mostrarCamaraPedidos"
         @cancelar="cerrarCamaraYVolver"
         @codigo-detectado="onCodigoLeido"
+        @modal-abierto="manejarModalAbierto"
+        @modal-cerrado="manejarModalCerrado"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { IconCamera, IconArrowRight, IconX, IconMinus, IconPlus } from '@tabler/icons-vue'
 import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
@@ -142,18 +144,6 @@ const esMovil = Capacitor.isNativePlatform()
 const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
 })
-
-// Watcher para emitir estado de cámara
-watch(
-  () => mostrarCamaraPedidos.value,
-  (nuevoValor) => {
-    if (nuevoValor) {
-      emit('modal-abierto')
-    } else {
-      emit('modal-cerrado')
-    }
-  },
-)
 
 // Funciones para incrementar/decrementar items
 const incrementarItems = () => {
@@ -263,6 +253,15 @@ const onCodigoLeido = (pedidos) => {
   emit('agregar-pedido', pedidos)
   mostrarCamaraPedidos.value = false
   emit('cerrar')
+}
+
+// Métodos para manejar eventos de la cámara
+const manejarModalAbierto = () => {
+  emit('modal-abierto')
+}
+
+const manejarModalCerrado = () => {
+  emit('modal-cerrado')
 }
 
 onMounted(() => {

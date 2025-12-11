@@ -66,6 +66,8 @@
     v-if="mostrarCamara"
     @cancelar="cerrarCamara"
     @finalizar="procesarUbicacionesEscaneadas"
+    @modal-abierto="manejarModalAbierto"
+    @modal-cerrado="manejarModalCerrado"
   />
 </template>
 
@@ -107,7 +109,7 @@ const inputEnfocado = ref(false)
 const bloqueandoClick = ref(false)
 
 // --- EMITS ---
-const emit = defineEmits(['ubicacion-agregada'])
+const emit = defineEmits(['ubicacion-agregada', 'modal-abierto', 'modal-cerrado'])
 
 // --- FUNCIONES INTERNAS ---
 function restablecerPlaceholderCodigo() {
@@ -284,4 +286,12 @@ onMounted(async () => {
     console.log(`[FormularioUbicacion] Cargada última ubicación: ${ultimaUbicacion}`)
   }
 })
+
+const manejarModalAbierto = () => {
+  emit('modal-abierto')
+}
+
+const manejarModalCerrado = () => {
+  emit('modal-cerrado')
+}
 </script>

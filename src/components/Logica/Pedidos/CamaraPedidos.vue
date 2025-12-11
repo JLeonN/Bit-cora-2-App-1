@@ -69,7 +69,7 @@ import {
 } from '@zxing/library'
 import { IconX } from '@tabler/icons-vue'
 
-const emit = defineEmits(['cancelar', 'codigo-detectado'])
+const emit = defineEmits(['cancelar', 'codigo-detectado', 'modal-abierto', 'modal-cerrado'])
 
 const codigoDetectado = ref('')
 const ultimaCaptura = ref(null)
@@ -171,12 +171,14 @@ const emitirFinalizar = () => {
 
 onMounted(() => {
   iniciarCamara()
+  emit('modal-abierto')
 })
 
 onBeforeUnmount(() => {
   if (lector) {
     lector.reset()
   }
+  emit('modal-cerrado')
 })
 </script>
 

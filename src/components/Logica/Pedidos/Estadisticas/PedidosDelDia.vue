@@ -84,6 +84,8 @@
       :items="pedidoEditar.items"
       @guardar="guardarEdicionPedido"
       @cerrar="mostrarModalEditarPedido = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal editar falta -->
@@ -93,6 +95,8 @@
       :fecha="pedidoEditar.fecha"
       @guardar="guardarEdicionFalta"
       @cerrar="mostrarModalEditarFalta = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal eliminar pedido -->
@@ -101,6 +105,8 @@
       :texto="pedidoEliminar.numero"
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
   </div>
 </template>
@@ -127,7 +133,7 @@ import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
 import TarjetaEstadistica from './TarjetaEstadistica.vue'
 
 // Emit para configurar la barra inferior
-const emit = defineEmits(['configurar-barra'])
+const emit = defineEmits(['configurar-barra', 'modal-abierto', 'modal-cerrado'])
 
 // Estado principal
 const pedidosDelDia = ref([])
@@ -138,6 +144,9 @@ const mostrarModalEditarPedido = ref(false)
 const mostrarModalEditarFalta = ref(false)
 const mostrarModalEliminar = ref(false)
 
+// Estado para controlar si algún modal está activo
+const modalActivo = ref(false)
+
 // Datos para editar/eliminar
 const pedidoEditar = ref({ numero: '', fecha: '', tipo: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
@@ -147,6 +156,17 @@ const indiceEliminar = ref(null)
 // Estados de notificaciones
 const mensajeExito = ref('')
 const mensajeError = ref('')
+
+// Métodos para manejar el estado del modal
+const manejarModalAbierto = () => {
+  modalActivo.value = true
+  emit('modal-abierto')
+}
+
+const manejarModalCerrado = () => {
+  modalActivo.value = false
+  emit('modal-cerrado')
+}
 
 // Función para verificar si es fin de semana
 function esFinesDeSemana(fecha) {
@@ -250,6 +270,7 @@ const configuracionBarra = computed(() => ({
   mostrarEnviar: pedidosDelDia.value.some((p) => p.tipo !== 'falta'),
   puedeEnviar: pedidosDelDia.value.some((p) => p.tipo !== 'falta'),
   botonesPersonalizados: [],
+  modalActivo: modalActivo.value,
 }))
 
 // Métodos que la barra inferior va a llamar
@@ -275,6 +296,13 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => modalActivo.value,
+  () => {
+    actualizarConfiguracionBarra()
+  },
+)
+
 // Cargar pedidos del día
 async function cargarPedidosDelDia() {
   try {
@@ -296,7 +324,6 @@ async function registrarFalta() {
     const fechaHoyFormateada = formatearFechaHoy(fechaActual.value)
     const todosLosPedidos = await obtenerPedidos()
 
-    // Agregar la falta
     todosLosPedidos.push({
       numero: 'FALTA',
       fecha: fechaHoyFormateada,
@@ -443,6 +470,7 @@ onUnmounted(() => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
+      modalActivo: false,
     },
     null,
   )
@@ -460,11 +488,9 @@ onUnmounted(() => {
     text-transform: uppercase;
   }
 }
-/* Espaciado de tarjeta */
 .contenedor-pedidos-dia :deep(.tarjeta-metrica) {
   margin-bottom: 1.5rem;
 }
-/* Botón de falta */
 .contenedor-boton-falta {
   margin-bottom: 1.5rem;
   display: flex;
@@ -493,7 +519,6 @@ onUnmounted(() => {
 .boton-falta:active {
   transform: translateY(0);
 }
-/* Contador de repetidos */
 .contenedor-repetidos {
   background: var(--color-superficie);
   border: 1px solid var(--color-error);
@@ -507,7 +532,6 @@ onUnmounted(() => {
   margin: 0;
   text-align: center;
 }
-/* Mensaje vacío */
 .mensaje-vacio {
   text-align: center;
   padding: 3rem 1rem;
@@ -530,7 +554,6 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-/* Responsive */
 @media (max-width: 768px) {
   .contenedor-pedidos-dia {
     padding: 1rem;

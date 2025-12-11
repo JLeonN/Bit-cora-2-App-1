@@ -6,7 +6,11 @@
     <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
 
     <!-- Formulario de ubicación -->
-    <FormularioUbicacion @ubicacion-agregada="agregarUbicacion" />
+    <FormularioUbicacion
+      @ubicacion-agregada="agregarUbicacion"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
+    />
 
     <!-- Tabla -->
     <TablaUbicaciones

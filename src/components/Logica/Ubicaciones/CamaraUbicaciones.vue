@@ -126,7 +126,7 @@ import {
   limpiarUltimaUbicacion,
 } from './recordarUltimaTipografia.js'
 
-const emit = defineEmits(['cancelar', 'finalizar'])
+const emit = defineEmits(['cancelar', 'finalizar', 'modal-abierto', 'modal-cerrado'])
 
 // --- Estados de la UI ---
 const estado = ref('escaneando')
@@ -342,19 +342,21 @@ function cancelarGeneral() {
 
 // --- Lifecycle hooks ---
 onMounted(async () => {
-  iniciarCamara()
+  emit('modal-abierto')
 
-  // CARGAR ÚLTIMA UBICACIÓN AL INICIAR
-  const ultimaUbicacion = await obtenerUltimaUbicacion()
-  if (ultimaUbicacion) {
-    nuevaUbicacion.value = ultimaUbicacion
-    console.log(`[CamaraUbicaciones] Cargada última ubicación: ${ultimaUbicacion}`)
+  const ubicacionGuardada = await obtenerUltimaUbicacion()
+  if (ubicacionGuardada) {
+    nuevaUbicacion.value = ubicacionGuardada
   }
+
+  await nextTick()
+  iniciarCamara()
 })
 
 onBeforeUnmount(() => {
   if (lector) {
     lector.reset()
   }
+  emit('modal-cerrado') // ← AGREGAR ESTA LÍNEA
 })
 </script>
