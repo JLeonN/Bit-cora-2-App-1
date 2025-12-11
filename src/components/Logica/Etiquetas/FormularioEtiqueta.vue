@@ -92,6 +92,8 @@
       v-if="mostrarCamara"
       @cancelar="cerrarCamara"
       @finalizar="procesarCodigosEscaneados"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
   </div>
 </template>
@@ -103,7 +105,7 @@ import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
-const emit = defineEmits(['agregar-etiqueta'])
+const emit = defineEmits(['agregar-etiqueta', 'modal-abierto', 'modal-cerrado'])
 
 // --- ESTADO REACTIVO ---
 const codigoIngresado = ref('')
@@ -128,6 +130,15 @@ const inputCantidad = ref(null)
 // Estado del buscador
 const inputEnfocado = ref(false)
 
+// --- MÉTODOS PARA MANEJAR ESTADO DE MODALES ---
+const manejarModalAbierto = () => {
+  emit('modal-abierto')
+}
+
+const manejarModalCerrado = () => {
+  emit('modal-cerrado')
+}
+
 // --- FUNCIONES ---
 
 // Función para mover el formulario arriba suavemente
@@ -135,7 +146,7 @@ function moverFormularioArriba() {
   if (!formularioRef.value) return
 
   const rect = formularioRef.value.getBoundingClientRect()
-  const offset = 82 // píxeles desde arriba
+  const offset = 82
 
   window.scrollTo({
     top: window.scrollY + rect.top - offset,
@@ -309,10 +320,7 @@ watch(mostrarResultados, (nuevo) => {
 // Observador para formatear el campo de ubicación en tiempo real.
 watch(ubicacionIngresada, (newValue) => {
   if (typeof newValue === 'string') {
-    // Transforma el valor a mayúsculas y reemplaza espacios con guiones.
     const formattedValue = newValue.toUpperCase().replace(/\s+/g, '-')
-
-    // Solo actualiza si el valor formateado es diferente, para evitar un bucle infinito.
     if (formattedValue !== ubicacionIngresada.value) {
       ubicacionIngresada.value = formattedValue
     }
@@ -439,7 +447,6 @@ function cerrarResultadosFuera(event) {
 .boton-limpiar-ubicacion:hover {
   color: var(--color-error);
 }
-/* Estados de error */
 .input-error {
   border-color: var(--color-error) !important;
 }
@@ -468,7 +475,6 @@ function cerrarResultadosFuera(event) {
 .animar-error {
   animation: sacudida 0.5s;
 }
-/* Responsive */
 @media (max-width: 768px) {
   .formulario-etiqueta {
     grid-template-columns: 1fr;

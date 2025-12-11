@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 
 const props = defineProps({
@@ -46,7 +46,7 @@ const props = defineProps({
   ubicacion: String,
 })
 
-const emit = defineEmits(['guardar', 'cerrar'])
+const emit = defineEmits(['guardar', 'cerrar', 'modal-abierto', 'modal-cerrado'])
 
 const codigoEditado = ref(props.codigo)
 const ubicacionEditada = ref(props.ubicacion)
@@ -72,4 +72,14 @@ function guardarCambios() {
     ubicacion: ubicacionEditada.value,
   })
 }
+
+// Emitir que el modal está abierto al montar
+onMounted(() => {
+  emit('modal-abierto')
+})
+
+// Emitir que el modal está cerrado al desmontar
+onUnmounted(() => {
+  emit('modal-cerrado')
+})
 </script>

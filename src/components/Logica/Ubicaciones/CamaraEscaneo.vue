@@ -15,6 +15,7 @@
       </div>
 
       <div class="caja-inferior">
+        <button class="boton-cancelar" @click="$emit('cancelar')">Cancelar</button>
         <button
           class="boton-finalizar"
           :disabled="codigosEscaneados.length === 0"
@@ -22,7 +23,6 @@
         >
           {{ `Finalizar (${codigosEscaneados.length})` }}
         </button>
-        <button class="boton-cancelar" @click="$emit('cancelar')">Cancelar</button>
       </div>
     </div>
   </div>
@@ -37,7 +37,7 @@ import {
   NotFoundException,
 } from '@zxing/library'
 
-const emit = defineEmits(['cancelar', 'finalizar'])
+const emit = defineEmits(['cancelar', 'finalizar', 'modal-abierto', 'modal-cerrado'])
 
 const codigosEscaneados = ref([])
 const ultimaCaptura = ref(null)
@@ -117,11 +117,52 @@ const emitirFinalizar = () => {
   }
 }
 
-onMounted(() => iniciarCamara())
-onBeforeUnmount(() => lector?.reset())
+onMounted(() => {
+  iniciarCamara()
+  emit('modal-abierto')
+})
+
+onBeforeUnmount(() => {
+  lector?.reset()
+  emit('modal-cerrado')
+})
 </script>
 
 <style scoped>
+.modal-fondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.modal-camara {
+  background: var(--color-superficie);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+.caja-camara {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+#video-camara {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .overlay-miniatura {
   position: absolute;
   bottom: 10px;
@@ -131,10 +172,86 @@ onBeforeUnmount(() => lector?.reset())
   border: 2px solid #fff;
   overflow: hidden;
   border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .mini-captura {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.mensaje-temporal {
+  background: var(--color-primario);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.caja-inferior {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+.boton-cancelar,
+.boton-finalizar {
+  flex: 1;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boton-cancelar {
+  background: transparent;
+  color: var(--color-texto-secundario);
+  border: 1px solid var(--color-borde);
+}
+.boton-cancelar:hover {
+  background: var(--color-fondo);
+  border-color: var(--color-texto-secundario);
+}
+.boton-finalizar {
+  background: var(--color-exito);
+  color: white;
+}
+.boton-finalizar:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+.boton-finalizar:disabled {
+  background: var(--color-desactivado);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+@media (max-width: 600px) {
+  .modal-camara {
+    padding: 1rem;
+    width: 95%;
+  }
+  .caja-inferior {
+    gap: 0.5rem;
+  }
+  .boton-cancelar,
+  .boton-finalizar {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
 }
 </style>

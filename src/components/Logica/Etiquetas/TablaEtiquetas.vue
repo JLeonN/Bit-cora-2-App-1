@@ -133,6 +133,8 @@
       :etiqueta="etiquetaEditando"
       @guardar="guardarEdicion"
       @cerrar="cerrarModalEditar"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- MODAL PARA CONFIRMAR ELIMINAR TODAS LAS ETIQUETAS -->
@@ -141,6 +143,8 @@
       texto="todas las etiquetas"
       @confirmar="confirmarLimpiarTodo"
       @cerrar="cerrarModalLimpiarTodo"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
   </div>
 </template>
@@ -149,7 +153,7 @@
 import { ref, computed } from 'vue'
 import { IconPencil, IconTrash, IconPlus, IconMinus, IconTag } from '@tabler/icons-vue'
 import ModalEditarEtiqueta from '../../Modales/ModalEditarEtiqueta.vue'
-import ModalEliminar from '../../Modales/ModalEliminar.vue' // 👈 IMPORTAR ModalEliminar
+import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
@@ -159,14 +163,29 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta', 'limpiar-todo'])
+const emit = defineEmits([
+  'editar-etiqueta',
+  'eliminar-etiqueta',
+  'limpiar-todo',
+  'modal-abierto',
+  'modal-cerrado',
+])
 
 // --- ESTADO REACTIVO PARA MODALES ---
-const mostrarModalEditar = ref(false) // Modal para editar etiqueta individual
+const mostrarModalEditar = ref(false)
 const etiquetaEditando = ref(null)
 const indiceEditando = ref(null)
 
-const mostrarModalLimpiarTodo = ref(false) // Modal para confirmar limpiar todo
+const mostrarModalLimpiarTodo = ref(false)
+
+// --- MÉTODOS PARA MANEJAR ESTADO DE MODALES ---
+const manejarModalAbierto = () => {
+  emit('modal-abierto')
+}
+
+const manejarModalCerrado = () => {
+  emit('modal-cerrado')
+}
 
 // --- COMPUTED ---
 const totalCopias = computed(() => {
@@ -220,18 +239,15 @@ function eliminarEtiqueta(indice) {
 }
 
 // --- FUNCIONES MODAL LIMPIAR TODO ---
-// Abre el modal de confirmación para limpiar todas las etiquetas
 function confirmarLimpiar() {
   mostrarModalLimpiarTodo.value = true
 }
 
-// Se ejecuta cuando el usuario confirma en el modal
 function confirmarLimpiarTodo() {
   emit('limpiar-todo')
   mostrarModalLimpiarTodo.value = false
 }
 
-// Se ejecuta cuando el usuario cancela en el modal
 function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
 }
@@ -411,11 +427,9 @@ const cantidadArticulosInexistentes = computed(() => {
   font-size: 0.9rem;
   font-style: italic;
 }
-/* Ocultar labels en desktop */
 .label-responsive {
   display: none;
 }
-/* ===== COLUMNAS ===== */
 .columna-nombre-codigo {
   width: 40%;
 }
@@ -433,7 +447,6 @@ const cantidadArticulosInexistentes = computed(() => {
 .celda-cantidad {
   padding-left: 1rem;
 }
-/* RESPONSIVE */
 @media (max-width: 900px) {
   .tabla-ubicaciones {
     font-size: 0.85rem;
@@ -461,7 +474,6 @@ const cantidadArticulosInexistentes = computed(() => {
   .contenedor-boton-borrar-todo {
     margin-bottom: 0.5rem;
   }
-  /* Tabla responsive - Modo cards */
   .tabla-ubicaciones {
     display: block;
     border: none;
@@ -483,7 +495,6 @@ const cantidadArticulosInexistentes = computed(() => {
     padding: 0.75rem;
     background: var(--color-superficie);
   }
-  /* Colores en responsive */
   .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
     background: color-mix(in oklab, var(--color-error) 10%, transparent);
   }
@@ -501,7 +512,6 @@ const cantidadArticulosInexistentes = computed(() => {
     gap: 0.5rem;
     margin-bottom: 0.5rem;
   }
-  /* Mostrar labels en mobile */
   .label-responsive {
     display: block;
     font-weight: 600;

@@ -86,7 +86,7 @@
         :puede-enviar="configuracionBarra.puedeEnviar"
         :botones-personalizados="configuracionBarra.botonesPersonalizados"
         :hay-banner-visible="hayBannerVisible"
-        :camara-activa="camaraActiva"
+        :modal-activo="modalActivo"
         @agregar="manejarAgregar"
         @enviar="manejarEnviar"
         @accion-personalizada="manejarAccionPersonalizada"
@@ -113,8 +113,8 @@ const nombreUsuario = ref('Usua desconocido')
 // Estado del banner
 const hayBannerVisible = ref(false)
 
-// Estado de la cámara
-const camaraActiva = ref(false)
+// Estado del modal (más genérico que camaraActiva)
+const modalActivo = ref(false)
 
 // Estado centralizado de la barra inferior
 const configuracionBarra = reactive({
@@ -156,9 +156,9 @@ const manejarConfiguracionBarra = (configuracion, refPagina) => {
   Object.assign(configuracionBarra, configuracion)
   paginaActivaRef = refPagina
 
-  // Actualizar estado de cámara si viene en la configuración
-  if (configuracion.camaraActiva !== undefined) {
-    camaraActiva.value = configuracion.camaraActiva
+  // Actualizar estado de modal si viene en la configuración
+  if (configuracion.modalActivo !== undefined) {
+    modalActivo.value = configuracion.modalActivo
   }
 }
 

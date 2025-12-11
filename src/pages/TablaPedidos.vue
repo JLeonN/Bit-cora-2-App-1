@@ -43,8 +43,8 @@
       @agregar-pedido="agregarPedido"
       @cerrar="mostrarModalAgregar = false"
       @abrir-camara="abrirCamaraPedidos"
-      @camara-abierta="manejarCamaraAbierta"
-      @camara-cerrada="manejarCamaraCerrada"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal: Editar Pedido -->
@@ -54,6 +54,8 @@
       :items="pedidoEditar.items"
       @guardar="guardarEdicion"
       @cerrar="mostrarModalEditar = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal: Eliminar Pedido -->
@@ -62,6 +64,8 @@
       :texto="pedidoEliminar.numero"
       @confirmar="confirmarEliminacion"
       @cerrar="mostrarModalEliminar = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal: Cámara -->
@@ -105,8 +109,8 @@ const mostrarModalEliminar = ref(false)
 const mostrarCamaraPedidos = ref(false)
 const mostrarModalConfirmarEscaneados = ref(false)
 
-// NUEVO: Estado para controlar si la cámara está activa
-const camaraActiva = ref(false)
+// Estado para controlar si algún modal está activo
+const modalActivo = ref(false)
 
 // Datos para editar/eliminar
 const pedidoEditar = ref(null)
@@ -124,7 +128,7 @@ const configuracionBarra = computed(() => ({
   mostrarEnviar: false,
   puedeEnviar: false,
   botonesPersonalizados: [],
-  camaraActiva: camaraActiva.value, // ACTUALIZADO
+  modalActivo: modalActivo.value,
 }))
 
 // Métodos que la barra inferior va a llamar
@@ -154,21 +158,21 @@ watch(
   { deep: true },
 )
 
-// NUEVO: Watcher para actualizar cuando cambia el estado de cámara
+// Watcher para actualizar cuando cambia el estado del modal
 watch(
-  () => camaraActiva.value,
+  () => modalActivo.value,
   () => {
     actualizarConfiguracionBarra()
   },
 )
 
-// NUEVO: Métodos para manejar el estado de la cámara
-const manejarCamaraAbierta = () => {
-  camaraActiva.value = true
+// Métodos para manejar el estado del modal
+const manejarModalAbierto = () => {
+  modalActivo.value = true
 }
 
-const manejarCamaraCerrada = () => {
-  camaraActiva.value = false
+const manejarModalCerrado = () => {
+  modalActivo.value = false
 }
 
 // Funciones utilitarias
@@ -252,12 +256,12 @@ function confirmarEliminacion() {
 function abrirCamaraPedidos() {
   mostrarModalAgregar.value = false
   mostrarCamaraPedidos.value = true
-  camaraActiva.value = true // NUEVO
+  modalActivo.value = true
 }
 
 function cerrarCamaraPedidos() {
   mostrarCamaraPedidos.value = false
-  camaraActiva.value = false // NUEVO
+  modalActivo.value = false
   pedidosEscaneados.value = []
 }
 
@@ -287,7 +291,7 @@ onUnmounted(() => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
-      camaraActiva: false,
+      modalActivo: false,
     },
     null,
   )
@@ -295,7 +299,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Header con botón de estadísticas */
 .encabezado-pedidos {
   display: flex;
   justify-content: space-between;
@@ -331,7 +334,6 @@ onUnmounted(() => {
 .boton-estadisticas-anuales:active {
   transform: scale(0.95);
 }
-/* Responsive */
 @media (max-width: 600px) {
   .encabezado-pedidos {
     padding: 0 0.25rem;

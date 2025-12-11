@@ -4,28 +4,15 @@
     <div class="header-etiquetas">
       <h2 class="titulo-tabla">Etiquetas</h2>
 
-      <!--
-  <div class="selector-tamano">
-    <span class="label-tamano">Tamaño:</span>
-    <label class="opcion-tamano">
-      <input type="radio" name="tamano" value="10x15cm" v-model="tamanoSeleccionado" checked />
-      <span>10x15 cm</span>
-    </label>
-    <label class="opcion-tamano">
-      <input type="radio" name="tamano" value="5x10cm" v-model="tamanoSeleccionado" />
-      <span>5x10 cm</span>
-    </label>
-    <label class="opcion-tamano">
-      <input type="radio" name="tamano" value="2.5x6.7cm" v-model="tamanoSeleccionado" />
-      <span>2.5x6.7 cm</span>
-    </label>
-  </div>
-  -->
       <p class="texto-info-tamano">Las etiquetas se generan en formato <strong>10x15 cm</strong></p>
     </div>
 
     <!-- FORMULARIO DE ENTRADA -->
-    <FormularioEtiqueta @agregar-etiqueta="agregarEtiqueta" />
+    <FormularioEtiqueta
+      @agregar-etiqueta="agregarEtiqueta"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
+    />
 
     <!-- TABLA DE ARTÍCULOS -->
     <TablaEtiquetas
@@ -33,6 +20,8 @@
       @editar-etiqueta="editarEtiqueta"
       @eliminar-etiqueta="eliminarEtiqueta"
       @limpiar-todo="limpiarTodo"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- MODAL ELIMINAR ETIQUETA INDIVIDUAL -->
@@ -41,6 +30,8 @@
       :texto="`la etiqueta del artículo ${etiquetaAEliminar?.codigo}`"
       @confirmar="confirmarEliminar"
       @cerrar="cerrarModalEliminar"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- MODAL ELIMINAR TODO -->
@@ -49,6 +40,8 @@
       texto="todas las etiquetas"
       @confirmar="confirmarLimpiarTodo"
       @cerrar="cerrarModalLimpiarTodo"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
   </div>
 </template>
@@ -78,6 +71,10 @@ const mostrarModalLimpiarTodo = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
+
+// Estado para controlar si algún modal está activo
+const modalActivo = ref(false)
+
 let intervaloPolling = null
 
 const emit = defineEmits(['configurar-barra'])
@@ -257,12 +254,22 @@ const configuracionBarra = computed(() => ({
   mostrarEnviar: listaEtiquetas.value.length > 0,
   puedeEnviar: listaEtiquetas.value.length > 0,
   botonesPersonalizados: [],
+  modalActivo: modalActivo.value,
 }))
 
 const metodosParaBarra = {
   onEnviar: () => generarPDF(),
   onAgregar: () => {},
   onAccionPersonalizada: () => {},
+}
+
+// Métodos para manejar el estado del modal
+const manejarModalAbierto = () => {
+  modalActivo.value = true
+}
+
+const manejarModalCerrado = () => {
+  modalActivo.value = false
 }
 
 // --- LIFECYCLE ---
@@ -295,6 +302,7 @@ onUnmounted(() => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
+      modalActivo: false,
     },
     null,
   )
@@ -306,6 +314,14 @@ watch(
     emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
   },
   { deep: true },
+)
+
+// Watcher para actualizar cuando cambia el estado del modal
+watch(
+  () => modalActivo.value,
+  () => {
+    emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
+  },
 )
 </script>
 
@@ -371,7 +387,6 @@ watch(
   color: var(--color-texto-principal);
   font-weight: 500;
 }
-/* Responsive */
 @media (max-width: 600px) {
   .contenedor-tabla {
     padding: 0.75rem;

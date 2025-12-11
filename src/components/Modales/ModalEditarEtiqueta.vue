@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 
 const props = defineProps({
@@ -73,7 +73,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['guardar', 'cerrar'])
+const emit = defineEmits(['guardar', 'cerrar', 'modal-abierto', 'modal-cerrado'])
 
 const etiquetaEditada = ref({
   id: props.etiqueta.id,
@@ -101,16 +101,11 @@ watch(
   { deep: true },
 )
 
-// --- NUEVO ---
-// Observador para formatear el campo de ubicación en tiempo real.
 watch(
   () => etiquetaEditada.value.ubicacion,
   (newValue) => {
     if (typeof newValue === 'string') {
-      // Transforma el valor a mayúsculas y reemplaza espacios con guiones.
       const formattedValue = newValue.toUpperCase().replace(/\s+/g, '-')
-
-      // Solo actualiza si el valor formateado es diferente para evitar un bucle.
       if (formattedValue !== etiquetaEditada.value.ubicacion) {
         etiquetaEditada.value.ubicacion = formattedValue
       }
@@ -119,7 +114,6 @@ watch(
 )
 
 function guardarCambios() {
-  // Validaciones básicas
   if (!etiquetaEditada.value.codigo.trim()) {
     alert('El código no puede estar vacío')
     return
@@ -134,8 +128,6 @@ function guardarCambios() {
     etiquetaEditada.value.cantidad = 1
   }
 
-  // --- MODIFICADO ---
-  // Limpia los guiones que puedan quedar al principio o al final del string.
   const ubicacionFinal = (etiquetaEditada.value.ubicacion || '').replace(/^-+|-+$/g, '')
 
   emit('guardar', {
@@ -145,10 +137,19 @@ function guardarCambios() {
     ubicacion: ubicacionFinal || 'Sin ubicación',
   })
 }
+
+// Emitir que el modal está abierto al montar
+onMounted(() => {
+  emit('modal-abierto')
+})
+
+// Emitir que el modal está cerrado al desmontar
+onUnmounted(() => {
+  emit('modal-cerrado')
+})
 </script>
 
 <style scoped>
-/* Reutiliza los estilos globales del modal */
 .modal-campo textarea {
   padding: 0.5rem;
   border: 1px solid var(--color-borde);

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="!camaraActiva"
+    v-if="!modalActivo"
     class="barra-botones-inferior"
     :class="{ 'con-banner': hayBannerVisible }"
   >
@@ -96,8 +96,8 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  // Prop para saber si la cámara está activa
-  camaraActiva: {
+  // Prop para saber si hay algún modal activo (más genérico)
+  modalActivo: {
     type: Boolean,
     default: false,
   },
@@ -138,7 +138,7 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 <style scoped>
 .barra-botones-inferior {
   position: fixed;
-  bottom: 26px; /* Posición por defecto (sin banner) */
+  bottom: 26px;
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
@@ -155,11 +155,10 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   padding: 0 16px;
   box-sizing: border-box;
-  transition: bottom 0.3s ease; /* Transición suave */
+  transition: bottom 0.3s ease;
 }
-/* CLASE DINÁMICA: Cuando hay banner visible */
 .barra-botones-inferior.con-banner {
-  bottom: 55px; /* 26px original + 60px del banner */
+  bottom: 55px;
 }
 .boton-barra {
   width: 48px;
@@ -184,7 +183,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 .boton-barra:active:not(:disabled) {
   transform: translateY(0);
 }
-/* Botón de agregar con estilo especial */
 .boton-agregar {
   background-color: var(--color-acento);
   transform: scale(1.1);
@@ -194,7 +192,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   filter: brightness(1.1);
   transform: scale(1.15) translateY(-2px);
 }
-/* Estado desactivado */
 .boton-desactivado {
   background-color: var(--color-desactivado) !important;
   cursor: not-allowed !important;
@@ -205,7 +202,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
   filter: none !important;
 }
-/* Responsive: Ajustar para pantallas pequeñas */
 @media (max-width: 480px) {
   .barra-botones-inferior {
     gap: 16px;
@@ -227,7 +223,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     transform: scale(1.1) translateY(-2px);
   }
 }
-/* Ajuste para muchos botones */
 @media (max-width: 360px) {
   .barra-botones-inferior {
     gap: 12px;

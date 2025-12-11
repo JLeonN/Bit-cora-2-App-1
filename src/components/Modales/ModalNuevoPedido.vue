@@ -121,7 +121,7 @@ import CamaraPedidos from '../Logica/Pedidos/CamaraPedidos.vue'
 import { Keyboard } from '@capacitor/keyboard'
 import { Capacitor } from '@capacitor/core'
 
-const emit = defineEmits(['agregar-pedido', 'cerrar', 'camara-abierta', 'camara-cerrada'])
+const emit = defineEmits(['agregar-pedido', 'cerrar', 'modal-abierto', 'modal-cerrado'])
 
 // Referencias
 const inputPedidoRef = ref(null)
@@ -143,14 +143,14 @@ const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
 })
 
-// NUEVO: Watcher para emitir estado de cámara
+// Watcher para emitir estado de cámara
 watch(
   () => mostrarCamaraPedidos.value,
   (nuevoValor) => {
     if (nuevoValor) {
-      emit('camara-abierta')
+      emit('modal-abierto')
     } else {
-      emit('camara-cerrada')
+      emit('modal-cerrado')
     }
   },
 )
@@ -167,7 +167,6 @@ const decrementarItems = () => {
 }
 
 const validarItems = () => {
-  // Asegurar que siempre sea al menos 1 y nunca negativo
   if (!cantidadItems.value || cantidadItems.value < 1) {
     cantidadItems.value = 1
   }
@@ -185,7 +184,6 @@ const agregarPedidoALista = () => {
     items: items,
   })
 
-  // Auto-incremento inteligente del número de pedido
   const ultimoNumero = parseInt(numero)
   if (!isNaN(ultimoNumero)) {
     numeroPedido.value = String(ultimoNumero + 1)
@@ -199,10 +197,8 @@ const agregarPedidoALista = () => {
     numeroPedido.value = ''
   }
 
-  // Resetear items a 1
   cantidadItems.value = 1
 
-  // Auto-scroll al final de la lista
   nextTick(() => {
     const miniLista = document.querySelector('.mini-lista')
     if (miniLista) {
@@ -213,14 +209,11 @@ const agregarPedidoALista = () => {
   restablecerPlaceholder()
 }
 
-// Eliminar de la lista temporal
 const eliminarDeLista = (index) => {
   pedidosTemporales.value.splice(index, 1)
 }
 
-// Confirmar todos los pedidos
 const confirmarTodosPedidos = () => {
-  // Si no hay pedidos en la lista, intentamos agregar el del input
   if (pedidosTemporales.value.length === 0) {
     if (!numeroPedido.value.trim()) {
       mostrarError.value = true
@@ -229,28 +222,22 @@ const confirmarTodosPedidos = () => {
       setTimeout(() => (animarError.value = false), 500)
       return
     }
-    // Agregar el del input si hay algo escrito
     pedidosTemporales.value.push({
       numero: numeroPedido.value.trim(),
       items: cantidadItems.value || 1,
     })
   }
 
-  // Emitir todos los pedidos al padre
   emit('agregar-pedido', pedidosTemporales.value)
-
-  // Limpiar y cerrar
   limpiarTodo()
   emit('cerrar')
 }
 
-// Cancelar y cerrar
 const cancelarYCerrar = () => {
   limpiarTodo()
   emit('cerrar')
 }
 
-// Limpiar todo
 const limpiarTodo = () => {
   numeroPedido.value = ''
   cantidadItems.value = 1
@@ -264,7 +251,6 @@ const restablecerPlaceholder = () => {
   textoPlaceholder.value = 'Número de pedido'
 }
 
-// Abrir cámara
 const abrirCamara = () => {
   mostrarCamaraPedidos.value = true
 }
@@ -273,15 +259,12 @@ const cerrarCamaraYVolver = () => {
   mostrarCamaraPedidos.value = false
 }
 
-// Los pedidos de la cámara pueden ser varios
 const onCodigoLeido = (pedidos) => {
-  // La cámara ya emite objetos { numero, items }
   emit('agregar-pedido', pedidos)
   mostrarCamaraPedidos.value = false
   emit('cerrar')
 }
 
-// Focus automático al montar
 onMounted(() => {
   nextTick(() => {
     if (inputPedidoRef.value) {
@@ -289,12 +272,13 @@ onMounted(() => {
     }
   })
 
-  // Listener del teclado (solo en móviles)
+  // Emitir que el modal está abierto
+  emit('modal-abierto')
+
   if (esMovil) {
     Keyboard.addListener('keyboardWillShow', (info) => {
       const alturaVentana = window.innerHeight
       const alturaTeclado = info.keyboardHeight
-      // Calcular el porcentaje de desplazamiento
       alturaDesplazamiento.value = (alturaTeclado / alturaVentana) * 50
     })
 
@@ -308,13 +292,12 @@ onUnmounted(() => {
   if (esMovil) {
     Keyboard.removeAllListeners()
   }
-  // Asegurar que se emita cerrada al desmontar
-  emit('camara-cerrada')
+  // Emitir que el modal está cerrado
+  emit('modal-cerrado')
 })
 </script>
 
 <style scoped>
-/* Modal fondo */
 .modal-fondo {
   position: fixed;
   top: 0;
@@ -327,7 +310,6 @@ onUnmounted(() => {
   justify-content: center;
   z-index: 1000;
 }
-/* Modal contenido - padding reducido */
 .modal-contenido {
   background: var(--color-superficie);
   border-radius: 16px;
@@ -337,14 +319,12 @@ onUnmounted(() => {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease;
 }
-/* Título del modal - margin reducido */
 .modal-titulo {
   margin: 0 0 0.75rem 0;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-texto-principal);
 }
-/* Contador arriba a la derecha */
 .contador-pedidos-arriba {
   display: flex;
   justify-content: flex-end;
@@ -359,20 +339,17 @@ onUnmounted(() => {
   font-size: 0.85rem;
   font-weight: 600;
 }
-/* Label */
 .label-pedido {
   display: block;
   font-size: 0.95rem;
   color: var(--color-texto-secundario);
   margin-bottom: 0.5rem;
 }
-/* Fila: Input con flecha integrada + botón cámara */
 .fila-input-camara {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
-/* Contenedor del input con flecha integrada */
 .contenedor-input-flecha {
   flex: 1;
   position: relative;
@@ -382,7 +359,7 @@ onUnmounted(() => {
 .contenedor-input-flecha input {
   width: 100%;
   padding: 0.75rem;
-  padding-right: 50px; /* Espacio para el botón */
+  padding-right: 50px;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-fondo);
@@ -411,7 +388,6 @@ onUnmounted(() => {
     transform: translateX(10px);
   }
 }
-/* Botón flecha integrado dentro del input */
 .boton-flecha-integrado {
   position: absolute;
   right: 4px;
@@ -439,7 +415,6 @@ onUnmounted(() => {
   cursor: not-allowed;
   opacity: 0.5;
 }
-/* Botón cámara */
 .boton-camara {
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
@@ -461,7 +436,6 @@ onUnmounted(() => {
 .boton-camara:active {
   transform: scale(0.95);
 }
-/* Input items con botones */
 .fila-items {
   margin-bottom: 0.75rem;
 }
@@ -471,7 +445,6 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   margin-bottom: 0.5rem;
 }
-/* Contenedor de los 3 elementos: [-] [Input] [+] */
 .contenedor-items-botones {
   display: flex;
   gap: 0.5rem;
@@ -486,13 +459,12 @@ onUnmounted(() => {
   color: var(--color-texto-principal);
   font-size: 1rem;
   text-align: center;
-  min-width: 0; /* Importante para que flex funcione correctamente */
+  min-width: 0;
 }
 .contenedor-items-botones input:focus {
   outline: none;
   border-color: var(--color-acento);
 }
-/* Botones - y + */
 .boton-items {
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
@@ -514,7 +486,6 @@ onUnmounted(() => {
 .boton-items:active {
   transform: scale(0.95);
 }
-/* Mini lista de pedidos */
 .contenedor-mini-lista {
   margin-bottom: 0.75rem;
 }
@@ -542,7 +513,6 @@ onUnmounted(() => {
 .item-mini-lista:last-child {
   margin-bottom: 0;
 }
-/* Animación de entrada */
 @keyframes fadeInSlide {
   from {
     opacity: 0;
@@ -587,7 +557,6 @@ onUnmounted(() => {
 .boton-eliminar-item:active {
   transform: scale(0.9);
 }
-/* Scroll personalizado */
 .mini-lista::-webkit-scrollbar {
   width: 6px;
 }
@@ -602,7 +571,6 @@ onUnmounted(() => {
 .mini-lista::-webkit-scrollbar-thumb:hover {
   background: var(--color-texto-secundario);
 }
-/* Responsive */
 @media (max-width: 600px) {
   .modal-contenido {
     padding: 0.75rem;

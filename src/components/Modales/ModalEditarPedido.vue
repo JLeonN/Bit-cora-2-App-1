@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 
 const props = defineProps({
@@ -50,7 +50,7 @@ const props = defineProps({
     default: 1,
   },
 })
-const emit = defineEmits(['guardar', 'cerrar'])
+const emit = defineEmits(['guardar', 'cerrar', 'modal-abierto', 'modal-cerrado'])
 
 const pedidoEditado = ref(props.pedido)
 const itemsEditados = ref(props.items || 1)
@@ -76,10 +76,19 @@ function guardarCambios() {
     items: itemsEditados.value,
   })
 }
+
+// Emitir que el modal está abierto al montar
+onMounted(() => {
+  emit('modal-abierto')
+})
+
+// Emitir que el modal está cerrado al desmontar
+onUnmounted(() => {
+  emit('modal-cerrado')
+})
 </script>
 
 <style scoped>
-/* Modal fondo */
 .modal-fondo {
   position: fixed;
   top: 0;
@@ -92,7 +101,6 @@ function guardarCambios() {
   justify-content: center;
   z-index: 1000;
 }
-/* Modal contenido */
 .modal-contenido {
   background: var(--color-superficie);
   border-radius: 16px;
@@ -105,14 +113,12 @@ function guardarCambios() {
 .modal-contenido.activo {
   transform: translateY(-30%);
 }
-/* Título */
 .modal-titulo {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-texto-principal);
 }
-/* Campo del modal */
 .modal-campo {
   margin-bottom: 1rem;
 }
@@ -135,7 +141,6 @@ function guardarCambios() {
   outline: none;
   border-color: var(--color-acento);
 }
-/* Input number sin flechas */
 .input-items-escaneado::-webkit-inner-spin-button,
 .input-items-escaneado::-webkit-outer-spin-button {
   -webkit-appearance: none;

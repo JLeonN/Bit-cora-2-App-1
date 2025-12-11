@@ -25,6 +25,8 @@
       :ubicacion="ubicacionEditar?.ubicacion"
       @guardar="guardarEdicion"
       @cerrar="cerrarModalEditar"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal: Eliminar Ubicación -->
@@ -33,6 +35,8 @@
       :texto="ubicacionEliminar?.codigo"
       @confirmar="confirmarEliminacion"
       @cerrar="cerrarModalEliminar"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Modal: Eliminar Todas Ubicaciones -->
@@ -41,6 +45,8 @@
       texto="todas las ubicaciones"
       @confirmar="confirmarEliminacionTodas"
       @cerrar="cerrarModalEliminarTodas"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
     />
 
     <!-- Mensajes de notificación -->
@@ -74,6 +80,9 @@ const emit = defineEmits(['configurar-barra'])
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
+
+// Estado para controlar si algún modal está activo
+const modalActivo = ref(false)
 
 // Computed para garantizar que siempre sea array
 const ubicacionesArray = computed(() => {
@@ -110,6 +119,7 @@ const configuracionBarra = computed(() => ({
   mostrarEnviar: ubicacionesArray.value.length > 0,
   puedeEnviar: ubicacionesArray.value.length > 0,
   botonesPersonalizados: [],
+  modalActivo: modalActivo.value,
 }))
 
 // Métodos que la barra inferior va a llamar
@@ -134,6 +144,23 @@ watch(
   },
   { deep: true },
 )
+
+// Watcher para actualizar cuando cambia el estado del modal
+watch(
+  () => modalActivo.value,
+  () => {
+    actualizarConfiguracionBarra()
+  },
+)
+
+// Métodos para manejar el estado del modal
+const manejarModalAbierto = () => {
+  modalActivo.value = true
+}
+
+const manejarModalCerrado = () => {
+  modalActivo.value = false
+}
 
 // --- MANEJO DE EVENTOS DEL SELECTOR DE EXCEL ---
 function manejarBaseDatosCargada(evento) {
@@ -204,7 +231,6 @@ async function enviarAEtiquetas(ubicacion) {
 
     console.log('[AjustarUbicaciones] Etiqueta enviada:', nuevaEtiqueta)
 
-    // Mensaje específico para envío individual
     Notify.create({
       type: 'positive',
       message: '✅ Etiqueta enviada correctamente',
@@ -232,7 +258,6 @@ async function enviarTodasAEtiquetas(etiquetas) {
 
     await guardarEtiquetas(listaActualizada)
 
-    // Mensaje específico para envío masivo
     Notify.create({
       type: 'positive',
       message: `✅ ${etiquetas.length} etiquetas enviadas correctamente`,
@@ -449,6 +474,7 @@ onUnmounted(() => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
+      modalActivo: false,
     },
     null,
   )

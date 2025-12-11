@@ -19,6 +19,7 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 
 defineProps({
@@ -28,5 +29,15 @@ defineProps({
   },
 })
 
-defineEmits(['cerrar', 'confirmar'])
+const emit = defineEmits(['cerrar', 'confirmar', 'modal-abierto', 'modal-cerrado'])
+
+// Emitir que el modal está abierto al montar
+onMounted(() => {
+  emit('modal-abierto')
+})
+
+// Emitir que el modal está cerrado al desmontar
+onUnmounted(() => {
+  emit('modal-cerrado')
+})
 </script>

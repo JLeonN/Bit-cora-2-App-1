@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
 import { obtenerPedidos } from '../BaseDeDatos/almacenamiento.js'
 
@@ -43,25 +43,22 @@ const props = defineProps({
   observacion: String,
   fecha: String,
 })
-const emit = defineEmits(['guardar', 'cerrar'])
+const emit = defineEmits(['guardar', 'cerrar', 'modal-abierto', 'modal-cerrado'])
 
 const observacionEditada = ref(props.observacion)
 const fechaEditada = ref('')
 const mensajeError = ref('')
 
-// Convertir fecha de DD/MM/YYYY a YYYY-MM-DD
 function convertirAFormatoInput(fechaDDMMYYYY) {
   const [dia, mes, anio] = fechaDDMMYYYY.split('/')
   return `${anio}-${mes}-${dia}`
 }
 
-// Convertir fecha de YYYY-MM-DD a DD/MM/YYYY
 function convertirAFormatoDDMMYYYY(fechaYYYYMMDD) {
   const [anio, mes, dia] = fechaYYYYMMDD.split('-')
   return `${dia}/${mes}/${anio}`
 }
 
-// Inicializar fecha
 fechaEditada.value = convertirAFormatoInput(props.fecha)
 
 watch(
@@ -81,15 +78,12 @@ watch(
 async function guardarCambios() {
   mensajeError.value = ''
 
-  // Si observación está vacía, vuelve a FALTA
   const observacionFinal = observacionEditada.value.trim() || 'FALTA'
   const fechaFinal = convertirAFormatoDDMMYYYY(fechaEditada.value)
 
-  // Validar que la fecha nueva no tenga pedidos o faltas
   const todosLosPedidos = await obtenerPedidos()
   const fechaOriginal = props.fecha
 
-  // Si cambió la fecha
   if (fechaFinal !== fechaOriginal) {
     const hayRegistrosEnFecha = todosLosPedidos.some((p) => p.fecha === fechaFinal)
 
@@ -105,6 +99,16 @@ async function guardarCambios() {
     fechaOriginal: fechaOriginal,
   })
 }
+
+// Emitir que el modal está abierto al montar
+onMounted(() => {
+  emit('modal-abierto')
+})
+
+// Emitir que el modal está cerrado al desmontar
+onUnmounted(() => {
+  emit('modal-cerrado')
+})
 </script>
 
 <style scoped>
