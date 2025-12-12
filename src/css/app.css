@@ -356,7 +356,6 @@ button {
 /* -------------------------------------------------------------------------- */
 /* ESTILOS CONSOLIDADOS PARA TODAS LAS CÁMARAS */
 /* -------------------------------------------------------------------------- */
-
 /* Modal fondo general para cámaras */
 .modal-fondo {
   position: fixed;
@@ -365,12 +364,12 @@ button {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.9);
-  display: flex;
+  align-items: flex-start; /* ← Cambiar esto */
+  padding-bottom: 4rem;
   align-items: center;
   justify-content: center;
   z-index: 2000;
 }
-
 /* Contenedor principal de cámara - PANTALLA COMPLETA */
 .modal-camara {
   background: var(--color-superficie);
@@ -384,7 +383,6 @@ button {
   display: flex;
   flex-direction: column;
 }
-
 /* Caja del video - ocupa el espacio disponible */
 .caja-camara {
   position: relative;
@@ -396,14 +394,12 @@ button {
   margin-bottom: 1rem;
   min-height: 0; /* Para que flex funcione bien */
 }
-
 #video-camara,
 #video-camara-ubicaciones {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 /* Overlay miniatura (feedback visual) */
 .overlay-miniatura {
   position: absolute;
@@ -416,13 +412,11 @@ button {
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
-
 .mini-captura {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 /* Mensaje temporal flotante */
 .mensaje-temporal {
   background: var(--color-primario);
@@ -434,7 +428,6 @@ button {
   font-weight: 500;
   animation: fadeIn 0.3s ease;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -445,14 +438,12 @@ button {
     transform: translateY(0);
   }
 }
-
 /* Caja inferior de controles */
 .caja-inferior {
   display: flex;
   gap: 0.75rem;
   justify-content: space-between;
 }
-
 /* Botones principales */
 .boton-cancelar,
 .boton-finalizar {
@@ -468,34 +459,28 @@ button {
   align-items: center;
   justify-content: center;
 }
-
 .boton-cancelar {
   background: transparent;
   color: var(--color-texto-secundario);
   border: 1px solid var(--color-borde);
 }
-
 .boton-cancelar:hover {
   background: var(--color-fondo);
   border-color: var(--color-texto-secundario);
 }
-
 .boton-finalizar {
   background: var(--color-exito);
   color: white;
 }
-
 .boton-finalizar:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-2px);
 }
-
 .boton-finalizar:disabled {
   background: var(--color-desactivado);
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 /* Contenedor de lista de pedidos escaneados (CamaraPedidos) */
 .contenedor-lista-pedidos {
   background: var(--color-superficie);
@@ -506,13 +491,11 @@ button {
   margin-bottom: 1rem;
   border-radius: 8px;
 }
-
 .lista-pedidos-escaneados {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
 .item-pedido-escaneado {
   display: flex;
   align-items: center;
@@ -523,7 +506,6 @@ button {
   padding: 0.5rem 0.75rem;
   animation: slideIn 0.3s ease;
 }
-
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -534,14 +516,12 @@ button {
     transform: translateX(0);
   }
 }
-
 .numero-pedido-escaneado {
   flex: 1;
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--color-texto-principal);
 }
-
 .input-items-escaneado {
   width: 70px;
   padding: 0.5rem;
@@ -552,24 +532,20 @@ button {
   font-size: 0.9rem;
   text-align: center;
 }
-
 .input-items-escaneado:focus {
   outline: none;
   border-color: var(--color-acento);
 }
-
 /* Quitar flechas del input number */
 .input-items-escaneado::-webkit-inner-spin-button,
 .input-items-escaneado::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 .input-items-escaneado {
   appearance: textfield;
   -moz-appearance: textfield;
 }
-
 .boton-eliminar-escaneado {
   background: transparent;
   border: none;
@@ -582,34 +558,27 @@ button {
   border-radius: 4px;
   transition: all 0.2s ease;
 }
-
 .boton-eliminar-escaneado:hover {
   background: rgba(244, 67, 54, 0.1);
   transform: scale(1.1);
 }
-
 .boton-eliminar-escaneado:active {
   transform: scale(0.9);
 }
-
 /* Scroll personalizado para lista */
 .contenedor-lista-pedidos::-webkit-scrollbar {
   width: 6px;
 }
-
 .contenedor-lista-pedidos::-webkit-scrollbar-track {
   background: var(--color-fondo);
 }
-
 .contenedor-lista-pedidos::-webkit-scrollbar-thumb {
   background: var(--color-borde);
   border-radius: 3px;
 }
-
 .contenedor-lista-pedidos::-webkit-scrollbar-thumb:hover {
   background: var(--color-texto-secundario);
 }
-
 /* Controles principales (usados en modo escaneando) */
 .controles-principales {
   display: flex;
@@ -619,7 +588,6 @@ button {
   gap: 0.8rem;
   width: 100%;
 }
-
 /* Controles de ingreso (CamaraUbicaciones - modo ubicación) */
 .controles-ingreso {
   display: flex;
@@ -627,13 +595,11 @@ button {
   gap: 0.8rem;
   width: 100%;
 }
-
 .contenedor-botones-accion {
   display: flex;
   gap: 0.8rem;
   width: 100%;
 }
-
 .boton-siguiente,
 .boton-descartar {
   flex: 1;
@@ -646,17 +612,14 @@ button {
   cursor: pointer;
   font-weight: 600;
 }
-
 .boton-siguiente {
   background-color: var(--color-exito);
   color: var(--color-texto-principal);
 }
-
 .boton-descartar {
   background-color: var(--color-error);
   color: var(--color-texto-principal);
 }
-
 /* Feedback de código escaneado (CamaraUbicaciones) */
 .feedback-codigo-escaneado {
   position: absolute;
@@ -673,25 +636,21 @@ button {
   gap: 0.5rem;
   z-index: 10;
 }
-
 .texto-feedback {
   font-size: 1rem;
   color: var(--color-texto-secundario);
 }
-
 .codigo-feedback {
   font-size: 1.8rem;
   font-weight: bold;
   color: var(--color-texto-principal);
 }
-
 /* Contenedor del código con botón de edición */
 .contenedor-codigo-feedback {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .boton-editar-codigo {
   background: transparent;
   border: none;
@@ -701,14 +660,12 @@ button {
   align-items: center;
   justify-content: center;
 }
-
 /* Modo edición de código */
 .contenedor-edicion-codigo {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .input-codigo-editable {
   padding: 0.5rem;
   border-radius: 6px;
@@ -718,7 +675,6 @@ button {
   font-size: 1rem;
   min-width: 120px;
 }
-
 .boton-confirmar-codigo,
 .boton-cancelar-codigo {
   width: 36px;
@@ -730,21 +686,17 @@ button {
   justify-content: center;
   cursor: pointer;
 }
-
 .boton-confirmar-codigo {
   background-color: var(--color-exito);
   color: var(--color-texto-principal);
 }
-
 .boton-cancelar-codigo {
   background-color: var(--color-error);
   color: var(--color-texto-principal);
 }
-
 /* -------------------------------------------------------------------------- */
 /* RESPONSIVE PARA CÁMARAS */
 /* -------------------------------------------------------------------------- */
-
 @media (max-width: 600px) {
   .modal-camara {
     padding: 1rem;
@@ -752,29 +704,24 @@ button {
     height: 100%;
     border-radius: 0;
   }
-
   .caja-inferior {
     gap: 0.5rem;
   }
-
   .boton-cancelar,
   .boton-finalizar {
     padding: 0.75rem;
     font-size: 0.95rem;
   }
-
   .overlay-miniatura {
     width: 60px;
     height: 60px;
     top: 0.75rem;
     right: 0.75rem;
   }
-
   .contenedor-lista-pedidos {
     max-height: 150px;
     padding: 0.5rem;
   }
-
   .input-items-escaneado {
     width: 60px;
     font-size: 0.85rem;
@@ -787,27 +734,22 @@ button {
   .boton-finalizar {
     max-width: 200px;
   }
-
   .controles-ingreso {
     flex-direction: row;
     align-items: center;
   }
-
   .ubicacion-campo {
     flex: 1;
   }
-
   .contenedor-botones-accion {
     width: auto;
   }
-
   .boton-descartar,
   .boton-siguiente {
     flex: none;
     width: 48px;
   }
 }
-
 /* -------------------------------------------------------------------------- */
 /* Formulario de ubicación */
 .contenedor-principal-formulario {

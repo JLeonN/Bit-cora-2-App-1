@@ -31,7 +31,7 @@
               ref="inputPedidoRef"
               id="numeroPedido"
               v-model="numeroPedido"
-              type="number"
+              type="text"
               inputmode="text"
               autocomplete="off"
               :placeholder="textoPlaceholder"
