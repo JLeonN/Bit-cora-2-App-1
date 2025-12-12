@@ -272,7 +272,7 @@ function restablecerPlaceholderUbicacion() {
 function formatearUbicacion() {
   if (!nuevaUbicacion.value) return
   let texto = nuevaUbicacion.value.trim()
-  texto = texto.replace(/\s+/g, '-') // Reemplaza espacios intermedios por guiones
+  texto = texto.replace(/\s+/g, '-')
   nuevaUbicacion.value = texto
 }
 
@@ -287,7 +287,6 @@ async function guardarUbicacion() {
 
   formatearUbicacion()
 
-  // GUARDAR LA ÚLTIMA UBICACIÓN ANTES DE AGREGAR
   await guardarUltimaUbicacion(nuevaUbicacion.value)
 
   ubicacionesGuardadas.value.push({
@@ -295,8 +294,6 @@ async function guardarUbicacion() {
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
-  // Reset código pero mantener ubicación para el siguiente
-  // NO resetear nuevaUbicacion para mantenerla
   codigoEscaneadoTemporal.value = null
 
   mostrarMensaje('Ubicación guardada correctamente')
@@ -315,14 +312,12 @@ function confirmarUbicacionYSiguiente() {
 
   const exito = guardarUbicacion()
   if (exito) {
-    // Reanudar escaneo para el siguiente artículo
     nextTick(() => reanudarEscaneo())
   }
 }
 
 // --- Otros controles ---
 function descartarEscaneo() {
-  // Solo limpiar código, mantener ubicación
   codigoEscaneadoTemporal.value = null
   reanudarEscaneo()
 }
@@ -357,6 +352,6 @@ onBeforeUnmount(() => {
   if (lector) {
     lector.reset()
   }
-  emit('modal-cerrado') // ← AGREGAR ESTA LÍNEA
+  emit('modal-cerrado')
 })
 </script>
