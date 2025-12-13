@@ -133,8 +133,11 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     const libroDeTrabajo = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
 
-    // --- Nombre del archivo ---
-    const nombreArchivo = `Ubic ${nombreUsuario}.xlsx`
+    // --- Nombre del archivo con fecha y hora ---
+    const ahora = new Date()
+    const fecha = ahora.toISOString().split('T')[0] // Formato: YYYY-MM-DD
+    const hora = ahora.toTimeString().slice(0, 5).replace(':', '-') // Formato: HH-MM
+    const nombreArchivo = `Ubic ${nombreUsuario} ${fecha} # ${hora}.xlsx`
 
     // --- Convertir a Base64 y guardar ---
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
@@ -147,6 +150,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     // --- Log de estadísticas ---
     console.log('- Archivo de ubicaciones generado exitosamente:')
     console.log(`- Usuario: ${nombreUsuario}`)
+    console.log(`- Fecha y hora: ${fecha} # ${hora}`)
     console.log(`- Ubicaciones totales: ${ubicaciones.length}`)
     console.log(`- Con ubicación antigua: ${ubicacionesAntiguasEncontradas}`)
     console.log(`- Sin ubicación antigua: ${ubicacionesAntiguasVacias}`)
