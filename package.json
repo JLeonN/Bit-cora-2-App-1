@@ -27,6 +27,7 @@
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/keyboard": "^7.0.4",
     "@capacitor/preferences": "^7.0.1",
+    "@capacitor/screen-orientation": "^8.0.0",
     "@capacitor/share": "^7.0.2",
     "@capacitor/splash-screen": "^7.0.3",
     "@quasar/extras": "^1.16.4",

@@ -13,7 +13,9 @@ dependencies {
     implementation project(':capacitor-community-camera-preview')
     implementation project(':capacitor-camera')
     implementation project(':capacitor-filesystem')
+    implementation project(':capacitor-keyboard')
     implementation project(':capacitor-preferences')
+    implementation project(':capacitor-screen-orientation')
     implementation project(':capacitor-share')
     implementation project(':capacitor-splash-screen')
 

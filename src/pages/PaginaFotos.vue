@@ -189,7 +189,7 @@ async function limpiarTodasFotos() {
   }
 }
 
-// Enviar fotos (generar ZIP y compartir)
+// Enviar fotos (generar ZIP y compartir o descargar)
 async function enviarFotos() {
   if (fotos.value.length === 0) {
     return
@@ -204,20 +204,45 @@ async function enviarFotos() {
 
     mensajeCarga.value = 'Preparando para compartir...'
 
-    // Compartir
-    await compartirArchivo(uri, nombre, 'zip')
+    // Detectar si está en PC o móvil
+    const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
 
-    cargando.value = false
+    if (esNavegadorPC) {
+      // EN PC: Descargar directamente
+      const link = document.createElement('a')
+      link.href = uri
+      link.download = nombre
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
 
-    $q.notify({
-      message: 'Fotos compartidas exitosamente',
-      color: 'positive',
-      icon: 'check_circle',
-      position: 'top',
-      timeout: 2000,
-    })
+      cargando.value = false
 
-    console.log('[PaginaFotos] ZIP compartido exitosamente')
+      $q.notify({
+        message: 'ZIP descargado exitosamente',
+        color: 'positive',
+        icon: 'check_circle',
+        position: 'top',
+        timeout: 2000,
+      })
+
+      console.log('[PaginaFotos] ZIP descargado en PC')
+    } else {
+      // EN MÓVIL: Compartir con Share API
+      await compartirArchivo(uri, nombre, 'zip')
+
+      cargando.value = false
+
+      $q.notify({
+        message: 'Fotos compartidas exitosamente',
+        color: 'positive',
+        icon: 'check_circle',
+        position: 'top',
+        timeout: 2000,
+      })
+
+      console.log('[PaginaFotos] ZIP compartido en móvil')
+    }
   } catch (error) {
     cargando.value = false
     console.error('[PaginaFotos] Error al enviar fotos:', error)

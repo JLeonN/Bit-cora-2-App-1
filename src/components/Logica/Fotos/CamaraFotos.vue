@@ -10,6 +10,15 @@
       <div class="caja-camara">
         <video ref="videoCamara" id="video-camara-fotos" autoplay playsinline></video>
 
+        <!-- Overlay de área de captura 4:3 -->
+        <div class="overlay-area-captura">
+          <div class="zona-oscura zona-arriba"></div>
+          <div class="zona-captura">
+            <div class="marco-captura"></div>
+          </div>
+          <div class="zona-oscura zona-abajo"></div>
+        </div>
+
         <!-- Overlay con miniatura de última captura -->
         <div v-if="ultimaCaptura" class="overlay-miniatura">
           <img :src="ultimaCaptura" alt="Última captura" class="mini-captura" />
@@ -77,6 +86,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { IconCamera, IconX, IconCheck, IconTrash } from '@tabler/icons-vue'
 import { Filesystem, Directory } from '@capacitor/filesystem'
+import { ScreenOrientation } from '@capacitor/screen-orientation'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 
 const emit = defineEmits(['cerrar', 'fotos-guardadas'])
@@ -95,27 +105,60 @@ const codigoSeleccionado = ref(null)
 const nombreArticuloSeleccionado = ref('')
 const fotoCapturadaBase64 = ref(null)
 const mensajeTemporal = ref('')
-const mostrarResultadosBuscador = ref(true) // ← AGREGÁ ESTA LÍNEA
+const mostrarResultadosBuscador = ref(true)
 
 // Lista temporal de fotos
 const fotosTemporales = ref([])
 
+// Bloquear orientación
+async function bloquearOrientacion() {
+  try {
+    const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+
+    if (!esNavegadorPC) {
+      await ScreenOrientation.lock({ orientation: 'portrait' })
+      console.log('[CamaraFotos] Orientación bloqueada en vertical')
+    }
+  } catch (error) {
+    console.error('[CamaraFotos] Error al bloquear orientación:', error)
+  }
+}
+
+// Desbloquear orientación
+async function desbloquearOrientacion() {
+  try {
+    const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+
+    if (!esNavegadorPC) {
+      await ScreenOrientation.unlock()
+      console.log('[CamaraFotos] Orientación desbloqueada')
+    }
+  } catch (error) {
+    console.error('[CamaraFotos] Error al desbloquear orientación:', error)
+  }
+}
+
 // Inicializar cámara
 async function iniciarCamara() {
   try {
+    // Bloquear orientación en vertical
+    await bloquearOrientacion()
+
     // Detectar si está en desarrollo en navegador
     const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
 
     if (esNavegadorPC) {
       console.log('[CamaraFotos] Modo simulación PC activado')
-      // No iniciar cámara real en PC
       return
     }
 
+    // Solicitar cámara con aspect ratio 4:3
     streamCamara = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: 'environment',
-        aspectRatio: 4 / 3, // Relación 4:3
+        width: { ideal: 800 },
+        height: { ideal: 600 },
+        aspectRatio: { ideal: 4 / 3 },
       },
     })
 
@@ -123,10 +166,11 @@ async function iniciarCamara() {
       videoCamara.value.srcObject = streamCamara
     }
 
-    console.log('[CamaraFotos] Cámara iniciada correctamente')
+    console.log('[CamaraFotos] Cámara iniciada correctamente con 4:3')
   } catch (error) {
     console.error('[CamaraFotos] Error al iniciar cámara:', error)
     alert('No se pudo acceder a la cámara. Verificá los permisos.')
+    await desbloquearOrientacion()
     emit('cerrar')
   }
 }
@@ -134,17 +178,15 @@ async function iniciarCamara() {
 // Capturar foto
 function capturarFoto() {
   try {
-    // Detectar si está en PC
     const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
 
     if (esNavegadorPC) {
-      // Generar imagen simulada (rectángulo gris 800x600)
+      // Generar imagen simulada
       const canvas = document.createElement('canvas')
       canvas.width = 800
       canvas.height = 600
       const ctx = canvas.getContext('2d')
 
-      // Fondo gris con texto
       ctx.fillStyle = '#333'
       ctx.fillRect(0, 0, 800, 600)
       ctx.fillStyle = '#fff'
@@ -170,15 +212,42 @@ function capturarFoto() {
       return
     }
 
-    // Código original para móvil
+    // Captura real en móvil
     const canvas = document.createElement('canvas')
     const video = videoCamara.value
 
+    // Obtener dimensiones reales del video
+    const videoWidth = video.videoWidth
+    const videoHeight = video.videoHeight
+
+    // Calcular dimensiones para recortar en 4:3
+    let sourceWidth, sourceHeight, sourceX, sourceY
+
+    const videoAspectRatio = videoWidth / videoHeight
+    const targetAspectRatio = 4 / 3
+
+    if (videoAspectRatio > targetAspectRatio) {
+      // Video es más ancho que 4:3, recortar los lados
+      sourceHeight = videoHeight
+      sourceWidth = videoHeight * targetAspectRatio
+      sourceX = (videoWidth - sourceWidth) / 2
+      sourceY = 0
+    } else {
+      // Video es más alto que 4:3, recortar arriba/abajo
+      sourceWidth = videoWidth
+      sourceHeight = videoWidth / targetAspectRatio
+      sourceX = 0
+      sourceY = (videoHeight - sourceHeight) / 2
+    }
+
+    // Establecer canvas a 800x600
     canvas.width = 800
     canvas.height = 600
 
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0, 800, 600)
+
+    // Dibujar la porción recortada del video en el canvas
+    ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 800, 600)
 
     const imagenBase64 = canvas.toDataURL('image/jpeg', 0.85)
     fotoCapturadaBase64.value = imagenBase64.split(',')[1]
@@ -192,7 +261,7 @@ function capturarFoto() {
       }
     })
 
-    console.log('[CamaraFotos] Foto capturada, esperando código...')
+    console.log('[CamaraFotos] Foto capturada correctamente en 4:3')
   } catch (error) {
     console.error('[CamaraFotos] Error al capturar foto:', error)
   }
@@ -224,7 +293,6 @@ async function confirmarYContinuar() {
   }
 
   try {
-    // Guardar foto en filesystem temporal
     const nombreArchivo = `temp_${Date.now()}.jpg`
     await Filesystem.writeFile({
       path: nombreArchivo,
@@ -234,7 +302,6 @@ async function confirmarYContinuar() {
 
     const rutaFoto = nombreArchivo
 
-    // Agregar a lista temporal
     fotosTemporales.value.push({
       codigo: codigoSeleccionado.value,
       nombreArticulo: nombreArticuloSeleccionado.value,
@@ -243,13 +310,11 @@ async function confirmarYContinuar() {
 
     fotosTomadas.value++
 
-    // Mostrar mensaje temporal
     mensajeTemporal.value = `Foto guardada: ${codigoSeleccionado.value}`
     setTimeout(() => {
       mensajeTemporal.value = ''
     }, 2000)
 
-    // Resetear para siguiente foto
     resetearEstado()
 
     console.log('[CamaraFotos] Foto guardada temporalmente')
@@ -277,19 +342,21 @@ function resetearEstado() {
 }
 
 // Finalizar y enviar todas las fotos
-function finalizar() {
+async function finalizar() {
   if (fotosTemporales.value.length === 0) {
     return
   }
 
   emit('fotos-guardadas', fotosTemporales.value)
   detenerCamara()
+  await desbloquearOrientacion()
   emit('cerrar')
 }
 
 // Cancelar
-function cancelar() {
+async function cancelar() {
   detenerCamara()
+  await desbloquearOrientacion()
   emit('cerrar')
 }
 
@@ -309,11 +376,11 @@ onMounted(() => {
 
 onUnmounted(() => {
   detenerCamara()
+  desbloquearOrientacion()
 })
 </script>
 
 <style scoped>
-/* Estilos específicos adicionales */
 .boton-capturar {
   width: 64px;
   height: 64px;
@@ -328,30 +395,57 @@ onUnmounted(() => {
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
 .boton-capturar:hover {
   transform: scale(1.1);
 }
+
 .boton-capturar:active {
   transform: scale(0.95);
 }
+
 .contenedor-buscador-foto {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
   position: absolute;
-  top: 8rem;
+  top: 1rem;
   left: 1.5rem;
   right: 1.5rem;
   z-index: 10;
 }
+
 .contenedor-buscador-foto .modal-campo {
   margin-bottom: 0;
 }
+
 .caja-inferior {
   display: flex;
   gap: 0.75rem;
   justify-content: space-between;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
+}
+
+/* VIDEO MÁS CHICO */
+.caja-camara {
+  position: relative;
+  width: 100%;
+  max-height: 40vh; /* Solo ocupa 40% de la altura de la pantalla */
+  aspect-ratio: 4 / 3;
+  background: #000;
+  overflow: hidden;
+  margin: 2rem auto 1rem auto;
+}
+
+#video-camara-fotos {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* OCULTAR OVERLAY */
+.overlay-area-captura {
+  display: none;
 }
 </style>

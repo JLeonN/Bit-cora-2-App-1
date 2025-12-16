@@ -11,31 +11,40 @@ export async function generarZipFotos(listaFotos) {
       throw new Error('No hay fotos para comprimir')
     }
 
+    // Detectar si está en PC
+    const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+
     // Crear instancia de JSZip
     const zip = new JSZip()
 
     // Agregar cada foto al ZIP
     for (const foto of listaFotos) {
       try {
-        // Leer foto desde filesystem
-        const archivoFoto = await Filesystem.readFile({
-          path: foto.rutaFoto,
-        })
+        let dataFoto
+
+        if (esNavegadorPC) {
+          // En PC: Las fotos ya están en base64 en memoria
+          dataFoto = foto.rutaFoto // Ya es base64
+        } else {
+          // En móvil: Leer foto desde filesystem
+          const archivoFoto = await Filesystem.readFile({
+            path: foto.rutaFoto,
+            directory: Directory.Cache,
+          })
+          dataFoto = archivoFoto.data
+        }
 
         // Nombre del archivo: codigo.jpg
         const nombreArchivo = `${foto.codigo}.jpg`
 
-        // Agregar al ZIP (convertir base64 a binary)
-        zip.file(nombreArchivo, archivoFoto.data, { base64: true })
+        // Agregar al ZIP
+        zip.file(nombreArchivo, dataFoto, { base64: true })
 
         console.log(`[GeneradorZip] Foto agregada al ZIP: ${nombreArchivo}`)
       } catch (error) {
         console.error(`[GeneradorZip] Error al agregar foto ${foto.codigo}:`, error)
       }
     }
-
-    // Generar ZIP como base64
-    const zipBase64 = await zip.generateAsync({ type: 'base64' })
 
     // Obtener nombre de usuario y fecha/hora actual
     const nombreUsuario = await obtenerNombreUsuario()
@@ -45,25 +54,39 @@ export async function generarZipFotos(listaFotos) {
 
     const nombreZip = `Fotos ${nombreUsuario} ${fecha} ${hora}.zip`
 
-    // Guardar ZIP en filesystem temporal
-    const rutaZip = `${nombreZip}`
-    await Filesystem.writeFile({
-      path: rutaZip,
-      data: zipBase64,
-      directory: Directory.Cache,
-    })
+    if (esNavegadorPC) {
+      // EN PC: Generar blob para descarga directa
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      const urlBlob = URL.createObjectURL(zipBlob)
 
-    // Obtener URI del archivo
-    const uriZip = await Filesystem.getUri({
-      directory: Directory.Cache,
-      path: rutaZip,
-    })
+      console.log('[GeneradorZip] ZIP generado como blob para PC:', nombreZip)
 
-    console.log('[GeneradorZip] ZIP generado exitosamente:', nombreZip)
+      return {
+        uri: urlBlob,
+        nombre: nombreZip,
+      }
+    } else {
+      // EN MÓVIL: Guardar en filesystem
+      const zipBase64 = await zip.generateAsync({ type: 'base64' })
 
-    return {
-      uri: uriZip.uri,
-      nombre: nombreZip,
+      const rutaZip = `${nombreZip}`
+      await Filesystem.writeFile({
+        path: rutaZip,
+        data: zipBase64,
+        directory: Directory.Cache,
+      })
+
+      const uriZip = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: rutaZip,
+      })
+
+      console.log('[GeneradorZip] ZIP generado en móvil:', nombreZip)
+
+      return {
+        uri: uriZip.uri,
+        nombre: nombreZip,
+      }
     }
   } catch (error) {
     console.error('[GeneradorZip] Error al generar ZIP:', error)
