@@ -43,6 +43,14 @@
               </q-item-section>
               <q-item-section>Etiquetas</q-item-section>
             </q-item>
+
+            <!-- FOTOS -->
+            <q-item clickable v-ripple to="/fotos">
+              <q-item-section avatar>
+                <IconPhoto :stroke="2" />
+              </q-item-section>
+              <q-item-section>Fotos</q-item-section>
+            </q-item>
           </q-list>
         </q-scroll-area>
 
@@ -100,7 +108,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { IconTableRow, IconMapRoute, IconTag, IconSettings } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconTag, IconPhoto, IconSettings } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'

@@ -27,13 +27,22 @@
         <h3>Etiquetas</h3>
         <p>Genera etiquetas con códigos de barras para tus artículos</p>
       </div>
+
+      <!-- FOTOS -->
+      <div class="tarjeta-funcion" @click="irA('/fotos')">
+        <div class="icono-funcion">
+          <IconPhoto :size="48" :stroke="1.5" />
+        </div>
+        <h3>Fotos</h3>
+        <p>Captura y gestiona fotos de productos para catálogo</p>
+      </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { IconTableRow, IconMapRoute, IconTag } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconTag, IconPhoto } from '@tabler/icons-vue'
 
 const router = useRouter()
 

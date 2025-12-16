@@ -14,7 +14,7 @@
       <!-- Modal de cámara -->
       <CamaraFotos
         v-if="mostrarCamara"
-        @cerrar="mostrarCamara = false"
+        @cerrar="cerrarCamara"
         @fotos-guardadas="guardarFotosEnLista"
       />
 
@@ -26,26 +26,14 @@
         </div>
       </div>
     </div>
-
-    <!-- Barra de botones inferior -->
-    <BarraBotonesInferior
-      :mostrarAtras="true"
-      :mostrarInicio="true"
-      :mostrarAgregar="true"
-      :mostrarEnviar="fotos.length > 0"
-      :puedeEnviar="fotos.length > 0"
-      @agregar="abrirCamara"
-      @enviar="enviarFotos"
-    />
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
 import { useQuasar } from 'quasar'
 import TablaFotos from '../components/Logica/Fotos/TablaFotos.vue'
 import CamaraFotos from '../components/Logica/Fotos/CamaraFotos.vue'
-import BarraBotonesInferior from '../components/Botones/BarraBotonesInferior.vue'
 import {
   obtenerFotos,
   agregarFoto,
@@ -57,6 +45,7 @@ import { generarZipFotos } from '../components/Logica/Fotos/GeneradorZipFotos.js
 import { compartirArchivo } from '../components/Logica/Fotos/CompartirArchivo.js'
 
 const $q = useQuasar()
+const instance = getCurrentInstance()
 
 // Estado
 const fotos = ref([])
@@ -64,15 +53,32 @@ const mostrarCamara = ref(false)
 const cargando = ref(false)
 const mensajeCarga = ref('')
 
+// Configurar barra de botones
+function configurarBarra() {
+  const configuracion = {
+    mostrarAgregar: true,
+    mostrarEnviar: fotos.value.length > 0,
+    puedeEnviar: fotos.value.length > 0,
+    modalActivo: mostrarCamara.value,
+  }
+
+  instance?.emit('configurar-barra', configuracion, {
+    onAgregar: abrirCamara,
+    onEnviar: enviarFotos,
+  })
+}
+
 // Cargar fotos al montar
 onMounted(async () => {
   await cargarFotos()
+  configurarBarra()
 })
 
 // Cargar fotos desde storage
 async function cargarFotos() {
   try {
     fotos.value = await obtenerFotos()
+    configurarBarra()
     console.log('[PaginaFotos] Fotos cargadas:', fotos.value.length)
   } catch (error) {
     console.error('[PaginaFotos] Error al cargar fotos:', error)
@@ -82,6 +88,13 @@ async function cargarFotos() {
 // Abrir cámara
 function abrirCamara() {
   mostrarCamara.value = true
+  configurarBarra()
+}
+
+// Cerrar cámara
+function cerrarCamara() {
+  mostrarCamara.value = false
+  configurarBarra()
 }
 
 // Guardar fotos en lista (callback de cámara)

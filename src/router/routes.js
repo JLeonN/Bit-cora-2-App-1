@@ -44,6 +44,12 @@ const routes = [
         name: 'Etiquetas',
         component: () => import('pages/PaginaEtiquetas.vue'),
       },
+      // FOTOS - Gestión de fotos de productos
+      {
+        path: '/fotos',
+        name: 'Fotos',
+        component: () => import('pages/PaginaFotos.vue'),
+      },
     ],
   },
   // PÁGINA 404 - Manejo de rutas no encontradas

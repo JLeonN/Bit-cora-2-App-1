@@ -73,7 +73,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { IconCamera, IconX, IconCheck, IconTrash } from '@tabler/icons-vue'
 import { Filesystem, Directory } from '@capacitor/filesystem'
-import CodigoMasNombre from '../../Ubicaciones/CodigoMasNombre.vue'
+import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 
 const emit = defineEmits(['cerrar', 'fotos-guardadas'])
 
@@ -98,6 +98,15 @@ const fotosTemporales = ref([])
 // Inicializar cámara
 async function iniciarCamara() {
   try {
+    // Detectar si está en desarrollo en navegador
+    const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+
+    if (esNavegadorPC) {
+      console.log('[CamaraFotos] Modo simulación PC activado')
+      // No iniciar cámara real en PC
+      return
+    }
+
     streamCamara = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: 'environment',
@@ -120,27 +129,58 @@ async function iniciarCamara() {
 // Capturar foto
 function capturarFoto() {
   try {
+    // Detectar si está en PC
+    const esNavegadorPC = !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+
+    if (esNavegadorPC) {
+      // Generar imagen simulada (rectángulo gris 800x600)
+      const canvas = document.createElement('canvas')
+      canvas.width = 800
+      canvas.height = 600
+      const ctx = canvas.getContext('2d')
+
+      // Fondo gris con texto
+      ctx.fillStyle = '#333'
+      ctx.fillRect(0, 0, 800, 600)
+      ctx.fillStyle = '#fff'
+      ctx.font = '40px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('FOTO SIMULADA', 400, 280)
+      ctx.font = '20px Arial'
+      ctx.fillText('(Modo desarrollo PC)', 400, 320)
+
+      const imagenBase64 = canvas.toDataURL('image/jpeg', 0.85)
+      fotoCapturadaBase64.value = imagenBase64.split(',')[1]
+      ultimaCaptura.value = imagenBase64
+
+      mostrarBuscador.value = true
+
+      nextTick(() => {
+        if (inputBusqueda.value) {
+          inputBusqueda.value.focus()
+        }
+      })
+
+      console.log('[CamaraFotos] Foto simulada capturada')
+      return
+    }
+
+    // Código original para móvil
     const canvas = document.createElement('canvas')
     const video = videoCamara.value
 
-    // Establecer dimensiones exactas 800x600
     canvas.width = 800
     canvas.height = 600
 
     const ctx = canvas.getContext('2d')
     ctx.drawImage(video, 0, 0, 800, 600)
 
-    // Obtener imagen en base64
-    const imagenBase64 = canvas.toDataURL('image/jpeg', 0.85) // Calidad 85%
-    fotoCapturadaBase64.value = imagenBase64.split(',')[1] // Quitar prefijo data:image
-
-    // Mostrar miniatura
+    const imagenBase64 = canvas.toDataURL('image/jpeg', 0.85)
+    fotoCapturadaBase64.value = imagenBase64.split(',')[1]
     ultimaCaptura.value = imagenBase64
 
-    // Activar buscador
     mostrarBuscador.value = true
 
-    // Enfocar input después de renderizar
     nextTick(() => {
       if (inputBusqueda.value) {
         inputBusqueda.value.focus()
@@ -159,6 +199,13 @@ function seleccionarArticulo(articulo) {
   nombreArticuloSeleccionado.value = articulo.nombre
   busquedaCodigo.value = articulo.codigo
   console.log('[CamaraFotos] Artículo seleccionado:', articulo)
+
+  // Enfocar el input para que el teclado no tape
+  nextTick(() => {
+    if (inputBusqueda.value) {
+      inputBusqueda.value.blur() // Quitar foco para cerrar teclado
+    }
+  })
 }
 
 // Confirmar y continuar
@@ -271,19 +318,33 @@ onUnmounted(() => {
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
 .boton-capturar:hover {
   transform: scale(1.1);
 }
+
 .boton-capturar:active {
   transform: scale(0.95);
 }
+
 .contenedor-buscador-foto {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+  position: absolute;
+  top: 8rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
 }
 .contenedor-buscador-foto .modal-campo {
   margin-bottom: 0;
+}
+.caja-inferior {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 4rem;
 }
 </style>
