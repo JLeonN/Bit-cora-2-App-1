@@ -127,9 +127,9 @@ async function guardarFotosEnLista(fotosNuevas) {
 }
 
 // Editar código de foto
-async function editarCodigoFoto(id, nuevoCodigo) {
+async function editarCodigoFoto(id, nuevoCodigo, nuevoNombre) {
   try {
-    const exito = await editarCodigoStorage(id, nuevoCodigo)
+    const exito = await editarCodigoStorage(id, nuevoCodigo, nuevoNombre)
     if (exito) {
       await cargarFotos()
       $q.notify({

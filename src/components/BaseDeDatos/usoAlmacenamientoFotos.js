@@ -64,20 +64,21 @@ export async function eliminarFoto(id) {
   }
 }
 
-export async function editarCodigoFoto(id, nuevoCodigo) {
+export async function editarCodigoFoto(id, nuevoCodigo, nuevoNombre) {
   try {
     const fotosActuales = await obtenerFotos()
     const fotoIndex = fotosActuales.findIndex((foto) => foto.id === id)
 
     if (fotoIndex !== -1) {
       fotosActuales[fotoIndex].codigo = nuevoCodigo.toUpperCase()
+      fotosActuales[fotoIndex].nombreArticulo = nuevoNombre.toUpperCase()
       await guardarFotos(fotosActuales)
-      console.log('Código actualizado para foto ID:', id)
+      console.log('Código y nombre actualizados para foto ID:', id)
       return true
     }
     return false
   } catch (error) {
-    console.error('Error al editar código de foto:', error)
+    console.error('Error al editar foto:', error)
     return false
   }
 }
