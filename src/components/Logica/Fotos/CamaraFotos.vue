@@ -30,7 +30,11 @@
         </div>
 
         <!-- Componente de búsqueda -->
-        <CodigoMasNombre :busqueda="busquedaCodigo" @articulo-seleccionado="seleccionarArticulo" />
+        <CodigoMasNombre
+          v-if="mostrarResultadosBuscador"
+          :busqueda="busquedaCodigo"
+          @articulo-seleccionado="seleccionarArticulo"
+        />
 
         <!-- Botones de acción -->
         <div class="contenedor-botones-accion">
@@ -91,6 +95,7 @@ const codigoSeleccionado = ref(null)
 const nombreArticuloSeleccionado = ref('')
 const fotoCapturadaBase64 = ref(null)
 const mensajeTemporal = ref('')
+const mostrarResultadosBuscador = ref(true) // ← AGREGÁ ESTA LÍNEA
 
 // Lista temporal de fotos
 const fotosTemporales = ref([])
@@ -198,14 +203,18 @@ function seleccionarArticulo(articulo) {
   codigoSeleccionado.value = articulo.codigo
   nombreArticuloSeleccionado.value = articulo.nombre
   busquedaCodigo.value = articulo.codigo
-  console.log('[CamaraFotos] Artículo seleccionado:', articulo)
 
-  // Enfocar el input para que el teclado no tape
+  // Ocultar dropdown
+  mostrarResultadosBuscador.value = false
+
+  // Quitar foco del input
   nextTick(() => {
     if (inputBusqueda.value) {
-      inputBusqueda.value.blur() // Quitar foco para cerrar teclado
+      inputBusqueda.value.blur()
     }
   })
+
+  console.log('[CamaraFotos] Artículo seleccionado:', articulo)
 }
 
 // Confirmar y continuar
@@ -264,6 +273,7 @@ function resetearEstado() {
   nombreArticuloSeleccionado.value = ''
   fotoCapturadaBase64.value = null
   ultimaCaptura.value = null
+  mostrarResultadosBuscador.value = true
 }
 
 // Finalizar y enviar todas las fotos
