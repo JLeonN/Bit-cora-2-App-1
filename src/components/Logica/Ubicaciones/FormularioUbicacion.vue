@@ -122,6 +122,22 @@ function restablecerPlaceholderUbicacion() {
   placeholderUbicacion.value = 'Ubicación'
 }
 
+// --- FUNCIÓN PARA NORMALIZAR CÓDIGO ---
+function normalizarCodigo(codigo) {
+  if (!codigo) return ''
+
+  // 1. Convertir a mayúsculas
+  let codigoLimpio = codigo.toUpperCase()
+
+  // 2. Reemplazar cualquier carácter que NO sea letra, número o guión por un guión
+  codigoLimpio = codigoLimpio.replace(/[^A-Z0-9-]/g, '-')
+
+  // 3. Evitar guiones múltiples seguidos
+  codigoLimpio = codigoLimpio.replace(/-+/g, '-')
+
+  return codigoLimpio
+}
+
 // --- FUNCIÓN PARA LIMPIAR UBICACIÓN RECORDADA ---
 async function limpiarUbicacionRecordada() {
   nuevaUbicacion.value = ''
@@ -143,8 +159,23 @@ function moverFormularioArriba() {
 }
 
 // --- FUNCIONES DEL BUSCADOR Y ENFOQUE ---
-function manejarInputCodigo() {
+function manejarInputCodigo(evento) {
+  const valorOriginal = evento.target.value
+  const valorNormalizado = normalizarCodigo(valorOriginal)
+
+  // Solo actualizar si cambió algo
+  if (valorOriginal !== valorNormalizado) {
+    nuevoCodigo.value = valorNormalizado
+    // Mantener el cursor en la posición correcta
+    nextTick(() => {
+      if (inputCodigo.value) {
+        inputCodigo.value.setSelectionRange(valorNormalizado.length, valorNormalizado.length)
+      }
+    })
+  }
+
   restablecerPlaceholderCodigo()
+
   // Si hay texto y el input está enfocado, mostrar buscador
   if (inputEnfocado.value && nuevoCodigo.value.length >= 3) {
     mostrarBuscador.value = true
