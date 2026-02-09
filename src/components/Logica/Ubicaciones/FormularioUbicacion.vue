@@ -129,11 +129,14 @@ function normalizarCodigo(codigo) {
   // 1. Convertir a mayúsculas
   let codigoLimpio = codigo.toUpperCase()
 
-  // 2. Reemplazar cualquier carácter que NO sea letra, número o guión por un guión
-  codigoLimpio = codigoLimpio.replace(/[^A-Z0-9-]/g, '-')
+  // 2. Reemplazar cualquier carácter que NO sea letra, número, Ñ, espacio o guión por un guión
+  codigoLimpio = codigoLimpio.replace(/[^A-Z0-9Ñ -]/g, '-')
 
   // 3. Evitar guiones múltiples seguidos
   codigoLimpio = codigoLimpio.replace(/-+/g, '-')
+
+  // 4. Evitar espacios múltiples seguidos
+  codigoLimpio = codigoLimpio.replace(/\s+/g, ' ')
 
   return codigoLimpio
 }
