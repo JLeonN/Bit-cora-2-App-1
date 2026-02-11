@@ -13,6 +13,7 @@
           @input="manejarInputCodigo"
           @focus="manejarEnfoqueCodigo"
           @blur="manejarDesenfoqueCodigo"
+          @keydown="manejarDobleEspacio"
         />
 
         <!-- Componente buscador -->
@@ -101,6 +102,9 @@ const errorUbicacion = ref(false)
 const animarErrorUbicacion = ref(false)
 const mostrarCamara = ref(false)
 
+// --- Control de doble espacio ---
+const ultimoEspacioTiempo = ref(0)
+
 // --- ESTADO DEL BUSCADOR ---
 const mostrarBuscador = ref(false)
 const inputEnfocado = ref(false)
@@ -139,6 +143,44 @@ function normalizarCodigo(codigo) {
   codigoLimpio = codigoLimpio.replace(/\s+/g, ' ')
 
   return codigoLimpio
+}
+
+// --- FUNCIÓN PARA MANEJAR DOBLE ESPACIO ---
+function manejarDobleEspacio(evento) {
+  // Solo actuar si es la tecla espacio
+  if (evento.key !== ' ') return
+
+  const tiempoActual = Date.now()
+  const diferenciaTiempo = tiempoActual - ultimoEspacioTiempo.value
+
+  // Si presionó espacio hace menos de 300ms (doble espacio)
+  if (diferenciaTiempo < 300 && diferenciaTiempo > 0) {
+    evento.preventDefault()
+
+    // Obtener posición actual del cursor
+    const posicionCursor = evento.target.selectionStart
+
+    // Obtener el texto actual
+    const textoActual = nuevoCodigo.value
+
+    // Remover el último espacio y agregar guión
+    const textoAntes = textoActual.substring(0, posicionCursor - 1)
+    const textoDespues = textoActual.substring(posicionCursor)
+    nuevoCodigo.value = textoAntes + '-' + textoDespues
+
+    // Mantener cursor en posición correcta
+    nextTick(() => {
+      if (inputCodigo.value) {
+        inputCodigo.value.setSelectionRange(posicionCursor, posicionCursor)
+      }
+    })
+
+    // Resetear el tiempo
+    ultimoEspacioTiempo.value = 0
+  } else {
+    // Guardar el tiempo del espacio actual
+    ultimoEspacioTiempo.value = tiempoActual
+  }
 }
 
 // --- FUNCIÓN PARA LIMPIAR UBICACIÓN RECORDADA ---
