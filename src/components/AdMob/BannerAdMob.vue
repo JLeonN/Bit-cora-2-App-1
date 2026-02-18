@@ -89,7 +89,7 @@ const mostrarBannerPublicitario = async () => {
       adSize: BannerAdSize.BANNER, // 320x50
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
-      isTesting: false, // Cambiar a false en producción
+      isTesting: false, // Cambiar a false en producción o a true para pruebas
     }
 
     await AdMob.showBanner(opciones)

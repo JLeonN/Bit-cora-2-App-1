@@ -308,11 +308,10 @@ onUnmounted(() => {
   margin-bottom: 1rem;
   padding: 0 0.5rem;
 }
-.titulo-tabla {
+.encabezado-pedidos h2 {
+  flex: 1;
+  text-align: center;
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-texto-principal);
 }
 .boton-estadisticas-anuales {
   background: var(--color-superficie);
@@ -339,9 +338,6 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .encabezado-pedidos {
     padding: 0 0.25rem;
-  }
-  .titulo-tabla {
-    font-size: 1.5rem;
   }
   .boton-estadisticas-anuales {
     width: 44px;

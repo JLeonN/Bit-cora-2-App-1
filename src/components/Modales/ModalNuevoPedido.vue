@@ -27,12 +27,20 @@
         <!-- Fila: Input con flecha integrada y botón cámara -->
         <div class="fila-input-camara">
           <div class="contenedor-input-flecha">
+            <button
+              type="button"
+              :class="['boton-toggle-teclado', { 'teclado-activo': modoTexto }]"
+              @click="toggleTeclado"
+              :title="modoTexto ? 'Cambiar a numérico' : 'Cambiar a texto'"
+            >
+              {{ modoTexto ? '123' : 'ABC' }}
+            </button>
             <input
               ref="inputPedidoRef"
               id="numeroPedido"
               v-model="numeroPedido"
               type="text"
-              inputmode="text"
+              :inputmode="modoTexto ? 'text' : 'numeric'"
               autocomplete="off"
               :placeholder="textoPlaceholder"
               @input="restablecerPlaceholder"
@@ -137,6 +145,12 @@ const mostrarError = ref(false)
 const animarError = ref(false)
 const textoPlaceholder = ref('Número de pedido')
 const mostrarCamaraPedidos = ref(false)
+const modoTexto = ref(false)
+
+const toggleTeclado = () => {
+  modoTexto.value = !modoTexto.value
+  nextTick(() => inputPedidoRef.value?.focus())
+}
 const alturaDesplazamiento = ref(0)
 const esMovil = Capacitor.isNativePlatform()
 
@@ -233,6 +247,7 @@ const limpiarTodo = () => {
   cantidadItems.value = 1
   pedidosTemporales.value = []
   mostrarError.value = false
+  modoTexto.value = false
   restablecerPlaceholder()
 }
 
@@ -358,12 +373,42 @@ onUnmounted(() => {
 .contenedor-input-flecha input {
   width: 100%;
   padding: 0.75rem;
+  padding-left: 50px;
   padding-right: 50px;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-fondo);
   color: var(--color-texto-principal);
   font-size: 1rem;
+}
+.boton-toggle-teclado {
+  position: absolute;
+  left: 6px;
+  z-index: 1;
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-texto-secundario);
+  transition: all 0.2s ease;
+}
+.boton-toggle-teclado:hover {
+  border-color: var(--color-acento);
+  color: var(--color-acento);
+}
+.teclado-activo {
+  background: rgba(3, 169, 244, 0.12);
+  border-color: var(--color-acento);
+  color: var(--color-acento);
+  box-shadow: 0 0 6px rgba(3, 169, 244, 0.3);
 }
 .contenedor-input-flecha input:focus {
   outline: none;
