@@ -29,11 +29,11 @@ Implementar un flujo de detección de nueva versión para Android usando un arch
 
 Dejar creada la base de infraestructura para publicar un archivo remoto de versión desde este mismo proyecto.
 
-- [ ] Revisar la estrategia usada en `PrecioJusto` para GitHub Pages, especialmente `vueRouterMode` y `publicPath`
-- [ ] Definir si GitHub Pages se publicará desde rama dedicada, carpeta `docs` o GitHub Actions
-- [ ] Dejar preparada la configuración mínima necesaria para publicar esta app en GitHub Pages sin romper su build actual
-- [ ] Confirmar el nombre final del repositorio para calcular correctamente la base publica de GitHub Pages
-- [ ] Dejar documentado que la publicacion web y la app Android comparten repo pero no deben depender de las mismas rutas relativas
+- [x] Revisar la estrategia usada en `PrecioJusto` para GitHub Pages, especialmente `vueRouterMode` y `publicPath`
+- [x] Definir si GitHub Pages se publicará desde rama dedicada, carpeta `docs` o GitHub Actions
+- [x] Dejar preparada la configuración mínima necesaria para publicar esta app en GitHub Pages sin romper su build actual
+- [x] Confirmar el nombre final del repositorio para calcular correctamente la base publica de GitHub Pages
+- [x] Dejar documentado que la publicacion web y la app Android comparten repo pero no deben depender de las mismas rutas relativas
 
 ## FASE 2: Definir la fuente remota de actualización
 
@@ -41,11 +41,11 @@ Dejar creada la base de infraestructura para publicar un archivo remoto de versi
 
 Dejar definido el contrato de datos remoto y la forma estable de consultarlo desde Android una vez publicado GitHub Pages.
 
-- [ ] Definir la estructura del archivo remoto `version.json` publicado en GitHub Pages
-- [ ] Incluir en el contrato al menos `versionDisponible`, `urlPlayStore` y `mostrarActualizacion`
-- [ ] Definir una URL fija y absoluta para el JSON remoto evitando problemas de rutas relativos de GitHub Pages
-- [ ] Documentar cómo se actualizará manualmente ese archivo cuando se publique una nueva versión
-- [ ] Confirmar el `applicationId` o identificador usado para la URL final de Play Store
+- [x] Definir la estructura del archivo remoto `version.json` publicado en GitHub Pages
+- [x] Incluir en el contrato al menos `versionDisponible`, `urlPlayStore` y `mostrarActualizacion`
+- [x] Definir una URL fija y absoluta para el JSON remoto evitando problemas de rutas relativos de GitHub Pages
+- [x] Documentar cómo se actualizará manualmente ese archivo cuando se publique una nueva versión
+- [x] Confirmar el `applicationId` o identificador usado para la URL final de Play Store
 
 ## FASE 3: Blindar rutas para web y Android
 
@@ -53,11 +53,11 @@ Dejar definido el contrato de datos remoto y la forma estable de consultarlo des
 
 Evitar que la configuración necesaria para GitHub Pages rompa la app Android o deje la pantalla en blanco.
 
-- [ ] Revisar el `quasar.config.js` actual y definir si necesita `publicPath` condicional como en `PrecioJusto`
-- [ ] Confirmar que la SPA siga funcionando correctamente en GitHub Pages usando hash routing o una base compatible
-- [ ] Separar la URL remota de `version.json` de cualquier ruta relativa interna del frontend
+- [x] Revisar el `quasar.config.js` actual y definir si necesita `publicPath` condicional como en `PrecioJusto`
+- [x] Confirmar que la SPA siga funcionando correctamente en GitHub Pages usando hash routing o una base compatible
+- [x] Separar la URL remota de `version.json` de cualquier ruta relativa interna del frontend
 - [ ] Verificar que Capacitor cargue correctamente la app compilada aunque exista configuracion especial para GitHub Pages
-- [ ] Dejar el criterio técnico por escrito para no repetir el fallo de pantalla blanca en Android
+- [x] Dejar el criterio técnico por escrito para no repetir el fallo de pantalla blanca en Android
 
 ## FASE 4: Crear la lógica central de verificación
 
@@ -65,11 +65,11 @@ Evitar que la configuración necesaria para GitHub Pages rompa la app Android o 
 
 Encapsular la lectura de versión instalada, la consulta remota y la comparación de versiones en una lógica simple y reutilizable.
 
-- [ ] Revisar cómo obtener de forma confiable la versión instalada actual en la app Android con Capacitor o desde la configuración disponible del proyecto
-- [ ] Crear un servicio, composable o módulo aislado para consultar el `version.json`
-- [ ] Implementar la comparación semántica entre versión instalada y versión remota
-- [ ] Devolver un estado claro con datos como `hayActualizacion`, `versionDisponible`, `urlPlayStore` y `debeMostrarModal`
-- [ ] Contemplar fallos de red o JSON inválido sin romper el arranque de la app
+- [x] Revisar cómo obtener de forma confiable la versión instalada actual en la app Android con Capacitor o desde la configuración disponible del proyecto
+- [x] Crear un servicio, composable o módulo aislado para consultar el `version.json`
+- [x] Implementar la comparación semántica entre versión instalada y versión remota
+- [x] Devolver un estado claro con datos como `hayActualizacion`, `versionDisponible`, `urlPlayStore` y `debeMostrarModal`
+- [x] Contemplar fallos de red o JSON inválido sin romper el arranque de la app
 
 ## FASE 5: Mostrar el modal al abrir la app
 
@@ -77,10 +77,10 @@ Encapsular la lectura de versión instalada, la consulta remota y la comparació
 
 Integrar un modal claro y no intrusivo que aparezca al iniciar la app cuando exista una actualización pendiente.
 
-- [ ] Identificar el punto de arranque más seguro para disparar la verificación inicial sin afectar el splash ni la carga principal
-- [ ] Crear el modal de actualización con texto claro, versión disponible y botones `Actualizar` y `Cancelar`
-- [ ] Hacer que el botón `Actualizar` abra la URL de Play Store
-- [ ] Hacer que el botón `Cancelar` cierre el modal sin marcar la actualización como descartada permanente
+- [x] Identificar el punto de arranque más seguro para disparar la verificación inicial sin afectar el splash ni la carga principal
+- [x] Crear el modal de actualización con texto claro, versión disponible y botones `Actualizar` y `Cancelar`
+- [x] Hacer que el botón `Actualizar` abra la URL de Play Store
+- [x] Hacer que el botón `Cancelar` cierre el modal sin marcar la actualización como descartada permanente
 - [ ] Verificar que al cerrar la app y volver a abrirla, el modal reaparezca si la actualización sigue disponible
 
 ## FASE 6: Integrar el estado visual en el drawer y en el menú
@@ -89,12 +89,12 @@ Integrar un modal claro y no intrusivo que aparezca al iniciar la app cuando exi
 
 Mostrar la actualización pendiente de forma visible pero consistente con el layout actual.
 
-- [ ] Revisar el layout actual del drawer y del botón hamburguesa para insertar el nuevo estado visual con cambios mínimos
-- [ ] Agregar en el drawer un botón destacado con texto similar a `Actualización disponible`
-- [ ] Hacer que el botón del drawer abra la misma URL de Play Store
-- [ ] Mostrar el botón del drawer solo cuando `hayActualizacion` sea verdadero
-- [ ] Agregar un indicador rojo pequeño y llamativo sobre el botón hamburguesa cuando exista una actualización pendiente
-- [ ] Ajustar estilos del botón destacado usando variables existentes de `src/css/app.css` y crear un color nuevo solo si el contraste lo exige
+- [x] Revisar el layout actual del drawer y del botón hamburguesa para insertar el nuevo estado visual con cambios mínimos
+- [x] Agregar en el drawer un botón destacado con texto similar a `Actualización disponible`
+- [x] Hacer que el botón del drawer abra la misma URL de Play Store
+- [x] Mostrar el botón del drawer solo cuando `hayActualizacion` sea verdadero
+- [x] Agregar un indicador rojo pequeño y llamativo sobre el botón hamburguesa cuando exista una actualización pendiente
+- [x] Ajustar estilos del botón destacado usando variables existentes de `src/css/app.css` y crear un color nuevo solo si el contraste lo exige
 
 ## FASE 7: Ajustar textos, estados y tolerancia a fallos
 
@@ -102,12 +102,12 @@ Mostrar la actualización pendiente de forma visible pero consistente con el lay
 
 Pulir la experiencia para que el flujo sea claro, estable y fácil de mantener.
 
-- [ ] Redactar mensajes cortos y naturales en español para el modal y el botón del drawer
-- [ ] Evitar que se muestren elementos de actualización si la consulta remota falla
-- [ ] Verificar que el flujo no interfiera con el drawer, la navegación ni otros modales existentes
+- [x] Redactar mensajes cortos y naturales en español para el modal y el botón del drawer
+- [x] Evitar que se muestren elementos de actualización si la consulta remota falla
+- [x] Verificar que el flujo no interfiera con el drawer, la navegación ni otros modales existentes
 - [ ] Confirmar que el comportamiento sea consistente tanto al abrir la app por primera vez como en aperturas posteriores
-- [ ] Dejar preparado un punto claro donde cambiar la URL remota o la URL de Play Store si más adelante cambia la publicación
-- [ ] Documentar el flujo de actualizacion futura del `version.json` y de GitHub Pages para que no quede dependiente de memoria informal
+- [x] Dejar preparado un punto claro donde cambiar la URL remota o la URL de Play Store si más adelante cambia la publicación
+- [x] Documentar el flujo de actualizacion futura del `version.json` y de GitHub Pages para que no quede dependiente de memoria informal
 
 ## FASE TESTING
 
@@ -125,19 +125,19 @@ Validar de forma ejecutable por IA y revisable por humano que la publicación re
 - [ ] Verificar que el botón `Actualización disponible` del drawer aparezca solo cuando corresponde y abra la misma URL
 - [ ] Verificar visualmente que el indicador rojo del botón hamburguesa sea visible y no deforme el header
 - [ ] Confirmar que si falla la descarga del `version.json` la app siga funcionando sin errores visibles graves
-- [ ] Ejecutar lint o revisión equivalente sobre los archivos modificados y corregir cualquier error introducido
+- [x] Ejecutar lint o revisión equivalente sobre los archivos modificados y corregir cualquier error introducido
 
 ## Progreso del plan
 
-- [ ] Fase 1: Preparar GitHub Pages para esta app
-- [ ] Fase 2: Definir la fuente remota de actualización
+- [x] Fase 1: Preparar GitHub Pages para esta app
+- [x] Fase 2: Definir la fuente remota de actualización
 - [ ] Fase 3: Blindar rutas para web y Android
-- [ ] Fase 4: Crear la lógica central de verificación
-- [ ] Fase 5: Mostrar el modal al abrir la app
-- [ ] Fase 6: Integrar el estado visual en el drawer y en el menú
+- [x] Fase 4: Crear la lógica central de verificación
+- [x] Fase 5: Mostrar el modal al abrir la app
+- [x] Fase 6: Integrar el estado visual en el drawer y en el menú
 - [ ] Fase 7: Ajustar textos, estados y tolerancia a fallos
 - [ ] Fase Testing
 
 Fecha de creacion: 05 de Abril 2026
 Fecha de ultima actualizacion: 05 de Abril 2026
-Estado: BORRADOR
+Estado: EN PROCESO

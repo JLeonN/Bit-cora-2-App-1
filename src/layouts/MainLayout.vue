@@ -1,17 +1,16 @@
 <template>
   <div class="fondo-app texto-principal">
     <q-layout view="lHh Lpr lff">
-      <!-- HEADER CON NOMBRE DE USUARIO DINÁMICO -->
       <q-header elevated class="bg-primario-oscuro texto-principal">
         <q-toolbar class="barra-superior">
           <q-toolbar-title>{{ nombreUsuario }}</q-toolbar-title>
-          <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
+          <div class="contenedor-boton-menu">
+            <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
+            <span v-if="hayActualizacionDisponible" class="indicador-actualizacion-menu"></span>
+          </div>
         </q-toolbar>
       </q-header>
-
-      <!-- DRAWER CON NAVEGACIÓN Y CONFIGURACIÓN -->
       <q-drawer v-model="drawer" :width="200" class="bg-superficie texto-principal">
-        <!-- ÁREA DE NAVEGACIÓN PRINCIPAL -->
         <q-scroll-area
           style="
             height: calc(100% - 200px);
@@ -20,41 +19,38 @@
           "
         >
           <q-list padding>
-            <!-- PEDIDOS -->
             <q-item clickable v-ripple to="/TablaPedidos">
               <q-item-section avatar>
                 <IconTableRow :stroke="2" />
               </q-item-section>
               <q-item-section>Pedidos</q-item-section>
             </q-item>
-
-            <!-- UBICACIONES -->
             <q-item clickable v-ripple to="/AjustarUbicaciones">
               <q-item-section avatar>
                 <IconMapRoute :stroke="2" />
               </q-item-section>
               <q-item-section>Ubicaciones</q-item-section>
             </q-item>
-
-            <!-- ETIQUETAS -->
             <q-item clickable v-ripple to="/etiquetas">
               <q-item-section avatar>
                 <IconTag :stroke="2" />
               </q-item-section>
               <q-item-section>Etiquetas</q-item-section>
             </q-item>
-
-            <!-- FOTOS -->
-            <!--  <q-item clickable v-ripple to="/fotos">
+            <q-item
+              v-if="hayActualizacionDisponible"
+              clickable
+              v-ripple
+              class="item-actualizacion"
+              @click="irAPlayStore"
+            >
               <q-item-section avatar>
-                <IconPhoto :stroke="2" />
+                <IconDownload :stroke="2" class="icono-actualizacion" />
               </q-item-section>
-              <q-item-section>Fotos</q-item-section>
-            </q-item> -->
+              <q-item-section>Actualización disponible</q-item-section>
+            </q-item>
           </q-list>
         </q-scroll-area>
-
-        <!-- HEADER DEL DRAWER CON AVATAR Y INFO -->
         <q-img
           class="absolute-top"
           src="https://cdn.quasar.dev/img/material.png"
@@ -68,8 +64,6 @@
             <div>@{{ nombreUsuario }}</div>
           </div>
         </q-img>
-
-        <!-- FOOTER DEL DRAWER CON CONFIGURACIÓN -->
         <div class="drawer-footer">
           <q-item clickable v-ripple to="/configuracion" class="item-configuracion">
             <q-item-section avatar>
@@ -81,13 +75,9 @@
           </q-item>
         </div>
       </q-drawer>
-
-      <!-- CONTENIDO PRINCIPAL -->
       <q-page-container class="fondo-app texto-principal contenedor-con-barra-inferior">
         <router-view @configurar-barra="manejarConfiguracionBarra" />
       </q-page-container>
-
-      <!-- BARRA DE BOTONES INFERIOR -->
       <BarraBotonesInferior
         :mostrar-agregar="configuracionBarra.mostrarAgregar"
         :mostrar-enviar="configuracionBarra.mostrarEnviar"
@@ -99,78 +89,98 @@
         @enviar="manejarEnviar"
         @accion-personalizada="manejarAccionPersonalizada"
       />
-
-      <!-- BANNER DE ADMOB -->
       <BannerAdMob @banner-visible="actualizarEstadoBanner" />
+      <q-dialog v-model="mostrarModalActualizacion">
+        <q-card class="tarjeta-actualizacion">
+          <q-card-section>
+            <div class="titulo-actualizacion">Hay una actualización disponible</div>
+            <div class="detalle-actualizacion">
+              Tu versión: {{ versionInstalada }} | Nueva versión: {{ versionDisponible }}
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" @click="mostrarModalActualizacion = false" />
+            <q-btn
+              unelevated
+              class="boton-actualizar"
+              label="Actualizar"
+              @click="irAPlayStore"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </q-layout>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { IconTableRow, IconMapRoute, IconTag, IconSettings } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconTag, IconSettings, IconDownload } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  obtenerEstadoActualizacion,
+  abrirActualizacionEnTienda,
+} from 'components/Actualizacion/ServicioActualizacionApp.js'
 
 const drawer = ref(false)
-
-// NOMBRE DE USUARIO REACTIVO
-const nombreUsuario = ref('Usua desconocido')
-
-// Estado del banner
+const nombreUsuario = ref('Usuario desconocido')
 const hayBannerVisible = ref(false)
-
-// Estado del modal (más genérico que camaraActiva)
 const modalActivo = ref(false)
-
-// Estado centralizado de la barra inferior
+const hayActualizacionDisponible = ref(false)
+const mostrarModalActualizacion = ref(false)
+const versionDisponible = ref('')
+const versionInstalada = ref('')
+const urlPlayStoreActualizacion = ref('')
 const configuracionBarra = reactive({
   mostrarAgregar: false,
   mostrarEnviar: false,
   puedeEnviar: true,
   botonesPersonalizados: [],
 })
-
-// Referencia para emitir eventos a la página activa
 let paginaActivaRef = null
 
-// CARGAR NOMBRE DE USUARIO AL MONTAR
 onMounted(async () => {
-  await cargarNombreUsuario()
-
-  // Actualizar nombre cada 5 segundos por si cambió en configuración
+  await Promise.all([cargarNombreUsuario(), verificarActualizacion()])
   setInterval(cargarNombreUsuario, 5000)
 })
 
-// MÉTODOS PARA NOMBRE DE USUARIO
 const cargarNombreUsuario = async () => {
   try {
     const nombre = await obtenerNombreUsuario()
     nombreUsuario.value = nombre
   } catch (error) {
     console.error('Error al cargar nombre de usuario:', error)
-    nombreUsuario.value = 'Usua desconocido'
+    nombreUsuario.value = 'Usuario desconocido'
   }
 }
 
-// Método para actualizar estado del banner
+const verificarActualizacion = async () => {
+  const estadoActualizacion = await obtenerEstadoActualizacion()
+  hayActualizacionDisponible.value = estadoActualizacion.hayActualizacion
+  mostrarModalActualizacion.value = estadoActualizacion.debeMostrarModal
+  versionDisponible.value = estadoActualizacion.versionDisponible
+  versionInstalada.value = estadoActualizacion.versionInstalada
+  urlPlayStoreActualizacion.value = estadoActualizacion.urlPlayStore
+}
+
+const irAPlayStore = () => {
+  abrirActualizacionEnTienda(urlPlayStoreActualizacion.value)
+}
+
 const actualizarEstadoBanner = (estaVisible) => {
   hayBannerVisible.value = estaVisible
 }
 
-// Método para que las páginas configuren la barra
 const manejarConfiguracionBarra = (configuracion, refPagina) => {
   Object.assign(configuracionBarra, configuracion)
   paginaActivaRef = refPagina
-
-  // Actualizar estado de modal si viene en la configuración
   if (configuracion.modalActivo !== undefined) {
     modalActivo.value = configuracion.modalActivo
   }
 }
 
-// Métodos que se ejecutan cuando se presionan los botones
 const manejarAgregar = () => {
   if (paginaActivaRef?.onAgregar) {
     paginaActivaRef.onAgregar()
@@ -191,12 +201,9 @@ const manejarAccionPersonalizada = (accion) => {
 </script>
 
 <style scoped>
-/* Contenedor con padding para barra inferior Y banner */
 .contenedor-con-barra-inferior {
-  padding-bottom: 140px; /* 80px botones + 60px banner */
+  padding-bottom: 140px;
 }
-
-/* FOOTER DEL DRAWER */
 .drawer-footer {
   position: absolute;
   bottom: 0;
@@ -225,7 +232,46 @@ const manejarAccionPersonalizada = (accion) => {
   color: var(--color-texto-principal);
   font-weight: 500;
 }
-/* RESPONSIVE PARA DRAWER */
+.contenedor-boton-menu {
+  position: relative;
+}
+.indicador-actualizacion-menu {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-error);
+  box-shadow: 0 0 8px var(--color-error);
+}
+.item-actualizacion {
+  background: color-mix(in oklab, var(--color-error) 16%, var(--color-superficie));
+  border: 1px solid color-mix(in oklab, var(--color-error) 45%, var(--color-borde));
+  border-radius: 10px;
+  margin: 8px;
+}
+.icono-actualizacion {
+  color: var(--color-error);
+}
+.tarjeta-actualizacion {
+  width: min(90vw, 430px);
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  color: var(--color-texto-principal);
+}
+.titulo-actualizacion {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.detalle-actualizacion {
+  margin-top: 8px;
+  color: var(--color-texto-secundario);
+}
+.boton-actualizar {
+  background: var(--color-error);
+  color: var(--color-texto-principal);
+}
 @media (max-width: 400px) {
   .drawer-footer {
     padding: 8px;

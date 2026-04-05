@@ -8,7 +8,9 @@
   "private": true,
   "scripts": {
     "dev": "quasar dev",
+    "prebuild": "node Scripts/GenerarVersionJson.js",
     "build": "quasar build",
+    "pregenerar-apk": "node Scripts/GenerarVersionJson.js",
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",

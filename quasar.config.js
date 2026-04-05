@@ -3,7 +3,14 @@
 
 import { defineConfig } from '#q-app/wrappers'
 
-export default defineConfig((/* ctx */) => {
+export default defineConfig((ctx) => {
+  const nombreRepo = process.env.GITHUB_REPOSITORY?.split('/')?.[1] || 'Bit-cora-2-App-1'
+  const publicPathProduccion = process.env.GITHUB_ACTIONS ? `/${nombreRepo}/` : './'
+  const urlVersionRemota =
+    process.env.URL_VERSION_REMOTA || `https://jleonn.github.io/${nombreRepo}/version.json`
+  const urlPlayStore =
+    process.env.URL_PLAY_STORE || 'https://play.google.com/store/apps/details?id=bitacora.v2'
+
   return {
     htmlVariables: {
       productName: 'Bitácora II',
@@ -48,7 +55,12 @@ export default defineConfig((/* ctx */) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: '/',
+      publicPath: ctx.dev ? '/' : publicPathProduccion,
+      env: {
+        VERSION_APP: process.env.npm_package_version,
+        URL_VERSION_REMOTA: urlVersionRemota,
+        URL_PLAY_STORE: urlPlayStore,
+      },
       // analyze: true,
       // env: {},
       // rawDefine: {}
