@@ -14,7 +14,7 @@
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
-    "generar-apk": "quasar build && npx cap copy android && npx cap open android",
+    "cel": "quasar build && npx cap sync android && npx cap open android",
     "postinstall": "quasar prepare",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android"
