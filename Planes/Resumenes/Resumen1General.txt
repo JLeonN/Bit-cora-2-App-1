@@ -6,9 +6,10 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 
 ### 📦 **Estructura General**
 
-La aplicación se divide en 5 módulos principales:
+La aplicación se divide en 6 módulos principales:
 - **Pedidos**: Gestión de pedidos diarios con sistema de estadísticas completo (ver `ResumenPedidos.txt`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `ResumenUbicaciones.txt`)
+- **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.txt`)
 - **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `ResumenEtiquetas.txt`)
 - **Configuración**: Sistema de configuración de usuario (ver `ResumenConfiguracion.txt`)
 - **Inicio**: Pantalla principal de navegación
@@ -21,6 +22,7 @@ La aplicación se divide en 5 módulos principales:
 - Pantalla principal de navegación
 - **Tarjeta Pedidos**: Acceso a `/TablaPedidos`
 - **Tarjeta Ubicaciones**: Acceso a `/AjustarUbicaciones`
+- **Tarjeta Consulta De Ubicación**: Acceso a `/ConsultaDeUbicacion`
 - **Tarjeta Etiquetas**: Acceso a `/etiquetas`
 - Diseño responsive con grid adaptativo
 - Efectos hover y transiciones suaves
@@ -34,7 +36,7 @@ La aplicación se divide en 5 módulos principales:
 - **PaginaConfiguracion.vue**: Página principal con secciones colapsables
 - **ConfiguracionUsuario.vue**: Formulario para gestionar nombre de usuario con guía integrada
 - **TarjetaSeccion.vue**: Componente reutilizable para secciones colapsables
-- **SeccionTutoriales.vue**: Acordeones con tutoriales de Pedidos, Ubicaciones y Etiquetas
+- **SeccionTutoriales.vue**: Acordeones con tutoriales de Pedidos, Ubicaciones, Consulta De Ubicación y Etiquetas
 - **Tutoriales individuales**: Pasos básicos y tips para cada módulo
 - **usoAlmacenamientoConfiguracion.js**: Persistencia de configuración
 - **Integración en MainLayout**: Nombre dinámico en header y drawer
@@ -69,7 +71,7 @@ La aplicación se divide en 5 módulos principales:
 
 ### 📊 **Sistema de Base de Datos Excel (breve)**
 
-**Sistema compartido** usado en Ubicaciones y Etiquetas.
+**Sistema compartido** usado en Ubicaciones, Consulta De Ubicación y Etiquetas.
 
 - **SelectorExcel.vue**: Componente para cargar archivos Excel
 - **LectorExcel.js**: Procesa y persiste artículos automáticamente
@@ -87,7 +89,7 @@ La aplicación se divide en 5 módulos principales:
 
 ### 🔎 **Sistema de Búsqueda Inteligente (breve)**
 
-**Sistema compartido** usado en Ubicaciones y Etiquetas.
+**Sistema compartido** usado en Ubicaciones, Consulta De Ubicación y Etiquetas.
 
 - **CodigoMasNombre.vue**: Buscador con priorización de resultados
 - **Búsqueda en tiempo real** con resaltado de coincidencias
@@ -99,6 +101,11 @@ La aplicación se divide en 5 módulos principales:
 ---
 
 ### 🔗 **Integración entre Módulos**
+
+#### **Ubicaciones → Consulta De Ubicación**
+- **Consulta exacta**: Busca por código o nombre y muestra ubicación, nombre y código
+- **Edición directa**: Permite actualizar la ubicación desde la misma pantalla
+- **Sincronización total**: Actualiza base cargada, Excel original y lista de Ubicaciones
 
 #### **Ubicaciones → Etiquetas**
 - **Botón verde IconTag** en cada fila de TablaUbicaciones
@@ -146,7 +153,7 @@ La aplicación se divide en 5 módulos principales:
 
 - **@zxing/library**: Escaneo en tiempo real
 - **CamaraPedidos.vue**: Para pedidos
-- **CamaraEscaneo.vue**: Para ubicaciones y etiquetas
+- **CamaraEscaneo.vue**: Para ubicaciones, consulta de ubicación y etiquetas
 - **CamaraUbicaciones.vue**: Específico para ubicaciones
 - Optimización para códigos de barra y QR
 
