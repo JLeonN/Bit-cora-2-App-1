@@ -19,6 +19,15 @@
         <p>Ajusta y actualiza las ubicaciones de tus artículos</p>
       </div>
 
+      <!-- CONSULTA DE UBICACION -->
+      <div class="tarjeta-funcion" @click="irA('/ConsultaDeUbicacion')">
+        <div class="icono-funcion">
+          <IconSearch :size="48" :stroke="1.5" />
+        </div>
+        <h3>Consulta De Ubicación</h3>
+        <p>Busca un artículo y consulta o actualiza su ubicación</p>
+      </div>
+
       <!-- ETIQUETAS -->
       <div class="tarjeta-funcion" @click="irA('/etiquetas')">
         <div class="icono-funcion">
@@ -42,7 +51,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { IconTableRow, IconMapRoute, IconTag } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconSearch, IconTag } from '@tabler/icons-vue'
 
 const router = useRouter()
 

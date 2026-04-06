@@ -414,6 +414,44 @@ export function obtenerArticuloPorCodigo(codigo) {
   return articuloEncontrado || null
 }
 
+// Actualiza la ubicación (columna C) de un artículo cargado y persiste la base
+export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
+  if (!codigo || typeof codigo !== 'string') {
+    return { exito: false, mensaje: 'Código inválido para actualizar ubicación' }
+  }
+
+  if (!nuevaUbicacion || typeof nuevaUbicacion !== 'string') {
+    return { exito: false, mensaje: 'Ubicación inválida para actualizar' }
+  }
+
+  if (!Array.isArray(articulosDelExcel) || articulosDelExcel.length === 0) {
+    return { exito: false, mensaje: 'No hay base de datos cargada para actualizar' }
+  }
+
+  const codigoNormalizado = codigo.trim().toUpperCase()
+  const ubicacionNormalizada = nuevaUbicacion.trim().toUpperCase()
+  const indiceArticulo = articulosDelExcel.findIndex(
+    (articulo) => articulo?.codigo?.toUpperCase() === codigoNormalizado,
+  )
+
+  if (indiceArticulo === -1) {
+    return { exito: false, mensaje: `No se encontró el artículo ${codigoNormalizado}` }
+  }
+
+  articulosDelExcel[indiceArticulo] = {
+    ...articulosDelExcel[indiceArticulo],
+    ubicacionAntigua: ubicacionNormalizada,
+  }
+
+  await guardarBaseDatosEnPreferences()
+
+  return {
+    exito: true,
+    mensaje: 'Ubicación actualizada correctamente',
+    articulo: articulosDelExcel[indiceArticulo],
+  }
+}
+
 // --- FUNCIÓN PARA VERIFICAR SOPORTE DEL NAVEGADOR ---
 export function verificarSoporteSelector() {
   const tieneFileAPI = !!(window.File && window.FileReader && window.FileList && window.Blob)

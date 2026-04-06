@@ -1,0 +1,49 @@
+### Módulo de Consulta De Ubicación - Bitácora II
+
+Nuevo módulo para consultar y actualizar la ubicación de un artículo usando la base Excel cargada.
+
+---
+
+### Objetivo
+
+- Encontrar rápidamente dónde va un artículo.
+- Mostrar ubicación, nombre y código con jerarquía visual clara.
+- Permitir actualizar ubicación desde la misma pantalla.
+- Sincronizar cambios con base cargada y con el módulo Ubicaciones.
+
+---
+
+### Flujo principal
+
+1. Entrar a Consulta De Ubicación desde inicio o drawer.
+2. Si no hay Excel cargado, usar el selector existente.
+3. Buscar por código, nombre o escaneo de cámara.
+4. Ver resultado exacto del artículo encontrado.
+5. Opcionalmente actualizar ubicación y guardar.
+
+---
+
+### Integraciones reutilizadas
+
+- Selector de base Excel: `SelectorExcel.vue`
+- Buscador inteligente: `CodigoMasNombre.vue`
+- Escaneo de cámara: `CamaraEscaneo.vue`
+- Persistencia de ubicaciones: `usoAlmacenamientoUbicaciones.js`
+- Base de artículos Excel: `LectorExcel.js`
+
+---
+
+### Comportamiento de actualización
+
+- El guardado actualiza la ubicación en la base Excel persistida (columna C lógica).
+- El resultado visible en la consulta se actualiza al instante.
+- Se agrega registro en Ubicaciones para dejarlo listo para enviar/exportar.
+- Se notifica al usuario que quedó actualizado y agregado a Ubicaciones.
+
+---
+
+### Notas de UX
+
+- El input de búsqueda inicia centrado y se reacomoda con transición suave al mostrar resultado.
+- El bloque de actualización de ubicación se despliega con transición suave.
+- Se mantiene consistencia visual con estilos y patrones ya usados en la app.

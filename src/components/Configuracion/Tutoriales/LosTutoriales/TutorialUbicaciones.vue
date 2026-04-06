@@ -16,7 +16,8 @@
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
           <strong>Cargar base de datos:</strong> Primero, seleccioná tu archivo Excel con los
-          artículos. Este archivo debe tener: Código, Nombre, Ubicación Antigua y Stock.
+          artículos. Estructura exacta: columna A Código, columna B Descripción, columna C
+          Ubicación y columna D Stock.
         </div>
       </div>
 

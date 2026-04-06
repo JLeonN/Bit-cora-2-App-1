@@ -85,10 +85,13 @@
         <IconInfoCircle :size="20" />
         <div class="texto-ayuda">
           <h4>Selecciona tu archivo Excel</h4>
-          <p>Busca y selecciona el archivo que contenga los artículos (códigos y nombres)</p>
+          <p>Busca y selecciona el archivo con estructura exacta de columnas.</p>
           <ul class="lista-formatos">
             <li>Formatos soportados: .xlsx, .xls</li>
-            <li>Debe tener 2 columnas: código y nombre</li>
+            <li>Columna A: Código del artículo</li>
+            <li>Columna B: Descripción del artículo</li>
+            <li>Columna C: Ubicación</li>
+            <li>Columna D: Stock</li>
           </ul>
         </div>
       </div>

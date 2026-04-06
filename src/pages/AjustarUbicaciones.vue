@@ -77,7 +77,10 @@ import {
   guardarEtiquetas,
   obtenerEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
-import { obtenerArticuloPorCodigo } from '../components/BaseDeDatos/LectorExcel.js'
+import {
+  actualizarUbicacionArticulo,
+  obtenerArticuloPorCodigo,
+} from '../components/BaseDeDatos/LectorExcel.js'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
@@ -200,6 +203,7 @@ async function agregarUbicacion(datosNuevos) {
     }
 
     ubicaciones.value.unshift(nuevaUbicacion)
+    await actualizarUbicacionArticulo(nuevaUbicacion.codigo, nuevaUbicacion.ubicacion)
     await guardarUbicaciones(ubicaciones.value)
     actualizarConfiguracionBarra()
 
@@ -316,7 +320,7 @@ async function guardarEdicion(datos) {
       return
     }
 
-    ubicaciones.value[indiceEditar] = {
+    const ubicacionEditada = {
       codigo: String(datos.codigo || '')
         .trim()
         .toUpperCase(),
@@ -324,6 +328,8 @@ async function guardarEdicion(datos) {
         .trim()
         .toUpperCase(),
     }
+    ubicaciones.value[indiceEditar] = ubicacionEditada
+    await actualizarUbicacionArticulo(ubicacionEditada.codigo, ubicacionEditada.ubicacion)
     await guardarUbicaciones(ubicaciones.value)
     actualizarConfiguracionBarra()
 

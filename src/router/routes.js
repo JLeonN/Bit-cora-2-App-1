@@ -32,6 +32,12 @@ const routes = [
       },
       // UBICACIONES - Gestión completa de ubicaciones de artículos
       { path: '/AjustarUbicaciones', component: () => import('src/pages/AjustarUbicaciones.vue') },
+      // CONSULTA DE UBICACION - Busqueda rapida y actualizacion de ubicaciones
+      {
+        path: '/ConsultaDeUbicacion',
+        name: 'ConsultaDeUbicacion',
+        component: () => import('pages/ConsultaDeUbicacion.vue'),
+      },
       // CONFIGURACIÓN - Ajustes de usuario y preferencias de la app
       {
         path: '/configuracion',

@@ -31,6 +31,12 @@
               </q-item-section>
               <q-item-section>Ubicaciones</q-item-section>
             </q-item>
+            <q-item clickable v-ripple to="/ConsultaDeUbicacion">
+              <q-item-section avatar>
+                <IconSearch :stroke="2" />
+              </q-item-section>
+              <q-item-section>Consulta De Ubicación</q-item-section>
+            </q-item>
             <q-item clickable v-ripple to="/etiquetas">
               <q-item-section avatar>
                 <IconTag :stroke="2" />
@@ -115,7 +121,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { IconTableRow, IconMapRoute, IconTag, IconSettings, IconDownload } from '@tabler/icons-vue'
+import {
+  IconTableRow,
+  IconMapRoute,
+  IconSearch,
+  IconTag,
+  IconSettings,
+  IconDownload,
+} from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'

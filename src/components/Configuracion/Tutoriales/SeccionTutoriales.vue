@@ -41,6 +41,26 @@
     </div>
 
     <!-- Tutorial Etiquetas -->
+    <div class="acordeon-tutorial" @click="alternarTutorial('consulta-ubicacion')">
+      <div class="acordeon-header">
+        <div class="header-izquierda">
+          <IconSearch :stroke="2" class="icono-tutorial" />
+          <span class="titulo-tutorial">Cómo usar Consulta De Ubicación</span>
+        </div>
+        <IconChevronDown
+          :stroke="2"
+          class="icono-chevron"
+          :class="{ 'chevron-rotado': tutorialExpandido === 'consulta-ubicacion' }"
+        />
+      </div>
+      <transition name="expandir-contenido">
+        <div v-show="tutorialExpandido === 'consulta-ubicacion'" class="acordeon-contenido">
+          <TutorialConsultaDeUbicacion />
+        </div>
+      </transition>
+    </div>
+
+    <!-- Tutorial Etiquetas -->
     <div class="acordeon-tutorial" @click="alternarTutorial('etiquetas')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -64,9 +84,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { IconTableRow, IconMapRoute, IconTag, IconChevronDown } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconSearch, IconTag, IconChevronDown } from '@tabler/icons-vue'
 import TutorialPedidos from './LosTutoriales/TutorialPedidos.vue'
 import TutorialUbicaciones from './LosTutoriales/TutorialUbicaciones.vue'
+import TutorialConsultaDeUbicacion from './LosTutoriales/TutorialConsultaDeUbicacion.vue'
 import TutorialEtiquetas from './LosTutoriales/TutorialEtiquetas.vue'
 
 const tutorialExpandido = ref(null)
