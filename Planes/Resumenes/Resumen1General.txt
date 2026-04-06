@@ -1,4 +1,4 @@
-### **Estado Actual del Proyecto: Bitácora II**
+﻿### **Estado Actual del Proyecto: Bitácora II**
 
 Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la gestión de **pedidos internos, ubicaciones e inventario**. Sistema pensado para correr como aplicación móvil en Android, **ya publicada en la Play Store de Google**.
 
