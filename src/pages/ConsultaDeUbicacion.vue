@@ -442,8 +442,13 @@ onUnmounted(() => {
 
 <style scoped>
 .contenedor-consulta {
+  background-color: var(--color-superficie);
   padding: 1rem;
   padding-bottom: 120px;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+  max-width: 900px;
+  margin: 20px auto;
 }
 .titulo-consulta {
   text-align: center;
@@ -615,6 +620,7 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .contenedor-consulta {
     padding: 0.75rem;
+    margin: 12px;
   }
   .titulo-consulta {
     font-size: 1.6rem;

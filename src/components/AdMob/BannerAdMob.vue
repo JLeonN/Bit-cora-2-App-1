@@ -6,6 +6,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob'
 import { tieneAccesoVIP } from '../BaseDeDatos/usoAlmacenamientoVIP'
 
@@ -23,6 +24,13 @@ const BANNER_AD_UNIT_ID = 'ca-app-pub-7620083100302566/1645913333'
 
 onMounted(async () => {
   console.log('[AdMob] Inicializando componente banner...')
+
+  // En web no reservamos espacio para banner nativo.
+  if (Capacitor.getPlatform() === 'web') {
+    mostrarBanner.value = false
+    emit('banner-visible', false)
+    return
+  }
 
   // Verificar si el usuario es VIP
   const esVIP = await tieneAccesoVIP()
@@ -110,7 +118,6 @@ const mostrarBannerPublicitario = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-top: 1px solid var(--color-borde);
 }
 .banner-admob {
   width: 100%;
