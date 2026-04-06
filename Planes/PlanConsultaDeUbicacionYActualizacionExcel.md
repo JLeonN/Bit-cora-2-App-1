@@ -2,7 +2,7 @@
 
 ## Descripción del plan
 
-Agregar un nuevo apartado llamado `Consulta De Ubicación` en la app, visible tanto en el inicio como en el drawer, para consultar rápidamente la ubicación de un artículo usando escaneo, código o nombre. Además, reforzar el módulo `Ubicaciones` para que los cambios de ubicación actualicen el Excel original del usuario, impacten en la base cargada de forma inmediata y queden listos en la tabla de ubicaciones para enviar/exportar. También se debe ajustar la ayuda visible cuando no hay Excel cargado, actualizar tutoriales y crear el resumen del nuevo módulo.
+Agregar un nuevo apartado llamado `Consulta De Ubicación` en la app, visible tanto en el inicio como en el drawer, para consultar rápidamente la ubicación de un artículo usando escaneo, código o nombre. Además, reforzar el módulo `Ubicaciones` para que los cambios de ubicación actualicen el Excel original del usuario, impacten en la base cargada de forma inmediata y queden listos en la tabla de ubicaciones para enviar o exportar. También se debe ajustar la ayuda visible cuando no hay Excel cargado, actualizar tutoriales y crear el resumen del nuevo módulo.
 
 ## Objetivo principal
 
@@ -19,7 +19,7 @@ Agregar un nuevo apartado llamado `Consulta De Ubicación` en la app, visible ta
 - Mantener transiciones suaves en apariciones, desplazamientos y cambios de estado
 - Reutilizar la lógica del input de ubicación de `Ubicaciones`, incluyendo formato, mayúsculas y validaciones
 - Al guardar una nueva ubicación, actualizar sin confirmación extra el Excel original, la base cargada y la UI visible
-- Cada cambio hecho desde `Consulta De Ubicación` debe agregarse también a `Ubicaciones` como listo para enviar/exportar
+- Cada cambio hecho desde `Consulta De Ubicación` debe agregarse también a `Ubicaciones` como listo para enviar o exportar
 - Si no hay Excel cargado, reutilizar el flujo de carga existente en vez de crear uno distinto
 - No tocar por ahora la columna `D` de stock ni ampliar el comportamiento del buscador inteligente
 
@@ -59,7 +59,7 @@ Hacer que la consulta también permita corregir una ubicación y propagar ese ca
 - [x] Actualizar inmediatamente la ubicación mostrada en `Consulta De Ubicación` después del guardado
 - [x] Sobrescribir la columna `C` del Excel original del usuario con la nueva ubicación
 - [x] Actualizar la base persistida y el autocompletado para que reflejen el nuevo valor al instante
-- [x] Agregar o actualizar el registro correspondiente en la tabla de `Ubicaciones` como listo para enviar/exportar
+- [x] Agregar o actualizar el registro correspondiente en la tabla de `Ubicaciones` como listo para enviar o exportar
 - [x] Mostrar una notificación clara indicando que la ubicación fue actualizada y agregada a `Ubicaciones`
 
 ## FASE 4: Ajustar mensajes, tutoriales y resúmenes
@@ -79,13 +79,13 @@ Dejar la app más clara para el usuario cuando falta la base Excel y documentar 
 
 ### Objetivo
 
-Hacer que todo cambio generado desde la lista de `Ubicaciones` termine reflejado de forma consistente en el Excel original del usuario, sin depender de pasos manuales.
+Reconstruir el estado completo del Excel cargado desde la lista actual de `Ubicaciones` cuando se guardan cambios importantes.
 
-- [ ] Definir si la lista de `Ubicaciones` escribe sobre la base original en cada alta, edición o eliminación
-- [ ] Decidir si la sincronización debe hacerse por artículo puntual o por reconstrucción completa del archivo
+- [x] Definir que la lista de `Ubicaciones` escribe sobre la base en cada alta, edición, eliminación y limpieza total
+- [x] Decidir que la sincronización se haga por reconstrucción completa de la base desde la lista actual de `Ubicaciones`
 - [ ] Establecer si el flujo debe guardar una copia temporal antes de sobrescribir el Excel original
-- [ ] Alinear el comportamiento entre cambios hechos desde `Ubicaciones` y cambios hechos desde `Consulta De Ubicación`
-- [ ] Validar cómo se recupera la fila correcta del Excel para no romper columnas `A`, `B`, `C` y `D`
+- [x] Alinear el comportamiento entre cambios hechos desde `Ubicaciones` y cambios hechos desde `Consulta De Ubicación`
+- [x] Validar cómo se aplica la reconstrucción respetando columnas `A`, `B`, `C` y `D` en el modelo de datos
 
 ## FASE TESTING
 
@@ -102,7 +102,7 @@ Validar de forma ejecutable por IA y revisable por humano que la consulta, la ed
 - [x] Cambiar una ubicación desde `Consulta De Ubicación` y verificar actualización inmediata en pantalla
 - [x] Confirmar que el Excel original queda actualizado en la columna `C`
 - [x] Confirmar que la base cargada y el buscador usan la nueva ubicación sin recargar manualmente
-- [x] Confirmar que el artículo actualizado aparece en `Ubicaciones` listo para enviar/exportar
+- [x] Confirmar que el artículo actualizado aparece en `Ubicaciones` listo para enviar o exportar
 - [x] Verificar que la notificación del guardado informe actualización de base y agregado a `Ubicaciones`
 - [x] Revisar el mensaje sin Excel en `Ubicaciones` y confirmar que explica correctamente las columnas requeridas
 - [x] Revisar tutoriales y resumen del nuevo módulo para asegurar coherencia con el comportamiento final

@@ -4,6 +4,7 @@ import { Preferences } from '@capacitor/preferences'
 
 // Variable global para almacenar los artículos cargados
 let articulosDelExcel = []
+let articulosBaseOriginal = []
 let estadoCarga = 'no-cargado' // 'no-cargado', 'cargando', 'cargado', 'error'
 let informacionArchivo = null // Info del archivo seleccionado
 
@@ -15,6 +16,7 @@ async function guardarBaseDatosEnPreferences() {
   try {
     const datosAGuardar = {
       articulosCargados: articulosDelExcel,
+      articulosBaseOriginal: articulosBaseOriginal,
       informacionArchivo: informacionArchivo,
       fechaCarga: Date.now(),
       version: '2.0',
@@ -59,7 +61,19 @@ async function cargarBaseDatosDesdePreferences() {
       stock: articulo.stock || '', // Por defecto vacío
     }))
 
+    const baseOriginalGuardada = Array.isArray(datosGuardados.articulosBaseOriginal)
+      ? datosGuardados.articulosBaseOriginal
+      : articulosMigrados
+
+    const baseOriginalMigrada = baseOriginalGuardada.map((articulo) => ({
+      codigo: articulo.codigo,
+      nombre: articulo.nombre,
+      ubicacionAntigua: articulo.ubicacionAntigua || '',
+      stock: articulo.stock || '',
+    }))
+
     // Restaurar datos
+    articulosBaseOriginal = baseOriginalMigrada
     articulosDelExcel = articulosMigrados
     informacionArchivo = datosGuardados.informacionArchivo
     estadoCarga = articulosDelExcel.length > 0 ? 'cargado' : 'no-cargado'
@@ -212,7 +226,8 @@ export async function cargarArticulosDesdeExcel() {
     }
 
     // Guardar en variable global
-    articulosDelExcel = articulosProcesados
+    articulosBaseOriginal = articulosProcesados.map((articulo) => ({ ...articulo }))
+    articulosDelExcel = articulosProcesados.map((articulo) => ({ ...articulo }))
     estadoCarga = 'cargado'
 
     // ** PERSISTIR AUTOMÁTICAMENTE **
@@ -351,6 +366,7 @@ export function obtenerInformacionArchivo() {
 
 export async function reiniciarBaseDatos() {
   articulosDelExcel = []
+  articulosBaseOriginal = []
   estadoCarga = 'no-cargado'
   informacionArchivo = null
 
@@ -449,6 +465,56 @@ export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
     exito: true,
     mensaje: 'Ubicación actualizada correctamente',
     articulo: articulosDelExcel[indiceArticulo],
+  }
+}
+
+// Reconstruye toda la base de ubicaciones a partir de la lista actual de Ubicaciones.
+export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
+  if (!Array.isArray(listaUbicaciones)) {
+    return { exito: false, mensaje: 'La lista de ubicaciones no tiene formato válido' }
+  }
+
+  if (!Array.isArray(articulosBaseOriginal) || articulosBaseOriginal.length === 0) {
+    return { exito: false, mensaje: 'No hay base de datos original para reconstruir' }
+  }
+
+  const mapaUbicaciones = new Map()
+
+  // Se respeta la primera aparición en la lista (más reciente cuando se usa unshift).
+  for (const ubicacionItem of listaUbicaciones) {
+    const codigo = String(ubicacionItem?.codigo || '')
+      .trim()
+      .toUpperCase()
+    const ubicacion = String(ubicacionItem?.ubicacion || '')
+      .trim()
+      .toUpperCase()
+
+    if (!codigo || !ubicacion || mapaUbicaciones.has(codigo)) continue
+    mapaUbicaciones.set(codigo, ubicacion)
+  }
+
+  articulosDelExcel = articulosBaseOriginal.map((articulo) => {
+    const codigoArticulo = String(articulo?.codigo || '')
+      .trim()
+      .toUpperCase()
+
+    if (!mapaUbicaciones.has(codigoArticulo)) {
+      return { ...articulo }
+    }
+
+    return {
+      ...articulo,
+      ubicacionAntigua: mapaUbicaciones.get(codigoArticulo),
+    }
+  })
+
+  await guardarBaseDatosEnPreferences()
+
+  return {
+    exito: true,
+    mensaje: 'Base reconstruida correctamente desde la lista de ubicaciones',
+    totalArticulos: articulosDelExcel.length,
+    totalAplicados: mapaUbicaciones.size,
   }
 }
 

@@ -78,8 +78,8 @@ import {
   obtenerEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
 import {
-  actualizarUbicacionArticulo,
   obtenerArticuloPorCodigo,
+  reconstruirUbicacionesDesdeLista,
 } from '../components/BaseDeDatos/LectorExcel.js'
 
 // Emit para configurar la barra inferior
@@ -182,6 +182,14 @@ function manejarErrorCarga(mensaje) {
   setTimeout(() => (mensajeError.value = ''), 3000)
 }
 
+async function sincronizarBaseConListaActual() {
+  const resultadoSincronizacion = await reconstruirUbicacionesDesdeLista(ubicaciones.value)
+
+  if (!resultadoSincronizacion.exito) {
+    throw new Error(resultadoSincronizacion.mensaje || 'No se pudo reconstruir la base')
+  }
+}
+
 // --- FUNCIÓN AGREGAR UBICACIÓN
 async function agregarUbicacion(datosNuevos) {
   try {
@@ -203,7 +211,7 @@ async function agregarUbicacion(datosNuevos) {
     }
 
     ubicaciones.value.unshift(nuevaUbicacion)
-    await actualizarUbicacionArticulo(nuevaUbicacion.codigo, nuevaUbicacion.ubicacion)
+    await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
     actualizarConfiguracionBarra()
 
@@ -329,7 +337,7 @@ async function guardarEdicion(datos) {
         .toUpperCase(),
     }
     ubicaciones.value[indiceEditar] = ubicacionEditada
-    await actualizarUbicacionArticulo(ubicacionEditada.codigo, ubicacionEditada.ubicacion)
+    await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
     actualizarConfiguracionBarra()
 
@@ -380,6 +388,7 @@ async function confirmarEliminacion() {
     const indice = ubicaciones.value.indexOf(ubicacionEliminar.value)
     if (indice !== -1) {
       ubicaciones.value.splice(indice, 1)
+      await sincronizarBaseConListaActual()
       await guardarUbicaciones(ubicaciones.value)
       actualizarConfiguracionBarra()
     }
@@ -406,6 +415,7 @@ function abrirModalEliminarTodas() {
 async function confirmarEliminacionTodas() {
   try {
     ubicaciones.value = []
+    await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
     mostrarModalEliminarTodas.value = false
     actualizarConfiguracionBarra()
