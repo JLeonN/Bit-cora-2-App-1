@@ -1,12 +1,13 @@
 <template>
   <div class="contenedor-contador">
-    <div class="tarjeta-contador" @click="irAEstadisticas">
+    <div class="tarjeta-contador" :title="textoContador" @click="irAEstadisticas">
       <div class="icono-contador">
         <component :is="obtenerIconoContador" size="24" />
       </div>
       <div class="info-contador">
-        <p class="texto-contador">{{ textoContador }}</p>
         <p class="fecha-actual">{{ fechaFormateada }}</p>
+        <p class="linea-conteo"><span class="etiqueta-conteo">Pedidos:</span> <span class="numero-conteo">{{ pedidosDelDia }}</span></p>
+        <p class="linea-conteo"><span class="etiqueta-conteo">Items:</span> <span class="numero-conteo">{{ itemsDelDia }}</span></p>
       </div>
       <div class="icono-estadisticas">
         <IconChartBar :size="18" />
@@ -33,6 +34,7 @@ const router = useRouter()
 
 // Estado reactivo
 const pedidosDelDia = ref(0)
+const itemsDelDia = ref(0)
 const fechaActual = ref(new Date())
 
 // Función para navegar a estadísticas
@@ -138,9 +140,11 @@ async function contarPedidosHoy() {
     )
 
     pedidosDelDia.value = pedidosHoy.length
+    itemsDelDia.value = pedidosHoy.reduce((suma, pedido) => suma + (pedido.items || 1), 0)
   } catch (error) {
     console.error('Error al contar pedidos del día:', error)
     pedidosDelDia.value = 0
+    itemsDelDia.value = 0
   }
 }
 
@@ -242,17 +246,28 @@ defineExpose({
   opacity: 1;
   color: var(--color-acento);
 }
-.texto-contador {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
+.fecha-actual {
+  font-size: 0.9rem;
+  margin: 0 0 0.3rem 0;
+  text-transform: capitalize;
+  opacity: 0.95;
+  color: var(--color-acento);
+}
+.linea-conteo {
+  margin: 0;
+  font-size: 0.9rem;
   color: var(--color-texto-principal);
 }
-.fecha-actual {
-  font-size: 0.875rem;
-  margin: 0;
-  text-transform: capitalize;
-  opacity: 0.9;
+.linea-conteo + .linea-conteo {
+  margin-top: 0.1rem;
+}
+.etiqueta-conteo {
+  color: var(--color-texto-secundario);
+  font-weight: 600;
+}
+.numero-conteo {
+  color: var(--color-acento);
+  font-weight: 700;
 }
 /* Responsive */
 @media (max-width: 600px) {
@@ -271,11 +286,11 @@ defineExpose({
     top: 0.625rem;
     right: 0.625rem;
   }
-  .texto-contador {
-    font-size: 1rem;
-  }
   .fecha-actual {
     font-size: 0.8rem;
+  }
+  .linea-conteo {
+    font-size: 0.84rem;
   }
 }
 /* Estados especiales para fines de semana */
