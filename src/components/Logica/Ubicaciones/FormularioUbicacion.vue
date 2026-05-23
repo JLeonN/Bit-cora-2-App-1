@@ -23,6 +23,21 @@
           @articulo-seleccionado="seleccionarArticuloDelBuscador"
         />
       </div>
+      <div v-if="articuloSeleccionadoInfo" class="tarjeta-info-articulo">
+        <p class="titulo-info-articulo">Artículo seleccionado</p>
+        <p class="linea-info-articulo">
+          <span class="etiqueta-info-articulo">Nombre:</span>
+          {{ articuloSeleccionadoInfo.nombre }}
+        </p>
+        <p class="linea-info-articulo">
+          <span class="etiqueta-info-articulo">Código:</span>
+          {{ articuloSeleccionadoInfo.codigo }}
+        </p>
+        <p class="linea-info-articulo">
+          <span class="etiqueta-info-articulo">Ubicación:</span>
+          {{ articuloSeleccionadoInfo.ubicacion || 'Sin ubicación' }}
+        </p>
+      </div>
 
       <!-- input ubicacion -->
       <div class="ubicacion-campo">
@@ -108,6 +123,8 @@ const ultimoEspacioTiempo = ref(0)
 // --- ESTADO DEL BUSCADOR ---
 const mostrarBuscador = ref(false)
 const inputEnfocado = ref(false)
+const seleccionRecienteDesdeBuscador = ref(false)
+const articuloSeleccionadoInfo = ref(null)
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -220,6 +237,11 @@ function manejarInputCodigo(evento) {
   }
 
   restablecerPlaceholderCodigo()
+  seleccionRecienteDesdeBuscador.value = false
+  const codigoActual = nuevoCodigo.value.trim().toUpperCase()
+  if (articuloSeleccionadoInfo.value && codigoActual !== articuloSeleccionadoInfo.value.codigo) {
+    articuloSeleccionadoInfo.value = null
+  }
 
   // Si hay texto y el input está enfocado, mostrar buscador
   if (inputEnfocado.value && nuevoCodigo.value.length >= 3) {
@@ -231,6 +253,12 @@ function manejarInputCodigo(evento) {
 
 function manejarEnfoqueCodigo() {
   inputEnfocado.value = true
+  if (seleccionRecienteDesdeBuscador.value) {
+    nextTick(() => {
+      inputCodigo.value?.select()
+    })
+    seleccionRecienteDesdeBuscador.value = false
+  }
 
   // Solo scroll automático, sin anclar
   moverFormularioArriba()
@@ -263,6 +291,12 @@ function manejarDesenfoqueUbicacion() {
 
 function seleccionarArticuloDelBuscador(articulo) {
   nuevoCodigo.value = articulo.codigo
+  articuloSeleccionadoInfo.value = {
+    nombre: articulo.nombre,
+    codigo: articulo.codigo,
+    ubicacion: articulo.ubicacionAntigua || '',
+  }
+  seleccionRecienteDesdeBuscador.value = true
   mostrarBuscador.value = false
   inputEnfocado.value = false
   restablecerPlaceholderCodigo()
@@ -325,6 +359,8 @@ async function gestionarEnvio() {
 
   // Limpiar solo el código, mantener la ubicación para el próximo
   nuevoCodigo.value = ''
+  articuloSeleccionadoInfo.value = null
+  seleccionRecienteDesdeBuscador.value = false
   restablecerPlaceholderCodigo()
   mostrarBuscador.value = false
 

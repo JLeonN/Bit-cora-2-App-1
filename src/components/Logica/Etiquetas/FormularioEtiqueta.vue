@@ -129,6 +129,7 @@ const inputCantidad = ref(null)
 
 // Estado del buscador
 const inputEnfocado = ref(false)
+const seleccionRecienteDesdeBuscador = ref(false)
 
 // --- MÉTODOS PARA MANEJAR ESTADO DE MODALES ---
 const manejarModalAbierto = () => {
@@ -156,6 +157,7 @@ function moverFormularioArriba() {
 
 // Manejar búsqueda en tiempo real
 function manejarBusqueda() {
+  seleccionRecienteDesdeBuscador.value = false
   mostrarErrorCodigo.value = false
   if (inputEnfocado.value && codigoIngresado.value.length >= 3) {
     mostrarResultados.value = true
@@ -167,6 +169,10 @@ function manejarBusqueda() {
 // Manejar enfoque del código
 function manejarEnfoqueCodigo() {
   inputEnfocado.value = true
+  if (seleccionRecienteDesdeBuscador.value) {
+    inputCodigo.value?.select()
+    seleccionRecienteDesdeBuscador.value = false
+  }
   moverFormularioArriba()
 
   if (codigoIngresado.value.length >= 3) {
@@ -195,6 +201,7 @@ function manejarEnfoqueCantidad() {
 function seleccionarArticulo(articulo) {
   codigoIngresado.value = articulo.codigo
   descripcionIngresada.value = articulo.nombre
+  seleccionRecienteDesdeBuscador.value = true
 
   // Buscar ubicación del artículo en la base de datos
   const articuloCompleto = obtenerArticulosCargados().find(
@@ -303,6 +310,7 @@ function limpiarFormulario() {
   ubicacionIngresada.value = ''
   cantidadCopias.value = 1
   mostrarResultados.value = false
+  seleccionRecienteDesdeBuscador.value = false
   inputCodigo.value?.focus()
 }
 

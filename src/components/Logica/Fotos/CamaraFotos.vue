@@ -28,6 +28,7 @@
             type="text"
             placeholder="Buscar por código o nombre..."
             @input="busquedaCodigo = busquedaCodigo.toUpperCase()"
+            @focus="manejarEnfoqueBusqueda"
           />
         </div>
 
@@ -93,6 +94,7 @@ const codigoSeleccionado = ref(null)
 const nombreArticuloSeleccionado = ref('')
 const fotoCapturadaBase64 = ref(null)
 const mensajeTemporal = ref('')
+const seleccionRecienteDesdeBuscador = ref(false)
 
 // Lista temporal de fotos
 const fotosTemporales = ref([])
@@ -278,11 +280,19 @@ function capturarFoto() {
   }
 }
 
+function manejarEnfoqueBusqueda() {
+  if (seleccionRecienteDesdeBuscador.value) {
+    inputBusqueda.value?.select()
+    seleccionRecienteDesdeBuscador.value = false
+  }
+}
+
 // Seleccionar artículo del buscador
 function seleccionarArticulo(articulo) {
   codigoSeleccionado.value = articulo.codigo
   nombreArticuloSeleccionado.value = articulo.nombre
   busquedaCodigo.value = articulo.codigo
+  seleccionRecienteDesdeBuscador.value = true
   console.log('[CamaraFotos] Artículo seleccionado:', articulo)
 
   nextTick(() => {
@@ -341,6 +351,7 @@ function descartarFoto() {
 function resetearEstado() {
   mostrarBuscador.value = false
   busquedaCodigo.value = ''
+  seleccionRecienteDesdeBuscador.value = false
   codigoSeleccionado.value = null
   nombreArticuloSeleccionado.value = ''
   fotoCapturadaBase64.value = null

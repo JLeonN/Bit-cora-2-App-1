@@ -16,6 +16,7 @@
           placeholder="Buscar por código o nombre..."
           :class="{ 'input-error': error, 'animar-error': animarError }"
           @input="handleInput"
+          @focus="manejarEnfoqueCodigo"
           @keyup.enter="guardar"
         />
 
@@ -60,6 +61,7 @@ const error = ref(false)
 const animarError = ref(false)
 const inputCodigo = ref(null)
 const mostrarResultadosBuscador = ref(true)
+const seleccionRecienteDesdeBuscador = ref(false)
 
 // Computed para mostrar buscador
 const mostrarBuscador = computed(() => {
@@ -69,13 +71,22 @@ const mostrarBuscador = computed(() => {
 // Manejar input (activar buscador al escribir)
 function handleInput() {
   nuevoCodigo.value = nuevoCodigo.value.toUpperCase()
+  seleccionRecienteDesdeBuscador.value = false
   mostrarResultadosBuscador.value = true
+}
+
+function manejarEnfoqueCodigo() {
+  if (seleccionRecienteDesdeBuscador.value) {
+    inputCodigo.value?.select()
+    seleccionRecienteDesdeBuscador.value = false
+  }
 }
 
 // Seleccionar artículo del buscador
 function seleccionarArticulo(articulo) {
   nuevoCodigo.value = articulo.codigo
   nombreArticulo.value = articulo.nombre
+  seleccionRecienteDesdeBuscador.value = true
 
   // Ocultar dropdown
   mostrarResultadosBuscador.value = false

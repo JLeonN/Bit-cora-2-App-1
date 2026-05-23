@@ -93,7 +93,7 @@ const cantidadArticulos = ref(0)
 
 // --- CONFIGURACIÓN DEL BUSCADOR ---
 const caracteresMinimos = 3
-const maximosResultados = 3
+const maximosResultados = 50
 
 // --- COMPUTED PARA MOSTRAR/OCULTAR LISTA ---
 const mostrarLista = computed(() => {
@@ -149,22 +149,24 @@ const resultadosBusqueda = computed(() => {
     })),
   )
 
-  // Nombres que contengan al menos una palabra
-  const nombresParcialesCoinciden = articulosDisponibles.value.filter((articulo) => {
-    const nombre = articulo.nombre.toLowerCase()
-    return (
-      palabras.some((palabra) => nombre.includes(palabra)) &&
-      !codigosEmpiezan.includes(articulo) &&
-      !nombresCoinciden.includes(articulo) &&
-      !codigosContienen.includes(articulo)
+  // Nombres parciales solo para búsquedas de una sola palabra
+  if (palabras.length <= 1) {
+    const nombresParcialesCoinciden = articulosDisponibles.value.filter((articulo) => {
+      const nombre = articulo.nombre.toLowerCase()
+      return (
+        palabras.some((palabra) => nombre.includes(palabra)) &&
+        !codigosEmpiezan.includes(articulo) &&
+        !nombresCoinciden.includes(articulo) &&
+        !codigosContienen.includes(articulo)
+      )
+    })
+    resultados.push(
+      ...nombresParcialesCoinciden.map((articulo) => ({
+        articulo,
+        tipoCoincidencia: 'nombre-parcial',
+      })),
     )
-  })
-  resultados.push(
-    ...nombresParcialesCoinciden.map((articulo) => ({
-      articulo,
-      tipoCoincidencia: 'nombre-parcial',
-    })),
-  )
+  }
 
   return resultados.slice(0, maximosResultados)
 })

@@ -121,6 +121,7 @@ const baseDatosCargada = ref(false)
 const inputBusquedaRef = ref(null)
 const inputNuevaUbicacionRef = ref(null)
 const ultimoEspacioTiempo = ref(0)
+const seleccionRecienteDesdeBuscador = ref(false)
 
 let intervaloBaseDatos = null
 
@@ -188,6 +189,7 @@ const manejarDobleEspacio = (evento) => {
 }
 
 const manejarInputBusqueda = (evento) => {
+  seleccionRecienteDesdeBuscador.value = false
   const valorOriginal = evento.target.value
   const valorNormalizado = normalizarTextoBusqueda(valorOriginal)
   if (valorOriginal !== valorNormalizado) {
@@ -204,6 +206,10 @@ const manejarInputBusqueda = (evento) => {
 
 const manejarEnfoqueBusqueda = () => {
   inputEnfocado.value = true
+  if (seleccionRecienteDesdeBuscador.value) {
+    inputBusquedaRef.value?.select()
+    seleccionRecienteDesdeBuscador.value = false
+  }
   mostrarBuscador.value = busquedaArticulo.value.length >= 3 && baseDatosCargada.value
 }
 
@@ -259,6 +265,7 @@ const buscarArticuloExacto = () => {
 
 const seleccionarArticulo = (articulo) => {
   busquedaArticulo.value = articulo.codigo
+  seleccionRecienteDesdeBuscador.value = true
   articuloConsultado.value = { ...articulo }
   mostrarBuscador.value = false
   inputEnfocado.value = false
@@ -289,6 +296,7 @@ const procesarCodigosEscaneados = (codigos) => {
 
   const codigoPrincipal = codigos[0]
   busquedaArticulo.value = codigoPrincipal
+  seleccionRecienteDesdeBuscador.value = false
   const articulo = buscarEnBase(codigoPrincipal)
 
   if (!articulo) {
