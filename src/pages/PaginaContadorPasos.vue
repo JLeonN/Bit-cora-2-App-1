@@ -38,71 +38,12 @@
         {{ textoEstadoMonitoreo }}
       </span>
     </div>
-    <div class="filtros-historial">
-      <div class="filtros-fila">
-        <q-select
-          v-model="filtros.mes"
-          dense
-          outlined
-          emit-value
-          map-options
-          :options="opcionesMeses"
-          options-dark
-          popup-content-class="menu-filtro-pasos"
-          label="Mes"
-          class="campo-filtro"
-        />
-        <q-select
-          v-model="filtros.anio"
-          dense
-          outlined
-          emit-value
-          map-options
-          :options="opcionesAnios"
-          options-dark
-          popup-content-class="menu-filtro-pasos"
-          label="Ano"
-          class="campo-filtro"
-        />
-        <q-input
-          v-model="filtros.diaExacto"
-          dense
-          outlined
-          type="date"
-          label="Dia puntual"
-          class="campo-filtro"
-        />
-      </div>
-      <div class="filtros-fila">
-        <q-input
-          v-model="filtros.fechaDesde"
-          dense
-          outlined
-          type="date"
-          label="Desde"
-          class="campo-filtro"
-        />
-        <q-input
-          v-model="filtros.fechaHasta"
-          dense
-          outlined
-          type="date"
-          label="Hasta"
-          class="campo-filtro"
-        />
-        <q-btn
-          dense
-          outline
-          color="primary"
-          label="Limpiar filtros"
-          class="boton-limpiar"
-          @click="limpiarFiltros"
-        />
-      </div>
-      <p v-if="rangoInvalido" class="mensaje-filtro-error">
-        El rango Desde/Hasta no es valido.
-      </p>
-    </div>
+    <SelectorPeriodo
+      v-model="filtros"
+      :anios="opcionesAniosValores"
+      @limpiar="limpiarFiltros"
+      @rangoInvalido="manejarRangoInvalido"
+    />
     <div class="tabs-historial">
       <q-tabs
         v-model="pestanaActiva"
@@ -184,6 +125,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { Notify } from 'quasar'
 import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
+import SelectorPeriodo from 'src/components/Logica/Compartidos/SelectorPeriodo.vue'
 import {
   obtenerPasosDiarios,
   obtenerSesionesPasos,
@@ -202,35 +144,23 @@ const historialSesiones = ref([])
 const estadoMonitoreo = ref(false)
 const esAndroidNativo = servicioPasos.esAndroidNativo()
 const hoy = new Date()
-const filtros = reactive({
+const fechaHoyISO = obtenerFechaHoyISO()
+const filtros = ref({
   mes: hoy.getMonth() + 1,
   anio: hoy.getFullYear(),
   fechaDesde: '',
   fechaHasta: '',
-  diaExacto: '',
+  diaExacto: fechaHoyISO,
 })
+const rangoInvalido = ref(false)
+const diaExactoManual = ref(false)
 const pestanaActiva = ref('diario')
 const paginacionDiario = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const paginacionSesiones = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const mesesExpandidos = ref(new Set())
 let desuscribir = null
 
-const opcionesMeses = [
-  { label: 'Enero', value: 1 },
-  { label: 'Febrero', value: 2 },
-  { label: 'Marzo', value: 3 },
-  { label: 'Abril', value: 4 },
-  { label: 'Mayo', value: 5 },
-  { label: 'Junio', value: 6 },
-  { label: 'Julio', value: 7 },
-  { label: 'Agosto', value: 8 },
-  { label: 'Septiembre', value: 9 },
-  { label: 'Octubre', value: 10 },
-  { label: 'Noviembre', value: 11 },
-  { label: 'Diciembre', value: 12 },
-]
-
-const opcionesAnios = computed(() => {
+const opcionesAniosValores = computed(() => {
   const anios = new Set([hoy.getFullYear()])
   historialDiario.value.forEach((item) => anios.add(new Date(`${item.fecha}T00:00:00`).getFullYear()))
   historialSesiones.value.forEach((sesion) => {
@@ -238,14 +168,7 @@ const opcionesAnios = computed(() => {
       anios.add(new Date(sesion.inicio).getFullYear())
     }
   })
-  return [...anios].sort((a, b) => b - a).map((anio) => ({ label: String(anio), value: anio }))
-})
-
-const rangoInvalido = computed(() => {
-  if (!filtros.fechaDesde || !filtros.fechaHasta) {
-    return false
-  }
-  return new Date(filtros.fechaDesde) > new Date(filtros.fechaHasta)
+  return [...anios].sort((a, b) => b - a)
 })
 
 const textoEstadoMonitoreo = computed(() => {
@@ -260,16 +183,17 @@ const resumenTreintaDias = computed(() => sumarUltimosDias(30))
 
 const diarioFiltrado = computed(() => {
   const base = [...historialDiario.value].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
-  return base.filter((item) => fechaCumpleFiltros(item.fecha))
+  return base.filter((item) => fechaCumpleFiltros(item.fecha, true))
 })
 
 const sesionesFiltradas = computed(() => {
   const base = [...historialSesiones.value].sort((a, b) => (a.inicio < b.inicio ? 1 : -1))
+  const aplicarDiaEnSesiones = diaExactoManual.value && Boolean(filtros.value.diaExacto)
   return base.filter((sesion) => {
     if (!sesion.inicio) {
       return false
     }
-    return fechaCumpleFiltros(new Date(sesion.inicio).toISOString().slice(0, 10))
+    return fechaCumpleFiltros(new Date(sesion.inicio).toISOString().slice(0, 10), aplicarDiaEnSesiones)
   })
 })
 
@@ -294,7 +218,11 @@ const sesionesPaginadas = computed(() => {
 
 const mensualFiltrado = computed(() => {
   const mapa = new Map()
-  diarioFiltrado.value.forEach((dia) => {
+  const aplicarDiaEnMensual = diaExactoManual.value && Boolean(filtros.value.diaExacto)
+  const baseMensual = [...historialDiario.value]
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+    .filter((dia) => fechaCumpleFiltros(dia.fecha, aplicarDiaEnMensual))
+  baseMensual.forEach((dia) => {
     const mesClave = dia.fecha.slice(0, 7)
     if (!mapa.has(mesClave)) {
       mapa.set(mesClave, { mes: mesClave, totalPasos: 0, dias: [] })
@@ -314,13 +242,20 @@ watch([diarioFiltrado, sesionesFiltradas], () => {
 })
 
 watch(
-  () => ({ ...filtros }),
+  () => ({ ...filtros.value }),
   () => {
     paginacionDiario.pagina = 1
     paginacionSesiones.pagina = 1
     mesesExpandidos.value = new Set()
   },
   { deep: true },
+)
+
+watch(
+  () => filtros.value.diaExacto,
+  (nuevoDia) => {
+    diaExactoManual.value = Boolean(nuevoDia) && nuevoDia !== fechaHoyISO
+  },
 )
 
 function sumarUltimosDias(cantidad) {
@@ -331,35 +266,49 @@ function sumarUltimosDias(cantidad) {
     .reduce((acc, item) => acc + (item.totalPasos || 0), 0)
 }
 
-function fechaCumpleFiltros(fechaISO) {
+function fechaCumpleFiltros(fechaISO, aplicarDiaExacto = true) {
   if (!fechaISO || rangoInvalido.value) {
     return false
   }
   const [anio, mes] = fechaISO.split('-').map(Number)
-  if (filtros.anio && anio !== Number(filtros.anio)) {
+  if (filtros.value.anio && anio !== Number(filtros.value.anio)) {
     return false
   }
-  if (filtros.mes && mes !== Number(filtros.mes)) {
+  if (filtros.value.mes && mes !== Number(filtros.value.mes)) {
     return false
   }
-  if (filtros.diaExacto && fechaISO !== filtros.diaExacto) {
+  if (aplicarDiaExacto && filtros.value.diaExacto && fechaISO !== filtros.value.diaExacto) {
     return false
   }
-  if (filtros.fechaDesde && fechaISO < filtros.fechaDesde) {
+  if (filtros.value.fechaDesde && fechaISO < filtros.value.fechaDesde) {
     return false
   }
-  if (filtros.fechaHasta && fechaISO > filtros.fechaHasta) {
+  if (filtros.value.fechaHasta && fechaISO > filtros.value.fechaHasta) {
     return false
   }
   return true
 }
 
 function limpiarFiltros() {
-  filtros.mes = hoy.getMonth() + 1
-  filtros.anio = hoy.getFullYear()
-  filtros.fechaDesde = ''
-  filtros.fechaHasta = ''
-  filtros.diaExacto = ''
+  filtros.value = {
+    mes: hoy.getMonth() + 1,
+    anio: hoy.getFullYear(),
+    fechaDesde: '',
+    fechaHasta: '',
+    diaExacto: fechaHoyISO,
+  }
+  diaExactoManual.value = false
+}
+
+function manejarRangoInvalido(esInvalido) {
+  rangoInvalido.value = esInvalido
+}
+
+function obtenerFechaHoyISO() {
+  const anio = hoy.getFullYear()
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+  const dia = String(hoy.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
 }
 
 function alternarMes(mesClave) {
@@ -498,32 +447,6 @@ onUnmounted(() => {
   border-color: var(--color-exito);
   color: var(--color-exito);
 }
-.filtros-historial {
-  border: 1px solid var(--color-borde);
-  border-radius: 10px;
-  background: var(--color-fondo);
-  padding: 10px;
-  margin-bottom: 12px;
-}
-.filtros-fila {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-}
-.filtros-fila + .filtros-fila {
-  margin-top: 8px;
-}
-.campo-filtro {
-  width: 100%;
-}
-.boton-limpiar {
-  width: 100%;
-}
-.mensaje-filtro-error {
-  margin: 8px 0 0 0;
-  color: var(--color-error);
-  font-size: 0.8rem;
-}
 .tabs-historial {
   border: 1px solid var(--color-borde);
   border-radius: 10px;
@@ -548,39 +471,6 @@ onUnmounted(() => {
 }
 .paneles-pasos :deep(.q-tab-panel) {
   background: var(--color-fondo);
-  color: var(--color-texto-principal);
-}
-.filtros-historial :deep(.q-field .q-field__control) {
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-}
-.filtros-historial :deep(.q-field .q-field__native),
-.filtros-historial :deep(.q-field .q-field__input),
-.filtros-historial :deep(.q-field .q-field__marginal),
-.filtros-historial :deep(.q-select__dropdown-icon) {
-  color: var(--color-texto-principal);
-}
-.filtros-historial :deep(.q-field .q-field__label) {
-  color: var(--color-texto-secundario);
-}
-.filtros-historial :deep(.q-field.q-field--focused .q-field__label) {
-  color: var(--color-acento);
-}
-.filtros-historial :deep(.q-field .q-field__control:before) {
-  border-color: var(--color-borde);
-}
-.filtros-historial :deep(.q-field .q-field__control:hover:before) {
-  border-color: var(--color-primario);
-}
-.filtros-historial :deep(.q-field.q-field--focused .q-field__control:after) {
-  border-color: var(--color-acento);
-}
-.filtros-historial :deep(.q-field .q-placeholder) {
-  color: var(--color-texto-secundario);
-}
-.filtros-historial :deep(.q-menu),
-.filtros-historial :deep(.q-list) {
-  background: var(--color-superficie);
   color: var(--color-texto-principal);
 }
 .cabecera-lista {
@@ -653,35 +543,9 @@ onUnmounted(() => {
   font-size: 0.85rem;
   padding: 8px 0;
 }
-@media (max-width: 800px) {
-  .filtros-fila {
-    grid-template-columns: 1fr 1fr;
-  }
-}
 @media (max-width: 560px) {
-  .filtros-fila {
-    grid-template-columns: 1fr;
-  }
   .acciones-sesion {
     gap: 8px;
   }
-}
-</style>
-
-<style>
-.menu-filtro-pasos {
-  background: var(--color-superficie) !important;
-  color: var(--color-texto-principal) !important;
-}
-.menu-filtro-pasos .q-item {
-  color: var(--color-texto-principal) !important;
-}
-.menu-filtro-pasos .q-item--active,
-.menu-filtro-pasos .q-item--active .q-item__label {
-  color: var(--color-acento) !important;
-}
-.menu-filtro-pasos .q-item.q-manual-focusable--focused,
-.menu-filtro-pasos .q-item:hover {
-  background: color-mix(in oklab, var(--color-primario) 18%, var(--color-superficie)) !important;
 }
 </style>
