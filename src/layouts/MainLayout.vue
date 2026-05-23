@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div class="fondo-app texto-principal">
     <q-layout view="lHh Lpr lff">
-      <q-header elevated class="bg-primario-oscuro texto-principal">
+      <q-header elevated :class="claseHeader">
         <q-toolbar class="barra-superior">
           <q-toolbar-title class="titulo-usuario" :title="nombreUsuario">{{ nombreUsuario }}</q-toolbar-title>
           <div class="pasos-header" :title="textoPasosHeader">
@@ -39,7 +39,7 @@
               <q-item-section avatar>
                 <IconSearch :stroke="2" />
               </q-item-section>
-              <q-item-section>Consulta De Ubicación</q-item-section>
+              <q-item-section>Consulta de Ubicación</q-item-section>
             </q-item>
             <q-item clickable v-ripple to="/etiquetas">
               <q-item-section avatar>
@@ -142,6 +142,7 @@ import {
 } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
+import { esModoPruebaPublicidad } from 'components/Configuracion/ModoPublicidad.js'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
   obtenerEstadoActualizacion,
@@ -169,6 +170,9 @@ const configuracionBarra = reactive({
 })
 let paginaActivaRef = null
 let desuscribirPasos = null
+const claseHeader = esModoPruebaPublicidad
+  ? 'header-modo-prueba texto-principal'
+  : 'bg-primario-oscuro texto-principal'
 
 onMounted(async () => {
   await Promise.all([cargarNombreUsuario(), verificarActualizacion()])
@@ -258,6 +262,10 @@ const manejarAccionPersonalizada = (accion) => {
 .barra-superior {
   position: relative;
   min-height: 56px;
+}
+.header-modo-prueba {
+  background: linear-gradient(135deg, var(--color-carga) 0%, var(--color-carga-claro) 100%);
+  box-shadow: 0 2px 14px color-mix(in oklab, var(--color-carga) 35%, transparent);
 }
 .titulo-usuario {
   max-width: calc(100% - 120px);
@@ -370,3 +378,6 @@ const manejarAccionPersonalizada = (accion) => {
   }
 }
 </style>
+
+
+

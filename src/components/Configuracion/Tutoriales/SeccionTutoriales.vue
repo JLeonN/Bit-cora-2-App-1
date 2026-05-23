@@ -1,6 +1,5 @@
 <template>
   <div class="seccion-tutoriales">
-    <!-- Tutorial Pedidos -->
     <div class="acordeon-tutorial" @click="alternarTutorial('pedidos')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -20,7 +19,6 @@
       </transition>
     </div>
 
-    <!-- Tutorial Ubicaciones -->
     <div class="acordeon-tutorial" @click="alternarTutorial('ubicaciones')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -40,12 +38,11 @@
       </transition>
     </div>
 
-    <!-- Tutorial Etiquetas -->
     <div class="acordeon-tutorial" @click="alternarTutorial('consulta-ubicacion')">
       <div class="acordeon-header">
         <div class="header-izquierda">
           <IconSearch :stroke="2" class="icono-tutorial" />
-          <span class="titulo-tutorial">Cómo usar Consulta De Ubicación</span>
+          <span class="titulo-tutorial">Cómo usar Consulta de Ubicación</span>
         </div>
         <IconChevronDown
           :stroke="2"
@@ -60,7 +57,6 @@
       </transition>
     </div>
 
-    <!-- Tutorial Etiquetas -->
     <div class="acordeon-tutorial" @click="alternarTutorial('etiquetas')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -79,6 +75,7 @@
         </div>
       </transition>
     </div>
+
     <div class="acordeon-tutorial" @click="alternarTutorial('contador-pasos')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -121,9 +118,9 @@ const tutorialExpandido = ref(null)
 const alternarTutorial = (tutorial) => {
   if (tutorialExpandido.value === tutorial) {
     tutorialExpandido.value = null
-  } else {
-    tutorialExpandido.value = tutorial
+    return
   }
+  tutorialExpandido.value = tutorial
 }
 </script>
 
@@ -197,7 +194,6 @@ const alternarTutorial = (tutorial) => {
   opacity: 1;
   max-height: 1500px;
 }
-/* Responsive */
 @media (max-width: 600px) {
   .acordeon-header {
     padding: 14px;

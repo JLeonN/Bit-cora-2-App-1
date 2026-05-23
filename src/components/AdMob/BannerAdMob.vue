@@ -9,18 +9,17 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob'
 import { tieneAccesoVIP } from '../BaseDeDatos/usoAlmacenamientoVIP'
+import {
+  esModoPruebaPublicidad,
+  DISPOSITIVOS_PRUEBA_ADMOB,
+  obtenerBannerAdUnitId,
+} from '../Configuracion/ModoPublicidad.js'
 
 const mostrarBanner = ref(false)
-let bannerInicializado = ref(false)
+const bannerInicializado = ref(false)
 
-// Emits para comunicar al padre si el banner está visible
+// Emit para comunicar al padre si el banner está visible.
 const emit = defineEmits(['banner-visible'])
-
-// ID de prueba de Google (cambiar en producción)
-// const BANNER_AD_UNIT_ID = 'ca-app-pub-3940256099942544/6300978111'
-
-// ID de producción
-const BANNER_AD_UNIT_ID = 'ca-app-pub-7620083100302566/1645913333'
 
 onMounted(async () => {
   console.log('[AdMob] Inicializando componente banner...')
@@ -32,21 +31,20 @@ onMounted(async () => {
     return
   }
 
-  // Verificar si el usuario es VIP
+  // Verificar si el usuario es VIP.
   const esVIP = await tieneAccesoVIP()
 
   if (esVIP) {
     console.log('[AdMob] Usuario VIP detectado - Banner desactivado')
     mostrarBanner.value = false
-    emit('banner-visible', false) // Notificar al padre
+    emit('banner-visible', false)
     return
   }
 
   console.log('[AdMob] Usuario estándar - Mostrando banner')
   mostrarBanner.value = true
-  emit('banner-visible', true) // Notificar al padre
+  emit('banner-visible', true)
 
-  // Inicializar AdMob
   try {
     await inicializarAdMob()
   } catch (error) {
@@ -65,20 +63,17 @@ onUnmounted(async () => {
   }
 })
 
-// Función para inicializar AdMob
 const inicializarAdMob = async () => {
   try {
-    // Inicializar SDK de AdMob
     console.log('[AdMob] Inicializando SDK...')
     await AdMob.initialize({
       requestTrackingAuthorization: false,
-      testingDevices: ['YOUR_TEST_DEVICE_ID'],
-      initializeForTesting: true,
+      testingDevices: esModoPruebaPublicidad ? DISPOSITIVOS_PRUEBA_ADMOB : [],
+      initializeForTesting: esModoPruebaPublicidad,
     })
 
     console.log('[AdMob] SDK inicializado correctamente')
 
-    // Mostrar banner después de un pequeño delay
     setTimeout(async () => {
       await mostrarBannerPublicitario()
     }, 500)
@@ -87,17 +82,16 @@ const inicializarAdMob = async () => {
   }
 }
 
-// Función para mostrar el banner
 const mostrarBannerPublicitario = async () => {
   try {
     console.log('[AdMob] Mostrando banner publicitario...')
 
     const opciones = {
-      adId: BANNER_AD_UNIT_ID,
-      adSize: BannerAdSize.BANNER, // 320x50
+      adId: obtenerBannerAdUnitId(),
+      adSize: BannerAdSize.BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
-      isTesting: false, // Cambiar a false en producción o a true para pruebas
+      isTesting: esModoPruebaPublicidad,
     }
 
     await AdMob.showBanner(opciones)
@@ -113,7 +107,7 @@ const mostrarBannerPublicitario = async () => {
 <style scoped>
 .contenedor-banner-admob {
   width: 100%;
-  height: 60px; /* Altura estándar de banner (50px + padding) */
+  height: 60px;
   background: var(--color-fondo);
   display: flex;
   align-items: center;

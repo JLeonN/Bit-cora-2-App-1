@@ -1,7 +1,8 @@
 <template>
   <div class="tutorial-pasos">
     <p class="tutorial-descripcion">
-      El módulo de <strong>Contador de pasos</strong> permite monitoreo continuo en Android, con total diario y sesiones manuales.
+      El módulo de <strong>Contador de pasos</strong> permite monitoreo continuo en Android, con
+      total diario, sesiones manuales e historial compacto por período.
     </p>
     <div class="seccion-pasos">
       <h4 class="subtitulo-tutorial">
@@ -10,19 +11,37 @@
       </h4>
       <div class="paso">
         <div class="numero-paso">1</div>
-        <div class="contenido-paso"><strong>Abrir módulo:</strong> Entrá a Contador de pasos desde Inicio o el menú lateral.</div>
+        <div class="contenido-paso">
+          <strong>Abrir módulo:</strong> Entrá a Contador de pasos desde Inicio o el menú lateral.
+        </div>
       </div>
       <div class="paso">
         <div class="numero-paso">2</div>
-        <div class="contenido-paso"><strong>Monitoreo:</strong> Permití actividad física y notificaciones para mantener el servicio activo.</div>
+        <div class="contenido-paso">
+          <strong>Monitoreo:</strong> Permití actividad física y notificaciones para mantener el
+          servicio activo en segundo plano.
+        </div>
       </div>
       <div class="paso">
         <div class="numero-paso">3</div>
-        <div class="contenido-paso"><strong>Sesión manual:</strong> Usá Iniciar sesión y Detener sesión para medir un bloque puntual.</div>
+        <div class="contenido-paso">
+          <strong>Sesión manual:</strong> Usá Iniciar sesión y Detener sesión para medir un bloque
+          puntual desde cero.
+        </div>
       </div>
       <div class="paso">
         <div class="numero-paso">4</div>
-        <div class="contenido-paso"><strong>Historial:</strong> Revisá diario, últimos 7/30 días y resumen mensual en la misma pantalla.</div>
+        <div class="contenido-paso">
+          <strong>Selector de período:</strong> Usá mes, año, día puntual o rango para ver solo lo
+          que necesitás.
+        </div>
+      </div>
+      <div class="paso">
+        <div class="numero-paso">5</div>
+        <div class="contenido-paso">
+          <strong>Historial compacto:</strong> Revisá Diario, Sesiones y Mensual sin perder acceso a
+          todo el historial anterior.
+        </div>
       </div>
     </div>
   </div>
@@ -85,4 +104,3 @@ import { IconList } from '@tabler/icons-vue'
   color: var(--color-texto-principal);
 }
 </style>
-
