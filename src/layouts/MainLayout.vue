@@ -3,7 +3,11 @@
     <q-layout view="lHh Lpr lff">
       <q-header elevated class="bg-primario-oscuro texto-principal">
         <q-toolbar class="barra-superior">
-          <q-toolbar-title>{{ nombreUsuario }}</q-toolbar-title>
+          <q-toolbar-title class="titulo-usuario" :title="nombreUsuario">{{ nombreUsuario }}</q-toolbar-title>
+          <div class="pasos-header" :title="textoPasosHeader">
+            <q-icon name="directions_walk" size="16px" />
+            <span>{{ valorPasosHeader }}</span>
+          </div>
           <div class="contenedor-boton-menu">
             <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
             <span v-if="hayActualizacionDisponible" class="indicador-actualizacion-menu"></span>
@@ -42,6 +46,12 @@
                 <IconTag :stroke="2" />
               </q-item-section>
               <q-item-section>Etiquetas</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple to="/ContadorPasos">
+              <q-item-section avatar>
+                <IconActivity :stroke="2" />
+              </q-item-section>
+              <q-item-section>Contador de pasos</q-item-section>
             </q-item>
             <q-item
               v-if="hayActualizacionDisponible"
@@ -120,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import {
   IconTableRow,
   IconMapRoute,
@@ -128,6 +138,7 @@ import {
   IconTag,
   IconSettings,
   IconDownload,
+  IconActivity,
 } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
@@ -136,6 +147,7 @@ import {
   obtenerEstadoActualizacion,
   abrirActualizacionEnTienda,
 } from 'components/Actualizacion/ServicioActualizacionApp.js'
+import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
 
 const drawer = ref(false)
 const nombreUsuario = ref('Usuario desconocido')
@@ -146,6 +158,9 @@ const mostrarModalActualizacion = ref(false)
 const versionDisponible = ref('')
 const versionInstalada = ref('')
 const urlPlayStoreActualizacion = ref('')
+const pasosDiaHeader = ref(0)
+const pasosSesionHeader = ref(0)
+const sesionActivaHeader = ref(false)
 const configuracionBarra = reactive({
   mostrarAgregar: false,
   mostrarEnviar: false,
@@ -153,11 +168,34 @@ const configuracionBarra = reactive({
   botonesPersonalizados: [],
 })
 let paginaActivaRef = null
+let desuscribirPasos = null
 
 onMounted(async () => {
   await Promise.all([cargarNombreUsuario(), verificarActualizacion()])
   setInterval(cargarNombreUsuario, 5000)
+  await servicioPasos.iniciarMonitoreo()
+  desuscribirPasos = servicioPasos.suscribir((estado) => {
+    pasosDiaHeader.value = estado.pasosDia
+    pasosSesionHeader.value = estado.pasosSesion
+    sesionActivaHeader.value = estado.sesionActiva
+  })
 })
+
+onUnmounted(() => {
+  if (desuscribirPasos) {
+    desuscribirPasos()
+  }
+})
+
+const textoPasosHeader = computed(() => {
+  if (sesionActivaHeader.value) {
+    return `Sesión: ${pasosSesionHeader.value}`
+  }
+  return `Pasos hoy: ${pasosDiaHeader.value}`
+})
+const valorPasosHeader = computed(() =>
+  sesionActivaHeader.value ? pasosSesionHeader.value : pasosDiaHeader.value,
+)
 
 const cargarNombreUsuario = async () => {
   try {
@@ -217,6 +255,39 @@ const manejarAccionPersonalizada = (accion) => {
 .contenedor-con-barra-inferior {
   padding-bottom: 140px;
 }
+.barra-superior {
+  position: relative;
+  min-height: 56px;
+}
+.titulo-usuario {
+  max-width: calc(100% - 120px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 8px;
+}
+.pasos-header {
+  position: absolute;
+  left: clamp(46%, 52%, 58%);
+  transform: translateX(-50%);
+  max-width: 96px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-texto-principal);
+  pointer-events: none;
+  z-index: 1;
+}
+.contenedor-boton-menu {
+  position: relative;
+  margin-left: auto;
+  z-index: 2;
+}
 .drawer-footer {
   position: absolute;
   bottom: 0;
@@ -244,9 +315,6 @@ const manejarAccionPersonalizada = (accion) => {
 .texto-config {
   color: var(--color-texto-principal);
   font-weight: 500;
-}
-.contenedor-boton-menu {
-  position: relative;
 }
 .indicador-actualizacion-menu {
   position: absolute;
@@ -286,6 +354,14 @@ const manejarAccionPersonalizada = (accion) => {
   color: var(--color-texto-principal);
 }
 @media (max-width: 400px) {
+  .pasos-header {
+    max-width: 86px;
+    font-size: 0.78rem;
+    left: clamp(44%, 50%, 56%);
+  }
+  .titulo-usuario {
+    max-width: calc(100% - 104px);
+  }
   .drawer-footer {
     padding: 8px;
   }

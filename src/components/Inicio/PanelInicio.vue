@@ -37,6 +37,7 @@
         <p>Genera etiquetas con códigos de barras para tus artículos</p>
       </div>
 
+      <TarjetaContadorPasos />
       <!-- FOTOS -->
       <!-- <div class="tarjeta-funcion" @click="irA('/fotos')">
         <div class="icono-funcion">
@@ -52,6 +53,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { IconTableRow, IconMapRoute, IconSearch, IconTag } from '@tabler/icons-vue'
+import TarjetaContadorPasos from 'src/components/Logica/Pasos/TarjetaContadorPasos.vue'
 
 const router = useRouter()
 
