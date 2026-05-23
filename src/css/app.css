@@ -754,9 +754,10 @@ button {
 /* Formulario de ubicación */
 .contenedor-principal-formulario {
   display: flex;
+  flex-direction: row;
   align-items: flex-end;
-  gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 /* Botón cámara */
 .camara-ubicacion {
@@ -793,10 +794,24 @@ button {
 }
 .tarjeta-info-articulo {
   width: 100%;
+  order: 4;
+  flex-basis: 100%;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-fondo);
   padding: 8px 10px;
+  margin-top: 2px;
+}
+.contenedor-principal-formulario .ubicacion-campo-con-buscador {
+  order: 1;
+  flex: 1;
+}
+.contenedor-principal-formulario .ubicacion-campo:not(.ubicacion-campo-con-buscador) {
+  order: 2;
+  flex: 1;
+}
+.contenedor-principal-formulario .contenedor-botones-accion {
+  order: 3;
 }
 .titulo-info-articulo {
   margin: 0 0 6px 0;
@@ -833,8 +848,7 @@ button {
 /* Responsive */
 @media (max-width: 600px) and (orientation: portrait) {
   .contenedor-principal-formulario {
-    flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     gap: 8px;
   }
   .formulario {
@@ -891,6 +905,19 @@ button {
     grid-template-rows: auto auto;
     gap: 8px;
     align-items: end;
+  }
+  .contenedor-principal-formulario .ubicacion-campo-con-buscador {
+    grid-column: 1;
+  }
+  .contenedor-principal-formulario .ubicacion-campo:not(.ubicacion-campo-con-buscador) {
+    grid-column: 2;
+  }
+  .contenedor-botones-accion {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .tarjeta-info-articulo {
+    grid-column: 1 / -1;
   }
 }
 /* Botón borrar todo */
