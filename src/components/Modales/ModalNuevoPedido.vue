@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-fondo" @click.self="$emit('cerrar')">
+  <div class="modal-fondo">
     <div
       :class="['modal-contenido']"
       :style="
@@ -90,15 +90,23 @@
 
         <!-- Mini lista de pedidos temporales -->
         <div v-if="pedidosTemporales.length > 0" class="contenedor-mini-lista">
-          <div class="mini-lista">
-            <div v-for="(pedido, index) in pedidosTemporales" :key="index" class="item-mini-lista">
+          <TransitionGroup name="transicion-item-pedido" tag="div" class="mini-lista">
+            <div
+              v-for="pedido in pedidosTemporalesVisuales"
+              :key="pedido.idTemporal"
+              class="item-mini-lista"
+            >
               <span class="numero-pedido">{{ pedido.numero }}</span>
               <span class="badge-items">{{ pedido.items }} items</span>
-              <button type="button" class="boton-eliminar-item" @click="eliminarDeLista(index)">
+              <button
+                type="button"
+                class="boton-eliminar-item"
+                @click="eliminarDeLista(pedido.idTemporal)"
+              >
                 <IconX :size="18" :stroke="2" />
               </button>
             </div>
-          </div>
+          </TransitionGroup>
         </div>
 
         <!-- Botones Confirmar / Cancelar -->
@@ -146,6 +154,7 @@ const animarError = ref(false)
 const textoPlaceholder = ref('Número de pedido')
 const mostrarCamaraPedidos = ref(false)
 const modoTexto = ref(false)
+const siguienteIdTemporal = ref(1)
 
 const toggleTeclado = () => {
   modoTexto.value = !modoTexto.value
@@ -157,6 +166,9 @@ const esMovil = Capacitor.isNativePlatform()
 // Computed
 const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
+})
+const pedidosTemporalesVisuales = computed(() => {
+  return [...pedidosTemporales.value].reverse()
 })
 
 // Funciones para incrementar/decrementar items
@@ -184,6 +196,7 @@ const agregarPedidoALista = () => {
   const items = cantidadItems.value || 1
 
   pedidosTemporales.value.push({
+    idTemporal: siguienteIdTemporal.value++,
     numero: numero,
     items: items,
   })
@@ -206,15 +219,17 @@ const agregarPedidoALista = () => {
   nextTick(() => {
     const miniLista = document.querySelector('.mini-lista')
     if (miniLista) {
-      miniLista.scrollTop = miniLista.scrollHeight
+      miniLista.scrollTop = 0
     }
   })
 
   restablecerPlaceholder()
 }
 
-const eliminarDeLista = (index) => {
-  pedidosTemporales.value.splice(index, 1)
+const eliminarDeLista = (idTemporal) => {
+  pedidosTemporales.value = pedidosTemporales.value.filter(
+    (pedido) => pedido.idTemporal !== idTemporal,
+  )
 }
 
 const confirmarTodosPedidos = () => {
@@ -227,6 +242,7 @@ const confirmarTodosPedidos = () => {
       return
     }
     pedidosTemporales.value.push({
+      idTemporal: siguienteIdTemporal.value++,
       numero: numeroPedido.value.trim(),
       items: cantidadItems.value || 1,
     })
@@ -246,6 +262,7 @@ const limpiarTodo = () => {
   numeroPedido.value = ''
   cantidadItems.value = 1
   pedidosTemporales.value = []
+  siguienteIdTemporal.value = 1
   mostrarError.value = false
   modoTexto.value = false
   restablecerPlaceholder()
@@ -536,6 +553,8 @@ onUnmounted(() => {
 .mini-lista {
   max-height: 150px;
   overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-fondo);
@@ -550,22 +569,11 @@ onUnmounted(() => {
   background: var(--color-superficie);
   border-radius: 6px;
   border: 1px solid var(--color-borde);
-  opacity: 0;
-  animation: fadeInSlide 0.3s ease forwards;
   gap: 0.5rem;
+  transform-origin: top center;
 }
 .item-mini-lista:last-child {
   margin-bottom: 0;
-}
-@keyframes fadeInSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 .numero-pedido {
   font-size: 0.95rem;
@@ -602,18 +610,26 @@ onUnmounted(() => {
   transform: scale(0.9);
 }
 .mini-lista::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
-.mini-lista::-webkit-scrollbar-track {
-  background: var(--color-fondo);
-  border-radius: 3px;
+.transicion-item-pedido-enter-active,
+.transicion-item-pedido-leave-active {
+  transition: all 0.28s ease;
 }
-.mini-lista::-webkit-scrollbar-thumb {
-  background: var(--color-borde);
-  border-radius: 3px;
+.transicion-item-pedido-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.97);
 }
-.mini-lista::-webkit-scrollbar-thumb:hover {
-  background: var(--color-texto-secundario);
+.transicion-item-pedido-leave-to {
+  opacity: 0;
+  transform: translateX(6px) scale(0.96);
+}
+.transicion-item-pedido-move {
+  transition: transform 0.28s ease;
+}
+.transicion-item-pedido-leave-active {
+  position: absolute;
+  width: calc(100% - 1rem);
 }
 @media (max-width: 600px) {
   .modal-contenido {

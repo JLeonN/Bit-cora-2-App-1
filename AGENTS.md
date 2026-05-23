@@ -12,14 +12,13 @@
 Script estándar para compilar y abrir en Android Studio:
 
 ```json
-"cel": "quasar build && npx cap sync android && npx cap open android"
+"cel": "npm run androidReleaseConSimbolos && npx cap open android"
 ```
 
 Pasos que ejecuta:
 
-1. `quasar build` - compila la app para producción
-2. `npx cap sync android` - sincroniza con el proyecto Android (Capacitor)
-3. `npx cap open android` - abre Android Studio
+1. `npm run androidReleaseConSimbolos` - compila la web, sincroniza Android, genera el AAB release, empaqueta los símbolos nativos y valida el zip
+2. `npx cap open android` - abre Android Studio
 
 Uso: `npm run cel`
 
