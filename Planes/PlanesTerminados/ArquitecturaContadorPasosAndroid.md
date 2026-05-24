@@ -39,7 +39,7 @@ Definir la arquitectura oficial para soportar conteo de pasos 24/7 en Android, c
 
 ## Integración prevista en Android
 
-- Plugin Capacitor personalizado en `src-capacitor/android` para exponer:
+- Plugin Capacitor personalizado en `android/` (ruta nativa oficial) para exponer:
   - `iniciarMonitoreoPasos()`
   - `detenerMonitoreoPasos()`
   - `obtenerEstadoMonitoreo()`
@@ -54,4 +54,3 @@ Definir la arquitectura oficial para soportar conteo de pasos 24/7 en Android, c
   - Foreground Service activo.
   - Guardado frecuente en checkpoints.
   - Señalización de estado para usuario.
-
