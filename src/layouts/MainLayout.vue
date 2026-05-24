@@ -4,8 +4,8 @@
       <q-header elevated :class="claseHeader">
         <q-toolbar class="barra-superior">
           <q-toolbar-title class="titulo-usuario" :title="nombreUsuario">{{ nombreUsuario }}</q-toolbar-title>
-          <div class="pasos-header" :title="textoPasosHeader">
-            <q-icon name="directions_walk" size="16px" />
+          <div class="pasos-header" :class="{ 'sesion-activa': sesionActivaHeader }" :title="textoPasosHeader">
+            <IconPaw :size="16" :stroke="2" />
             <span>{{ valorPasosHeader }}</span>
           </div>
           <div class="contenedor-boton-menu">
@@ -49,7 +49,7 @@
             </q-item>
             <q-item clickable v-ripple to="/ContadorPasos">
               <q-item-section avatar>
-                <IconActivity :stroke="2" />
+                <IconPaw :stroke="2" />
               </q-item-section>
               <q-item-section>Contador de pasos</q-item-section>
             </q-item>
@@ -72,12 +72,24 @@
           src="https://cdn.quasar.dev/img/material.png"
           style="height: 150px"
         >
-          <div class="absolute-bottom bg-transparent texto-secundario">
-            <q-avatar size="56px" class="q-mb-sm">
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-            </q-avatar>
-            <div class="text-weight-bold">Bitácora II</div>
-            <div>@{{ nombreUsuario }}</div>
+          <div class="absolute-bottom bg-transparent texto-secundario cabecera-drawer-usuario">
+            <div class="datos-usuario-drawer">
+              <q-avatar size="56px" class="q-mb-sm">
+                <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
+              </q-avatar>
+              <div class="text-weight-bold">Bitácora II</div>
+              <div>@{{ nombreUsuario }}</div>
+            </div>
+            <div class="resumen-pasos-drawer">
+              <div class="linea-pasos-drawer">
+                <IconPaw :size="14" :stroke="2" />
+                <span>{{ pasosDiaHeader }}</span>
+              </div>
+              <div v-if="sesionActivaHeader" class="linea-pasos-drawer sesion-activa">
+                <IconPaw :size="14" :stroke="2" />
+                <span>{{ pasosSesionHeader }}</span>
+              </div>
+            </div>
           </div>
         </q-img>
         <div class="drawer-footer">
@@ -138,7 +150,7 @@ import {
   IconTag,
   IconSettings,
   IconDownload,
-  IconActivity,
+  IconPaw,
 } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
@@ -298,6 +310,9 @@ const manejarAccionPersonalizada = (accion) => {
   pointer-events: none;
   z-index: 1;
 }
+.pasos-header.sesion-activa {
+  color: var(--color-exito);
+}
 .contenedor-boton-menu {
   position: relative;
   margin-left: auto;
@@ -368,6 +383,42 @@ const manejarAccionPersonalizada = (accion) => {
   background: var(--color-error);
   color: var(--color-texto-principal);
 }
+.cabecera-drawer-usuario {
+  position: relative;
+  min-height: 98px;
+  padding: 8px 12px 10px 12px;
+}
+.datos-usuario-drawer {
+  max-width: 118px;
+  padding-right: 6px;
+}
+.resumen-pasos-drawer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 2;
+}
+.linea-pasos-drawer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+  background: color-mix(in oklab, var(--color-fondo) 72%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
+  border-radius: 999px;
+  padding: 2px 7px;
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--color-fondo) 45%, transparent);
+  backdrop-filter: blur(1px);
+}
+.linea-pasos-drawer.sesion-activa {
+  color: var(--color-exito);
+  border-color: color-mix(in oklab, var(--color-exito) 55%, var(--color-borde));
+}
 @media (max-width: 400px) {
   .pasos-header {
     max-width: 86px;
@@ -382,6 +433,17 @@ const manejarAccionPersonalizada = (accion) => {
   }
   .item-configuracion {
     padding: 12px;
+  }
+  .linea-pasos-drawer {
+    font-size: 0.72rem;
+  }
+  .cabecera-drawer-usuario {
+    min-height: 94px;
+    padding: 8px 10px 8px 10px;
+  }
+  .resumen-pasos-drawer {
+    top: 8px;
+    right: 8px;
   }
 }
 </style>
