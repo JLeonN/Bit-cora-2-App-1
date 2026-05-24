@@ -111,8 +111,8 @@
         </q-tab-panel>
         <q-tab-panel name="mensual" class="panel-pasos">
           <div class="cabecera-lista">Resumen mensual</div>
-          <div v-if="mensualFiltrado.length === 0" class="vacio">Sin datos mensuales</div>
-          <div v-for="mes in mensualFiltrado" :key="mes.mes" class="bloque-mes">
+          <div v-if="mensualPaginado.length === 0" class="vacio">Sin datos mensuales</div>
+          <div v-for="mes in mensualPaginado" :key="mes.mes" class="bloque-mes">
             <button class="boton-mes" @click="alternarMes(mes.mes)">
               <span>{{ mes.mes }}</span>
               <strong>{{ mes.totalPasos }}</strong>
@@ -124,6 +124,15 @@
                 <strong>{{ dia.totalPasos }}</strong>
               </div>
             </div>
+          </div>
+          <div class="paginacion" v-if="totalPaginasMensual > 1">
+            <q-pagination
+              v-model="paginacionMensual.pagina"
+              color="primary"
+              :max="totalPaginasMensual"
+              direction-links
+              boundary-links
+            />
           </div>
         </q-tab-panel>
       </q-tab-panels>
@@ -144,6 +153,7 @@ import {
 } from 'src/components/BaseDeDatos/usoAlmacenamientoPasos.js'
 
 const TAMANO_PAGINA = 10
+const TAMANO_PAGINA_MENSUAL = 12
 const estadoActual = reactive({
   pasosDia: 0,
   pasosSesion: 0,
@@ -168,6 +178,7 @@ const diaExactoManual = ref(false)
 const pestanaActiva = ref('diario')
 const paginacionDiario = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const paginacionSesiones = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
+const paginacionMensual = reactive({ pagina: 1, tamanio: TAMANO_PAGINA_MENSUAL })
 const mesesExpandidos = ref(new Set())
 let desuscribir = null
 const $q = useQuasar()
@@ -200,12 +211,11 @@ const diarioFiltrado = computed(() => {
 
 const sesionesFiltradas = computed(() => {
   const base = [...historialSesiones.value].sort((a, b) => (a.inicio < b.inicio ? 1 : -1))
-  const aplicarDiaEnSesiones = diaExactoManual.value && Boolean(filtros.value.diaExacto)
   return base.filter((sesion) => {
     if (!sesion.inicio) {
       return false
     }
-    return fechaCumpleFiltros(new Date(sesion.inicio).toISOString().slice(0, 10), aplicarDiaEnSesiones)
+    return fechaCumpleFiltros(obtenerFechaLocalISODesdeFecha(new Date(sesion.inicio)), true)
   })
 })
 
@@ -214,6 +224,9 @@ const totalPaginasDiario = computed(() =>
 )
 const totalPaginasSesiones = computed(() =>
   Math.max(1, Math.ceil(sesionesFiltradas.value.length / paginacionSesiones.tamanio)),
+)
+const totalPaginasMensual = computed(() =>
+  Math.max(1, Math.ceil(mensualFiltrado.value.length / paginacionMensual.tamanio)),
 )
 
 const diarioPaginado = computed(() => {
@@ -227,13 +240,17 @@ const sesionesPaginadas = computed(() => {
   const fin = inicio + paginacionSesiones.tamanio
   return sesionesFiltradas.value.slice(inicio, fin)
 })
+const mensualPaginado = computed(() => {
+  const inicio = (paginacionMensual.pagina - 1) * paginacionMensual.tamanio
+  const fin = inicio + paginacionMensual.tamanio
+  return mensualFiltrado.value.slice(inicio, fin)
+})
 
 const mensualFiltrado = computed(() => {
   const mapa = new Map()
-  const aplicarDiaEnMensual = diaExactoManual.value && Boolean(filtros.value.diaExacto)
   const baseMensual = [...historialDiario.value]
     .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
-    .filter((dia) => fechaCumpleFiltros(dia.fecha, aplicarDiaEnMensual))
+    .filter((dia) => fechaCumpleFiltros(dia.fecha, true))
   baseMensual.forEach((dia) => {
     const mesClave = dia.fecha.slice(0, 7)
     if (!mapa.has(mesClave)) {
@@ -248,9 +265,10 @@ const mensualFiltrado = computed(() => {
     .sort((a, b) => (a.mes < b.mes ? 1 : -1))
 })
 
-watch([diarioFiltrado, sesionesFiltradas], () => {
+watch([diarioFiltrado, sesionesFiltradas, mensualFiltrado], () => {
   paginacionDiario.pagina = Math.min(paginacionDiario.pagina, totalPaginasDiario.value)
   paginacionSesiones.pagina = Math.min(paginacionSesiones.pagina, totalPaginasSesiones.value)
+  paginacionMensual.pagina = Math.min(paginacionMensual.pagina, totalPaginasMensual.value)
 })
 
 watch(
@@ -258,6 +276,7 @@ watch(
   () => {
     paginacionDiario.pagina = 1
     paginacionSesiones.pagina = 1
+    paginacionMensual.pagina = 1
     mesesExpandidos.value = new Set()
   },
   { deep: true },
@@ -320,6 +339,16 @@ function obtenerFechaHoyISO() {
   const anio = hoy.getFullYear()
   const mes = String(hoy.getMonth() + 1).padStart(2, '0')
   const dia = String(hoy.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
+}
+
+function obtenerFechaLocalISODesdeFecha(fecha) {
+  if (!(fecha instanceof Date) || Number.isNaN(fecha.getTime())) {
+    return ''
+  }
+  const anio = fecha.getFullYear()
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
   return `${anio}-${mes}-${dia}`
 }
 
