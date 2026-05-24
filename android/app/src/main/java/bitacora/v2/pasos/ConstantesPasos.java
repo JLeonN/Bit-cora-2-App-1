@@ -4,6 +4,7 @@ public final class ConstantesPasos {
     private ConstantesPasos() {}
 
     public static final String PREFS_PASOS = "pasos_servicio_prefs";
+    public static final String CLAVE_MONITOREO_HABILITADO = "monitoreoHabilitado";
     public static final String CANAL_NOTIFICACION_ID = "canal_pasos_activo";
     public static final int NOTIFICACION_ID = 2048;
 
@@ -14,4 +15,3 @@ public final class ConstantesPasos {
 
     public static final String EVENTO_ACTUALIZACION_PASOS = "bitacora.v2.pasos.ACTUALIZACION";
 }
-

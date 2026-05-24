@@ -2,23 +2,36 @@
   <div class="contenedor-pasos">
     <div class="cabecera-pasos">
       <h2 class="titulo-tabla">Contador de pasos</h2>
+      <div class="bloque-monitoreo">
+        <q-toggle
+          v-model="monitoreoHabilitado"
+          color="primary"
+          label="Monitoreo 24/7"
+          @update:model-value="cambiarMonitoreo"
+        />
+        <span class="estado-pill" :class="{ activo: estadoMonitoreo }">
+          {{ textoEstadoMonitoreo }}
+        </span>
+      </div>
     </div>
-    <div class="tarjetas-resumen">
-      <div class="tarjeta-resumen">
-        <p class="etiqueta">Pasos hoy</p>
-        <p class="valor">{{ estadoActual.pasosDia }}</p>
-      </div>
-      <div class="tarjeta-resumen">
-        <p class="etiqueta">Sesion actual</p>
-        <p class="valor">{{ estadoActual.sesionActiva ? estadoActual.pasosSesion : 0 }}</p>
-      </div>
-      <div class="tarjeta-resumen">
-        <p class="etiqueta">Ultimos 7 dias</p>
-        <p class="valor">{{ resumenSieteDias }}</p>
-      </div>
-      <div class="tarjeta-resumen">
-        <p class="etiqueta">Ultimos 30 dias</p>
-        <p class="valor">{{ resumenTreintaDias }}</p>
+    <div class="tarjeta-resumen-general">
+      <div class="tarjetas-resumen">
+        <div class="tarjeta-resumen">
+          <p class="etiqueta">Pasos hoy</p>
+          <p class="valor">{{ estadoActual.pasosDia }}</p>
+        </div>
+        <div class="tarjeta-resumen">
+          <p class="etiqueta">Sesión actual</p>
+          <p class="valor">{{ estadoActual.sesionActiva ? estadoActual.pasosSesion : 0 }}</p>
+        </div>
+        <div class="tarjeta-resumen">
+          <p class="etiqueta">Últimos 7 días</p>
+          <p class="valor">{{ resumenSieteDias }}</p>
+        </div>
+        <div class="tarjeta-resumen">
+          <p class="etiqueta">Últimos 30 días</p>
+          <p class="valor">{{ resumenTreintaDias }}</p>
+        </div>
       </div>
     </div>
     <div class="acciones-sesion">
@@ -31,12 +44,9 @@
       <q-btn
         v-else
         class="boton-sesion detener"
-        label="Detener sesion"
+        label="Detener sesión"
         @click="detenerSesion"
       />
-      <span class="estado-pill" :class="{ activo: estadoMonitoreo }">
-        {{ textoEstadoMonitoreo }}
-      </span>
     </div>
     <SelectorPeriodo
       v-model="filtros"
@@ -142,6 +152,7 @@ const estadoActual = reactive({
 const historialDiario = ref([])
 const historialSesiones = ref([])
 const estadoMonitoreo = ref(false)
+const monitoreoHabilitado = ref(false)
 const esAndroidNativo = servicioPasos.esAndroidNativo()
 const hoy = new Date()
 const fechaHoyISO = obtenerFechaHoyISO()
@@ -351,23 +362,56 @@ async function refrescarHistorial() {
 }
 
 async function iniciarSesion() {
+  if (!monitoreoHabilitado.value) {
+    monitoreoHabilitado.value = true
+    await cambiarMonitoreo(true)
+  }
   const resultado = await servicioPasos.iniciarSesionManual()
   if (!resultado.ok) {
-    $q.notify({ type: 'warning', message: 'Ya existe una sesion activa' })
+    $q.notify({ type: 'warning', message: 'Ya existe una sesión activa' })
     return
   }
-  await registrarEventoPasos('ui_sesion_iniciada', 'Sesion iniciada desde el modulo de pasos')
+  await registrarEventoPasos('ui_sesion_iniciada', 'Sesión iniciada desde el módulo de pasos')
   await refrescarHistorial()
 }
 
 async function detenerSesion() {
   await servicioPasos.detenerSesionManual()
-  await registrarEventoPasos('ui_sesion_detenida', 'Sesion detenida desde el modulo de pasos')
+  await registrarEventoPasos('ui_sesion_detenida', 'Sesión detenida desde el módulo de pasos')
+  await refrescarHistorial()
+}
+
+async function cambiarMonitoreo(habilitado) {
+  if (!esAndroidNativo) {
+    monitoreoHabilitado.value = false
+    estadoMonitoreo.value = false
+    return
+  }
+  if (habilitado) {
+    const resultado = await servicioPasos.iniciarMonitoreo()
+    if (!resultado.ok) {
+      monitoreoHabilitado.value = false
+      estadoMonitoreo.value = false
+      return
+    }
+  } else {
+    await servicioPasos.detenerMonitoreo()
+    if (estadoActual.sesionActiva) {
+      await servicioPasos.detenerSesionManual()
+    }
+  }
+  await servicioPasos.guardarPreferenciaMonitoreo(habilitado)
+  await servicioPasos.refrescarEstadoDesdeNativo()
   await refrescarHistorial()
 }
 
 onMounted(async () => {
-  await servicioPasos.iniciarMonitoreo()
+  monitoreoHabilitado.value = await servicioPasos.obtenerPreferenciaMonitoreo()
+  if (monitoreoHabilitado.value) {
+    await servicioPasos.iniciarMonitoreo()
+  } else if (esAndroidNativo) {
+    await servicioPasos.detenerMonitoreo()
+  }
   await servicioPasos.refrescarEstadoDesdeNativo()
   desuscribir = servicioPasos.suscribir((estado) => {
     estadoActual.pasosDia = estado.pasosDia
@@ -397,7 +441,21 @@ onUnmounted(() => {
   margin-bottom: 16px;
 }
 .cabecera-pasos :deep(.titulo-tabla) {
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+.bloque-monitoreo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tarjeta-resumen-general {
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
 }
 .tarjetas-resumen {
   display: grid;
@@ -405,7 +463,7 @@ onUnmounted(() => {
   gap: 10px;
 }
 .tarjeta-resumen {
-  background: var(--color-fondo);
+  background: color-mix(in oklab, var(--color-superficie) 80%, var(--color-fondo));
   border: 1px solid var(--color-borde);
   border-radius: 10px;
   padding: 12px;
@@ -422,10 +480,11 @@ onUnmounted(() => {
   font-weight: 700;
 }
 .acciones-sesion {
-  margin: 16px 0;
+  margin: 0 0 16px 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
   flex-wrap: wrap;
 }
 .boton-sesion {
@@ -545,6 +604,10 @@ onUnmounted(() => {
   padding: 8px 0;
 }
 @media (max-width: 560px) {
+  .bloque-monitoreo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
   .acciones-sesion {
     gap: 8px;
   }

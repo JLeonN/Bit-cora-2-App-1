@@ -5,6 +5,7 @@ const CLAVE_SESIONES_PASOS = 'sesiones_pasos_v1'
 const CLAVE_EVENTOS_PASOS = 'eventos_pasos_v1'
 const CLAVE_ESTADO_MONITOREO = 'estado_monitoreo_pasos_v1'
 const CLAVE_CHECKPOINT_PASOS = 'checkpoint_pasos_v1'
+const CLAVE_PREFERENCIA_MONITOREO = 'preferencia_monitoreo_pasos_v1'
 
 function obtenerFechaLocalISO(fecha = new Date()) {
   const anio = fecha.getFullYear()
@@ -169,6 +170,20 @@ export async function guardarEstadoMonitoreoPasos(estado) {
   return guardarJsonEnPreferences(CLAVE_ESTADO_MONITOREO, estadoNormalizado)
 }
 
+export async function obtenerPreferenciaMonitoreoPasos() {
+  return leerJsonDesdePreferences(CLAVE_PREFERENCIA_MONITOREO, {
+    habilitado: false,
+    ultimaActualizacion: null,
+  })
+}
+
+export async function guardarPreferenciaMonitoreoPasos(habilitado) {
+  return guardarJsonEnPreferences(CLAVE_PREFERENCIA_MONITOREO, {
+    habilitado: Boolean(habilitado),
+    ultimaActualizacion: new Date().toISOString(),
+  })
+}
+
 export async function obtenerCheckpointPasos() {
   return leerJsonDesdePreferences(CLAVE_CHECKPOINT_PASOS, null)
 }
@@ -186,4 +201,3 @@ export async function guardarCheckpointPasos({
     pasosDiaActual: Number.isFinite(pasosDiaActual) ? Math.max(0, pasosDiaActual) : 0,
   })
 }
-

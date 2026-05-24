@@ -88,6 +88,8 @@ public class PluginContadorPasos extends Plugin {
 
     @PluginMethod
     public void iniciarMonitoreoPasos(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences(ConstantesPasos.PREFS_PASOS, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(ConstantesPasos.CLAVE_MONITOREO_HABILITADO, true).apply();
         Intent intent = new Intent(getContext(), ServicioContadorPasos.class);
         intent.setAction(ConstantesPasos.ACCION_INICIAR_SERVICIO);
         ContextCompat.startForegroundService(getContext(), intent);
@@ -98,6 +100,8 @@ public class PluginContadorPasos extends Plugin {
 
     @PluginMethod
     public void detenerMonitoreoPasos(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences(ConstantesPasos.PREFS_PASOS, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(ConstantesPasos.CLAVE_MONITOREO_HABILITADO, false).apply();
         Intent intent = new Intent(getContext(), ServicioContadorPasos.class);
         intent.setAction(ConstantesPasos.ACCION_DETENER_SERVICIO);
         getContext().startService(intent);

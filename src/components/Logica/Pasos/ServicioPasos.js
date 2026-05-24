@@ -4,11 +4,13 @@ import {
   actualizarTotalPasosDelDia,
   guardarCheckpointPasos,
   guardarEstadoMonitoreoPasos,
+  guardarPreferenciaMonitoreoPasos,
   iniciarSesionPasos,
   cerrarSesionActiva,
   actualizarPasosSesionActiva,
   registrarEventoPasos,
   obtenerSesionActiva,
+  obtenerPreferenciaMonitoreoPasos,
 } from 'src/components/BaseDeDatos/usoAlmacenamientoPasos.js'
 
 const ContadorPasosNativo = registerPlugin('ContadorPasos')
@@ -194,6 +196,15 @@ class ServicioPasos {
 
   notificarCambio() {
     this.listeners.forEach((listener) => listener(this.estadoActual))
+  }
+
+  async obtenerPreferenciaMonitoreo() {
+    const preferencia = await obtenerPreferenciaMonitoreoPasos()
+    return Boolean(preferencia?.habilitado)
+  }
+
+  async guardarPreferenciaMonitoreo(habilitado) {
+    await guardarPreferenciaMonitoreoPasos(Boolean(habilitado))
   }
 }
 

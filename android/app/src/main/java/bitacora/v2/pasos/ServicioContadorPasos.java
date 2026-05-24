@@ -28,6 +28,7 @@ public class ServicioContadorPasos extends Service implements SensorEventListene
     private SensorManager sensorManager;
     private Sensor sensorPasos;
     private SharedPreferences prefs;
+    private boolean sensorRegistrado = false;
 
     @Override
     public void onCreate() {
@@ -37,16 +38,20 @@ public class ServicioContadorPasos extends Service implements SensorEventListene
         if (sensorManager != null) {
             sensorPasos = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         }
-        crearCanalNotificacion();
-        iniciarForeground();
-        registrarSensor();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && intent.getAction() != null) {
-            manejarAccion(intent.getAction());
+        if (!esMonitoreoHabilitado()) {
+            detenerSesionSiActiva("interrumpida");
+            detenerMonitoreoLocal();
+            return START_NOT_STICKY;
         }
+        String accion = intent != null ? intent.getAction() : null;
+        if (accion == null) {
+            accion = ConstantesPasos.ACCION_INICIAR_SERVICIO;
+        }
+        manejarAccion(accion);
         return START_STICKY;
     }
 
@@ -54,8 +59,7 @@ public class ServicioContadorPasos extends Service implements SensorEventListene
         switch (accion) {
             case ConstantesPasos.ACCION_DETENER_SERVICIO:
                 detenerSesionSiActiva("interrumpida");
-                stopForeground(STOP_FOREGROUND_REMOVE);
-                stopSelf();
+                detenerMonitoreoLocal();
                 break;
             case ConstantesPasos.ACCION_INICIAR_SESION:
                 iniciarSesionManual();
@@ -63,9 +67,31 @@ public class ServicioContadorPasos extends Service implements SensorEventListene
             case ConstantesPasos.ACCION_DETENER_SESION:
                 detenerSesionSiActiva("manual");
                 break;
+            case ConstantesPasos.ACCION_INICIAR_SERVICIO:
+                iniciarMonitoreoLocal();
+                break;
             default:
                 break;
         }
+    }
+
+    private boolean esMonitoreoHabilitado() {
+        return prefs.getBoolean(ConstantesPasos.CLAVE_MONITOREO_HABILITADO, false);
+    }
+
+    private void iniciarMonitoreoLocal() {
+        crearCanalNotificacion();
+        iniciarForeground();
+        registrarSensor();
+    }
+
+    private void detenerMonitoreoLocal() {
+        if (sensorManager != null && sensorRegistrado) {
+            sensorManager.unregisterListener(this);
+            sensorRegistrado = false;
+        }
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        stopSelf();
     }
 
     private void crearCanalNotificacion() {
@@ -105,8 +131,12 @@ public class ServicioContadorPasos extends Service implements SensorEventListene
     }
 
     private void registrarSensor() {
+        if (sensorRegistrado) {
+            return;
+        }
         if (sensorManager != null && sensorPasos != null) {
             sensorManager.registerListener(this, sensorPasos, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorRegistrado = true;
         } else {
             prefs.edit().putString("ultimoError", "sensor_no_disponible").apply();
         }
@@ -193,8 +223,9 @@ public class ServicioContadorPasos extends Service implements SensorEventListene
 
     @Override
     public void onDestroy() {
-        if (sensorManager != null) {
+        if (sensorManager != null && sensorRegistrado) {
             sensorManager.unregisterListener(this);
+            sensorRegistrado = false;
         }
         super.onDestroy();
     }

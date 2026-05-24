@@ -177,7 +177,14 @@ const claseHeader = esModoPruebaPublicidad
 onMounted(async () => {
   await Promise.all([cargarNombreUsuario(), verificarActualizacion()])
   setInterval(cargarNombreUsuario, 5000)
-  await servicioPasos.iniciarMonitoreo()
+  const monitoreoHabilitado = await servicioPasos.obtenerPreferenciaMonitoreo()
+  if (monitoreoHabilitado) {
+    await servicioPasos.iniciarMonitoreo()
+  } else if (servicioPasos.esAndroidNativo()) {
+    // Refuerzo: si la preferencia está apagada, cortamos cualquier reactivación residual.
+    await servicioPasos.detenerMonitoreo()
+  }
+  await servicioPasos.refrescarEstadoDesdeNativo()
   desuscribirPasos = servicioPasos.suscribir((estado) => {
     pasosDiaHeader.value = estado.pasosDia
     pasosSesionHeader.value = estado.pasosSesion
