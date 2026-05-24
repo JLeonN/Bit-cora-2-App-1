@@ -82,12 +82,17 @@ class ServicioPasos {
   async iniciarSesionManual() {
     const existente = await obtenerSesionActiva()
     if (existente) {
-      return { ok: false, motivo: 'ya_existe_sesion_activa' }
+      if (!this.estadoActual.sesionActiva) {
+        await cerrarSesionActiva('interrumpida')
+      } else {
+        return { ok: false, motivo: 'ya_existe_sesion_activa' }
+      }
     }
 
     await iniciarSesionPasos()
     if (this.esAndroidNativo()) {
       await ContadorPasosNativo.iniciarSesion()
+      await this.refrescarEstadoDesdeNativo()
     } else {
       this.estadoActual.sesionActiva = true
       this.estadoActual.pasosSesion = 0
@@ -100,6 +105,7 @@ class ServicioPasos {
   async detenerSesionManual() {
     if (this.esAndroidNativo()) {
       await ContadorPasosNativo.detenerSesion()
+      await this.refrescarEstadoDesdeNativo()
     }
     await cerrarSesionActiva('manual')
     this.estadoActual.sesionActiva = false
@@ -192,3 +198,4 @@ class ServicioPasos {
 }
 
 export const servicioPasos = new ServicioPasos()
+

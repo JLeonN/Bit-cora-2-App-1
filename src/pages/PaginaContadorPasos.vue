@@ -123,7 +123,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { Notify } from 'quasar'
+import { useQuasar } from 'quasar'
 import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
 import SelectorPeriodo from 'src/components/Logica/Compartidos/SelectorPeriodo.vue'
 import {
@@ -159,6 +159,7 @@ const paginacionDiario = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const paginacionSesiones = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const mesesExpandidos = ref(new Set())
 let desuscribir = null
+const $q = useQuasar()
 
 const opcionesAniosValores = computed(() => {
   const anios = new Set([hoy.getFullYear()])
@@ -352,7 +353,7 @@ async function refrescarHistorial() {
 async function iniciarSesion() {
   const resultado = await servicioPasos.iniciarSesionManual()
   if (!resultado.ok) {
-    Notify.create({ type: 'warning', message: 'Ya existe una sesion activa' })
+    $q.notify({ type: 'warning', message: 'Ya existe una sesion activa' })
     return
   }
   await registrarEventoPasos('ui_sesion_iniciada', 'Sesion iniciada desde el modulo de pasos')
