@@ -324,3 +324,5 @@ src/
 - Se mantuvieron mejoras generales de interfaz y estabilidad en módulos existentes.
 - Se preservó el flujo de Android alineado con la versión vigente del proyecto.
 - Release vigente actualizada: 4.2.13.
+
+- Release vigente actualizada: 4.2.14.
