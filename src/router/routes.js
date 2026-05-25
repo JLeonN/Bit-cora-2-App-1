@@ -56,12 +56,6 @@ const routes = [
         name: 'Fotos',
         component: () => import('pages/PaginaFotos.vue'),
       },
-      // CONTADOR DE PASOS - Monitoreo diario y sesiones manuales
-      {
-        path: '/ContadorPasos',
-        name: 'ContadorPasos',
-        component: () => import('pages/PaginaContadorPasos.vue'),
-      },
     ],
   },
   // PÁGINA 404 - Manejo de rutas no encontradas
