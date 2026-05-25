@@ -1,50 +1,35 @@
 <template>
   <q-page class="pagina-inicio">
     <div class="contenedor-botones">
-      <!-- PEDIDOS -->
-      <div class="tarjeta-funcion" @click="irA('/TablaPedidos')">
-        <div class="icono-funcion">
+      <div class="tarjeta-inicio-modulo" @click="irA('/TablaPedidos')">
+        <div class="tarjeta-inicio-icono">
           <IconTableRow :size="48" :stroke="1.5" />
         </div>
-        <h3>Pedidos</h3>
-        <p>Gestiona tus pedidos diarios y consulta el historial</p>
+        <h3 class="tarjeta-inicio-titulo">Pedidos</h3>
+        <p class="tarjeta-inicio-descripcion">Gestiona tus pedidos diarios y consulta el historial</p>
       </div>
-
-      <!-- UBICACIONES -->
-      <div class="tarjeta-funcion" @click="irA('/AjustarUbicaciones')">
-        <div class="icono-funcion">
+      <div class="tarjeta-inicio-modulo" @click="irA('/AjustarUbicaciones')">
+        <div class="tarjeta-inicio-icono">
           <IconMapRoute :size="48" :stroke="1.5" />
         </div>
-        <h3>Ubicaciones</h3>
-        <p>Ajusta y actualiza las ubicaciones de tus artículos</p>
+        <h3 class="tarjeta-inicio-titulo">Ubicaciones</h3>
+        <p class="tarjeta-inicio-descripcion">Ajusta y actualiza las ubicaciones de tus artículos</p>
       </div>
-
-      <!-- CONSULTA DE UBICACION -->
-      <div class="tarjeta-funcion" @click="irA('/ConsultaDeUbicacion')">
-        <div class="icono-funcion">
+      <div class="tarjeta-inicio-modulo" @click="irA('/ConsultaDeUbicacion')">
+        <div class="tarjeta-inicio-icono">
           <IconSearch :size="48" :stroke="1.5" />
         </div>
-        <h3>Consulta De Ubicación</h3>
-        <p>Busca un artículo y consulta o actualiza su ubicación</p>
+        <h3 class="tarjeta-inicio-titulo">Consulta de ubicación</h3>
+        <p class="tarjeta-inicio-descripcion">Busca un artículo y consulta o actualiza su ubicación</p>
       </div>
-
-      <!-- ETIQUETAS -->
-      <div class="tarjeta-funcion" @click="irA('/etiquetas')">
-        <div class="icono-funcion">
+      <div class="tarjeta-inicio-modulo" @click="irA('/etiquetas')">
+        <div class="tarjeta-inicio-icono">
           <IconTag :size="48" :stroke="1.5" />
         </div>
-        <h3>Etiquetas</h3>
-        <p>Genera etiquetas con códigos de barras para tus artículos</p>
+        <h3 class="tarjeta-inicio-titulo">Etiquetas</h3>
+        <p class="tarjeta-inicio-descripcion">Genera etiquetas con códigos de barras para tus artículos</p>
       </div>
-
-      <!-- FOTOS -->
-      <!-- <div class="tarjeta-funcion" @click="irA('/fotos')">
-        <div class="icono-funcion">
-          <IconPhoto :size="48" :stroke="1.5" />
-        </div>
-        <h3>Fotos</h3>
-        <p>Captura y gestiona fotos de productos para catálogo</p>
-      </div> -->
+      <TarjetaContadorPasos />
     </div>
   </q-page>
 </template>
@@ -52,6 +37,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { IconTableRow, IconMapRoute, IconSearch, IconTag } from '@tabler/icons-vue'
+import TarjetaContadorPasos from 'src/components/Logica/Pasos/TarjetaContadorPasos.vue'
 
 const router = useRouter()
 
@@ -76,41 +62,6 @@ const irA = (ruta) => {
   width: 100%;
   max-width: 1200px;
 }
-.tarjeta-funcion {
-  background: var(--color-superficie);
-  border-radius: 12px;
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px var(--sombra-boton);
-  border: 1px solid var(--color-borde);
-}
-.tarjeta-funcion:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 16px var(--sombra-boton);
-  border-color: var(--color-primario);
-}
-.icono-funcion {
-  color: var(--color-primario);
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.tarjeta-funcion h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-texto-principal);
-  margin: 0 0 0.5rem 0;
-}
-.tarjeta-funcion p {
-  font-size: 0.95rem;
-  color: var(--color-texto-secundario);
-  margin: 0;
-  line-height: 1.5;
-}
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .pagina-inicio {
     padding: 1rem;
@@ -119,13 +70,13 @@ const irA = (ruta) => {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  .tarjeta-funcion {
+  .tarjeta-inicio-modulo {
     padding: 1.5rem;
   }
-  .tarjeta-funcion h3 {
+  .tarjeta-inicio-titulo {
     font-size: 1.3rem;
   }
-  .tarjeta-funcion p {
+  .tarjeta-inicio-descripcion {
     font-size: 0.9rem;
   }
 }

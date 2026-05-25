@@ -1,6 +1,5 @@
 <template>
   <div class="seccion-tutoriales">
-    <!-- Tutorial Pedidos -->
     <div class="acordeon-tutorial" @click="alternarTutorial('pedidos')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -20,7 +19,6 @@
       </transition>
     </div>
 
-    <!-- Tutorial Ubicaciones -->
     <div class="acordeon-tutorial" @click="alternarTutorial('ubicaciones')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -40,12 +38,11 @@
       </transition>
     </div>
 
-    <!-- Tutorial Etiquetas -->
     <div class="acordeon-tutorial" @click="alternarTutorial('consulta-ubicacion')">
       <div class="acordeon-header">
         <div class="header-izquierda">
           <IconSearch :stroke="2" class="icono-tutorial" />
-          <span class="titulo-tutorial">Cómo usar Consulta De Ubicación</span>
+          <span class="titulo-tutorial">Cómo usar Consulta de Ubicación</span>
         </div>
         <IconChevronDown
           :stroke="2"
@@ -60,7 +57,6 @@
       </transition>
     </div>
 
-    <!-- Tutorial Etiquetas -->
     <div class="acordeon-tutorial" @click="alternarTutorial('etiquetas')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -79,25 +75,52 @@
         </div>
       </transition>
     </div>
+
+    <div class="acordeon-tutorial" @click="alternarTutorial('contador-pasos')">
+      <div class="acordeon-header">
+        <div class="header-izquierda">
+          <IconActivity :stroke="2" class="icono-tutorial" />
+          <span class="titulo-tutorial">Cómo usar Contador de pasos</span>
+        </div>
+        <IconChevronDown
+          :stroke="2"
+          class="icono-chevron"
+          :class="{ 'chevron-rotado': tutorialExpandido === 'contador-pasos' }"
+        />
+      </div>
+      <transition name="expandir-contenido">
+        <div v-show="tutorialExpandido === 'contador-pasos'" class="acordeon-contenido">
+          <TutorialContadorPasos />
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { IconTableRow, IconMapRoute, IconSearch, IconTag, IconChevronDown } from '@tabler/icons-vue'
+import {
+  IconTableRow,
+  IconMapRoute,
+  IconSearch,
+  IconTag,
+  IconActivity,
+  IconChevronDown,
+} from '@tabler/icons-vue'
 import TutorialPedidos from './LosTutoriales/TutorialPedidos.vue'
 import TutorialUbicaciones from './LosTutoriales/TutorialUbicaciones.vue'
 import TutorialConsultaDeUbicacion from './LosTutoriales/TutorialConsultaDeUbicacion.vue'
 import TutorialEtiquetas from './LosTutoriales/TutorialEtiquetas.vue'
+import TutorialContadorPasos from './LosTutoriales/TutorialContadorPasos.vue'
 
 const tutorialExpandido = ref(null)
 
 const alternarTutorial = (tutorial) => {
   if (tutorialExpandido.value === tutorial) {
     tutorialExpandido.value = null
-  } else {
-    tutorialExpandido.value = tutorial
+    return
   }
+  tutorialExpandido.value = tutorial
 }
 </script>
 
@@ -171,7 +194,6 @@ const alternarTutorial = (tutorial) => {
   opacity: 1;
   max-height: 1500px;
 }
-/* Responsive */
 @media (max-width: 600px) {
   .acordeon-header {
     padding: 14px;
