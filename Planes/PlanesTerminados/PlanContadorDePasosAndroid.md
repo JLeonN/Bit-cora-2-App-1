@@ -1,4 +1,4 @@
-﻿# PLAN CONTADOR DE PASOS ANDROID
+# PLAN CONTADOR DE PASOS ANDROID
 
 ## Descripción del plan
 

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <q-page class="pagina-inicio">
     <div class="contenedor-botones">
       <div class="tarjeta-inicio-modulo" @click="irA('/TablaPedidos')">

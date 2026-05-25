@@ -316,3 +316,15 @@ src/
   --color-carga-claro: #ffb74d; /* Naranja claro para gradiente */
   --color-carga-fondo: #fff3e0; /* Fondo suave para estados de carga */
 }
+
+---
+
+### Actualización de release 4.2.11
+
+- Se consolidó el módulo Contador de pasos con estética alineada al inicio de la app.
+- Se añadieron indicadores de pasos en el drawer superior con mejor contraste visual.
+- Se ajustó el filtrado de sesiones por fecha local para evitar registros de días anteriores.
+- Se agregó paginación mensual de 12 elementos en el historial de pasos.
+- Se mantiene Android como plataforma objetivo principal para el contador de pasos.
+
+- Release vigente actualizada: 4.2.12.

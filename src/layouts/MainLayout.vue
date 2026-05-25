@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="fondo-app texto-principal">
     <q-layout view="lHh Lpr lff">
       <q-header elevated :class="claseHeader">

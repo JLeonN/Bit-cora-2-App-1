@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="contenedor-contador-pasos">
     <div class="tarjeta-inicio-modulo" @click="irAContador">
       <div class="tarjeta-inicio-icono">
