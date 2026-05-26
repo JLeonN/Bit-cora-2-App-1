@@ -62,6 +62,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Notify } from 'quasar'
+import { Capacitor } from '@capacitor/core'
+import { IconDownload } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
@@ -80,6 +82,7 @@ import {
 import {
   obtenerArticuloPorCodigo,
   reconstruirUbicacionesDesdeLista,
+  validarCodigosDuplicadosEnUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
 
 // Emit para configurar la barra inferior
@@ -119,13 +122,27 @@ let indiceEditar = null
 // Estados de notificaciones
 const mensajeExito = ref('')
 const mensajeError = ref('')
+const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
+const hayCodigosDuplicados = computed(
+  () => !validarCodigosDuplicadosEnUbicaciones(ubicacionesArray.value).exito,
+)
 
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: ubicacionesArray.value.length > 0,
-  puedeEnviar: ubicacionesArray.value.length > 0,
-  botonesPersonalizados: [],
+  puedeEnviar: ubicacionesArray.value.length > 0 && !hayCodigosDuplicados.value,
+  botonesPersonalizados: esNavegadorWeb.value
+    ? [
+        {
+          accion: 'descargar-excel-ubicaciones',
+          icono: IconDownload,
+          titulo: 'Descargar Excel',
+          desactivado: ubicacionesArray.value.length === 0 || hayCodigosDuplicados.value,
+          claseCSS: '',
+        },
+      ]
+    : [],
   modalActivo: modalActivo.value,
 }))
 
@@ -135,7 +152,11 @@ const metodosParaBarra = {
   onEnviar: () => {
     enviarUbicacionesExcel()
   },
-  onAccionPersonalizada: () => {},
+  onAccionPersonalizada: (accion) => {
+    if (accion === 'descargar-excel-ubicaciones') {
+      descargarUbicacionesExcelWeb()
+    }
+  },
 }
 
 // Función para actualizar la configuración de la barra
@@ -183,6 +204,15 @@ function manejarErrorCarga(mensaje) {
 }
 
 async function sincronizarBaseConListaActual() {
+  const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicaciones.value)
+  if (!validacionDuplicados.exito) {
+    throw new Error(
+      `Hay codigos duplicados: ${validacionDuplicados.codigosDuplicados.join(
+        ', ',
+      )}. Elimina repetidos para continuar.`,
+    )
+  }
+
   const resultadoSincronizacion = await reconstruirUbicacionesDesdeLista(ubicaciones.value)
 
   if (!resultadoSincronizacion.exito) {
@@ -208,6 +238,18 @@ async function agregarUbicacion(datosNuevos) {
     const nuevaUbicacion = {
       codigo: String(datosNuevos.codigo).trim().toUpperCase(),
       ubicacion: String(datosNuevos.ubicacion).trim().toUpperCase(),
+    }
+
+    const yaExisteCodigo = ubicaciones.value.some(
+      (item) =>
+        String(item?.codigo || '')
+          .trim()
+          .toUpperCase() === nuevaUbicacion.codigo,
+    )
+    if (yaExisteCodigo) {
+      mensajeError.value = `Codigo duplicado: ${nuevaUbicacion.codigo}. Elimina el repetido para continuar.`
+      setTimeout(() => (mensajeError.value = ''), 3500)
+      return
     }
 
     ubicaciones.value.unshift(nuevaUbicacion)
@@ -336,6 +378,15 @@ async function guardarEdicion(datos) {
         .trim()
         .toUpperCase(),
     }
+    const codigoDuplicado = ubicaciones.value.some(
+      (item, indice) => indice !== indiceEditar && String(item?.codigo || '').trim().toUpperCase() === ubicacionEditada.codigo,
+    )
+    if (codigoDuplicado) {
+      mensajeError.value = `Codigo duplicado: ${ubicacionEditada.codigo}.`
+      setTimeout(() => (mensajeError.value = ''), 3000)
+      return
+    }
+
     ubicaciones.value[indiceEditar] = ubicacionEditada
     await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
@@ -443,10 +494,27 @@ async function enviarUbicacionesExcel() {
       return
     }
 
+    const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicacionesArray.value)
+    if (!validacionDuplicados.exito) {
+      throw new Error(
+        `Hay codigos duplicados en Ubicaciones: ${validacionDuplicados.codigosDuplicados.join(', ')}`,
+      )
+    }
+
     const resultado = await generarYGuardarExcelUbicaciones(ubicacionesArray.value)
 
-    if (!resultado || !resultado.uri) {
+    if (!resultado) {
       throw new Error('No se pudo generar el archivo Excel')
+    }
+
+    if (esNavegadorWeb.value) {
+      mensajeExito.value = 'Archivo de ubicaciones descargado correctamente'
+      setTimeout(() => (mensajeExito.value = ''), 3000)
+      return
+    }
+
+    if (!resultado.uri) {
+      throw new Error('No se pudo obtener la ruta del archivo')
     }
 
     await compartirArchivo(resultado.uri, resultado.nombreArchivo)
@@ -456,6 +524,30 @@ async function enviarUbicacionesExcel() {
     console.error('Error al enviar ubicaciones:', error)
     mensajeError.value = 'Error al enviar el archivo: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3000)
+  }
+}
+
+async function descargarUbicacionesExcelWeb() {
+  try {
+    if (!esNavegadorWeb.value) return
+    if (!Array.isArray(ubicacionesArray.value) || ubicacionesArray.value.length === 0) {
+      mensajeError.value = 'No hay ubicaciones para descargar'
+      setTimeout(() => (mensajeError.value = ''), 3000)
+      return
+    }
+    const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicacionesArray.value)
+    if (!validacionDuplicados.exito) {
+      mensajeError.value = `Hay codigos duplicados: ${validacionDuplicados.codigosDuplicados.join(', ')}`
+      setTimeout(() => (mensajeError.value = ''), 3500)
+      return
+    }
+
+    await generarYGuardarExcelUbicaciones(ubicacionesArray.value)
+    mensajeExito.value = 'Excel descargado correctamente'
+    setTimeout(() => (mensajeExito.value = ''), 2500)
+  } catch (error) {
+    mensajeError.value = 'Error al descargar el archivo: ' + error.message
+    setTimeout(() => (mensajeError.value = ''), 3500)
   }
 }
 

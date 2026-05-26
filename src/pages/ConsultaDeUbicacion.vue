@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-consulta">
-    <h2 class="titulo-consulta">Consulta De Ubicación</h2>
+    <h2 class="titulo-consulta">Consulta De Ubicacion</h2>
 
     <SelectorExcel
       v-if="!baseDatosCargada"
@@ -14,7 +14,7 @@
           ref="inputBusquedaRef"
           v-model="busquedaArticulo"
           type="text"
-          placeholder="Código o nombre del artículo"
+          placeholder="Codigo o nombre del articulo"
           class="input-buscador"
           @focus="manejarEnfoqueBusqueda"
           @blur="manejarDesenfoqueBusqueda"
@@ -37,29 +37,44 @@
 
     <transition name="mostrar-resultado">
       <div v-if="articuloConsultado" class="resultado-consulta">
-        <div class="tarjeta-resultado">
-          <p class="etiqueta-resultado">Ubicación actual</p>
-          <p class="valor-ubicacion">{{ articuloConsultado.ubicacionAntigua || 'SIN UBICACIÓN' }}</p>
+        <div class="tarjeta-resultado" :class="{ 'tarjeta-sl-neon': esUbicacionOriginalSL }">
+          <p class="etiqueta-resultado">Historial de ubicaciones</p>
+          <div class="lista-historial-ubicaciones">
+            <p
+              v-for="(ubicacion, indice) in historialVisual"
+              :key="`historial-${indice}`"
+              class="valor-ubicacion"
+              :class="{ 'texto-sl-neon': ubicacion === 'SL' && esUbicacionOriginalSL }"
+            >
+              {{ ubicacion }}
+            </p>
+          </div>
+          <p class="ubicacion-original">
+            Original Excel:
+            <strong :class="{ 'texto-sl-neon': esUbicacionOriginalSL }">{{
+              articuloConsultado.ubicacionAntigua || 'SIN UBICACION'
+            }}</strong>
+          </p>
           <p class="valor-nombre">{{ articuloConsultado.nombre }}</p>
           <p class="valor-codigo">{{ articuloConsultado.codigo }}</p>
         </div>
 
-        <button
-          type="button"
-          class="boton-actualizar-ubicacion"
-          @click="alternarEditorUbicacion"
-        >
-          {{ mostrarEditorUbicacion ? 'Cancelar actualización' : 'Actualizar ubicación' }}
+        <button type="button" class="boton-actualizar-ubicacion" @click="alternarEditorUbicacion">
+          {{ mostrarEditorUbicacion ? 'Cancelar actualizacion' : 'Actualizar ubicacion' }}
         </button>
 
         <transition name="mostrar-editor">
-          <form v-if="mostrarEditorUbicacion" class="editor-ubicacion" @submit.prevent="guardarNuevaUbicacion">
+          <form
+            v-if="mostrarEditorUbicacion"
+            class="editor-ubicacion"
+            @submit.prevent="guardarNuevaUbicacion"
+          >
             <div class="campo-editor">
               <input
                 ref="inputNuevaUbicacionRef"
                 v-model="nuevaUbicacion"
                 type="text"
-                placeholder="Nueva ubicación"
+                placeholder="Nueva ubicacion"
                 class="input-ubicacion"
                 @blur="formatearNuevaUbicacion"
               />
@@ -67,13 +82,13 @@
                 v-if="nuevaUbicacion"
                 type="button"
                 class="boton-limpiar-ubicacion"
-                title="Limpiar ubicación"
+                title="Limpiar ubicacion"
                 @click="nuevaUbicacion = ''"
               >
                 <IconTrash :size="16" />
               </button>
             </div>
-            <button type="submit" class="boton-guardar-ubicacion">Guardar ubicación</button>
+            <button type="submit" class="boton-guardar-ubicacion">Guardar ubicacion</button>
           </form>
         </transition>
       </div>
@@ -101,6 +116,7 @@ import {
   actualizarUbicacionArticulo,
   obtenerArticulosCargados,
   obtenerEstadoCarga,
+  obtenerHistorialUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
 import {
   guardarUbicaciones,
@@ -124,6 +140,21 @@ const ultimoEspacioTiempo = ref(0)
 const seleccionRecienteDesdeBuscador = ref(false)
 
 let intervaloBaseDatos = null
+
+const historialVisual = computed(() => {
+  if (!articuloConsultado.value?.codigo) return []
+  const historial = Array.isArray(articuloConsultado.value.historialUbicaciones)
+    ? [...articuloConsultado.value.historialUbicaciones]
+    : []
+  if (historial.length === 0) {
+    return [articuloConsultado.value.ubicacionAntigua || 'SIN UBICACION']
+  }
+  return [...historial].reverse()
+})
+
+const esUbicacionOriginalSL = computed(
+  () => (articuloConsultado.value?.ubicacionAntigua || '').trim().toUpperCase() === 'SL',
+)
 
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
@@ -151,7 +182,7 @@ const actualizarEstadoBaseDatos = () => {
 const normalizarTextoBusqueda = (valor) => {
   if (!valor) return ''
   let texto = valor.toUpperCase()
-  texto = texto.replace(/[^A-Z0-9Ñ -]/g, '-')
+  texto = texto.replace(/[^A-Z0-9\u00D1 -]/g, '-')
   texto = texto.replace(/-+/g, '-')
   texto = texto.replace(/\s+/g, ' ')
   return texto
@@ -166,10 +197,8 @@ const formatearNuevaUbicacion = () => {
 
 const manejarDobleEspacio = (evento) => {
   if (evento.key !== ' ') return
-
   const tiempoActual = Date.now()
   const diferencia = tiempoActual - ultimoEspacioTiempo.value
-
   if (diferencia < 300 && diferencia > 0) {
     evento.preventDefault()
     const posicion = evento.target.selectionStart
@@ -200,8 +229,8 @@ const manejarInputBusqueda = (evento) => {
       }
     })
   }
-
-  mostrarBuscador.value = inputEnfocado.value && busquedaArticulo.value.length >= 3 && baseDatosCargada.value
+  mostrarBuscador.value =
+    inputEnfocado.value && busquedaArticulo.value.length >= 3 && baseDatosCargada.value
 }
 
 const manejarEnfoqueBusqueda = () => {
@@ -225,13 +254,10 @@ const manejarDesenfoqueBusqueda = () => {
 const buscarEnBase = (textoBusqueda) => {
   const termino = textoBusqueda.trim().toUpperCase()
   if (!termino) return null
-
   const articulos = obtenerArticulosCargados()
   if (!Array.isArray(articulos) || articulos.length === 0) return null
-
   const porCodigo = articulos.find((articulo) => articulo.codigo === termino)
   if (porCodigo) return porCodigo
-
   return articulos.find((articulo) => articulo.nombre === termino) || null
 }
 
@@ -247,26 +273,27 @@ const buscarArticuloExacto = () => {
   }
 
   const articulo = buscarEnBase(busquedaArticulo.value)
-
   if (!articulo) {
     Notify.create({
       type: 'warning',
-      message: 'Artículo inexistente en la base cargada',
+      message: 'Articulo inexistente en la base cargada',
       position: 'top',
       timeout: 2200,
     })
     return
   }
 
-  articuloConsultado.value = { ...articulo }
+  const historial = obtenerHistorialUbicaciones(articulo.codigo)
+  articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
 }
 
 const seleccionarArticulo = (articulo) => {
+  const historial = obtenerHistorialUbicaciones(articulo.codigo)
   busquedaArticulo.value = articulo.codigo
   seleccionRecienteDesdeBuscador.value = true
-  articuloConsultado.value = { ...articulo }
+  articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
   mostrarBuscador.value = false
   inputEnfocado.value = false
   mostrarEditorUbicacion.value = false
@@ -277,7 +304,7 @@ const abrirCamara = () => {
   if (!baseDatosCargada.value) {
     Notify.create({
       type: 'warning',
-      message: 'Carga el Excel antes de escanear artículos',
+      message: 'Carga el Excel antes de escanear articulos',
       position: 'top',
       timeout: 2200,
     })
@@ -298,29 +325,20 @@ const procesarCodigosEscaneados = (codigos) => {
   busquedaArticulo.value = codigoPrincipal
   seleccionRecienteDesdeBuscador.value = false
   const articulo = buscarEnBase(codigoPrincipal)
-
   if (!articulo) {
     Notify.create({
       type: 'warning',
-      message: `El código ${codigoPrincipal} no existe en la base cargada`,
+      message: `El codigo ${codigoPrincipal} no existe en la base cargada`,
       position: 'top',
       timeout: 2200,
     })
     return
   }
 
-  articuloConsultado.value = { ...articulo }
+  const historial = obtenerHistorialUbicaciones(articulo.codigo)
+  articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
-
-  if (codigos.length > 1) {
-    Notify.create({
-      type: 'info',
-      message: `Se tomó el primer código escaneado (${codigoPrincipal})`,
-      position: 'top',
-      timeout: 2200,
-    })
-  }
 }
 
 const alternarEditorUbicacion = async () => {
@@ -332,38 +350,55 @@ const alternarEditorUbicacion = async () => {
   }
 }
 
-const agregarUbicacionALista = async (codigo, ubicacion) => {
+const agregarUbicacionALista = async (codigo, ubicacion, listaBase = null) => {
   const ubicacionesActuales = await obtenerUbicaciones()
-  const lista = Array.isArray(ubicacionesActuales) ? ubicacionesActuales : []
-  lista.unshift({
-    codigo,
-    ubicacion,
-  })
+  const lista = Array.isArray(listaBase)
+    ? listaBase
+    : Array.isArray(ubicacionesActuales)
+      ? ubicacionesActuales
+      : []
+  const codigoNormalizado = String(codigo || '')
+    .trim()
+    .toUpperCase()
+  const indiceExistente = lista.findIndex(
+    (item) =>
+      String(item?.codigo || '')
+        .trim()
+        .toUpperCase() === codigoNormalizado,
+  )
+  if (indiceExistente !== -1) {
+    lista[indiceExistente] = { codigo: codigoNormalizado, ubicacion }
+  } else {
+    lista.unshift({ codigo: codigoNormalizado, ubicacion })
+  }
   await guardarUbicaciones(lista)
 }
 
 const guardarNuevaUbicacion = async () => {
   if (!articuloConsultado.value?.codigo) return
-
   formatearNuevaUbicacion()
-
   if (!nuevaUbicacion.value) {
     Notify.create({
       type: 'warning',
-      message: 'Ingresa una ubicación nueva antes de guardar',
+      message: 'Ingresa una ubicacion nueva antes de guardar',
       position: 'top',
       timeout: 2200,
     })
     return
   }
 
-  const ubicacionActual = (articuloConsultado.value.ubicacionAntigua || '').trim().toUpperCase()
+  const historialActual = Array.isArray(articuloConsultado.value.historialUbicaciones)
+    ? articuloConsultado.value.historialUbicaciones
+    : []
+  const ubicacionReferencia =
+    historialActual.length > 0
+      ? historialActual[historialActual.length - 1]
+      : articuloConsultado.value.ubicacionAntigua
   const ubicacionNueva = nuevaUbicacion.value.trim().toUpperCase()
-
-  if (ubicacionActual === ubicacionNueva) {
+  if ((ubicacionReferencia || '').trim().toUpperCase() === ubicacionNueva) {
     Notify.create({
       type: 'warning',
-      message: 'La ubicación nueva es igual a la actual',
+      message: 'La ubicacion nueva es igual a la ultima conocida',
       position: 'top',
       timeout: 2200,
     })
@@ -374,26 +409,36 @@ const guardarNuevaUbicacion = async () => {
   if (!resultado.exito) {
     Notify.create({
       type: 'negative',
-      message: resultado.mensaje || 'No se pudo actualizar la ubicación',
+      message: resultado.mensaje || 'No se pudo actualizar la ubicacion',
       position: 'top',
       timeout: 2600,
     })
     return
   }
 
-  await agregarUbicacionALista(articuloConsultado.value.codigo, ubicacionNueva)
-
-  articuloConsultado.value = {
-    ...articuloConsultado.value,
-    ubicacionAntigua: ubicacionNueva,
+  try {
+    await agregarUbicacionALista(articuloConsultado.value.codigo, ubicacionNueva)
+  } catch (error) {
+    Notify.create({
+      type: 'negative',
+      message: error.message,
+      position: 'top',
+      timeout: 2600,
+    })
+    return
   }
 
+  const historialActualizado = obtenerHistorialUbicaciones(articuloConsultado.value.codigo)
+  articuloConsultado.value = {
+    ...articuloConsultado.value,
+    historialUbicaciones: historialActualizado,
+  }
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
 
   Notify.create({
     type: 'positive',
-    message: 'Ubicación actualizada y agregada a Ubicaciones para enviar',
+    message: 'Ubicacion actualizada y agregada a Ubicaciones para enviar',
     position: 'top',
     timeout: 2600,
   })
@@ -519,17 +564,36 @@ onUnmounted(() => {
   border-radius: 12px;
   padding: 1rem;
 }
+.tarjeta-sl-neon {
+  border-color: var(--color-neon-sl-borde);
+  box-shadow: 0 0 12px var(--color-neon-sl-sombra), 0 0 24px var(--color-neon-sl-sombra);
+}
 .etiqueta-resultado {
   margin: 0;
   color: var(--color-texto-secundario);
   font-size: 0.85rem;
 }
+.lista-historial-ubicaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
 .valor-ubicacion {
-  margin: 0.4rem 0 0.7rem 0;
+  margin: 0;
   color: var(--color-primario);
-  font-size: clamp(2rem, 9vw, 3.2rem);
+  font-size: clamp(1.4rem, 6vw, 2.2rem);
   font-weight: 800;
   line-height: 1.05;
+}
+.texto-sl-neon {
+  color: var(--color-neon-sl-texto);
+  text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
+}
+.ubicacion-original {
+  margin: 0.5rem 0 0.7rem 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.9rem;
 }
 .valor-nombre {
   margin: 0;

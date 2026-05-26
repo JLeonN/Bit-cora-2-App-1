@@ -1,221 +1,160 @@
-// ExportarUbicacionesExcel.js
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
-import { obtenerArticulosCargados, obtenerUbicacionAntigua } from '../../BaseDeDatos/LectorExcel.js'
+import {
+  obtenerArticulosCargados,
+  obtenerHistorialUbicaciones,
+  obtenerUbicacionAntigua,
+  validarCodigosDuplicadosEnUbicaciones,
+} from '../../BaseDeDatos/LectorExcel.js'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
-// --- CONFIGURACIÓN DE ANCHOS DE COLUMNAS ---
-const ANCHOS_COLUMNAS = [
+const ANCHOS_BASE_COLUMNAS = [
   { wch: 18 }, // A - articulo
   { wch: 6 }, // B - sub1
   { wch: 6 }, // C - sub2
   { wch: 10 }, // D - deposito
   { wch: 8 }, // E - ubic
-  { wch: 65 }, // F - Descripcion
-  { wch: 12 }, // G - Ubic Antigua
-  { wch: 7 }, // H - Info (emojis)
+  { wch: 65 }, // F - descripcion
+  { wch: 12 }, // G - ubic antigua
+  { wch: 7 }, // H - info
+  { wch: 4 }, // I - libre
 ]
 
-// --- Función para obtener el nombre del artículo ---
+function esNavegadorWeb() {
+  return !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+}
+
 function obtenerNombreArticulo(codigo) {
   const articulosCargados = obtenerArticulosCargados()
+  const codigoNormalizado = String(codigo || '')
+    .trim()
+    .toLowerCase()
   const articuloEncontrado = articulosCargados.find(
-    (articulo) => articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+    (articulo) => articulo.codigo.toLowerCase() === codigoNormalizado,
   )
-  return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'
+  return articuloEncontrado ? articuloEncontrado.nombre : 'Articulo inexistente'
 }
 
-// --- Función principal ---
-export async function generarYGuardarExcelUbicaciones(ubicaciones) {
-  if (!ubicaciones || ubicaciones.length === 0) {
-    console.error('No se proporcionaron ubicaciones para generar el archivo.')
-    return null
+function obtenerColumnaExcelPorIndice(indice) {
+  let numero = indice + 1
+  let columna = ''
+  while (numero > 0) {
+    const modulo = (numero - 1) % 26
+    columna = String.fromCharCode(65 + modulo) + columna
+    numero = Math.floor((numero - modulo) / 26)
   }
-
-  try {
-    const nombreUsuario = await obtenerNombreUsuario()
-
-    // --- Crear hoja de trabajo vacía ---
-    const hojaDeTrabajo = XLSX.utils.aoa_to_sheet([])
-
-    // --- ENCABEZADOS en fila 1 ---
-    hojaDeTrabajo['A1'] = { v: 'articulo', t: 's' }
-    hojaDeTrabajo['B1'] = { v: 'sub1', t: 's' }
-    hojaDeTrabajo['C1'] = { v: 'sub2', t: 's' }
-    hojaDeTrabajo['D1'] = { v: 'deposito', t: 's' }
-    hojaDeTrabajo['E1'] = { v: 'ubic', t: 's' }
-    hojaDeTrabajo['F1'] = { v: 'Descripcion', t: 's' }
-    hojaDeTrabajo['G1'] = { v: 'Ubic Antigua', t: 's' }
-    hojaDeTrabajo['H1'] = { v: 'Info', t: 's' }
-
-    // --- Contadores para estadísticas ---
-    let ubicacionesAntiguasEncontradas = 0
-    let ubicacionesAntiguasVacias = 0
-
-    // --- Datos de ubicaciones desde fila 2 ---
-    ubicaciones.forEach((ubicacion, indice) => {
-      const numeroFila = indice + 2 // fila 2 para el primer dato
-
-      // Obtener ubicación antigua y descripción
-      const ubicacionAntiguaDelArticulo = obtenerUbicacionAntigua(ubicacion.codigo)
-      const descripcionArticulo = obtenerNombreArticulo(ubicacion.codigo)
-
-      // Actualizar estadísticas
-      if (ubicacionAntiguaDelArticulo && ubicacionAntiguaDelArticulo.trim() !== '') {
-        ubicacionesAntiguasEncontradas++
-      } else {
-        ubicacionesAntiguasVacias++
-      }
-
-      // --- DETERMINAR EMOJI SEGÚN CONDICIONES ---
-      const esUbicacionSL = ubicacionAntiguaDelArticulo.toUpperCase() === 'SL'
-      const esArticuloInexistente = descripcionArticulo === 'Artículo inexistente'
-
-      // Prioridad: SL → ❌, Inexistente → ❌, Resto → ✔️
-      let emojiInfo = '✔️' // Por defecto OK
-
-      if (esUbicacionSL || esArticuloInexistente) {
-        emojiInfo = '❌' // Error para SL o inexistente
-      }
-
-      // Columna A: código del artículo
-      hojaDeTrabajo[`A${numeroFila}`] = {
-        v: ubicacion.codigo || 'Sin código',
-        t: 's',
-      }
-      // Columna B: sub1 (siempre 0)
-      hojaDeTrabajo[`B${numeroFila}`] = {
-        v: 0,
-        t: 'n',
-      }
-      // Columna C: sub2 (siempre 0)
-      hojaDeTrabajo[`C${numeroFila}`] = {
-        v: 0,
-        t: 'n',
-      }
-      // Columna D: deposito (siempre 00000016)
-      hojaDeTrabajo[`D${numeroFila}`] = {
-        v: '00000016',
-        t: 's',
-      }
-      // Columna E: ubicación nueva
-      hojaDeTrabajo[`E${numeroFila}`] = {
-        v: ubicacion.ubicacion || 'Sin ubicación',
-        t: 's',
-      }
-      // Columna F: descripción (nombre del artículo)
-      hojaDeTrabajo[`F${numeroFila}`] = {
-        v: descripcionArticulo,
-        t: 's',
-      }
-
-      // Columna G: ubicación antigua
-      hojaDeTrabajo[`G${numeroFila}`] = {
-        v: ubicacionAntiguaDelArticulo || '', // Vacío si no tiene
-        t: 's',
-      }
-
-      // Columna H: Info con emoji
-      hojaDeTrabajo[`H${numeroFila}`] = {
-        v: emojiInfo,
-        t: 's',
-      }
-    })
-
-    // --- Definir rango de la hoja ---
-    const ultimaFila = ubicaciones.length + 1 // +1 por los encabezados
-    hojaDeTrabajo['!ref'] = `A1:H${ultimaFila}` // Ahora hasta columna H
-
-    // --- APLICAR ANCHOS DE COLUMNAS ---
-    hojaDeTrabajo['!cols'] = ANCHOS_COLUMNAS
-
-    // --- Crear libro y agregar hoja ---
-    const libroDeTrabajo = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
-
-    // --- Nombre del archivo con fecha y hora ---
-    const ahora = new Date()
-    const fecha = ahora.toISOString().split('T')[0] // Formato: YYYY-MM-DD
-    const hora = ahora.toTimeString().slice(0, 5).replace(':', '-') // Formato: HH-MM
-    const nombreArchivo = `Ubic ${nombreUsuario} ${fecha} # ${hora}.xlsx`
-
-    // --- Convertir a Base64 y guardar ---
-    const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
-    const resultadoEscritura = await Filesystem.writeFile({
-      path: nombreArchivo,
-      data: datosEnBase64,
-      directory: Directory.Cache,
-    })
-
-    // --- Log de estadísticas ---
-    console.log('- Archivo de ubicaciones generado exitosamente:')
-    console.log(`- Usuario: ${nombreUsuario}`)
-    console.log(`- Fecha y hora: ${fecha} # ${hora}`)
-    console.log(`- Ubicaciones totales: ${ubicaciones.length}`)
-    console.log(`- Con ubicación antigua: ${ubicacionesAntiguasEncontradas}`)
-    console.log(`- Sin ubicación antigua: ${ubicacionesAntiguasVacias}`)
-    console.log(`- Anchos aplicados: A(18), B(6), C(6), D(10), E(8), F(65), G(12), H(7)`)
-    console.log(`📋 COLUMNA INFO (H):`)
-    console.log(`- ❌ = Ubicación SL o Artículo inexistente`)
-    console.log(`- ✔️ = Todo correcto`)
-    console.log(`- Archivo guardado en: ${resultadoEscritura.uri}`)
-
-    return { uri: resultadoEscritura.uri, nombreArchivo }
-  } catch (error) {
-    console.error('Error al generar o guardar el archivo Excel de ubicaciones:', error)
-    return null
-  }
+  return columna
 }
 
-// Función auxiliar para obtener estadísticas antes de exportar
-export function obtenerEstadisticasUbicaciones(ubicaciones) {
-  if (!ubicaciones || ubicaciones.length === 0) {
-    return {
-      total: 0,
-      conUbicacionAntigua: 0,
-      sinUbicacionAntigua: 0,
-      porcentajeConAntigua: 0,
-    }
-  }
-  let conUbicacionAntigua = 0
-  let sinUbicacionAntigua = 0
-  ubicaciones.forEach((ubicacion) => {
-    const ubicacionAntigua = obtenerUbicacionAntigua(ubicacion.codigo)
-    if (ubicacionAntigua && ubicacionAntigua.trim() !== '') {
-      conUbicacionAntigua++
-    } else {
-      sinUbicacionAntigua++
-    }
+function construirLibroUbicaciones(ubicaciones, nombreUsuario) {
+  const hojaDeTrabajo = XLSX.utils.aoa_to_sheet([])
+
+  hojaDeTrabajo.A1 = { v: 'articulo', t: 's' }
+  hojaDeTrabajo.B1 = { v: 'sub1', t: 's' }
+  hojaDeTrabajo.C1 = { v: 'sub2', t: 's' }
+  hojaDeTrabajo.D1 = { v: 'deposito', t: 's' }
+  hojaDeTrabajo.E1 = { v: 'ubic', t: 's' }
+  hojaDeTrabajo.F1 = { v: 'Descripcion', t: 's' }
+  hojaDeTrabajo.G1 = { v: 'Ubic Antigua', t: 's' }
+  hojaDeTrabajo.H1 = { v: 'Info', t: 's' }
+
+  let maximoHistorial = 0
+
+  ubicaciones.forEach((ubicacion, indice) => {
+    const numeroFila = indice + 2
+    const codigo = String(ubicacion.codigo || '')
+      .trim()
+      .toUpperCase()
+    const ubicacionNueva = String(ubicacion.ubicacion || '')
+      .trim()
+      .toUpperCase()
+
+    const ubicacionAntigua = obtenerUbicacionAntigua(codigo)
+    const descripcionArticulo = obtenerNombreArticulo(codigo)
+    const historial = obtenerHistorialUbicaciones(codigo)
+    maximoHistorial = Math.max(maximoHistorial, historial.length)
+
+    const esUbicacionSL = ubicacionAntigua.toUpperCase() === 'SL'
+    const esArticuloInexistente = descripcionArticulo === 'Articulo inexistente'
+    const emojiInfo = esUbicacionSL || esArticuloInexistente ? '❌' : '✔️'
+
+    hojaDeTrabajo[`A${numeroFila}`] = { v: codigo || 'Sin codigo', t: 's' }
+    hojaDeTrabajo[`B${numeroFila}`] = { v: 0, t: 'n' }
+    hojaDeTrabajo[`C${numeroFila}`] = { v: 0, t: 'n' }
+    hojaDeTrabajo[`D${numeroFila}`] = { v: '00000016', t: 's' }
+    hojaDeTrabajo[`E${numeroFila}`] = { v: ubicacionNueva || 'Sin ubicacion', t: 's' }
+    hojaDeTrabajo[`F${numeroFila}`] = { v: descripcionArticulo, t: 's' }
+    hojaDeTrabajo[`G${numeroFila}`] = { v: ubicacionAntigua || '', t: 's' }
+    hojaDeTrabajo[`H${numeroFila}`] = { v: emojiInfo, t: 's' }
+
+    // Columna I se mantiene libre a proposito.
+    historial.forEach((valorHistorial, indiceHistorial) => {
+      const indiceColumna = 9 + indiceHistorial // J=9
+      const columna = obtenerColumnaExcelPorIndice(indiceColumna)
+      hojaDeTrabajo[`${columna}${numeroFila}`] = { v: valorHistorial, t: 's' }
+    })
   })
-  const porcentajeConAntigua = Math.round((conUbicacionAntigua / ubicaciones.length) * 100)
-  return {
-    total: ubicaciones.length,
-    conUbicacionAntigua,
-    sinUbicacionAntigua,
-    porcentajeConAntigua,
+
+  for (let indice = 0; indice < maximoHistorial; indice++) {
+    const indiceColumna = 9 + indice // J=9
+    const columna = obtenerColumnaExcelPorIndice(indiceColumna)
+    hojaDeTrabajo[`${columna}1`] = { v: `Historial ${indice + 1}`, t: 's' }
   }
+
+  const ultimaFila = ubicaciones.length + 1
+  const ultimaColumnaIndice = Math.max(8, 9 + maximoHistorial - 1)
+  const ultimaColumna = obtenerColumnaExcelPorIndice(ultimaColumnaIndice)
+  hojaDeTrabajo['!ref'] = `A1:${ultimaColumna}${ultimaFila}`
+
+  const columnasHistorial = Array.from({ length: maximoHistorial }, () => ({ wch: 14 }))
+  hojaDeTrabajo['!cols'] = [...ANCHOS_BASE_COLUMNAS, ...columnasHistorial]
+
+  const libroDeTrabajo = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
+  return libroDeTrabajo
 }
 
-// Función para validar si hay datos de ubicaciones antiguas
-export function validarDatosUbicacionesAntiguas() {
-  const articulosCargados = obtenerArticulosCargados()
-  if (articulosCargados.length === 0) {
-    return {
-      valido: false,
-      mensaje: 'No hay base de datos Excel cargada',
-      tieneUbicacionesAntiguas: false,
-      totalArticulos: 0,
-      articulosConUbicacionAntigua: 0,
-    }
+function descargarExcelEnNavegador(libroDeTrabajo, nombreArchivo) {
+  XLSX.writeFile(libroDeTrabajo, nombreArchivo)
+  return { uri: null, nombreArchivo }
+}
+
+export async function generarYGuardarExcelUbicaciones(ubicaciones) {
+  if (!Array.isArray(ubicaciones) || ubicaciones.length === 0) {
+    throw new Error('No hay ubicaciones para generar el archivo.')
   }
-  const articulosConUbicacionAntigua = articulosCargados.filter(
-    (articulo) => articulo.ubicacionAntigua && articulo.ubicacionAntigua.trim() !== '',
-  ).length
-  return {
-    valido: true,
-    mensaje: 'Base de datos disponible',
-    tieneUbicacionesAntiguas: articulosConUbicacionAntigua > 0,
-    totalArticulos: articulosCargados.length,
-    articulosConUbicacionAntigua,
+
+  const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicaciones)
+  if (!validacionDuplicados.exito) {
+    throw new Error(
+      `Hay codigos duplicados en Ubicaciones: ${validacionDuplicados.codigosDuplicados.join(', ')}`,
+    )
   }
+
+  const nombreUsuario = await obtenerNombreUsuario()
+  const libroDeTrabajo = construirLibroUbicaciones(ubicaciones, nombreUsuario)
+
+  const ahora = new Date()
+  const fecha = ahora.toISOString().split('T')[0]
+  const hora = ahora.toTimeString().slice(0, 5).replace(':', '-')
+  const nombreArchivo = `Ubic ${nombreUsuario} ${fecha} # ${hora}.xlsx`
+
+  if (esNavegadorWeb()) {
+    return descargarExcelEnNavegador(libroDeTrabajo, nombreArchivo)
+  }
+
+  const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
+  const resultadoEscritura = await Filesystem.writeFile({
+    path: nombreArchivo,
+    data: datosEnBase64,
+    directory: Directory.Cache,
+  })
+  return { uri: resultadoEscritura.uri, nombreArchivo }
+}
+
+export async function descargarExcelUbicacionesEnNavegador(ubicaciones) {
+  if (!esNavegadorWeb()) {
+    throw new Error('La descarga directa solo esta disponible en navegador')
+  }
+  return generarYGuardarExcelUbicaciones(ubicaciones)
 }

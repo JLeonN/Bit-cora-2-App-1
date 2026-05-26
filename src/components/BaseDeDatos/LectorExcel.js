@@ -1,17 +1,46 @@
-// LectorExcel.js - Con persistencia automática y carga al inicializar
 import * as XLSX from 'xlsx'
 import { Preferences } from '@capacitor/preferences'
 
-// Variable global para almacenar los artículos cargados
 let articulosDelExcel = []
 let articulosBaseOriginal = []
-let estadoCarga = 'no-cargado' // 'no-cargado', 'cargando', 'cargado', 'error'
-let informacionArchivo = null // Info del archivo seleccionado
+let estadoCarga = 'no-cargado'
+let informacionArchivo = null
 
-// Clave para persistir en Preferences
 const CLAVE_BASE_DATOS_PERSISTENTE = 'base_datos_excel_persistente'
 
-// --- FUNCIONES DE PERSISTENCIA ---
+function normalizarTexto(valor) {
+  return String(valor || '')
+    .trim()
+    .toUpperCase()
+}
+
+function normalizarHistorial(historial) {
+  if (!Array.isArray(historial)) return []
+  return historial.map(normalizarTexto).filter(Boolean)
+}
+
+function normalizarArticulo(articulo) {
+  return {
+    codigo: normalizarTexto(articulo?.codigo),
+    nombre: normalizarTexto(articulo?.nombre),
+    ubicacionAntigua: normalizarTexto(articulo?.ubicacionAntigua),
+    stock: articulo?.stock || '',
+    historialUbicaciones: normalizarHistorial(articulo?.historialUbicaciones),
+  }
+}
+
+function obtenerCodigosDuplicadosEnLista(listaUbicaciones) {
+  const conteo = new Map()
+  for (const item of listaUbicaciones) {
+    const codigo = normalizarTexto(item?.codigo)
+    if (!codigo) continue
+    conteo.set(codigo, (conteo.get(codigo) || 0) + 1)
+  }
+  return Array.from(conteo.entries())
+    .filter(([, cantidad]) => cantidad > 1)
+    .map(([codigo]) => codigo)
+}
+
 async function guardarBaseDatosEnPreferences() {
   try {
     const datosAGuardar = {
@@ -19,73 +48,47 @@ async function guardarBaseDatosEnPreferences() {
       articulosBaseOriginal: articulosBaseOriginal,
       informacionArchivo: informacionArchivo,
       fechaCarga: Date.now(),
-      version: '2.0',
+      version: '3.0',
     }
 
     await Preferences.set({
       key: CLAVE_BASE_DATOS_PERSISTENTE,
       value: JSON.stringify(datosAGuardar),
     })
-
-    console.log(`[LectorExcel] Base de datos persistida: ${articulosDelExcel.length} artículos`)
   } catch (error) {
     console.error('[LectorExcel] Error al persistir base de datos:', error)
   }
 }
 
+async function limpiarBaseDatosPersistida() {
+  try {
+    await Preferences.remove({ key: CLAVE_BASE_DATOS_PERSISTENTE })
+  } catch (error) {
+    console.error('[LectorExcel] Error al limpiar base persistida:', error)
+  }
+}
+
 async function cargarBaseDatosDesdePreferences() {
   try {
-    const resultado = await Preferences.get({
-      key: CLAVE_BASE_DATOS_PERSISTENTE,
-    })
-
-    if (!resultado.value) {
-      console.log('[LectorExcel] No hay base de datos persistida')
-      return false
-    }
+    const resultado = await Preferences.get({ key: CLAVE_BASE_DATOS_PERSISTENTE })
+    if (!resultado.value) return false
 
     const datosGuardados = JSON.parse(resultado.value)
-
-    // Validar estructura de datos
-    if (!datosGuardados.articulosCargados || !Array.isArray(datosGuardados.articulosCargados)) {
-      console.log('[LectorExcel] Datos persistidos inválidos, limpiando...')
+    if (!Array.isArray(datosGuardados.articulosCargados)) {
       await limpiarBaseDatosPersistida()
       return false
     }
 
-    // Migración automática para versiones anteriores sin ubicación antigua
-    const articulosMigrados = datosGuardados.articulosCargados.map((articulo) => ({
-      codigo: articulo.codigo,
-      nombre: articulo.nombre,
-      ubicacionAntigua: articulo.ubicacionAntigua || '', // Por defecto vacío
-      stock: articulo.stock || '', // Por defecto vacío
-    }))
-
+    const articulosMigrados = datosGuardados.articulosCargados.map(normalizarArticulo)
     const baseOriginalGuardada = Array.isArray(datosGuardados.articulosBaseOriginal)
       ? datosGuardados.articulosBaseOriginal
       : articulosMigrados
+    const baseOriginalMigrada = baseOriginalGuardada.map(normalizarArticulo)
 
-    const baseOriginalMigrada = baseOriginalGuardada.map((articulo) => ({
-      codigo: articulo.codigo,
-      nombre: articulo.nombre,
-      ubicacionAntigua: articulo.ubicacionAntigua || '',
-      stock: articulo.stock || '',
-    }))
-
-    // Restaurar datos
-    articulosBaseOriginal = baseOriginalMigrada
     articulosDelExcel = articulosMigrados
-    informacionArchivo = datosGuardados.informacionArchivo
+    articulosBaseOriginal = baseOriginalMigrada
+    informacionArchivo = datosGuardados.informacionArchivo || null
     estadoCarga = articulosDelExcel.length > 0 ? 'cargado' : 'no-cargado'
-
-    console.log(`[LectorExcel] Base de datos cargada desde persistencia:`)
-    console.log(`- Artículos: ${articulosDelExcel.length}`)
-    console.log(`- Archivo: ${informacionArchivo?.nombre || 'Sin info'}`)
-    console.log(`- Fecha carga: ${new Date(datosGuardados.fechaCarga || 0).toLocaleString()}`)
-    console.log(
-      `- Con ubicaciones antiguas: ${articulosMigrados.filter((a) => a.ubicacionAntigua).length}`,
-    )
-
     return true
   } catch (error) {
     console.error('[LectorExcel] Error al cargar base persistida:', error)
@@ -94,85 +97,75 @@ async function cargarBaseDatosDesdePreferences() {
   }
 }
 
-async function limpiarBaseDatosPersistida() {
-  try {
-    await Preferences.remove({
-      key: CLAVE_BASE_DATOS_PERSISTENTE,
-    })
-    console.log('[LectorExcel] Base de datos persistida eliminada')
-  } catch (error) {
-    console.error('[LectorExcel] Error al limpiar base persistida:', error)
-  }
-}
-
-// --- FUNCIÓN PARA CREAR INPUT DE ARCHIVO ---
 function crearSelectorDeArchivo() {
   return new Promise((resolve, reject) => {
-    // Crear input de archivo invisible
     const inputArchivo = document.createElement('input')
     inputArchivo.type = 'file'
-    inputArchivo.accept = '.xlsx,.xls' // Solo Excel
+    inputArchivo.accept = '.xlsx,.xls'
     inputArchivo.style.display = 'none'
 
-    // Manejar selección de archivo
     inputArchivo.onchange = (evento) => {
-      const archivo = evento.target.files[0]
+      const archivo = evento.target.files?.[0]
       if (archivo) {
-        console.log(`📁 Archivo seleccionado: ${archivo.name} (${archivo.size} bytes)`)
         resolve(archivo)
       } else {
-        reject(new Error('No se seleccionó ningún archivo'))
+        reject(new Error('No se selecciono ningun archivo'))
       }
-      // Limpiar el input
       document.body.removeChild(inputArchivo)
     }
 
-    // Manejar cancelación
     inputArchivo.oncancel = () => {
-      reject(new Error('Selección cancelada'))
+      reject(new Error('Seleccion cancelada'))
       document.body.removeChild(inputArchivo)
     }
 
-    // Agregar al DOM y activar
     document.body.appendChild(inputArchivo)
     inputArchivo.click()
   })
 }
 
-// --- FUNCIÓN PARA LEER ARCHIVO COMO ARRAY BUFFER ---
 function leerArchivoComoBuffer(archivo) {
   return new Promise((resolve, reject) => {
     const lector = new FileReader()
-
-    lector.onload = (evento) => {
-      resolve(evento.target.result)
-    }
-
-    lector.onerror = () => {
-      reject(new Error('Error al leer el archivo'))
-    }
-
-    // Leer como ArrayBuffer para XLSX
+    lector.onload = (evento) => resolve(evento.target.result)
+    lector.onerror = () => reject(new Error('Error al leer el archivo'))
     lector.readAsArrayBuffer(archivo)
   })
 }
 
-// --- FUNCIÓN PRINCIPAL PARA CARGAR EXCEL CON SELECTOR ---
+function procesarDatosExcel(datosJson) {
+  const articulosProcesados = []
+  const filas = datosJson.slice(1)
+
+  for (const fila of filas) {
+    if (!fila || fila.length < 2) continue
+    const codigo = normalizarTexto(fila[0])
+    const nombre = normalizarTexto(fila[1])
+    const ubicacionAntigua = normalizarTexto(fila[2])
+    const stock = fila[3]?.toString()?.trim() || ''
+    if (!codigo || !nombre) continue
+
+    articulosProcesados.push({
+      codigo,
+      nombre,
+      ubicacionAntigua,
+      stock,
+      historialUbicaciones: [],
+    })
+  }
+
+  return articulosProcesados
+}
+
 export async function cargarArticulosDesdeExcel() {
   if (estadoCarga === 'cargando') {
-    console.log('Ya se está procesando un archivo...')
-    return { exito: false, mensaje: 'Ya está cargando...' }
+    return { exito: false, mensaje: 'Ya esta cargando...' }
   }
 
   estadoCarga = 'cargando'
-  console.log('Iniciando selector de archivos...')
 
   try {
-    // Mostrar selector de archivos
-    console.log('Abriendo selector de archivos...')
     const archivoSeleccionado = await crearSelectorDeArchivo()
-
-    // Guardar información del archivo
     informacionArchivo = {
       nombre: archivoSeleccionado.name,
       tamano: archivoSeleccionado.size,
@@ -180,40 +173,24 @@ export async function cargarArticulosDesdeExcel() {
       fechaModificacion: archivoSeleccionado.lastModified,
     }
 
-    console.log('Archivo seleccionado:', informacionArchivo)
-
-    // Validar que sea un Excel
     const esExcel =
       archivoSeleccionado.name.toLowerCase().endsWith('.xlsx') ||
       archivoSeleccionado.name.toLowerCase().endsWith('.xls') ||
       archivoSeleccionado.type.includes('spreadsheet')
 
     if (!esExcel) {
-      throw new Error('El archivo seleccionado no es un Excel válido (.xlsx o .xls)')
+      throw new Error('El archivo seleccionado no es un Excel valido (.xlsx o .xls)')
     }
 
-    // Leer el archivo
-    console.log('Leyendo contenido del archivo...')
     const bufferArchivo = await leerArchivoComoBuffer(archivoSeleccionado)
-
-    // Procesar Excel
-    console.log('Procesando Excel...')
     const libroExcel = XLSX.read(bufferArchivo, { type: 'array' })
-
     if (!libroExcel.SheetNames || libroExcel.SheetNames.length === 0) {
-      throw new Error('El archivo Excel no tiene hojas o está corrupto')
+      throw new Error('El archivo Excel no tiene hojas o esta corrupto')
     }
 
     const nombrePrimeraHoja = libroExcel.SheetNames[0]
     const hojaExcel = libroExcel.Sheets[nombrePrimeraHoja]
-
-    console.log(`Procesando hoja: "${nombrePrimeraHoja}"`)
-
-    // Convertir a JSON
     const datosJson = XLSX.utils.sheet_to_json(hojaExcel, { header: 1 })
-    console.log(`Filas encontradas: ${datosJson.length}`)
-
-    // Procesar y validar datos
     const articulosProcesados = procesarDatosExcel(datosJson)
 
     if (articulosProcesados.length === 0) {
@@ -221,132 +198,49 @@ export async function cargarArticulosDesdeExcel() {
       return {
         exito: false,
         mensaje:
-          'El archivo no contiene datos válidos. Asegúrate de que tenga al menos 2 columnas: código y nombre.',
+          'El archivo no contiene datos validos. Asegurate de que tenga al menos 2 columnas: codigo y nombre.',
       }
     }
 
-    // Guardar en variable global
     articulosBaseOriginal = articulosProcesados.map((articulo) => ({ ...articulo }))
     articulosDelExcel = articulosProcesados.map((articulo) => ({ ...articulo }))
     estadoCarga = 'cargado'
-
-    // ** PERSISTIR AUTOMÁTICAMENTE **
     await guardarBaseDatosEnPreferences()
-
-    console.log(`¡Carga exitosa!`)
-    console.log(`Estadísticas:`)
-    console.log(`- Archivo: ${informacionArchivo.nombre}`)
-    console.log(`- Tamaño: ${(informacionArchivo.tamano / 1024).toFixed(1)} KB`)
-    console.log(`- Artículos cargados: ${articulosProcesados.length}`)
-    console.log(
-      `- Con ubicaciones antiguas: ${articulosProcesados.filter((a) => a.ubicacionAntigua).length}`,
-    )
-    console.log(`- Con stock: ${articulosProcesados.filter((a) => a.stock).length}`)
-    console.log(`- Muestra:`, articulosProcesados.slice(0, 3))
 
     return {
       exito: true,
-      mensaje: `${articulosProcesados.length} artículos cargados desde "${informacionArchivo.nombre}"`,
+      mensaje: `${articulosProcesados.length} articulos cargados desde "${informacionArchivo.nombre}"`,
       cantidad: articulosProcesados.length,
       archivo: informacionArchivo,
     }
   } catch (error) {
     estadoCarga = 'error'
-    console.error('Error al cargar Excel:', error)
-
     let mensajeError = 'Error desconocido al procesar el archivo.'
-
-    if (error.message?.includes('No se seleccionó')) {
-      mensajeError = 'No se seleccionó ningún archivo.'
+    if (error.message?.includes('No se selecciono')) {
+      mensajeError = 'No se selecciono ningun archivo.'
     } else if (error.message?.includes('cancelada')) {
-      mensajeError = 'Selección de archivo cancelada.'
+      mensajeError = 'Seleccion de archivo cancelada.'
     } else if (error.message?.includes('no es un Excel')) {
-      mensajeError = 'El archivo seleccionado no es un Excel válido. Debe ser .xlsx o .xls'
+      mensajeError = 'El archivo seleccionado no es un Excel valido. Debe ser .xlsx o .xls'
     } else if (error.message?.includes('no tiene hojas')) {
-      mensajeError = 'El archivo Excel está corrupto o vacío.'
+      mensajeError = 'El archivo Excel esta corrupto o vacio.'
     } else if (error.message?.includes('no contiene datos')) {
-      mensajeError =
-        'El archivo no tiene el formato correcto. Debe tener columnas: código y nombre.'
+      mensajeError = 'El archivo no tiene el formato correcto. Debe tener columnas: codigo y nombre.'
     } else {
       mensajeError = `Error al procesar: ${error.message}`
     }
-
     return { exito: false, mensaje: mensajeError }
   }
 }
 
-// --- FUNCIÓN PARA PROCESAR DATOS DEL EXCEL ---
-// Procesa las 4 columnas A, B, C, D
-function procesarDatosExcel(datosJson) {
-  const articulosProcesados = []
-  const filas = datosJson.slice(1) // Omitir encabezados
-
-  console.log(`Procesando ${filas.length} filas de datos...`)
-
-  // Mostrar encabezados para debug
-  if (datosJson.length > 0) {
-    console.log(`Encabezados detectados:`, datosJson[0])
-  }
-
-  let filasOmitidas = 0
-
-  for (let i = 0; i < filas.length; i++) {
-    const fila = filas[i]
-
-    // Validar que la fila tenga datos mínimos (código y nombre)
-    if (!fila || fila.length < 2) {
-      filasOmitidas++
-      continue
-    }
-
-    const codigo = fila[0]?.toString()?.trim()
-    const nombre = fila[1]?.toString()?.trim()
-    const ubicacionAntigua = fila[2]?.toString()?.trim() || '' // Columna C
-    const stock = fila[3]?.toString()?.trim() || '' // Columna D (para futuro)
-
-    // Validar que código y nombre no estén vacíos
-    if (!codigo || !nombre) {
-      filasOmitidas++
-      continue
-    }
-
-    // Incluir nuevos campos
-    articulosProcesados.push({
-      codigo: codigo.toUpperCase(),
-      nombre: nombre.toUpperCase(),
-      ubicacionAntigua: ubicacionAntigua.toUpperCase(),
-      stock: stock, // (mantenemos original para números)
-    })
-  }
-
-  console.log(`Procesamiento completado:`)
-  console.log(`- Filas procesadas: ${articulosProcesados.length}`)
-  console.log(`- Filas omitidas: ${filasOmitidas}`)
-  console.log(
-    `- Artículos con ubicación antigua: ${articulosProcesados.filter((a) => a.ubicacionAntigua).length}`,
-  )
-  console.log(`- Artículos con stock: ${articulosProcesados.filter((a) => a.stock).length}`)
-
-  return articulosProcesados
-}
-
-// --- FUNCIÓN DE INICIALIZACIÓN AUTOMÁTICA ---
 export async function inicializarBaseDatos() {
-  if (estadoCarga !== 'no-cargado') {
-    console.log('[LectorExcel] Base de datos ya inicializada')
-    return
-  }
-
-  console.log('[LectorExcel] Inicializando base de datos...')
-
+  if (estadoCarga !== 'no-cargado') return
   const cargaExitosa = await cargarBaseDatosDesdePreferences()
-
   if (!cargaExitosa) {
-    console.log('[LectorExcel] No hay base de datos persistida, esperando carga manual')
+    estadoCarga = 'no-cargado'
   }
 }
 
-// --- FUNCIONES AUXILIARES ---
 export function obtenerArticulosCargados() {
   return articulosDelExcel
 }
@@ -369,160 +263,156 @@ export async function reiniciarBaseDatos() {
   articulosBaseOriginal = []
   estadoCarga = 'no-cargado'
   informacionArchivo = null
-
-  // Limpiar persistencia
   await limpiarBaseDatosPersistida()
-
-  console.log('Base de datos reiniciada y persistencia limpiada')
 }
 
-// Obtener ubicación antigua de un artículo
 export function obtenerUbicacionAntigua(codigo) {
-  // Validar que el código recibido no esté vacío
-  if (!codigo || typeof codigo !== 'string') {
-    console.warn('[obtenerUbicacionAntigua] Código inválido:', codigo)
-    return ''
-  }
+  if (!codigo || typeof codigo !== 'string') return ''
+  const codigoNormalizado = normalizarTexto(codigo)
   const articuloEncontrado = articulosDelExcel.find(
-    (articulo) =>
-      articulo && // Validar que el artículo existe
-      articulo.codigo && // Validar que el código existe
-      typeof articulo.codigo === 'string' && // Validar que es string
-      articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+    (articulo) => normalizarTexto(articulo?.codigo) === codigoNormalizado,
   )
   return articuloEncontrado?.ubicacionAntigua || ''
 }
 
-// Obtener stock de un artículo (para futuro uso) - TAMBIÉN CORREGIDO
 export function obtenerStock(codigo) {
-  // Validar que el código recibido no esté vacío
-  if (!codigo || typeof codigo !== 'string') {
-    console.warn('[obtenerStock] Código inválido:', codigo)
-    return ''
-  }
-
+  if (!codigo || typeof codigo !== 'string') return ''
+  const codigoNormalizado = normalizarTexto(codigo)
   const articuloEncontrado = articulosDelExcel.find(
-    (articulo) =>
-      articulo && // Validar que el artículo existe
-      articulo.codigo && // Validar que el código existe
-      typeof articulo.codigo === 'string' && // Validar que es string
-      articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+    (articulo) => normalizarTexto(articulo?.codigo) === codigoNormalizado,
   )
-
   return articuloEncontrado?.stock || ''
 }
 
-// Obtener artículo completo por código
 export function obtenerArticuloPorCodigo(codigo) {
-  if (!codigo || typeof codigo !== 'string') {
-    console.warn('[obtenerArticuloPorCodigo] Código inválido:', codigo)
-    return null
-  }
-
-  const articuloEncontrado = articulosDelExcel.find(
-    (articulo) =>
-      articulo &&
-      articulo.codigo &&
-      typeof articulo.codigo === 'string' &&
-      articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+  if (!codigo || typeof codigo !== 'string') return null
+  const codigoNormalizado = normalizarTexto(codigo)
+  return (
+    articulosDelExcel.find((articulo) => normalizarTexto(articulo?.codigo) === codigoNormalizado) ||
+    null
   )
-
-  return articuloEncontrado || null
 }
 
-// Actualiza la ubicación (columna C) de un artículo cargado y persiste la base
+export function obtenerHistorialUbicaciones(codigo) {
+  const articulo = obtenerArticuloPorCodigo(codigo)
+  if (!articulo) return []
+  return Array.isArray(articulo.historialUbicaciones) ? [...articulo.historialUbicaciones] : []
+}
+
 export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
   if (!codigo || typeof codigo !== 'string') {
-    return { exito: false, mensaje: 'Código inválido para actualizar ubicación' }
+    return { exito: false, mensaje: 'Codigo invalido para actualizar ubicacion' }
   }
-
   if (!nuevaUbicacion || typeof nuevaUbicacion !== 'string') {
-    return { exito: false, mensaje: 'Ubicación inválida para actualizar' }
+    return { exito: false, mensaje: 'Ubicacion invalida para actualizar' }
   }
-
   if (!Array.isArray(articulosDelExcel) || articulosDelExcel.length === 0) {
     return { exito: false, mensaje: 'No hay base de datos cargada para actualizar' }
   }
 
-  const codigoNormalizado = codigo.trim().toUpperCase()
-  const ubicacionNormalizada = nuevaUbicacion.trim().toUpperCase()
+  const codigoNormalizado = normalizarTexto(codigo)
+  const ubicacionNormalizada = normalizarTexto(nuevaUbicacion)
   const indiceArticulo = articulosDelExcel.findIndex(
-    (articulo) => articulo?.codigo?.toUpperCase() === codigoNormalizado,
+    (articulo) => normalizarTexto(articulo?.codigo) === codigoNormalizado,
   )
 
   if (indiceArticulo === -1) {
-    return { exito: false, mensaje: `No se encontró el artículo ${codigoNormalizado}` }
+    return { exito: false, mensaje: `No se encontro el articulo ${codigoNormalizado}` }
   }
 
+  const historialActual = Array.isArray(articulosDelExcel[indiceArticulo]?.historialUbicaciones)
+    ? [...articulosDelExcel[indiceArticulo].historialUbicaciones]
+    : []
+  const ultimaUbicacion = historialActual.at(-1)
+  if (ultimaUbicacion === ubicacionNormalizada) {
+    return { exito: false, mensaje: 'La ubicacion nueva es igual a la ultima del historial' }
+  }
+
+  historialActual.push(ubicacionNormalizada)
   articulosDelExcel[indiceArticulo] = {
     ...articulosDelExcel[indiceArticulo],
-    ubicacionAntigua: ubicacionNormalizada,
+    historialUbicaciones: historialActual,
   }
 
   await guardarBaseDatosEnPreferences()
-
   return {
     exito: true,
-    mensaje: 'Ubicación actualizada correctamente',
+    mensaje: 'Historial de ubicaciones actualizado correctamente',
     articulo: articulosDelExcel[indiceArticulo],
   }
 }
 
-// Reconstruye toda la base de ubicaciones a partir de la lista actual de Ubicaciones.
+export function validarCodigosDuplicadosEnUbicaciones(listaUbicaciones) {
+  if (!Array.isArray(listaUbicaciones)) {
+    return { exito: false, codigosDuplicados: [] }
+  }
+  const codigosDuplicados = obtenerCodigosDuplicadosEnLista(listaUbicaciones)
+  return {
+    exito: codigosDuplicados.length === 0,
+    codigosDuplicados,
+  }
+}
+
 export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
   if (!Array.isArray(listaUbicaciones)) {
-    return { exito: false, mensaje: 'La lista de ubicaciones no tiene formato válido' }
+    return { exito: false, mensaje: 'La lista de ubicaciones no tiene formato valido' }
   }
-
   if (!Array.isArray(articulosBaseOriginal) || articulosBaseOriginal.length === 0) {
     return { exito: false, mensaje: 'No hay base de datos original para reconstruir' }
   }
 
-  const mapaUbicaciones = new Map()
-
-  // Se respeta la primera aparición en la lista (más reciente cuando se usa unshift).
-  for (const ubicacionItem of listaUbicaciones) {
-    const codigo = String(ubicacionItem?.codigo || '')
-      .trim()
-      .toUpperCase()
-    const ubicacion = String(ubicacionItem?.ubicacion || '')
-      .trim()
-      .toUpperCase()
-
-    if (!codigo || !ubicacion || mapaUbicaciones.has(codigo)) continue
-    mapaUbicaciones.set(codigo, ubicacion)
+  const codigosDuplicados = obtenerCodigosDuplicadosEnLista(listaUbicaciones)
+  if (codigosDuplicados.length > 0) {
+    return {
+      exito: false,
+      mensaje: `Hay codigos duplicados en Ubicaciones: ${codigosDuplicados.join(', ')}`,
+      codigosDuplicados,
+    }
   }
 
-  articulosDelExcel = articulosBaseOriginal.map((articulo) => {
-    const codigoArticulo = String(articulo?.codigo || '')
-      .trim()
-      .toUpperCase()
+  const mapaUbicacionActual = new Map()
+  for (const ubicacionItem of listaUbicaciones) {
+    const codigo = normalizarTexto(ubicacionItem?.codigo)
+    const ubicacion = normalizarTexto(ubicacionItem?.ubicacion)
+    if (!codigo || !ubicacion) continue
+    mapaUbicacionActual.set(codigo, ubicacion)
+  }
 
-    if (!mapaUbicaciones.has(codigoArticulo)) {
-      return { ...articulo }
+  const mapaHistorialActual = new Map(
+    articulosDelExcel.map((articulo) => [
+      normalizarTexto(articulo?.codigo),
+      normalizarHistorial(articulo?.historialUbicaciones),
+    ]),
+  )
+
+  articulosDelExcel = articulosBaseOriginal.map((articulo) => {
+    const codigoArticulo = normalizarTexto(articulo?.codigo)
+    const historial = mapaHistorialActual.get(codigoArticulo) || []
+    const ubicacionDesdeLista = mapaUbicacionActual.get(codigoArticulo) || ''
+    const historialResultado = [...historial]
+
+    if (ubicacionDesdeLista && historialResultado.at(-1) !== ubicacionDesdeLista) {
+      historialResultado.push(ubicacionDesdeLista)
     }
 
     return {
-      ...articulo,
-      ubicacionAntigua: mapaUbicaciones.get(codigoArticulo),
+      ...normalizarArticulo(articulo),
+      historialUbicaciones: historialResultado,
     }
   })
 
   await guardarBaseDatosEnPreferences()
-
   return {
     exito: true,
     mensaje: 'Base reconstruida correctamente desde la lista de ubicaciones',
     totalArticulos: articulosDelExcel.length,
-    totalAplicados: mapaUbicaciones.size,
+    totalAplicados: mapaUbicacionActual.size,
   }
 }
 
-// --- FUNCIÓN PARA VERIFICAR SOPORTE DEL NAVEGADOR ---
 export function verificarSoporteSelector() {
   const tieneFileAPI = !!(window.File && window.FileReader && window.FileList && window.Blob)
   const tieneInputFile = document.createElement('input').type === 'file'
-
   return {
     soportado: tieneFileAPI && tieneInputFile,
     fileAPI: tieneFileAPI,
@@ -530,8 +420,6 @@ export function verificarSoporteSelector() {
   }
 }
 
-// --- INICIALIZACIÓN AUTOMÁTICA AL IMPORTAR EL MÓDULO ---
-// Se ejecuta automáticamente cuando se importa el módulo
 setTimeout(() => {
   inicializarBaseDatos()
 }, 100)

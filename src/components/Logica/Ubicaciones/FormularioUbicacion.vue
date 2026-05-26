@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <form ref="formularioRef" class="formulario" @submit.prevent="gestionarEnvio">
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
@@ -23,7 +23,11 @@
           @articulo-seleccionado="seleccionarArticuloDelBuscador"
         />
       </div>
-      <div v-if="articuloSeleccionadoInfo" class="tarjeta-info-articulo">
+      <div
+        v-if="articuloSeleccionadoInfo"
+        class="tarjeta-info-articulo"
+        :class="{ 'tarjeta-sl-neon': articuloSeleccionadoInfo.ubicacionOriginal === 'SL' }"
+      >
         <p class="titulo-info-articulo">Artículo seleccionado</p>
         <p class="linea-info-articulo">
           <span class="etiqueta-info-articulo">Nombre:</span>
@@ -33,9 +37,25 @@
           <span class="etiqueta-info-articulo">Código:</span>
           {{ articuloSeleccionadoInfo.codigo }}
         </p>
+        <p class="linea-info-articulo linea-historial">
+          <span class="etiqueta-info-articulo">Historial:</span>
+          <span
+            v-for="(ubicacionHistorial, indiceHistorial) in articuloSeleccionadoInfo.historialVisual"
+            :key="'historial-' + indiceHistorial"
+            class="chip-historial-ubicacion"
+            :class="{
+              'texto-sl-neon':
+                ubicacionHistorial === 'SL' && articuloSeleccionadoInfo.ubicacionOriginal === 'SL',
+            }"
+          >
+            {{ ubicacionHistorial }}
+          </span>
+        </p>
         <p class="linea-info-articulo">
-          <span class="etiqueta-info-articulo">Ubicación:</span>
-          {{ articuloSeleccionadoInfo.ubicacion || 'Sin ubicación' }}
+          <span class="etiqueta-info-articulo">Original Excel:</span>
+          <span :class="{ 'texto-sl-neon': articuloSeleccionadoInfo.ubicacionOriginal === 'SL' }">
+            {{ articuloSeleccionadoInfo.ubicacionOriginal || 'Sin ubicacion' }}
+          </span>
         </p>
       </div>
 
@@ -290,11 +310,15 @@ function manejarDesenfoqueUbicacion() {
 }
 
 function seleccionarArticuloDelBuscador(articulo) {
+  const historial = Array.isArray(articulo.historialUbicaciones) ? articulo.historialUbicaciones : []
+
   nuevoCodigo.value = articulo.codigo
   articuloSeleccionadoInfo.value = {
     nombre: articulo.nombre,
     codigo: articulo.codigo,
-    ubicacion: articulo.ubicacionAntigua || '',
+    ubicacionOriginal: articulo.ubicacionAntigua || '',
+    historialVisual:
+      historial.length > 0 ? [...historial].reverse() : [articulo.ubicacionAntigua || 'SIN UBICACION'],
   }
   seleccionRecienteDesdeBuscador.value = true
   mostrarBuscador.value = false
@@ -407,3 +431,4 @@ const manejarModalCerrado = () => {
   emit('modal-cerrado')
 }
 </script>
+

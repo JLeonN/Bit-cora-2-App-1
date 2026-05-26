@@ -26,6 +26,10 @@
   --color-falta: #ff9800; /* Naranja para faltas */
   --color-falta-claro: #ffb74d;
   --color-falta-fondo: #fff3e0;
+
+  --color-neon-sl-borde: color-mix(in oklab, var(--color-exito) 75%, var(--color-borde));
+  --color-neon-sl-sombra: color-mix(in oklab, var(--color-exito) 55%, transparent);
+  --color-neon-sl-texto: color-mix(in oklab, var(--color-exito) 90%, white);
 }
 
 body {
@@ -837,6 +841,10 @@ button {
   padding: 8px 10px;
   margin-top: 2px;
 }
+.tarjeta-info-articulo.tarjeta-sl-neon {
+  border-color: var(--color-neon-sl-borde);
+  box-shadow: 0 0 10px var(--color-neon-sl-sombra), 0 0 20px var(--color-neon-sl-sombra);
+}
 .contenedor-principal-formulario .ubicacion-campo-con-buscador {
   order: 1;
   flex: 1;
@@ -859,6 +867,26 @@ button {
   font-size: 0.82rem;
   color: var(--color-texto-principal);
   line-height: 1.35;
+}
+.linea-info-articulo.linea-historial {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip-historial-ubicacion {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.texto-sl-neon {
+  color: var(--color-neon-sl-texto);
+  text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
 }
 .etiqueta-info-articulo {
   color: var(--color-texto-secundario);
