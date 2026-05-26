@@ -319,9 +319,9 @@ src/
 
 ---
 
-### Actualización de release 4.2.16
+### Actualización de release 4.2.17
 
-- Se corrigió un cierre inesperado al activar el modo 24/7 en Android.
-- Se ajustó el servicio en segundo plano para usar únicamente el tipo `health`, compatible con la versión actual del sistema.
-- Se mantuvo sin cambios el comportamiento para activar y desactivar el monitoreo desde Configuración.
-- Release vigente actualizada: 4.2.16.
+- Se corrigió la lectura de versión local para evitar que la app muestre `0.0.0` en el aviso de actualización.
+- Se ajustó la inyección de versión en compilación para tomar siempre la versión real del proyecto.
+- Se alineó el estado de versión entre la aplicación instalada y el control remoto de actualización.
+- Release vigente actualizada: 4.2.17.

@@ -2,8 +2,15 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
 import { defineConfig } from '#q-app/wrappers'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig((ctx) => {
+  const rutaArchivoActual = fileURLToPath(import.meta.url)
+  const rutaDirectorioActual = path.dirname(rutaArchivoActual)
+  const rutaPackageJson = path.join(rutaDirectorioActual, 'package.json')
+  const versionPaquete = JSON.parse(fs.readFileSync(rutaPackageJson, 'utf8')).version
   const nombreRepo = process.env.GITHUB_REPOSITORY?.split('/')?.[1] || 'Bit-cora-2-App-1'
   const publicPathProduccion = process.env.GITHUB_ACTIONS ? `/${nombreRepo}/` : './'
   const urlVersionRemota =
@@ -57,7 +64,7 @@ export default defineConfig((ctx) => {
 
       publicPath: ctx.dev ? '/' : publicPathProduccion,
       env: {
-        VERSION_APP: process.env.npm_package_version,
+        VERSION_APP: versionPaquete,
         URL_VERSION_REMOTA: urlVersionRemota,
         URL_PLAY_STORE: urlPlayStore,
       },
