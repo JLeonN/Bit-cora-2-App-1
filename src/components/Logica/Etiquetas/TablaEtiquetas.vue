@@ -38,6 +38,7 @@
           :class="{
             'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
             'fila-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
+            'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
           }"
         >
           <td class="celda-nombre-codigo">
@@ -64,7 +65,11 @@
           <td class="celda-ubicacion">
             <div class="campo-responsive">
               <span class="label-responsive">Ubicación:</span>
-              <span class="globito-ubicacion" :title="etiqueta.ubicacion || 'Sin ubicación'">
+              <span
+                class="globito-ubicacion"
+                :class="{ 'texto-sl-neon': esUbicacionSL(etiqueta.ubicacion) }"
+                :title="etiqueta.ubicacion || 'Sin ubicación'"
+              >
                 {{ etiqueta.ubicacion || 'Sin ubicación' }}
               </span>
             </div>
@@ -260,6 +265,13 @@ function normalizarCodigo(codigo) {
   return codigo.trim().toUpperCase()
 }
 
+function esUbicacionSL(ubicacion) {
+  if (!ubicacion || typeof ubicacion !== 'string') {
+    return false
+  }
+  return ubicacion.trim().toUpperCase() === 'SL'
+}
+
 // --- Función para obtener el nombre del artículo ---
 function obtenerNombreArticulo(codigo) {
   if (!codigo || typeof codigo !== 'string') {
@@ -430,6 +442,14 @@ const cantidadArticulosInexistentes = computed(() => {
 .label-responsive {
   display: none;
 }
+.fila-ubicacion-sl {
+  border-color: var(--color-neon-sl-borde);
+  box-shadow: 0 0 12px var(--color-neon-sl-sombra), 0 0 24px var(--color-neon-sl-sombra);
+}
+.texto-sl-neon {
+  color: var(--color-neon-sl-texto);
+  text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
+}
 .columna-nombre-codigo {
   width: 40%;
 }
@@ -492,8 +512,12 @@ const cantidadArticulosInexistentes = computed(() => {
     margin-bottom: 0.75rem;
     border: 1px solid var(--color-borde);
     border-radius: 8px;
-    padding: 0.75rem;
+    padding: 0.85rem 0.75rem;
     background: var(--color-superficie);
+  }
+  .tabla-ubicaciones tbody tr.fila-ubicacion-sl {
+    border-color: var(--color-neon-sl-borde);
+    box-shadow: 0 0 10px var(--color-neon-sl-sombra), 0 0 20px var(--color-neon-sl-sombra);
   }
   .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
     background: color-mix(in oklab, var(--color-error) 10%, transparent);
@@ -502,15 +526,21 @@ const cantidadArticulosInexistentes = computed(() => {
     background: color-mix(in oklab, var(--color-carga) 10%, transparent);
   }
   .tabla-ubicaciones td {
-    padding: 0.4rem 0;
+    padding: 0.32rem 0;
     border: none;
     text-align: left;
   }
   .campo-responsive {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 0.55rem;
+    margin-bottom: 0.4rem;
+    min-height: 2rem;
+    padding: 0.1rem 0;
+  }
+  .celda-acciones .campo-responsive,
+  .celda-cantidad .campo-responsive {
+    margin-bottom: 0.2rem;
   }
   .label-responsive {
     display: block;
@@ -521,13 +551,17 @@ const cantidadArticulosInexistentes = computed(() => {
     letter-spacing: 0.5px;
     white-space: nowrap;
     flex-shrink: 0;
-    min-width: 100px;
+    min-width: 96px;
+    max-width: 96px;
+    line-height: 1.15;
   }
   .globito-ubicacion {
-    display: block;
+    display: flex;
+    align-items: center;
     flex: 1;
     white-space: normal;
-    padding: 0.4rem 0.6rem;
+    min-height: 2rem;
+    padding: 0.36rem 0.56rem;
     font-size: 0.85rem;
   }
   .contenedor-nombre-codigo {
@@ -540,23 +574,25 @@ const cantidadArticulosInexistentes = computed(() => {
     font-size: 0.75rem;
   }
   .control-cantidad {
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 0.4rem;
     flex: 1;
+    margin-left: auto;
   }
   .boton-cantidad {
     width: 32px;
     height: 32px;
   }
   .input-cantidad {
-    width: 45px;
+    width: 48px;
     padding: 0.25rem;
     font-size: 0.85rem;
   }
   .acciones-ubicacion {
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 10px;
     flex: 1;
+    margin-left: auto;
   }
   .icono-ubicacion {
     width: 20px;
