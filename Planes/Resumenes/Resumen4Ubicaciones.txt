@@ -1,299 +1,45 @@
-### **Módulo de Ubicaciones - Bitácora II**
+### Módulo de Ubicaciones - Bitácora II
 
-Sistema completo para gestionar ubicaciones de artículos con base de datos Excel, búsqueda inteligente y exportación optimizada.
-
----
-
-### 📦 **Componentes Principales**
-
-#### **AjustarUbicaciones.vue**
-- **Página principal** del módulo de ubicaciones
-- **Ruta**: `/AjustarUbicaciones`
-- **Integración completa** con todos los componentes del módulo
-- **Selector de base de datos Excel** en la parte superior
-- **Formulario de ubicaciones** responsive
-- **Tabla de ubicaciones** con acciones
-- **Envío a etiquetas**: Integración directa con módulo de etiquetas
-- **Responsive design** adaptativo
-
-#### **FormularioUbicacion.vue**
-- **Formulario responsive** para alta/edición de ubicaciones
-- **Campos**:
-  - **Código del artículo** con buscador inteligente integrado
-  - **Ubicación** con formateo automático
-- **Scroll automático** al enfocar inputs
-- **Formateo automático** de ubicaciones (espacios → guiones)
-- **Integración con CodigoMasNombre.vue** para autocompletado
-- **Recordar última ubicación** - Carga automáticamente la última ubicación usada
-- **Botón IconTrash** para limpiar ubicación recordada cuando se cambia de zona
-- **Mantener ubicación** entre artículos consecutivos (solo limpia el código)
-- **Validaciones** con feedback visual
-- **Botones**: agregar manual o abrir cámara
-
-#### **TablaUbicaciones.vue**
-- **Lista completa** de ubicaciones guardadas
-- **Muestra nombres de artículos** obtenidos de la base de datos Excel
-- **Detección visual de códigos duplicados** (fondo naranja)
-- **Contador de códigos duplicados** en header
-- **Columnas**: Nombre y Código, Ubicación, Acciones
-- **Acciones**: 
-  - **Enviar a etiquetas** (botón verde IconTag)
-  - **Editar** ubicación
-  - **Eliminar** ubicación individual
-- **Botón limpiar todo** con confirmación
-- **Responsive** con diseño de cards en móvil
-- **Sin ubicaciones antiguas** en UI (solo en Excel exportado)
-
-#### **CamaraEscaneo.vue**
-- **Modal con cámara** para escaneo de códigos
-- **@zxing/library** para escaneo en tiempo real
-- **Escaneo de códigos de barra y QR**
-- **Lista de códigos escaneados** con opción de eliminar
-- **Botones**: finalizar (confirma todos), cancelar
-- **Manejo de permisos** de cámara
-- **Usado en**: FormularioUbicacion y FormularioEtiqueta
-
-#### **CamaraUbicaciones.vue**
-- **Modal específico** para escaneo rápido de ubicaciones
-- **Recordar ubicación** durante escaneos múltiples
-- **Mantener ubicación** entre artículos (workflow optimizado)
-- **Campo de ubicación** editable durante el escaneo
-- **Escaneo continuo** sin cerrar modal
-- **Botones**: finalizar, cancelar
-
-#### **ModalEditarUbicacion.vue**
-- **Modal para editar** ubicaciones existentes
-- **Campos editables**: código y ubicación
-- **Validaciones** completas con feedback visual
-- **Botones**: guardar y cancelar
-- **Integración** con sistema de persistencia
+Este módulo administra ajustes de ubicación de artículos a partir del Excel principal cargado por el usuario.
 
 ---
 
-### 🔗 **Integración con Etiquetas**
+### Estado funcional actual (v4.2.15)
 
-#### **Botón "Enviar a Etiquetas"**
-- **Icono**: IconTag (verde)
-- **Posición**: Primera acción en cada fila
-- **Función**: Envía código, descripción y ubicación al módulo de etiquetas
-- **Datos enviados**:
-  - `codigo`: Código del artículo
-  - `descripcion`: Nombre obtenido de base de datos
-  - `ubicacion`: Ubicación actual (no la antigua)
-  - `cantidad`: 1 (por defecto)
-  - `tamano`: 10x15cm (por defecto)
-- **Sin cambio de página**: Usuario permanece en ubicaciones
-- **Notificación**: Mensaje de confirmación al agregar
-- **Persistencia**: Se guarda automáticamente en almacenamiento de etiquetas
+- Se permite que existan filas duplicadas por código en la tabla para que el usuario pueda ver conflictos reales en piso.
+- Los duplicados se marcan visualmente y se informan al usuario.
+- Con duplicados presentes, se bloquea enviar y descargar Excel para evitar exportaciones inconsistentes.
+- El botón de descarga aparece solo en navegador (web) para facilitar pruebas; en móvil se mantiene el flujo nativo de compartir.
+- En la mini tarjeta del artículo se muestra historial de movimientos y origen Excel cuando existe.
+- Se añadió estilo visual destacado para artículos con ubicación original `SL` (efecto neón en tarjeta y texto).
 
 ---
 
-### 📊 **Sistema de Base de Datos Excel**
+### Flujo de datos Excel y historial
 
-#### **SelectorExcel.vue**
-- **Componente completo** para seleccionar y cargar archivos Excel
-- **Estados visuales**:
-  - **No cargado**: Botón para seleccionar archivo
-  - **Cargando**: Barra de progreso animada
-  - **Cargado**: Tarjeta con información del archivo
-  - **Error**: Mensaje de error específico
-- **Selector nativo** de archivos con validación (.xlsx, .xls)
-- **Información del archivo**: nombre, tamaño, cantidad de artículos
-- **Acciones**: cambiar archivo, limpiar base de datos
-- **Modal de confirmación** para limpiar base
-- **Preview de datos** (modo desarrollo)
-- **Carga automática** al montar el componente
-
-#### **LectorExcel.js**
-- **Módulo central** para procesar archivos Excel
-- **Selector manual** usando `input[type="file"]`
-- **Procesamiento con XLSX**: lectura como ArrayBuffer
-- **Validaciones**: formato de archivo, estructura de datos
-- **Estado global**: artículos cargados, estado de carga, información del archivo
-
-**Funciones exportadas**:
-- `cargarArticulosDesdeExcel()`
-- `obtenerArticulosCargados()`
-- `obtenerArticuloPorCodigo(codigo)` - **Nueva función**
-- `obtenerEstadoCarga()`
-- `obtenerInformacionArchivo()`
-- `obtenerUbicacionAntigua(codigo)`
-- `obtenerStock(codigo)`
-- `reiniciarBaseDatos()`
-- `verificarSoporteSelector()`
-- `inicializarBaseDatos()`
-
-**Persistencia automática**:
-- Los artículos se **guardan automáticamente** en `@capacitor/preferences` después de cargar
-- Se **restauran automáticamente** al inicializar el módulo
-- **Limpieza automática** si hay errores o datos corruptos
-- **Sin intervención del usuario** - Una vez cargado, siempre disponible
-- **Inicialización automática** al importar el módulo con `setTimeout`
-
-**Estructura de artículo**: `{ codigo, nombre, ubicacionAntigua, stock }`
+- `ubicacionAntigua` conserva siempre el valor original del Excel base (columna C inicial).
+- El historial de cambios de ubicación se guarda internamente por artículo.
+- En el Excel base persistido, los movimientos se registran desde columna `L` en adelante (`Historial 1`, `Historial 2`, etc.).
+- En el Excel exportado de Ubicaciones:
+  - `G` mantiene la ubicación antigua original.
+  - `H` (Info) no se modifica de su lógica acordada.
+  - `I` queda libre.
+  - El historial sale desde `J` en adelante (`Historial 1`, `Historial 2`, etc.).
 
 ---
 
-### 🔎 **Sistema de Búsqueda Inteligente**
+### Componentes clave
 
-#### **CodigoMasNombre.vue**
-- **Buscador integrado** con base de datos Excel cargada
-- **Monitoreo automático** de cambios en la base (polling cada 1s)
-- **Mínimo 3 caracteres** para activar búsqueda
-
-**Búsqueda priorizada** (en este orden):
-1. **Códigos exactos**: Empiezan exactamente con la búsqueda
-2. **Nombres completos**: Contienen todas las palabras buscadas
-3. **Códigos parciales**: Contienen la búsqueda
-4. **Nombres parciales**: Coincidencias parciales
-
-**Interfaz visual**:
-- **Título dinámico** según estado de base de datos
-- **Resaltado de texto** en coincidencias
-- **Estados**: "Artículos encontrados", "Artículo inexistente", "Base de datos no cargada"
-- **Máximo 3 resultados** por búsqueda
-- **Detección automática** de base cargada/descargada
-- **Compatible con persistencia automática**
-
-**Emisión de eventos**: `@articulo-seleccionado` retorna `{ codigo, nombre }`
+- `AjustarUbicaciones.vue`: Página principal, lógica de enviar/descargar y validaciones globales.
+- `FormularioUbicacion.vue`: Alta y edición con vista previa del artículo e historial.
+- `TablaUbicaciones.vue`: Tabla de trabajo, resaltado de duplicados y acciones.
+- `ExportarUbicacionesExcel.js`: Exportación final con columnas fijas y columnas dinámicas de historial.
+- `LectorExcel.js`: Carga y persistencia de Excel base, incluyendo ubicación antigua e historial.
 
 ---
 
-### 💾 **Sistema de Recordar Ubicaciones**
+### Regla operativa de duplicados
 
-#### **recordarUltimaTipografia.js**
-- **Módulo dedicado** para gestionar la última ubicación usada
-- **Persistencia entre sesiones** usando `@capacitor/preferences`
-- **Formateo automático**: Convierte a mayúsculas y limpia espacios
-
-**Funciones principales**:
-- `guardarUltimaUbicacion(ubicacion)`
-- `obtenerUltimaUbicacion()`
-- `limpiarUltimaUbicacion()`
-
-**Workflow optimizado**:
-1. **Carga automática**: Al abrir formulario/cámara se carga la última ubicación
-2. **Solo limpia código**: Después de agregar un artículo, mantiene la ubicación
-3. **Botón IconTrash**: Para cambiar de zona rápidamente
-4. **Ideal para inventarios**: Múltiples artículos en la misma ubicación física
-
----
-
-### 📁 **Lógica de Exportación**
-
-#### **ExportarUbicacionesExcel.js**
-- **Generación de Excel** con ubicaciones
-- **Nombre de archivo**: `Ubic Usuario.xlsx`
-- **Nombre de hoja**: Nombre del usuario
-- **Anchos optimizados** para todas las columnas según contenido real
-
-**Columnas del Excel**:
-- **A - Código**: Código del artículo (ancho optimizado)
-- **B - Descripción**: Nombre del artículo de la base de datos (ancho optimizado)
-- **C - Ubicación**: Ubicación actual (ancho optimizado)
-- **D - Ubicación Antigua**: De la base de datos Excel (ancho optimizado)
-- **E - Observaciones**: Para notas manuales (ancho fijo)
-- **F - Fecha**: Fecha de última modificación (ancho fijo)
-- **G - Usuario**: Nombre del usuario (ancho fijo)
-- **H - Info**: **Sistema de emojis** para identificación rápida
-
-**Sistema de emojis en columna Info**:
-- **❌**: Ubicación es "SL" o artículo no existe en base de datos
-- **✔️**: Ubicación correcta y artículo existe
-
-**Características**:
-- **Integración con base de datos**: Obtiene nombres automáticamente
-- **Formato limpio**: Sin problemas de compatibilidad de colores
-- **100% compatible** con todas las versiones de Excel
-- **Ordenamiento**: Por código ascendente
-- **Fecha actual**: Se agrega automáticamente
-
----
-
-### 💾 **Almacenamiento y Persistencia**
-
-#### **usoAlmacenamientoUbicaciones.js**
-- **Módulo especializado** para ubicaciones
-- **Funciones principales**:
-  - `guardarUbicaciones(ubicaciones)`
-  - `obtenerUbicaciones()`
-  - `agregarUbicacion(codigo, ubicacion)`
-  - `eliminarUbicacion(id)`
-  - `editarUbicacion(id, codigo, ubicacion)`
-  - `limpiarUbicaciones()`
-
-**Estructura de ubicación**: `{ id, codigo, ubicacion, fecha }`
-
-- **Persistencia** en `@capacitor/preferences`
-- **Key**: `"ubicaciones"`
-
----
-
-### 🔄 **Integración con Barra de Botones**
-
-#### **AjustarUbicaciones.vue**
-- `mostrarAtras: true`
-- `mostrarInicio: true`
-- `mostrarAgregar: false`
-- `mostrarEnviar: ubicaciones.length > 0`
-
----
-
-### 📊 **Detección de Problemas**
-
-#### **Códigos Duplicados**
-- **Detección automática** en TablaUbicaciones
-- **Resaltado visual** con fondo naranja
-- **Contador** en header de tabla
-- **Normalización**: Compara en mayúsculas sin espacios
-
-#### **Artículos Inexistentes**
-- **Verificación** contra base de datos Excel
-- **Identificación** en Excel exportado con ❌
-- **Permite agregar** artículos no catalogados
-
-#### **Ubicaciones SL (Sin Ubicación)**
-- **Detección** de ubicación vacía o "SL"
-- **Marca** con ❌ en Excel exportado
-- **Permite identificar** artículos pendientes de ubicar
-
----
-
-### 🎨 **Características de UI/UX**
-
-- **Tabla responsive** con diseño de cards en móvil
-- **Scroll automático** al enfocar inputs
-- **Formateo en tiempo real** de ubicaciones
-- **Buscador dropdown** con resultados resaltados
-- **Iconos consistentes** con @tabler/icons-vue
-- **Estados de carga** con spinners
-- **Notificaciones** de éxito/error
-- **Confirmaciones** antes de acciones destructivas
-- **Botón IconTrash** para limpiar ubicación recordada
-- **Visual feedback** para códigos duplicados
-- **Botón verde IconTag** para enviar a etiquetas
-
----
-
-### 🔧 **Dependencias Específicas**
-
-- **xlsx**: Procesamiento y generación de Excel
-- **@capacitor/filesystem**: Guardado de archivos
-- **@capacitor/share**: Compartir archivos
-- **@capacitor/preferences**: Persistencia de datos
-- **@zxing/library**: Escaneo de códigos
-- **@tabler/icons-vue**: Iconografía
-
----
-
-### 📝 **Notas Importantes**
-
-- La **base de datos Excel** se carga una sola vez y persiste automáticamente
-- El sistema de **recordar ubicación** es ideal para inventarios físicos
-- Las **ubicaciones antiguas** solo aparecen en Excel exportado, no en UI
-- El **buscador inteligente** prioriza coincidencias exactas
-- Los **códigos duplicados** se detectan automáticamente
-- El **sistema de emojis** en Excel facilita identificación rápida de problemas
-- El **formateo automático** convierte espacios en guiones (A 1 2 → A-1-2)
-- El **botón de etiquetas** permite workflow rápido: ubicar y etiquetar sin cambiar de página
-- Las **etiquetas enviadas** usan la ubicación actual, no la de la base de datos
+- Si hay más de una fila con el mismo código, el sistema lo considera conflicto.
+- El conflicto no borra filas ni decide automáticamente cuál conservar.
+- El usuario debe resolver manualmente (eliminar o editar) y recién entonces puede exportar/enviar.

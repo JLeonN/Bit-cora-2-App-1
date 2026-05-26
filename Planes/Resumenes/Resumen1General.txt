@@ -319,10 +319,11 @@ src/
 
 ---
 
-### Actualización de release 4.2.13
+### Actualización de release 4.2.15
 
-- Se mantuvieron mejoras generales de interfaz y estabilidad en módulos existentes.
-- Se preservó el flujo de Android alineado con la versión vigente del proyecto.
-- Release vigente actualizada: 4.2.13.
-
-- Release vigente actualizada: 4.2.14.
+- Se consolidó el historial de ubicaciones en el flujo Excel: base desde `L` y exportación desde `J`.
+- Se mantuvo `Info` en columna `H` sin cambios de estructura en el archivo exportado.
+- Se habilitó visibilidad de duplicados en tabla de Ubicaciones, bloqueando envío/descarga hasta resolver.
+- Se incorporó botón de descarga solo en navegador, manteniendo compartir nativo en móvil.
+- Se reforzó la vista de historial en Consulta De Ubicación y mini tarjeta de Ubicaciones.
+- Release vigente actualizada: 4.2.15.

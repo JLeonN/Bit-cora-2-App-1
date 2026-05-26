@@ -1,8 +1,8 @@
 {
     "name": "bit-cora-2-app",
-    "version": "4.2.14",
-    "description": "AplicaciÃƒÂ³n mÃƒÂ³vil para registrar tareas y actividades diarias.",
-    "productName": "BitÃƒÂ¡cora 2",
+    "version": "4.2.15",
+    "description": "Aplicación móvil para registrar tareas y actividades diarias.",
+    "productName": "Bitácora 2",
     "author": "Leonardo",
     "type": "module",
     "private": true,

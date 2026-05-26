@@ -1,49 +1,33 @@
 ### Módulo de Consulta De Ubicación - Bitácora II
 
-Nuevo módulo para consultar y actualizar la ubicación de un artículo usando la base Excel cargada.
+Pantalla para buscar artículos y registrar cambios de ubicación sin salir del flujo operativo.
 
 ---
 
-### Objetivo
+### Estado funcional actual (v4.2.15)
 
-- Encontrar rápidamente dónde va un artículo.
-- Mostrar ubicación, nombre y código con jerarquía visual clara.
-- Permitir actualizar ubicación desde la misma pantalla.
-- Sincronizar cambios con base cargada y con el módulo Ubicaciones.
-
----
-
-### Flujo principal
-
-1. Entrar a Consulta De Ubicación desde inicio o drawer.
-2. Si no hay Excel cargado, usar el selector existente.
-3. Buscar por código, nombre o escaneo de cámara.
-4. Ver resultado exacto del artículo encontrado.
-5. Opcionalmente actualizar ubicación y guardar.
+- La tarjeta principal muestra historial de movimientos en lugar de solo “Ubicación actual”.
+- El historial se presenta con la ubicación más nueva primero.
+- Si el artículo tiene origen `SL`, se aplica resaltado visual neón para facilitar detección.
+- Al guardar ubicación:
+  - Se conserva `ubicacionAntigua` como dato original del Excel base.
+  - Se agrega el nuevo movimiento al historial del artículo.
+  - Se sincroniza el registro con el módulo Ubicaciones para exportación posterior.
+- Si el código ya existe en Ubicaciones, se permite coexistencia de filas para que el usuario vea duplicados y los resuelva manualmente.
 
 ---
 
-### Integraciones reutilizadas
+### Integraciones
 
-- Selector de base Excel: `SelectorExcel.vue`
-- Buscador inteligente: `CodigoMasNombre.vue`
-- Escaneo de cámara: `CamaraEscaneo.vue`
-- Persistencia de ubicaciones: `usoAlmacenamientoUbicaciones.js`
-- Base de artículos Excel: `LectorExcel.js`
-
----
-
-### Comportamiento de actualización
-
-- El guardado actualiza la ubicación en la base Excel persistida (columna C lógica).
-- El resultado visible en la consulta se actualiza al instante.
-- Se agrega registro en Ubicaciones para dejarlo listo para enviar/exportar.
-- Se notifica al usuario que quedó actualizado y agregado a Ubicaciones.
+- `SelectorExcel.vue`: usa la misma base cargada que Ubicaciones.
+- `CodigoMasNombre.vue`: búsqueda por código/nombre.
+- `CamaraEscaneo.vue`: carga por escaneo.
+- `LectorExcel.js`: fuente de artículo base + historial.
+- `usoAlmacenamientoUbicaciones.js`: persistencia de filas operativas para enviar/exportar.
 
 ---
 
-### Notas de UX
+### Regla operativa
 
-- El input de búsqueda inicia centrado y se reacomoda con transición suave al mostrar resultado.
-- El bloque de actualización de ubicación se despliega con transición suave.
-- Se mantiene consistencia visual con estilos y patrones ya usados en la app.
+- Consulta De Ubicación no decide automáticamente qué fila conservar ante duplicados.
+- El sistema prioriza visibilidad del conflicto para que la decisión la tome el usuario en Ubicaciones.
