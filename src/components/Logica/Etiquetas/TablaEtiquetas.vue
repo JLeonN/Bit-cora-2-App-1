@@ -12,7 +12,6 @@
         Artículos inexistentes: {{ cantidadArticulosInexistentes }}
       </p>
     </div>
-
     <div class="contenedor-boton-borrar-todo" v-if="etiquetas.length > 0">
       <IconTrash
         class="icono-accion icono-borrar-todo"
@@ -20,7 +19,6 @@
         title="Limpiar todas las etiquetas"
       />
     </div>
-
     <table class="tabla-ubicaciones" v-if="etiquetas.length > 0">
       <thead>
         <tr>
@@ -42,6 +40,12 @@
           }"
         >
           <td class="celda-nombre-codigo">
+            <TarjetaPreviewEtiquetaMovil
+              :etiqueta="etiqueta"
+              :nombre-articulo="obtenerNombreArticulo(etiqueta.codigo)"
+              :es-ubicacion-sl="esUbicacionSL"
+              :codigo-barra-valido="codigoBarraValido"
+            />
             <div class="campo-responsive">
               <span class="label-responsive">Nombre y Código:</span>
               <span
@@ -61,7 +65,6 @@
               </span>
             </div>
           </td>
-
           <td class="celda-ubicacion">
             <div class="campo-responsive">
               <span class="label-responsive">Ubicación:</span>
@@ -74,65 +77,33 @@
               </span>
             </div>
           </td>
-
           <td class="celda-cantidad">
-            <div class="campo-responsive">
-              <span class="label-responsive">Cantidad:</span>
-              <div class="control-cantidad">
-                <button
-                  type="button"
-                  class="boton-cantidad boton-menos"
-                  @click="decrementarCantidad(indice)"
-                  :disabled="etiqueta.cantidad <= 1"
-                >
-                  <IconMinus :size="16" :stroke="2" />
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  v-model.number="etiqueta.cantidad"
-                  @change="actualizarCantidad(indice)"
-                  class="input-cantidad"
-                />
-                <button
-                  type="button"
-                  class="boton-cantidad boton-mas"
-                  @click="incrementarCantidad(indice)"
-                >
-                  <IconPlus :size="16" :stroke="2" />
-                </button>
-              </div>
-            </div>
+            <ControlesFilaEtiqueta
+              modo="cantidad"
+              :etiqueta="etiqueta"
+              :indice="indice"
+              @incrementar="incrementarCantidad"
+              @decrementar="decrementarCantidad"
+              @actualizar="actualizarCantidad"
+            />
           </td>
-
           <td class="celda-acciones">
-            <div class="campo-responsive">
-              <span class="label-responsive">Acciones:</span>
-              <div class="acciones-ubicacion">
-                <IconPencil
-                  class="icono-ubicacion icono-editar"
-                  @click="editarEtiqueta(indice)"
-                  title="Editar etiqueta"
-                />
-                <IconTrash
-                  class="icono-ubicacion icono-borrar"
-                  @click="eliminarEtiqueta(indice)"
-                  title="Eliminar etiqueta"
-                />
-              </div>
-            </div>
+            <ControlesFilaEtiqueta
+              modo="acciones"
+              :etiqueta="etiqueta"
+              :indice="indice"
+              @editar="editarEtiqueta"
+              @eliminar="eliminarEtiqueta"
+            />
           </td>
         </tr>
       </tbody>
     </table>
-
     <div v-if="etiquetas.length === 0" class="sin-etiquetas">
       <IconTag :size="48" :stroke="1.5" class="icono-vacio" />
       <p>No hay etiquetas agregadas</p>
       <span class="texto-ayuda">Agregá etiquetas usando el formulario de arriba</span>
     </div>
-
-    <!-- MODAL PARA EDITAR ETIQUETA INDIVIDUAL -->
     <ModalEditarEtiqueta
       v-if="mostrarModalEditar"
       :etiqueta="etiquetaEditando"
@@ -141,8 +112,6 @@
       @modal-abierto="manejarModalAbierto"
       @modal-cerrado="manejarModalCerrado"
     />
-
-    <!-- MODAL PARA CONFIRMAR ELIMINAR TODAS LAS ETIQUETAS -->
     <ModalEliminar
       v-if="mostrarModalLimpiarTodo"
       texto="todas las etiquetas"
@@ -156,10 +125,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { IconPencil, IconTrash, IconPlus, IconMinus, IconTag } from '@tabler/icons-vue'
+import { IconTrash, IconTag } from '@tabler/icons-vue'
 import ModalEditarEtiqueta from '../../Modales/ModalEditarEtiqueta.vue'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
+import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
+import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
+import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 
 const props = defineProps({
   etiquetas: {
@@ -176,28 +148,21 @@ const emit = defineEmits([
   'modal-cerrado',
 ])
 
-// --- ESTADO REACTIVO PARA MODALES ---
 const mostrarModalEditar = ref(false)
 const etiquetaEditando = ref(null)
-const indiceEditando = ref(null)
-
 const mostrarModalLimpiarTodo = ref(false)
+const { codigoBarraValido } = usarCodigoBarraEtiqueta()
 
-// --- MÉTODOS PARA MANEJAR ESTADO DE MODALES ---
 const manejarModalAbierto = () => {
   emit('modal-abierto')
 }
-
 const manejarModalCerrado = () => {
   emit('modal-cerrado')
 }
-
-// --- COMPUTED ---
 const totalCopias = computed(() => {
   return props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0)
 })
 
-// --- FUNCIONES DE CANTIDAD ---
 function incrementarCantidad(indice) {
   const etiquetaActualizada = { ...props.etiquetas[indice] }
   etiquetaActualizada.cantidad++
@@ -212,18 +177,19 @@ function decrementarCantidad(indice) {
   }
 }
 
-function actualizarCantidad(indice) {
+function actualizarCantidad(indice, nuevaCantidad = null) {
   const etiquetaActualizada = { ...props.etiquetas[indice] }
+  if (nuevaCantidad !== null && Number.isFinite(nuevaCantidad)) {
+    etiquetaActualizada.cantidad = nuevaCantidad
+  }
   if (etiquetaActualizada.cantidad < 1 || !etiquetaActualizada.cantidad) {
     etiquetaActualizada.cantidad = 1
   }
   emit('editar-etiqueta', etiquetaActualizada)
 }
 
-// --- FUNCIONES MODAL EDITAR ETIQUETA INDIVIDUAL ---
 function editarEtiqueta(indice) {
   etiquetaEditando.value = { ...props.etiquetas[indice] }
-  indiceEditando.value = indice
   mostrarModalEditar.value = true
 }
 
@@ -235,15 +201,12 @@ function guardarEdicion(etiquetaEditada) {
 function cerrarModalEditar() {
   mostrarModalEditar.value = false
   etiquetaEditando.value = null
-  indiceEditando.value = null
 }
 
-// --- FUNCIONES ELIMINAR ETIQUETA INDIVIDUAL ---
 function eliminarEtiqueta(indice) {
   emit('eliminar-etiqueta', indice)
 }
 
-// --- FUNCIONES MODAL LIMPIAR TODO ---
 function confirmarLimpiar() {
   mostrarModalLimpiarTodo.value = true
 }
@@ -257,7 +220,6 @@ function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
 }
 
-// --- Función para normalizar solo el código ---
 function normalizarCodigo(codigo) {
   if (!codigo || typeof codigo !== 'string') {
     return ''
@@ -272,18 +234,15 @@ function esUbicacionSL(ubicacion) {
   return ubicacion.trim().toUpperCase() === 'SL'
 }
 
-// --- Función para obtener el nombre del artículo ---
 function obtenerNombreArticulo(codigo) {
   if (!codigo || typeof codigo !== 'string') {
     return 'Artículo inexistente'
   }
-
   try {
     const articulosCargados = obtenerArticulosCargados()
     if (!Array.isArray(articulosCargados)) {
       return 'Base de datos no cargada'
     }
-
     const articuloEncontrado = articulosCargados.find(
       (articulo) =>
         articulo &&
@@ -291,8 +250,7 @@ function obtenerNombreArticulo(codigo) {
         typeof articulo.codigo === 'string' &&
         articulo.codigo.toLowerCase() === codigo.toLowerCase(),
     )
-
-    const etiquetaActual = props.etiquetas.find((e) => e.codigo === codigo)
+    const etiquetaActual = props.etiquetas.find((etiqueta) => etiqueta.codigo === codigo)
     return articuloEncontrado?.nombre || etiquetaActual?.descripcion || 'Artículo inexistente'
   } catch (error) {
     console.error('[obtenerNombreArticulo] Error:', error)
@@ -300,18 +258,15 @@ function obtenerNombreArticulo(codigo) {
   }
 }
 
-// --- Función para verificar si un artículo existe ---
 function esArticuloInexistente(codigo) {
   if (!codigo || typeof codigo !== 'string') {
     return true
   }
-
   try {
     const articulosCargados = obtenerArticulosCargados()
     if (!Array.isArray(articulosCargados)) {
       return true
     }
-
     return !articulosCargados.some(
       (articulo) =>
         articulo &&
@@ -325,7 +280,6 @@ function esArticuloInexistente(codigo) {
   }
 }
 
-// --- Lógica de duplicados ---
 const codigosDuplicados = computed(() => {
   try {
     const conteo = new Map()
@@ -349,7 +303,6 @@ const codigosDuplicados = computed(() => {
   }
 })
 
-// --- Conteo de etiquetas con códigos repetidos ---
 const cantidadCodigosRepetidos = computed(() => {
   try {
     return props.etiquetas.filter(
@@ -364,7 +317,6 @@ const cantidadCodigosRepetidos = computed(() => {
   }
 })
 
-// --- Conteo de artículos inexistentes ---
 const cantidadArticulosInexistentes = computed(() => {
   try {
     return props.etiquetas.filter((etiqueta) => etiqueta && esArticuloInexistente(etiqueta.codigo))
@@ -377,49 +329,6 @@ const cantidadArticulosInexistentes = computed(() => {
 </script>
 
 <style scoped>
-.control-cantidad {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-}
-.boton-cantidad {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--color-borde);
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  padding: 0;
-}
-.boton-cantidad:hover:not(:disabled) {
-  background: var(--color-superficie);
-  border-color: var(--color-primario);
-  color: var(--color-primario);
-}
-.boton-cantidad:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.input-cantidad {
-  width: 50px;
-  padding: 0.3rem;
-  text-align: center;
-  border: 1px solid var(--color-borde);
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-.input-cantidad:focus {
-  outline: none;
-  border-color: var(--color-primario);
-}
 .sin-etiquetas {
   text-align: center;
   padding: 3rem 1rem;
@@ -503,17 +412,36 @@ const cantidadArticulosInexistentes = computed(() => {
     display: none;
   }
   .tabla-ubicaciones tbody,
-  .tabla-ubicaciones tr,
   .tabla-ubicaciones td {
     display: block;
     width: 100%;
   }
   .tabla-ubicaciones tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 0.6rem;
+    row-gap: 0.26rem;
     margin-bottom: 0.75rem;
     border: 1px solid var(--color-borde);
     border-radius: 8px;
-    padding: 0.85rem 0.75rem;
+    padding: 0.56rem 0.54rem;
     background: var(--color-superficie);
+  }
+  .celda-nombre-codigo {
+    grid-column: 1 / -1;
+  }
+  .celda-ubicacion {
+    display: none !important;
+  }
+  .celda-cantidad {
+    grid-column: 1 / 2;
+    border-top: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
+    padding-top: 0.45rem !important;
+  }
+  .celda-acciones {
+    grid-column: 2 / 3;
+    border-top: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
+    padding-top: 0.45rem !important;
   }
   .tabla-ubicaciones tbody tr.fila-ubicacion-sl {
     border-color: var(--color-neon-sl-borde);
@@ -526,77 +454,13 @@ const cantidadArticulosInexistentes = computed(() => {
     background: color-mix(in oklab, var(--color-carga) 10%, transparent);
   }
   .tabla-ubicaciones td {
-    padding: 0.32rem 0;
+    padding: 0.16rem 0;
     border: none;
     text-align: left;
   }
-  .campo-responsive {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 0.4rem;
-    min-height: 2rem;
-    padding: 0.1rem 0;
-  }
-  .celda-acciones .campo-responsive,
-  .celda-cantidad .campo-responsive {
-    margin-bottom: 0.2rem;
-  }
-  .label-responsive {
-    display: block;
-    font-weight: 600;
-    color: var(--color-primario-claro);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    min-width: 96px;
-    max-width: 96px;
-    line-height: 1.15;
-  }
-  .globito-ubicacion {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    white-space: normal;
-    min-height: 2rem;
-    padding: 0.36rem 0.56rem;
-    font-size: 0.85rem;
-  }
-  .contenedor-nombre-codigo {
-    gap: 0.15rem;
-  }
-  .nombre-articulo {
-    font-size: 0.9rem;
-  }
-  .codigo-articulo {
-    font-size: 0.75rem;
-  }
-  .control-cantidad {
-    justify-content: flex-end;
-    gap: 0.4rem;
-    flex: 1;
-    margin-left: auto;
-  }
-  .boton-cantidad {
-    width: 32px;
-    height: 32px;
-  }
-  .input-cantidad {
-    width: 48px;
-    padding: 0.25rem;
-    font-size: 0.85rem;
-  }
-  .acciones-ubicacion {
-    justify-content: flex-end;
-    gap: 10px;
-    flex: 1;
-    margin-left: auto;
-  }
-  .icono-ubicacion {
-    width: 20px;
-    height: 20px;
+  .celda-nombre-codigo .campo-responsive,
+  .celda-ubicacion .campo-responsive {
+    display: none;
   }
   .sin-etiquetas {
     padding: 2rem 1rem;
