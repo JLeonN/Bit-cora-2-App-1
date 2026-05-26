@@ -360,17 +360,7 @@ const agregarUbicacionALista = async (codigo, ubicacion, listaBase = null) => {
   const codigoNormalizado = String(codigo || '')
     .trim()
     .toUpperCase()
-  const indiceExistente = lista.findIndex(
-    (item) =>
-      String(item?.codigo || '')
-        .trim()
-        .toUpperCase() === codigoNormalizado,
-  )
-  if (indiceExistente !== -1) {
-    lista[indiceExistente] = { codigo: codigoNormalizado, ubicacion }
-  } else {
-    lista.unshift({ codigo: codigoNormalizado, ubicacion })
-  }
+  lista.unshift({ codigo: codigoNormalizado, ubicacion })
   await guardarUbicaciones(lista)
 }
 

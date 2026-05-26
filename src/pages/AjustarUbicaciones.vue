@@ -206,18 +206,24 @@ function manejarErrorCarga(mensaje) {
 async function sincronizarBaseConListaActual() {
   const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicaciones.value)
   if (!validacionDuplicados.exito) {
-    throw new Error(
-      `Hay codigos duplicados: ${validacionDuplicados.codigosDuplicados.join(
+    return {
+      exito: false,
+      mensaje: `Hay codigos duplicados: ${validacionDuplicados.codigosDuplicados.join(
         ', ',
-      )}. Elimina repetidos para continuar.`,
-    )
+      )}. Se guardo la tabla para que puedas revisarlos.`,
+    }
   }
 
   const resultadoSincronizacion = await reconstruirUbicacionesDesdeLista(ubicaciones.value)
 
   if (!resultadoSincronizacion.exito) {
-    throw new Error(resultadoSincronizacion.mensaje || 'No se pudo reconstruir la base')
+    return {
+      exito: false,
+      mensaje: resultadoSincronizacion.mensaje || 'No se pudo reconstruir la base',
+    }
   }
+
+  return { exito: true }
 }
 
 // --- FUNCIÓN AGREGAR UBICACIÓN
@@ -240,21 +246,13 @@ async function agregarUbicacion(datosNuevos) {
       ubicacion: String(datosNuevos.ubicacion).trim().toUpperCase(),
     }
 
-    const yaExisteCodigo = ubicaciones.value.some(
-      (item) =>
-        String(item?.codigo || '')
-          .trim()
-          .toUpperCase() === nuevaUbicacion.codigo,
-    )
-    if (yaExisteCodigo) {
-      mensajeError.value = `Codigo duplicado: ${nuevaUbicacion.codigo}. Elimina el repetido para continuar.`
-      setTimeout(() => (mensajeError.value = ''), 3500)
-      return
-    }
-
     ubicaciones.value.unshift(nuevaUbicacion)
-    await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
+    const resultadoSincronizacion = await sincronizarBaseConListaActual()
+    if (!resultadoSincronizacion.exito) {
+      mensajeError.value = resultadoSincronizacion.mensaje
+      setTimeout(() => (mensajeError.value = ''), 3500)
+    }
     actualizarConfiguracionBarra()
 
     console.log('[agregarUbicacion] Ubicación agregada:', nuevaUbicacion)
@@ -378,18 +376,13 @@ async function guardarEdicion(datos) {
         .trim()
         .toUpperCase(),
     }
-    const codigoDuplicado = ubicaciones.value.some(
-      (item, indice) => indice !== indiceEditar && String(item?.codigo || '').trim().toUpperCase() === ubicacionEditada.codigo,
-    )
-    if (codigoDuplicado) {
-      mensajeError.value = `Codigo duplicado: ${ubicacionEditada.codigo}.`
-      setTimeout(() => (mensajeError.value = ''), 3000)
-      return
-    }
-
     ubicaciones.value[indiceEditar] = ubicacionEditada
-    await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
+    const resultadoSincronizacion = await sincronizarBaseConListaActual()
+    if (!resultadoSincronizacion.exito) {
+      mensajeError.value = resultadoSincronizacion.mensaje
+      setTimeout(() => (mensajeError.value = ''), 3500)
+    }
     actualizarConfiguracionBarra()
 
     mostrarModalEditar.value = false
@@ -439,8 +432,12 @@ async function confirmarEliminacion() {
     const indice = ubicaciones.value.indexOf(ubicacionEliminar.value)
     if (indice !== -1) {
       ubicaciones.value.splice(indice, 1)
-      await sincronizarBaseConListaActual()
       await guardarUbicaciones(ubicaciones.value)
+      const resultadoSincronizacion = await sincronizarBaseConListaActual()
+      if (!resultadoSincronizacion.exito) {
+        mensajeError.value = resultadoSincronizacion.mensaje
+        setTimeout(() => (mensajeError.value = ''), 3500)
+      }
       actualizarConfiguracionBarra()
     }
 
@@ -466,8 +463,12 @@ function abrirModalEliminarTodas() {
 async function confirmarEliminacionTodas() {
   try {
     ubicaciones.value = []
-    await sincronizarBaseConListaActual()
     await guardarUbicaciones(ubicaciones.value)
+    const resultadoSincronizacion = await sincronizarBaseConListaActual()
+    if (!resultadoSincronizacion.exito) {
+      mensajeError.value = resultadoSincronizacion.mensaje
+      setTimeout(() => (mensajeError.value = ''), 3500)
+    }
     mostrarModalEliminarTodas.value = false
     actualizarConfiguracionBarra()
 
