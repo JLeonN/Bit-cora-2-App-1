@@ -48,7 +48,7 @@
             android:name=".pasos.ServicioContadorPasos"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="health|dataSync" />
+            android:foregroundServiceType="health" />
         <receiver
             android:name=".pasos.ReceptorReinicioPasos"
             android:enabled="true"
