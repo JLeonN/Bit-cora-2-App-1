@@ -21,14 +21,16 @@ export const usarCodigoBarraEtiqueta = () => {
     if (cacheConfigBarra.has(claveConfig)) {
       return cacheConfigBarra.get(claveConfig)
     }
+    const escalaNormalizada = Math.max(0.45, Math.min(1.3, escala))
+    const anchoModulo = Number((1.08 + (escalaNormalizada - 0.45) * 0.92).toFixed(2))
     const config = {
       format: 'CODE39',
       displayValue: false,
       background: '#ffffff',
       lineColor: '#000000',
       margin: 0,
-      width: Math.max(0.95, Number((1.32 * escala).toFixed(2))),
-      height: Math.max(24, Math.round(34 * escala)),
+      width: Math.max(0.98, anchoModulo),
+      height: Math.max(28, Math.round(34 + escalaNormalizada * 14)),
     }
     cacheConfigBarra.set(claveConfig, config)
     return config

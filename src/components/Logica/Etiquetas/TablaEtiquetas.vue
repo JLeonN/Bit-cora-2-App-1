@@ -19,86 +19,42 @@
         title="Limpiar todas las etiquetas"
       />
     </div>
-    <table class="tabla-ubicaciones" v-if="etiquetas.length > 0">
-      <thead>
-        <tr>
-          <th class="columna-nombre-codigo">Nombre y Código</th>
-          <th class="columna-ubicacion">Ubicación</th>
-          <th class="columna-cantidad">Cantidad</th>
-          <th class="columna-acciones">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(etiqueta, indice) in etiquetas"
-          :key="etiqueta.id"
-          class="fila-ubicacion"
-          :class="{
-            'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
-            'fila-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
-            'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
-          }"
-        >
-          <td class="celda-nombre-codigo">
-            <TarjetaPreviewEtiquetaMovil
-              :etiqueta="etiqueta"
-              :nombre-articulo="obtenerNombreArticulo(etiqueta.codigo)"
-              :es-ubicacion-sl="esUbicacionSL"
-              :codigo-barra-valido="codigoBarraValido"
-            />
-            <div class="campo-responsive">
-              <span class="label-responsive">Nombre y Código:</span>
-              <span
-                class="globito-ubicacion"
-                :class="{
-                  'texto-duplicado': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
-                  'texto-articulo-inexistente': esArticuloInexistente(etiqueta.codigo),
-                }"
-                :title="`${obtenerNombreArticulo(etiqueta.codigo)} - ${etiqueta.codigo}`"
-              >
-                <div class="contenedor-nombre-codigo">
-                  <div class="nombre-articulo">
-                    {{ obtenerNombreArticulo(etiqueta.codigo) }}
-                  </div>
-                  <div class="codigo-articulo">{{ etiqueta.codigo }}</div>
-                </div>
-              </span>
-            </div>
-          </td>
-          <td class="celda-ubicacion">
-            <div class="campo-responsive">
-              <span class="label-responsive">Ubicación:</span>
-              <span
-                class="globito-ubicacion"
-                :class="{ 'texto-sl-neon': esUbicacionSL(etiqueta.ubicacion) }"
-                :title="etiqueta.ubicacion || 'Sin ubicación'"
-              >
-                {{ etiqueta.ubicacion || 'Sin ubicación' }}
-              </span>
-            </div>
-          </td>
-          <td class="celda-cantidad">
-            <ControlesFilaEtiqueta
-              modo="cantidad"
-              :etiqueta="etiqueta"
-              :indice="indice"
-              @incrementar="incrementarCantidad"
-              @decrementar="decrementarCantidad"
-              @actualizar="actualizarCantidad"
-            />
-          </td>
-          <td class="celda-acciones">
-            <ControlesFilaEtiqueta
-              modo="acciones"
-              :etiqueta="etiqueta"
-              :indice="indice"
-              @editar="editarEtiqueta"
-              @eliminar="eliminarEtiqueta"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
+      <article
+        v-for="(etiqueta, indice) in etiquetas"
+        :key="etiqueta.id"
+        class="tarjeta-etiqueta-item"
+        :class="{
+          'tarjeta-etiqueta-duplicada': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
+          'tarjeta-etiqueta-inexistente': esArticuloInexistente(etiqueta.codigo),
+          'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
+        }"
+      >
+        <TarjetaPreviewEtiquetaMovil
+          :etiqueta="etiqueta"
+          :nombre-articulo="obtenerNombreArticulo(etiqueta.codigo)"
+          :es-ubicacion-sl="esUbicacionSL"
+          :codigo-barra-valido="codigoBarraValido"
+        />
+        <div class="franja-controles-tarjeta">
+          <ControlesFilaEtiqueta
+            modo="cantidad"
+            :etiqueta="etiqueta"
+            :indice="indice"
+            @incrementar="incrementarCantidad"
+            @decrementar="decrementarCantidad"
+            @actualizar="actualizarCantidad"
+          />
+          <ControlesFilaEtiqueta
+            modo="acciones"
+            :etiqueta="etiqueta"
+            :indice="indice"
+            @editar="editarEtiqueta"
+            @eliminar="eliminarEtiqueta"
+          />
+        </div>
+      </article>
+    </div>
     <div v-if="etiquetas.length === 0" class="sin-etiquetas">
       <IconTag :size="48" :stroke="1.5" class="icono-vacio" />
       <p>No hay etiquetas agregadas</p>
@@ -348,9 +304,6 @@ const cantidadArticulosInexistentes = computed(() => {
   font-size: 0.9rem;
   font-style: italic;
 }
-.label-responsive {
-  display: none;
-}
 .fila-ubicacion-sl {
   border-color: var(--color-neon-sl-borde);
   box-shadow: 0 0 12px var(--color-neon-sl-sombra), 0 0 24px var(--color-neon-sl-sombra);
@@ -359,117 +312,44 @@ const cantidadArticulosInexistentes = computed(() => {
   color: var(--color-neon-sl-texto);
   text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
 }
-.columna-nombre-codigo {
-  width: 40%;
+.grilla-tarjetas-etiquetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15cm), 1fr));
+  gap: 0.85rem;
 }
-.columna-ubicacion {
-  width: 10%;
+.tarjeta-etiqueta-item {
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 0.56rem 0.54rem;
+  background: var(--color-superficie);
+  width: min(100%, 15.9cm);
+  justify-self: center;
 }
-.columna-cantidad {
-  width: 20%;
-  padding-left: 5rem !important;
+.tarjeta-etiqueta-duplicada {
+  background: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
-.columna-acciones {
-  width: 10%;
-  text-align: center;
+.tarjeta-etiqueta-inexistente {
+  background: color-mix(in oklab, var(--color-carga) 10%, transparent);
 }
-.celda-cantidad {
-  padding-left: 1rem;
+.franja-controles-tarjeta {
+  margin-top: 0.32rem;
+  padding-top: 0.42rem;
+  border-top: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.6rem;
 }
-@media (max-width: 900px) {
-  .tabla-ubicaciones {
-    font-size: 0.85rem;
-  }
-  .tabla-ubicaciones th,
-  .tabla-ubicaciones td {
-    padding: 0.7rem 0.8rem;
-  }
-  .globito-ubicacion {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.85rem;
+@media (min-width: 601px) and (max-width: 1024px) {
+  .tarjeta-etiqueta-item {
+    padding: 0.65rem;
   }
 }
-@media (max-width: 600px) {
-  .encabezado-tabla {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem;
+@media (min-width: 1025px) {
+  .grilla-tarjetas-etiquetas {
+    gap: 1rem;
   }
-  .texto-secundario {
-    width: 100%;
-    padding: 0.3rem 0.6rem;
-    font-size: 0.85rem;
-  }
-  .contenedor-boton-borrar-todo {
-    margin-bottom: 0.5rem;
-  }
-  .tabla-ubicaciones {
-    display: block;
-    border: none;
-    background: transparent;
-  }
-  .tabla-ubicaciones thead {
-    display: none;
-  }
-  .tabla-ubicaciones tbody,
-  .tabla-ubicaciones td {
-    display: block;
-    width: 100%;
-  }
-  .tabla-ubicaciones tbody tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 0.6rem;
-    row-gap: 0.26rem;
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--color-borde);
-    border-radius: 8px;
-    padding: 0.56rem 0.54rem;
-    background: var(--color-superficie);
-  }
-  .celda-nombre-codigo {
-    grid-column: 1 / -1;
-  }
-  .celda-ubicacion {
-    display: none !important;
-  }
-  .celda-cantidad {
-    grid-column: 1 / 2;
-    border-top: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
-    padding-top: 0.45rem !important;
-  }
-  .celda-acciones {
-    grid-column: 2 / 3;
-    border-top: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
-    padding-top: 0.45rem !important;
-  }
-  .tabla-ubicaciones tbody tr.fila-ubicacion-sl {
-    border-color: var(--color-neon-sl-borde);
-    box-shadow: 0 0 10px var(--color-neon-sl-sombra), 0 0 20px var(--color-neon-sl-sombra);
-  }
-  .tabla-ubicaciones tbody tr.fila-ubicacion-duplicada {
-    background: color-mix(in oklab, var(--color-error) 10%, transparent);
-  }
-  .tabla-ubicaciones tbody tr.fila-articulo-inexistente {
-    background: color-mix(in oklab, var(--color-carga) 10%, transparent);
-  }
-  .tabla-ubicaciones td {
-    padding: 0.16rem 0;
-    border: none;
-    text-align: left;
-  }
-  .celda-nombre-codigo .campo-responsive,
-  .celda-ubicacion .campo-responsive {
-    display: none;
-  }
-  .sin-etiquetas {
-    padding: 2rem 1rem;
-  }
-  .sin-etiquetas p {
-    font-size: 1rem;
-  }
-  .texto-ayuda {
-    font-size: 0.85rem;
+  .tarjeta-etiqueta-item {
+    padding: 0.7rem;
   }
 }
 </style>

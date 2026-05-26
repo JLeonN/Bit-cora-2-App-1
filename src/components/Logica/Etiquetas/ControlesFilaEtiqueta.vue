@@ -58,18 +58,23 @@ function manejarCambioCantidad(evento) {
 
 <style scoped>
 .campo-responsive {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: grid;
+  gap: 0.3rem;
 }
 .label-responsive {
-  display: none;
+  display: block;
+  font-weight: 600;
+  color: var(--color-primario-claro);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  line-height: 1.1;
 }
 .control-cantidad {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: 0.35rem;
+  justify-content: flex-start;
 }
 .boton-cantidad {
   width: 28px;
@@ -111,8 +116,8 @@ function manejarCambioCantidad(evento) {
 .acciones-ubicacion {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 10px;
 }
 .icono-ubicacion {
   cursor: pointer;
@@ -125,19 +130,12 @@ function manejarCambioCantidad(evento) {
 }
 @media (max-width: 600px) {
   .campo-responsive {
-    display: grid;
     gap: 0.25rem;
     margin-bottom: 0.05rem;
     padding: 0.03rem 0;
   }
   .label-responsive {
-    display: block;
-    font-weight: 600;
-    color: var(--color-primario-claro);
     font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.35px;
-    line-height: 1.1;
   }
   .control-cantidad {
     justify-content: flex-start;
@@ -162,6 +160,23 @@ function manejarCambioCantidad(evento) {
   .icono-ubicacion {
     width: 19px;
     height: 19px;
+  }
+}
+@media (min-width: 601px) {
+  .campo-responsive {
+    gap: 0.35rem;
+  }
+  .boton-cantidad {
+    width: 32px;
+    height: 32px;
+  }
+  .input-cantidad {
+    width: 52px;
+    padding: 0.28rem;
+  }
+  .icono-ubicacion {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>
