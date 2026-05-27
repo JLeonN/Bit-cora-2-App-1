@@ -126,6 +126,7 @@ const campoEditando = ref('')
 const borradorCodigo = ref('')
 const borradorDescripcion = ref('')
 const borradorUbicacion = ref('')
+const lineasDescripcionEdicion = ref([])
 const {
   anchoPreview,
   obtenerEscala,
@@ -153,8 +154,17 @@ const etiquetaParaLayout = computed(() => ({
 }))
 const layoutPreview = computed(() => obtenerLayoutPixeles(etiquetaParaLayout.value))
 const lineasDescripcion = computed(() => layoutPreview.value.lineasDescripcion)
-const lineasDescripcionConEstilos = computed(() => layoutPreview.value.lineasDescripcionConEstilos)
-const filasDescripcionEdicion = computed(() => Math.max(3, lineasDescripcion.value.length))
+const lineasDescripcionConEstilos = computed(() => {
+  if (campoEditando.value !== 'descripcion') {
+    return layoutPreview.value.lineasDescripcionConEstilos
+  }
+  const estilosBase = layoutPreview.value.lineasDescripcionConEstilos
+  return lineasDescripcionEdicion.value.map((texto, indice) => ({
+    texto,
+    estilo: estilosBase[indice]?.estilo || estilosBase[0]?.estilo || {},
+  }))
+})
+const filasDescripcionEdicion = computed(() => Math.max(3, lineasDescripcionEdicion.value.length || lineasDescripcion.value.length))
 const estiloTextareaDescripcion = computed(() => ({
   ...layoutPreview.value.estilos.descripcion,
   left: '4%',
@@ -162,6 +172,7 @@ const estiloTextareaDescripcion = computed(() => ({
   height: '55%',
 }))
 const normalizarCodigo = (valor) => String(valor || '').trim().toUpperCase()
+const normalizarSaltosLocales = (valor) => String(valor || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 const normalizarUbicacion = (valor) => {
   const normalizado = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
   return normalizado || 'Sin ubicación'
@@ -172,18 +183,21 @@ function emitirActualizacion(campo, valor) {
 }
 
 function iniciarEdicion(campo) {
-  campoEditando.value = campo
   if (campo === 'codigo') {
     borradorCodigo.value = props.etiqueta?.codigo || ''
+    campoEditando.value = campo
     nextTick(() => inputCodigoRef.value?.focus())
     return
   }
   if (campo === 'descripcion') {
-    borradorDescripcion.value = lineasDescripcion.value.join('\n')
+    lineasDescripcionEdicion.value = [...lineasDescripcion.value]
+    borradorDescripcion.value = lineasDescripcionEdicion.value.join('\n')
+    campoEditando.value = campo
     nextTick(() => textareaDescripcionRef.value?.focus())
     return
   }
   borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
+  campoEditando.value = campo
   nextTick(() => inputUbicacionRef.value?.focus())
 }
 
@@ -194,6 +208,7 @@ function actualizarCodigo(evento) {
 
 function actualizarDescripcion(evento) {
   borradorDescripcion.value = evento.target.value
+  lineasDescripcionEdicion.value = normalizarSaltosLocales(borradorDescripcion.value).split('\n')
   emitirActualizacion('descripcion', String(borradorDescripcion.value))
 }
 
@@ -210,6 +225,7 @@ function confirmarEdicion() {
   }
   if (campoActual === 'descripcion') {
     emitirActualizacion('descripcion', String(borradorDescripcion.value))
+    lineasDescripcionEdicion.value = []
   }
   if (campoActual === 'ubicacion') {
     emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
@@ -224,6 +240,7 @@ function cancelarEdicion() {
   borradorCodigo.value = props.etiqueta?.codigo || ''
   borradorDescripcion.value = props.nombreArticulo || ''
   borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
+  lineasDescripcionEdicion.value = []
   campoEditando.value = ''
 }
 
@@ -258,6 +275,7 @@ watch(
       borradorCodigo.value = props.etiqueta?.codigo || ''
       borradorDescripcion.value = props.nombreArticulo || ''
       borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
+      lineasDescripcionEdicion.value = []
     }
   },
 )
