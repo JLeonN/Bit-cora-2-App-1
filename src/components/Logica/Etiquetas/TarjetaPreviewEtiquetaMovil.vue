@@ -18,9 +18,8 @@
       :value="borradorCodigo"
       :style="obtenerEstiloCodigo(etiqueta?.codigo)"
       @input="actualizarCodigo"
-      @keydown.enter.prevent="confirmarEdicion()"
+      @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
-      @blur="confirmarEdicion()"
     />
     <div class="preview-barra-contenedor" :style="obtenerEstiloContenedorBarra()">
       <svg v-if="esCodigoValido" ref="svgBarra" class="preview-barra-svg" :style="obtenerEstiloSvgBarra()"></svg>
@@ -46,8 +45,6 @@
       :style="obtenerEstiloDescripcion(nombreArticulo)"
       @input="actualizarDescripcion"
       @keydown.esc.prevent="cancelarEdicion()"
-      @keydown.enter.exact.prevent="confirmarEdicion()"
-      @blur="confirmarEdicion()"
       rows="4"
     />
     <p
@@ -69,9 +66,8 @@
       :value="borradorUbicacion"
       :style="obtenerEstiloUbicacion()"
       @input="actualizarUbicacion"
-      @keydown.enter.prevent="confirmarEdicion()"
+      @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
-      @blur="confirmarEdicion()"
     />
   </div>
 </template>
@@ -102,16 +98,23 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  indiceAccionEdicion: {
+    type: Number,
+    default: -1,
+  },
+  versionAccionEdicion: {
+    type: Number,
+    default: 0,
+  },
 })
 
-const emit = defineEmits(['actualizar-campo'])
+const emit = defineEmits(['borrador-campo', 'cancelar-edicion'])
 const contenedorPreview = ref(null)
 const svgBarra = ref(null)
 const inputCodigoRef = ref(null)
 const textareaDescripcionRef = ref(null)
 const inputUbicacionRef = ref(null)
 const campoEditando = ref('')
-const valorOriginalCampo = ref('')
 const borradorCodigo = ref('')
 const borradorDescripcion = ref('')
 const borradorUbicacion = ref('')
@@ -150,24 +153,21 @@ const normalizarUbicacion = (valor) => {
 }
 
 function emitirActualizacion(campo, valor) {
-  emit('actualizar-campo', { indice: props.indice, campo, valor })
+  emit('borrador-campo', { indice: props.indice, campo, valor })
 }
 
 function iniciarEdicion(campo) {
   campoEditando.value = campo
   if (campo === 'codigo') {
-    valorOriginalCampo.value = props.etiqueta?.codigo || ''
     borradorCodigo.value = props.etiqueta?.codigo || ''
     nextTick(() => inputCodigoRef.value?.focus())
     return
   }
   if (campo === 'descripcion') {
-    valorOriginalCampo.value = props.nombreArticulo || ''
     borradorDescripcion.value = props.nombreArticulo || ''
     nextTick(() => textareaDescripcionRef.value?.focus())
     return
   }
-  valorOriginalCampo.value = props.etiqueta?.ubicacion || 'Sin ubicación'
   borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
   nextTick(() => inputUbicacionRef.value?.focus())
 }
@@ -187,19 +187,12 @@ function actualizarUbicacion(evento) {
   emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
 }
 
-function confirmarEdicion() {
-  campoEditando.value = ''
-}
-
 function cancelarEdicion() {
   if (!campoEditando.value) return
-  if (campoEditando.value === 'codigo') {
-    emitirActualizacion('codigo', normalizarCodigo(valorOriginalCampo.value))
-  } else if (campoEditando.value === 'descripcion') {
-    emitirActualizacion('descripcion', String(valorOriginalCampo.value))
-  } else {
-    emitirActualizacion('ubicacion', normalizarUbicacion(valorOriginalCampo.value))
-  }
+  emit('cancelar-edicion', props.indice)
+  borradorCodigo.value = props.etiqueta?.codigo || ''
+  borradorDescripcion.value = props.nombreArticulo || ''
+  borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
   campoEditando.value = ''
 }
 
@@ -223,6 +216,18 @@ watch(
   async () => {
     await nextTick()
     renderizarBarra()
+  },
+)
+
+watch(
+  () => props.versionAccionEdicion,
+  () => {
+    if (props.indiceAccionEdicion === props.indice) {
+      campoEditando.value = ''
+      borradorCodigo.value = props.etiqueta?.codigo || ''
+      borradorDescripcion.value = props.nombreArticulo || ''
+      borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
+    }
   },
 )
 

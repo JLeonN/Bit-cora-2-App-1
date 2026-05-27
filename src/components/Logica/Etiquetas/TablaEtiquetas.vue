@@ -26,7 +26,10 @@
           :nombre-articulo="obtenerNombreArticulo(etiqueta)"
           :es-ubicacion-sl="esUbicacionSL"
           :codigo-barra-valido="codigoBarraValido"
-          @actualizar-campo="actualizarCampoInline"
+          :indice-accion-edicion="indiceAccionEdicion"
+          :version-accion-edicion="versionAccionEdicion"
+          @borrador-campo="actualizarBorradorCampoInline"
+          @cancelar-edicion="cancelarEdicionInline"
         />
         <div class="franja-controles-tarjeta">
           <ControlesFilaEtiqueta
@@ -37,6 +40,18 @@
             @decrementar="decrementarCantidad"
             @actualizar="actualizarCantidad"
           />
+          <div class="columna-confirmar">
+            <span class="label-responsive">Confirmar:</span>
+            <div v-if="tieneBorrador(indice)" class="acciones-confirmar">
+              <button type="button" class="boton-confirmar boton-check" @click="confirmarEdicionInline(indice)" title="Confirmar cambios">
+                <IconCheck :size="16" :stroke="2.2" />
+              </button>
+              <button type="button" class="boton-confirmar boton-cancelar" @click="cancelarEdicionInline(indice)" title="Cancelar cambios">
+                <IconX :size="16" :stroke="2.2" />
+              </button>
+            </div>
+            <div v-else class="sin-cambios">-</div>
+          </div>
           <ControlesFilaEtiqueta modo="acciones" :etiqueta="etiqueta" :indice="indice" @eliminar="eliminarEtiqueta" />
         </div>
       </article>
@@ -59,7 +74,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { IconTrash, IconTag } from '@tabler/icons-vue'
+import { IconTrash, IconTag, IconCheck, IconX } from '@tabler/icons-vue'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
@@ -72,6 +87,9 @@ const props = defineProps({
 
 const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta', 'limpiar-todo', 'modal-abierto', 'modal-cerrado'])
 const mostrarModalLimpiarTodo = ref(false)
+const borradoresEdicion = ref({})
+const indiceAccionEdicion = ref(-1)
+const versionAccionEdicion = ref(0)
 const { codigoBarraValido } = usarCodigoBarraEtiqueta()
 
 const manejarModalAbierto = () => emit('modal-abierto')
@@ -103,23 +121,50 @@ function actualizarCantidad(indice, nuevaCantidad = null) {
   emit('editar-etiqueta', etiquetaActualizada)
 }
 
-function actualizarCampoInline({ indice, campo, valor }) {
-  const etiquetaBase = props.etiquetas[indice]
-  if (!etiquetaBase || !campo) {
+function actualizarBorradorCampoInline({ indice, campo, valor }) {
+  if (!campo || !props.etiquetas[indice]) {
     return
   }
-  const etiquetaActualizada = { ...etiquetaBase, [campo]: valor }
-  if (campo === 'codigo') {
-    etiquetaActualizada.codigo = String(valor || '').trim().toUpperCase()
+  if (!borradoresEdicion.value[indice]) {
+    borradoresEdicion.value[indice] = {}
   }
-  if (campo === 'descripcion') {
-    etiquetaActualizada.descripcion = String(valor || '')
+  borradoresEdicion.value[indice][campo] = valor
+}
+
+function tieneBorrador(indice) {
+  const borrador = borradoresEdicion.value[indice]
+  return !!(borrador && Object.keys(borrador).length)
+}
+
+function confirmarEdicionInline(indice) {
+  const etiquetaBase = props.etiquetas[indice]
+  const borrador = borradoresEdicion.value[indice]
+  if (!etiquetaBase || !borrador) {
+    return
   }
-  if (campo === 'ubicacion') {
-    const ubicacionNormalizada = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
+  const etiquetaActualizada = { ...etiquetaBase }
+  if (Object.prototype.hasOwnProperty.call(borrador, 'codigo')) {
+    etiquetaActualizada.codigo = String(borrador.codigo || '').trim().toUpperCase()
+  }
+  if (Object.prototype.hasOwnProperty.call(borrador, 'descripcion')) {
+    etiquetaActualizada.descripcion = String(borrador.descripcion || '')
+  }
+  if (Object.prototype.hasOwnProperty.call(borrador, 'ubicacion')) {
+    const ubicacionNormalizada = String(borrador.ubicacion || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
     etiquetaActualizada.ubicacion = ubicacionNormalizada || 'Sin ubicación'
   }
   emit('editar-etiqueta', etiquetaActualizada)
+  delete borradoresEdicion.value[indice]
+  indiceAccionEdicion.value = indice
+  versionAccionEdicion.value += 1
+}
+
+function cancelarEdicionInline(indice) {
+  if (borradoresEdicion.value[indice]) {
+    delete borradoresEdicion.value[indice]
+  }
+  indiceAccionEdicion.value = indice
+  versionAccionEdicion.value += 1
 }
 
 function eliminarEtiqueta(indice) {
@@ -281,8 +326,51 @@ const cantidadArticulosInexistentes = computed(() => {
   padding-top: 0.42rem;
   border-top: 1px solid color-mix(in oklab, var(--color-borde) 65%, transparent);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 0.6rem;
+  align-items: end;
+}
+.columna-confirmar {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  min-width: 88px;
+}
+.label-responsive {
+  font-weight: 600;
+  color: var(--color-primario-claro);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  line-height: 1.1;
+}
+.acciones-confirmar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.boton-confirmar {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.boton-check {
+  color: var(--color-exito);
+}
+.boton-cancelar {
+  color: var(--color-error);
+}
+.sin-cambios {
+  min-height: 30px;
+  color: var(--color-texto-secundario);
+  opacity: 0.6;
 }
 @media (min-width: 601px) and (max-width: 1024px) {
   .tarjeta-etiqueta-item {
