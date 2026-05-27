@@ -127,7 +127,7 @@ export const calcularLayoutEtiquetaPreview = ({
   const barraAltoPx = Math.max(26, altoReferenciaPx * 0.14)
   const barraAnchoPx = anchoReferenciaPx * 0.72
   const descripcionTopPx = barraTopPx + barraAltoPx + altoReferenciaPx * 0.045
-  const ubicacionTamanoPx = Math.max(11, Math.min(20, altoReferenciaPx * 0.055))
+  const ubicacionTamanoPx = Math.max(18, Math.min(36, altoReferenciaPx * 0.09))
   return {
     codigo: {
       texto: codigoNormalizado,
