@@ -321,29 +321,44 @@ onBeforeUnmount(() => {
 }
 .input-inline {
   width: 100%;
-  border: 1px solid var(--color-primario);
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-  border-radius: 4px;
-  padding: 0.1rem 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-fondo);
+  border-radius: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: inherit;
+  letter-spacing: inherit;
 }
 .input-inline:focus {
   outline: none;
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primario) 75%, transparent);
+  box-shadow: none;
 }
 .input-codigo {
+  margin: 0 0 0.08rem 0;
   text-align: center;
   font-weight: 800;
+  line-height: 1.02;
+  padding: 0 0.1rem;
 }
 .textarea-descripcion {
+  margin: 0.02rem 0 0 0;
+  width: 100%;
+  text-align: center;
   text-transform: uppercase;
   font-weight: 800;
-  line-height: 1;
+  line-height: 0.93;
   resize: none;
+  padding: 0 0.14rem;
+  overflow: hidden;
 }
 .input-ubicacion {
-  margin-top: auto;
+  margin: auto 0 0 0;
+  width: 100%;
   text-align: left;
+  line-height: 1.08;
+  font-weight: 500;
+  padding-left: 0.1rem;
 }
 .texto-sl-neon {
   color: var(--color-neon-sl-texto);
