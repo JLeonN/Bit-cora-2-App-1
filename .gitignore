@@ -31,3 +31,7 @@ yarn-error.log*
 
 # local .env files
 .env.local*
+
+# Artefactos locales de pruebas UI
+.playwright-mcp/
+etiquetas-bug.png

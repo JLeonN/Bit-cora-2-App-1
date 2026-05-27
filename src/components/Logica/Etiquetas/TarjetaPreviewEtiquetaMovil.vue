@@ -1,20 +1,78 @@
 <template>
   <div class="preview-etiqueta-movil" :class="`densidad-${densidad}`" ref="contenedorPreview">
-    <p class="preview-codigo-movil" :style="obtenerEstiloCodigo(etiqueta?.codigo)">
+    <p
+      v-if="campoEditando !== 'codigo'"
+      class="preview-codigo-movil editable-preview"
+      :style="obtenerEstiloCodigo(etiqueta?.codigo)"
+      tabindex="0"
+      @click="iniciarEdicion('codigo')"
+      @keydown.enter.prevent="iniciarEdicion('codigo')"
+    >
       {{ etiqueta?.codigo }}
     </p>
+    <input
+      v-else
+      ref="inputCodigoRef"
+      class="input-inline input-codigo"
+      type="text"
+      :value="borradorCodigo"
+      :style="obtenerEstiloCodigo(etiqueta?.codigo)"
+      @input="actualizarCodigo"
+      @keydown.enter.prevent="confirmarEdicion()"
+      @keydown.esc.prevent="cancelarEdicion()"
+      @blur="confirmarEdicion()"
+    />
     <div class="preview-barra-contenedor" :style="obtenerEstiloContenedorBarra()">
       <svg v-if="esCodigoValido" ref="svgBarra" class="preview-barra-svg" :style="obtenerEstiloSvgBarra()"></svg>
       <p v-else class="preview-barra-invalida">Código no compatible con barras</p>
     </div>
-    <p class="preview-descripcion-movil" :style="obtenerEstiloDescripcion(nombreArticulo)">
+    <p
+      v-if="campoEditando !== 'descripcion'"
+      class="preview-descripcion-movil editable-preview"
+      :style="obtenerEstiloDescripcion(nombreArticulo)"
+      tabindex="0"
+      @click="iniciarEdicion('descripcion')"
+      @keydown.enter.prevent="iniciarEdicion('descripcion')"
+    >
       <span v-for="(linea, indiceLinea) in lineasDescripcion" :key="`${etiqueta?.id || etiqueta?.codigo}-${indiceLinea}`">
         {{ linea }}
       </span>
     </p>
-    <p class="preview-ubicacion-movil" :class="{ 'texto-sl-neon': esUbicacionSl(etiqueta?.ubicacion) }" :style="obtenerEstiloUbicacion()">
+    <textarea
+      v-else
+      ref="textareaDescripcionRef"
+      class="input-inline textarea-descripcion"
+      :value="borradorDescripcion"
+      :style="obtenerEstiloDescripcion(nombreArticulo)"
+      @input="actualizarDescripcion"
+      @keydown.esc.prevent="cancelarEdicion()"
+      @keydown.enter.exact.prevent="confirmarEdicion()"
+      @blur="confirmarEdicion()"
+      rows="4"
+    />
+    <p
+      v-if="campoEditando !== 'ubicacion'"
+      class="preview-ubicacion-movil editable-preview"
+      :class="{ 'texto-sl-neon': esUbicacionSl(etiqueta?.ubicacion) }"
+      :style="obtenerEstiloUbicacion()"
+      tabindex="0"
+      @click="iniciarEdicion('ubicacion')"
+      @keydown.enter.prevent="iniciarEdicion('ubicacion')"
+    >
       {{ etiqueta?.ubicacion || 'Sin ubicación' }}
     </p>
+    <input
+      v-else
+      ref="inputUbicacionRef"
+      class="input-inline input-ubicacion"
+      type="text"
+      :value="borradorUbicacion"
+      :style="obtenerEstiloUbicacion()"
+      @input="actualizarUbicacion"
+      @keydown.enter.prevent="confirmarEdicion()"
+      @keydown.esc.prevent="cancelarEdicion()"
+      @blur="confirmarEdicion()"
+    />
   </div>
 </template>
 
@@ -26,6 +84,10 @@ import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 const props = defineProps({
   etiqueta: {
     type: Object,
+    required: true,
+  },
+  indice: {
+    type: Number,
     required: true,
   },
   nombreArticulo: {
@@ -42,8 +104,17 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['actualizar-campo'])
 const contenedorPreview = ref(null)
 const svgBarra = ref(null)
+const inputCodigoRef = ref(null)
+const textareaDescripcionRef = ref(null)
+const inputUbicacionRef = ref(null)
+const campoEditando = ref('')
+const valorOriginalCampo = ref('')
+const borradorCodigo = ref('')
+const borradorDescripcion = ref('')
+const borradorUbicacion = ref('')
 const {
   anchoPreview,
   obtenerEscala,
@@ -72,6 +143,65 @@ const densidad = computed(() => {
   return 'compacta'
 })
 const lineasDescripcion = computed(() => obtenerLineasDescripcion(props.nombreArticulo))
+const normalizarCodigo = (valor) => String(valor || '').trim().toUpperCase()
+const normalizarUbicacion = (valor) => {
+  const normalizado = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
+  return normalizado || 'Sin ubicación'
+}
+
+function emitirActualizacion(campo, valor) {
+  emit('actualizar-campo', { indice: props.indice, campo, valor })
+}
+
+function iniciarEdicion(campo) {
+  campoEditando.value = campo
+  if (campo === 'codigo') {
+    valorOriginalCampo.value = props.etiqueta?.codigo || ''
+    borradorCodigo.value = props.etiqueta?.codigo || ''
+    nextTick(() => inputCodigoRef.value?.focus())
+    return
+  }
+  if (campo === 'descripcion') {
+    valorOriginalCampo.value = props.nombreArticulo || ''
+    borradorDescripcion.value = props.nombreArticulo || ''
+    nextTick(() => textareaDescripcionRef.value?.focus())
+    return
+  }
+  valorOriginalCampo.value = props.etiqueta?.ubicacion || 'Sin ubicación'
+  borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
+  nextTick(() => inputUbicacionRef.value?.focus())
+}
+
+function actualizarCodigo(evento) {
+  borradorCodigo.value = evento.target.value
+  emitirActualizacion('codigo', normalizarCodigo(borradorCodigo.value))
+}
+
+function actualizarDescripcion(evento) {
+  borradorDescripcion.value = evento.target.value
+  emitirActualizacion('descripcion', String(borradorDescripcion.value))
+}
+
+function actualizarUbicacion(evento) {
+  borradorUbicacion.value = evento.target.value
+  emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
+}
+
+function confirmarEdicion() {
+  campoEditando.value = ''
+}
+
+function cancelarEdicion() {
+  if (!campoEditando.value) return
+  if (campoEditando.value === 'codigo') {
+    emitirActualizacion('codigo', normalizarCodigo(valorOriginalCampo.value))
+  } else if (campoEditando.value === 'descripcion') {
+    emitirActualizacion('descripcion', String(valorOriginalCampo.value))
+  } else {
+    emitirActualizacion('ubicacion', normalizarUbicacion(valorOriginalCampo.value))
+  }
+  campoEditando.value = ''
+}
 
 function renderizarBarra() {
   if (!esCodigoValido.value || !svgBarra.value) {
@@ -124,6 +254,11 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+.editable-preview {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
 .preview-codigo-movil {
   margin: 0 0 0.08rem 0;
   width: 100%;
@@ -135,6 +270,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: clip;
   word-break: normal;
+  cursor: text;
 }
 .preview-barra-contenedor {
   width: 100%;
@@ -164,6 +300,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  cursor: text;
 }
 .preview-descripcion-movil span {
   display: block;
@@ -180,6 +317,33 @@ onBeforeUnmount(() => {
   font-weight: 500;
   color: var(--color-fondo);
   padding-left: 0.1rem;
+  cursor: text;
+}
+.input-inline {
+  width: 100%;
+  border: 1px solid var(--color-primario);
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 4px;
+  padding: 0.1rem 0.25rem;
+}
+.input-inline:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primario) 75%, transparent);
+}
+.input-codigo {
+  text-align: center;
+  font-weight: 800;
+}
+.textarea-descripcion {
+  text-transform: uppercase;
+  font-weight: 800;
+  line-height: 1;
+  resize: none;
+}
+.input-ubicacion {
+  margin-top: auto;
+  text-align: left;
 }
 .texto-sl-neon {
   color: var(--color-neon-sl-texto);

@@ -18,14 +18,13 @@
       </button>
     </div>
     <div v-else class="acciones-ubicacion">
-      <IconPencil class="icono-ubicacion icono-editar" @click="$emit('editar', indice)" title="Editar etiqueta" />
       <IconTrash class="icono-ubicacion icono-borrar" @click="$emit('eliminar', indice)" title="Eliminar etiqueta" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { IconPencil, IconTrash, IconPlus, IconMinus } from '@tabler/icons-vue'
+import { IconTrash, IconPlus, IconMinus } from '@tabler/icons-vue'
 
 const props = defineProps({
   etiqueta: {
@@ -43,7 +42,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['incrementar', 'decrementar', 'actualizar', 'editar', 'eliminar'])
+const emit = defineEmits(['incrementar', 'decrementar', 'actualizar', 'eliminar'])
 
 function manejarInputCantidad(evento) {
   const valorIngresado = Number(evento.target.value)
@@ -121,9 +120,6 @@ function manejarCambioCantidad(evento) {
 }
 .icono-ubicacion {
   cursor: pointer;
-}
-.icono-editar {
-  color: var(--color-acento);
 }
 .icono-borrar {
   color: var(--color-error);

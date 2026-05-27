@@ -1,23 +1,13 @@
 <template>
   <div>
     <div class="encabezado-tabla">
-      <p v-if="etiquetas.length > 0" class="texto-secundario">
-        Etiquetas totales: {{ etiquetas.length }}
-      </p>
+      <p v-if="etiquetas.length > 0" class="texto-secundario">Etiquetas totales: {{ etiquetas.length }}</p>
       <p v-if="etiquetas.length > 0" class="texto-secundario">Copias totales: {{ totalCopias }}</p>
-      <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos">
-        Códigos repetidos: {{ cantidadCodigosRepetidos }}
-      </p>
-      <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente">
-        Artículos inexistentes: {{ cantidadArticulosInexistentes }}
-      </p>
+      <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos">Códigos repetidos: {{ cantidadCodigosRepetidos }}</p>
+      <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente">Artículos inexistentes: {{ cantidadArticulosInexistentes }}</p>
     </div>
     <div class="contenedor-boton-borrar-todo" v-if="etiquetas.length > 0">
-      <IconTrash
-        class="icono-accion icono-borrar-todo"
-        @click="confirmarLimpiar"
-        title="Limpiar todas las etiquetas"
-      />
+      <IconTrash class="icono-accion icono-borrar-todo" @click="confirmarLimpiar" title="Limpiar todas las etiquetas" />
     </div>
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
       <article
@@ -32,9 +22,11 @@
       >
         <TarjetaPreviewEtiquetaMovil
           :etiqueta="etiqueta"
-          :nombre-articulo="obtenerNombreArticulo(etiqueta.codigo)"
+          :indice="indice"
+          :nombre-articulo="obtenerNombreArticulo(etiqueta)"
           :es-ubicacion-sl="esUbicacionSL"
           :codigo-barra-valido="codigoBarraValido"
+          @actualizar-campo="actualizarCampoInline"
         />
         <div class="franja-controles-tarjeta">
           <ControlesFilaEtiqueta
@@ -45,13 +37,7 @@
             @decrementar="decrementarCantidad"
             @actualizar="actualizarCantidad"
           />
-          <ControlesFilaEtiqueta
-            modo="acciones"
-            :etiqueta="etiqueta"
-            :indice="indice"
-            @editar="editarEtiqueta"
-            @eliminar="eliminarEtiqueta"
-          />
+          <ControlesFilaEtiqueta modo="acciones" :etiqueta="etiqueta" :indice="indice" @eliminar="eliminarEtiqueta" />
         </div>
       </article>
     </div>
@@ -60,14 +46,6 @@
       <p>No hay etiquetas agregadas</p>
       <span class="texto-ayuda">Agregá etiquetas usando el formulario de arriba</span>
     </div>
-    <ModalEditarEtiqueta
-      v-if="mostrarModalEditar"
-      :etiqueta="etiquetaEditando"
-      @guardar="guardarEdicion"
-      @cerrar="cerrarModalEditar"
-      @modal-abierto="manejarModalAbierto"
-      @modal-cerrado="manejarModalCerrado"
-    />
     <ModalEliminar
       v-if="mostrarModalLimpiarTodo"
       texto="todas las etiquetas"
@@ -82,7 +60,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { IconTrash, IconTag } from '@tabler/icons-vue'
-import ModalEditarEtiqueta from '../../Modales/ModalEditarEtiqueta.vue'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
@@ -90,45 +67,27 @@ import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 
 const props = defineProps({
-  etiquetas: {
-    type: Array,
-    required: true,
-  },
+  etiquetas: { type: Array, required: true },
 })
 
-const emit = defineEmits([
-  'editar-etiqueta',
-  'eliminar-etiqueta',
-  'limpiar-todo',
-  'modal-abierto',
-  'modal-cerrado',
-])
-
-const mostrarModalEditar = ref(false)
-const etiquetaEditando = ref(null)
+const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta', 'limpiar-todo', 'modal-abierto', 'modal-cerrado'])
 const mostrarModalLimpiarTodo = ref(false)
 const { codigoBarraValido } = usarCodigoBarraEtiqueta()
 
-const manejarModalAbierto = () => {
-  emit('modal-abierto')
-}
-const manejarModalCerrado = () => {
-  emit('modal-cerrado')
-}
-const totalCopias = computed(() => {
-  return props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0)
-})
+const manejarModalAbierto = () => emit('modal-abierto')
+const manejarModalCerrado = () => emit('modal-cerrado')
+const totalCopias = computed(() => props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0))
 
 function incrementarCantidad(indice) {
   const etiquetaActualizada = { ...props.etiquetas[indice] }
-  etiquetaActualizada.cantidad++
+  etiquetaActualizada.cantidad += 1
   emit('editar-etiqueta', etiquetaActualizada)
 }
 
 function decrementarCantidad(indice) {
   if (props.etiquetas[indice].cantidad > 1) {
     const etiquetaActualizada = { ...props.etiquetas[indice] }
-    etiquetaActualizada.cantidad--
+    etiquetaActualizada.cantidad -= 1
     emit('editar-etiqueta', etiquetaActualizada)
   }
 }
@@ -144,19 +103,23 @@ function actualizarCantidad(indice, nuevaCantidad = null) {
   emit('editar-etiqueta', etiquetaActualizada)
 }
 
-function editarEtiqueta(indice) {
-  etiquetaEditando.value = { ...props.etiquetas[indice] }
-  mostrarModalEditar.value = true
-}
-
-function guardarEdicion(etiquetaEditada) {
-  emit('editar-etiqueta', etiquetaEditada)
-  cerrarModalEditar()
-}
-
-function cerrarModalEditar() {
-  mostrarModalEditar.value = false
-  etiquetaEditando.value = null
+function actualizarCampoInline({ indice, campo, valor }) {
+  const etiquetaBase = props.etiquetas[indice]
+  if (!etiquetaBase || !campo) {
+    return
+  }
+  const etiquetaActualizada = { ...etiquetaBase, [campo]: valor }
+  if (campo === 'codigo') {
+    etiquetaActualizada.codigo = String(valor || '').trim().toUpperCase()
+  }
+  if (campo === 'descripcion') {
+    etiquetaActualizada.descripcion = String(valor || '')
+  }
+  if (campo === 'ubicacion') {
+    const ubicacionNormalizada = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
+    etiquetaActualizada.ubicacion = ubicacionNormalizada || 'Sin ubicación'
+  }
+  emit('editar-etiqueta', etiquetaActualizada)
 }
 
 function eliminarEtiqueta(indice) {
@@ -190,7 +153,8 @@ function esUbicacionSL(ubicacion) {
   return ubicacion.trim().toUpperCase() === 'SL'
 }
 
-function obtenerNombreArticulo(codigo) {
+function obtenerNombreArticulo(etiqueta) {
+  const codigo = etiqueta?.codigo
   if (!codigo || typeof codigo !== 'string') {
     return 'Artículo inexistente'
   }
@@ -200,14 +164,9 @@ function obtenerNombreArticulo(codigo) {
       return 'Base de datos no cargada'
     }
     const articuloEncontrado = articulosCargados.find(
-      (articulo) =>
-        articulo &&
-        articulo.codigo &&
-        typeof articulo.codigo === 'string' &&
-        articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+      (articulo) => articulo && articulo.codigo && typeof articulo.codigo === 'string' && articulo.codigo.toLowerCase() === codigo.toLowerCase(),
     )
-    const etiquetaActual = props.etiquetas.find((etiqueta) => etiqueta.codigo === codigo)
-    return articuloEncontrado?.nombre || etiquetaActual?.descripcion || 'Artículo inexistente'
+    return etiqueta?.descripcion || articuloEncontrado?.nombre || 'Artículo inexistente'
   } catch (error) {
     console.error('[obtenerNombreArticulo] Error:', error)
     return 'Error al buscar artículo'
@@ -224,11 +183,7 @@ function esArticuloInexistente(codigo) {
       return true
     }
     return !articulosCargados.some(
-      (articulo) =>
-        articulo &&
-        articulo.codigo &&
-        typeof articulo.codigo === 'string' &&
-        articulo.codigo.toLowerCase() === codigo.toLowerCase(),
+      (articulo) => articulo && articulo.codigo && typeof articulo.codigo === 'string' && articulo.codigo.toLowerCase() === codigo.toLowerCase(),
     )
   } catch (error) {
     console.error('[esArticuloInexistente] Error:', error)
@@ -261,12 +216,7 @@ const codigosDuplicados = computed(() => {
 
 const cantidadCodigosRepetidos = computed(() => {
   try {
-    return props.etiquetas.filter(
-      (etiqueta) =>
-        etiqueta &&
-        etiqueta.codigo &&
-        codigosDuplicados.value.has(normalizarCodigo(etiqueta.codigo)),
-    ).length
+    return props.etiquetas.filter((etiqueta) => etiqueta && etiqueta.codigo && codigosDuplicados.value.has(normalizarCodigo(etiqueta.codigo))).length
   } catch (error) {
     console.error('[cantidadCodigosRepetidos] Error:', error)
     return 0
@@ -275,8 +225,7 @@ const cantidadCodigosRepetidos = computed(() => {
 
 const cantidadArticulosInexistentes = computed(() => {
   try {
-    return props.etiquetas.filter((etiqueta) => etiqueta && esArticuloInexistente(etiqueta.codigo))
-      .length
+    return props.etiquetas.filter((etiqueta) => etiqueta && esArticuloInexistente(etiqueta.codigo)).length
   } catch (error) {
     console.error('[cantidadArticulosInexistentes] Error:', error)
     return 0
@@ -307,10 +256,6 @@ const cantidadArticulosInexistentes = computed(() => {
 .fila-ubicacion-sl {
   border-color: var(--color-neon-sl-borde);
   box-shadow: 0 0 12px var(--color-neon-sl-sombra), 0 0 24px var(--color-neon-sl-sombra);
-}
-.texto-sl-neon {
-  color: var(--color-neon-sl-texto);
-  text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
 }
 .grilla-tarjetas-etiquetas {
   display: grid;
