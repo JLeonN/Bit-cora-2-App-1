@@ -34,8 +34,12 @@
       @click="iniciarEdicion('descripcion')"
       @keydown.enter.prevent="iniciarEdicion('descripcion')"
     >
-      <span v-for="(linea, indiceLinea) in lineasDescripcion" :key="`${etiqueta?.id || etiqueta?.codigo}-${indiceLinea}`">
-        {{ linea }}
+      <span
+        v-for="(linea, indiceLinea) in lineasDescripcionConEstilos"
+        :key="`${etiqueta?.id || etiqueta?.codigo}-${indiceLinea}`"
+        :style="linea.estilo"
+      >
+        {{ linea.texto }}
       </span>
     </p>
     <textarea
@@ -43,11 +47,12 @@
       ref="textareaDescripcionRef"
       class="input-inline textarea-descripcion campo-editando"
       :value="borradorDescripcion"
-      :style="layoutPreview.estilos.descripcion"
+      :style="estiloTextareaDescripcion"
       @input="actualizarDescripcion"
       @blur="confirmarEdicion"
       @keydown.esc.prevent="cancelarEdicion()"
-      rows="4"
+      :rows="filasDescripcionEdicion"
+      wrap="off"
     />
     <p
       v-if="campoEditando !== 'ubicacion'"
@@ -148,6 +153,14 @@ const etiquetaParaLayout = computed(() => ({
 }))
 const layoutPreview = computed(() => obtenerLayoutPixeles(etiquetaParaLayout.value))
 const lineasDescripcion = computed(() => layoutPreview.value.lineasDescripcion)
+const lineasDescripcionConEstilos = computed(() => layoutPreview.value.lineasDescripcionConEstilos)
+const filasDescripcionEdicion = computed(() => Math.max(3, lineasDescripcion.value.length))
+const estiloTextareaDescripcion = computed(() => ({
+  ...layoutPreview.value.estilos.descripcion,
+  left: '4%',
+  width: '92%',
+  height: '55%',
+}))
 const normalizarCodigo = (valor) => String(valor || '').trim().toUpperCase()
 const normalizarUbicacion = (valor) => {
   const normalizado = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
@@ -166,7 +179,7 @@ function iniciarEdicion(campo) {
     return
   }
   if (campo === 'descripcion') {
-    borradorDescripcion.value = props.nombreArticulo || ''
+    borradorDescripcion.value = lineasDescripcion.value.join('\n')
     nextTick(() => textareaDescripcionRef.value?.focus())
     return
   }
@@ -388,6 +401,7 @@ onBeforeUnmount(() => {
   resize: none;
   padding: 0;
   overflow: hidden;
+  white-space: pre;
 }
 .input-ubicacion {
   position: absolute;

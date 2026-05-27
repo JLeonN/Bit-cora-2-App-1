@@ -87,12 +87,12 @@ const generarImagenEtiquetaDesdePreview = async (etiqueta, configuracion) => {
     contexto.drawImage(canvasBarra, leftBarra, topBarra, anchoBarra, altoBarra)
   }
 
-  const tamanoDescripcion = obtenerNumeroPx(layoutPx.estilos.descripcion.fontSize)
   const topDescripcion = obtenerNumeroPx(layoutPx.estilos.descripcion.top)
   const interlineadoDescripcion = obtenerNumeroPx(layoutPx.estilos.descripcion.lineHeight)
-  contexto.font = `900 ${tamanoDescripcion}px ${FAMILIA_FUENTE_ETIQUETA}`
-  layout.descripcion.lineas.forEach((linea, indice) => {
-    dibujarTextoCentrado(contexto, linea, ANCHO_RENDER_PX / 2, topDescripcion + indice * interlineadoDescripcion)
+  layoutPx.lineasDescripcionConEstilos.forEach((linea, indice) => {
+    const tamanoLinea = obtenerNumeroPx(linea.estilo.fontSize)
+    contexto.font = `900 ${tamanoLinea}px ${FAMILIA_FUENTE_ETIQUETA}`
+    dibujarTextoCentrado(contexto, linea.texto, ANCHO_RENDER_PX / 2, topDescripcion + indice * interlineadoDescripcion)
   })
 
   const tamanoUbicacion = obtenerNumeroPx(layoutPx.estilos.ubicacion.fontSize)

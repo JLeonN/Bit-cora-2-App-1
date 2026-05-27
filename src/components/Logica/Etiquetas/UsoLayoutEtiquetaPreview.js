@@ -28,6 +28,7 @@ const medirAnchoTexto = (texto, tamanoPx, peso = 800) => {
 
 const normalizarSaltosDescripcion = (descripcion = '') => String(descripcion).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 const normalizarTextoDescripcion = (descripcion = '') => normalizarSaltosDescripcion(descripcion).replace(/\s+/g, ' ').trim().toUpperCase()
+const contarLineasManualesDescripcion = (descripcion = '') => normalizarSaltosDescripcion(descripcion).split('\n').filter((linea) => linea.trim()).length
 
 const obtenerLineasObjetivoDescripcion = (descripcion) => {
   const largo = normalizarTextoDescripcion(descripcion).length
@@ -84,6 +85,13 @@ const obtenerAnchoCodigoBarraMm = (codigo) => {
   return 110
 }
 
+const calcularLineasDescripcion = (lineas, tamanoBasePx, tamanoMinimoPx, anchoMaximoPx) => {
+  return lineas.map((texto) => ({
+    texto,
+    tamanoPx: ajustarTamanoTextoEnUnaLinea(texto, tamanoBasePx, tamanoMinimoPx, anchoMaximoPx),
+  }))
+}
+
 const pxAMm = (valorPx, altoReferenciaPx, altoPaginaMm) => (valorPx / altoReferenciaPx) * altoPaginaMm
 const pxAPt = (valorPx, altoReferenciaPx, altoPaginaMm) => pxAMm(valorPx, altoReferenciaPx, altoPaginaMm) / MM_POR_PT
 const mmAPx = (valorMm, escalaY) => valorMm * escalaY
@@ -110,24 +118,6 @@ export const calcularLayoutEtiquetaPreview = ({
     anchoMaximoCodigoPx,
     900,
   )
-  const anchoMaximoDescripcionPx = anchoReferenciaPx * 0.9
-  const lineasObjetivo = obtenerLineasObjetivoDescripcion(descripcionNormalizada)
-  const tamanoDescripcionInicialPx = Math.max(18, altoReferenciaPx * 0.17)
-  const tamanoDescripcionMinimoPx = Math.max(11, altoReferenciaPx * 0.08)
-  let tamanoDescripcionPx = tamanoDescripcionMinimoPx
-  let lineasDescripcion = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoDescripcionMinimoPx)
-  for (let tamanoActual = tamanoDescripcionInicialPx; tamanoActual >= tamanoDescripcionMinimoPx; tamanoActual -= 1) {
-    const lineas = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoActual)
-    if (lineas.length <= lineasObjetivo) {
-      tamanoDescripcionPx = tamanoActual
-      lineasDescripcion = lineas
-      break
-    }
-    lineasDescripcion = lineas
-  }
-  if (lineasDescripcion.length > lineasObjetivo + 1) {
-    lineasDescripcion = lineasDescripcion.slice(0, lineasObjetivo + 1)
-  }
   const codigoTopPx = altoReferenciaPx * 0.035
   const codigoAltoPx = tamanoCodigoPx * 1.02
   const barraTopPx = codigoTopPx + codigoAltoPx + altoReferenciaPx * 0.01
@@ -136,6 +126,36 @@ export const calcularLayoutEtiquetaPreview = ({
   const barraAnchoPx = (barraAnchoMm / pagina.ancho) * anchoReferenciaPx
   const descripcionTopPx = barraTopPx + barraAltoPx + altoReferenciaPx * 0.045
   const ubicacionTamanoPx = Math.max(18, Math.min(36, altoReferenciaPx * 0.09))
+  const anchoMaximoDescripcionPx = anchoReferenciaPx * 0.92
+  const altoMaximoDescripcionPx = altoReferenciaPx * 0.93 - descripcionTopPx - ubicacionTamanoPx * 0.8
+  const lineasObjetivo = obtenerLineasObjetivoDescripcion(descripcionNormalizada)
+  const maximoLineasDescripcion = Math.min(5, Math.max(lineasObjetivo + 2, contarLineasManualesDescripcion(descripcionConSaltos)))
+  const tamanoDescripcionInicialPx = Math.max(18, altoReferenciaPx * 0.21)
+  const tamanoDescripcionMinimoPx = Math.max(11, altoReferenciaPx * 0.08)
+  let tamanoDescripcionPx = tamanoDescripcionMinimoPx
+  let lineasDescripcion = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoDescripcionMinimoPx)
+  for (let tamanoActual = tamanoDescripcionInicialPx; tamanoActual >= tamanoDescripcionMinimoPx; tamanoActual -= 1) {
+    const lineas = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoActual)
+    const altoTexto = lineas.length * tamanoActual * 0.93
+    if (lineas.length <= maximoLineasDescripcion && altoTexto <= altoMaximoDescripcionPx) {
+      tamanoDescripcionPx = tamanoActual
+      lineasDescripcion = lineas
+      break
+    }
+    lineasDescripcion = lineas
+  }
+  if (lineasDescripcion.length > maximoLineasDescripcion) {
+    lineasDescripcion = lineasDescripcion.slice(0, maximoLineasDescripcion)
+  }
+  const lineasDescripcionConTamanos = calcularLineasDescripcion(
+    lineasDescripcion,
+    tamanoDescripcionPx,
+    tamanoDescripcionMinimoPx,
+    anchoMaximoDescripcionPx,
+  ).map((linea) => ({
+    ...linea,
+    tamanoPt: pxAPt(linea.tamanoPx, altoReferenciaPx, pagina.alto),
+  }))
   return {
     codigo: {
       texto: codigoNormalizado,
@@ -149,7 +169,7 @@ export const calcularLayoutEtiquetaPreview = ({
       posicionY: pxAMm(barraTopPx, altoReferenciaPx, pagina.alto),
     },
     descripcion: {
-      lineas: lineasDescripcion,
+      lineas: lineasDescripcionConTamanos,
       tamanoPt: pxAPt(tamanoDescripcionPx, altoReferenciaPx, pagina.alto),
       posicionY: pxAMm(descripcionTopPx + tamanoDescripcionPx * 0.79, altoReferenciaPx, pagina.alto),
       interlineadoPt: pxAPt(tamanoDescripcionPx * 0.93, altoReferenciaPx, pagina.alto),
@@ -172,8 +192,15 @@ export const convertirLayoutPreviewAPixeles = ({
   const { pagina } = configuracion
   const escalaX = anchoPreviewPx / pagina.ancho
   const escalaY = altoPreviewPx / pagina.alto
+  const lineasDescripcion = layout.descripcion.lineas.map((linea) => linea.texto)
   return {
-    lineasDescripcion: layout.descripcion.lineas,
+    lineasDescripcion,
+    lineasDescripcionConEstilos: layout.descripcion.lineas.map((linea) => ({
+      texto: linea.texto,
+      estilo: {
+        fontSize: `${ptAPx(linea.tamanoPt, escalaY).toFixed(2)}px`,
+      },
+    })),
     estilos: {
       codigo: {
         fontFamily: FAMILIA_FUENTE_ETIQUETA,
