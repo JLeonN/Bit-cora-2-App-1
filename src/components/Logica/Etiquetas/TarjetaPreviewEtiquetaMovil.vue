@@ -3,7 +3,7 @@
     <p
       v-if="campoEditando !== 'codigo'"
       class="preview-codigo-movil editable-preview"
-      :style="obtenerEstiloCodigo(etiqueta?.codigo)"
+      :style="layoutPreview.estilos.codigo"
       tabindex="0"
       @click="iniciarEdicion('codigo')"
       @keydown.enter.prevent="iniciarEdicion('codigo')"
@@ -16,19 +16,19 @@
       class="input-inline input-codigo"
       type="text"
       :value="borradorCodigo"
-      :style="obtenerEstiloCodigo(etiqueta?.codigo)"
+      :style="layoutPreview.estilos.codigo"
       @input="actualizarCodigo"
       @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
     />
-    <div class="preview-barra-contenedor" :style="obtenerEstiloContenedorBarra()">
-      <svg v-if="esCodigoValido" ref="svgBarra" class="preview-barra-svg" :style="obtenerEstiloSvgBarra()"></svg>
+    <div class="preview-barra-contenedor" :style="layoutPreview.estilos.barra">
+      <svg v-if="esCodigoValido" ref="svgBarra" class="preview-barra-svg"></svg>
       <p v-else class="preview-barra-invalida">Código no compatible con barras</p>
     </div>
     <p
       v-if="campoEditando !== 'descripcion'"
       class="preview-descripcion-movil editable-preview"
-      :style="obtenerEstiloDescripcion(nombreArticulo)"
+      :style="layoutPreview.estilos.descripcion"
       tabindex="0"
       @click="iniciarEdicion('descripcion')"
       @keydown.enter.prevent="iniciarEdicion('descripcion')"
@@ -42,7 +42,7 @@
       ref="textareaDescripcionRef"
       class="input-inline textarea-descripcion"
       :value="borradorDescripcion"
-      :style="obtenerEstiloDescripcion(nombreArticulo)"
+      :style="layoutPreview.estilos.descripcion"
       @input="actualizarDescripcion"
       @keydown.esc.prevent="cancelarEdicion()"
       rows="4"
@@ -51,7 +51,7 @@
       v-if="campoEditando !== 'ubicacion'"
       class="preview-ubicacion-movil editable-preview"
       :class="{ 'texto-sl-neon': esUbicacionSl(etiqueta?.ubicacion) }"
-      :style="obtenerEstiloUbicacion()"
+      :style="layoutPreview.estilos.ubicacion"
       tabindex="0"
       @click="iniciarEdicion('ubicacion')"
       @keydown.enter.prevent="iniciarEdicion('ubicacion')"
@@ -64,7 +64,7 @@
       class="input-inline input-ubicacion"
       type="text"
       :value="borradorUbicacion"
-      :style="obtenerEstiloUbicacion()"
+      :style="layoutPreview.estilos.ubicacion"
       @input="actualizarUbicacion"
       @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { usarEscalaEtiquetaMovil } from './UsoEscalaEtiquetaMovil.js'
+import { usarLayoutEtiquetaPreview } from './UsoLayoutEtiquetaPreview.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 
 const props = defineProps({
@@ -121,18 +121,11 @@ const borradorUbicacion = ref('')
 const {
   anchoPreview,
   obtenerEscala,
-  obtenerEstiloCodigo,
-  obtenerEstiloDescripcion,
-  obtenerLineasDescripcion,
-  obtenerEstiloContenedorBarra,
-  obtenerEstiloSvgBarra,
-  obtenerEstiloUbicacion,
+  obtenerLayoutPixeles,
   registrarContenedorPreview,
   desconectarObservador,
-} = usarEscalaEtiquetaMovil({
+} = usarLayoutEtiquetaPreview({
   anchoBase: 360,
-  escalaMinima: 0.52,
-  escalaMaxima: 1,
   alCambiarEscala: () => {
     renderizarBarra()
   },
@@ -145,7 +138,12 @@ const densidad = computed(() => {
   if (anchoPreview.value >= 360) return 'media'
   return 'compacta'
 })
-const lineasDescripcion = computed(() => obtenerLineasDescripcion(props.nombreArticulo))
+const etiquetaParaLayout = computed(() => ({
+  ...props.etiqueta,
+  descripcion: props.nombreArticulo,
+}))
+const layoutPreview = computed(() => obtenerLayoutPixeles(etiquetaParaLayout.value))
+const lineasDescripcion = computed(() => layoutPreview.value.lineasDescripcion)
 const normalizarCodigo = (valor) => String(valor || '').trim().toUpperCase()
 const normalizarUbicacion = (valor) => {
   const normalizado = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
@@ -244,9 +242,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .preview-etiqueta-movil {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   width: min(100%, 15cm);
   max-width: 15cm;
   max-height: 10cm;
@@ -255,7 +250,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: var(--color-texto-principal);
   color: var(--color-fondo);
-  padding: 0.45rem 0.3rem 0.22rem 0.3rem;
+  padding: 0;
   position: relative;
   overflow: hidden;
 }
@@ -265,10 +260,11 @@ onBeforeUnmount(() => {
   -webkit-tap-highlight-color: transparent;
 }
 .preview-codigo-movil {
-  margin: 0 0 0.08rem 0;
+  position: absolute;
+  left: 0;
+  margin: 0;
   width: 100%;
   text-align: center;
-  line-height: 1.02;
   font-weight: 800;
   letter-spacing: 0;
   white-space: nowrap;
@@ -278,14 +274,14 @@ onBeforeUnmount(() => {
   cursor: text;
 }
 .preview-barra-contenedor {
-  width: 100%;
+  position: absolute;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .preview-barra-svg {
-  width: 94%;
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
 }
 .preview-barra-invalida {
   margin: 0;
@@ -294,12 +290,13 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 .preview-descripcion-movil {
-  margin: 0.02rem 0 0 0;
+  position: absolute;
+  left: 0;
+  margin: 0;
   text-align: center;
-  line-height: 0.93;
   font-weight: 800;
   text-transform: uppercase;
-  padding: 0 0.14rem;
+  padding: 0;
   width: 100%;
   letter-spacing: 0;
   display: flex;
@@ -309,14 +306,15 @@ onBeforeUnmount(() => {
 }
 .preview-descripcion-movil span {
   display: block;
-  line-height: 1;
+  line-height: inherit;
   font-weight: inherit;
   letter-spacing: inherit;
   white-space: nowrap;
 }
 .preview-ubicacion-movil {
-  margin: auto 0 0 0;
-  width: 100%;
+  position: absolute;
+  margin: 0;
+  width: auto;
   text-align: left;
   line-height: 1.08;
   font-weight: 500;
@@ -340,26 +338,29 @@ onBeforeUnmount(() => {
   box-shadow: none;
 }
 .input-codigo {
-  margin: 0 0 0.08rem 0;
+  position: absolute;
+  left: 0;
+  margin: 0;
   text-align: center;
   font-weight: 800;
-  line-height: 1.02;
-  padding: 0 0.1rem;
+  padding: 0;
 }
 .textarea-descripcion {
-  margin: 0.02rem 0 0 0;
+  position: absolute;
+  left: 0;
+  margin: 0;
   width: 100%;
   text-align: center;
   text-transform: uppercase;
   font-weight: 800;
-  line-height: 0.93;
   resize: none;
-  padding: 0 0.14rem;
+  padding: 0;
   overflow: hidden;
 }
 .input-ubicacion {
-  margin: auto 0 0 0;
-  width: 100%;
+  position: absolute;
+  margin: 0;
+  width: auto;
   text-align: left;
   line-height: 1.08;
   font-weight: 500;
@@ -368,11 +369,5 @@ onBeforeUnmount(() => {
 .texto-sl-neon {
   color: var(--color-neon-sl-texto);
   text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
-}
-.preview-etiqueta-movil.densidad-amplia {
-  padding: 0.5rem 0.4rem 0.3rem 0.4rem;
-}
-.preview-etiqueta-movil.densidad-compacta {
-  padding: 0.3rem 0.2rem 0.16rem 0.2rem;
 }
 </style>

@@ -20,19 +20,19 @@ export const generarCodigoBarraPNG = async (codigo, tamano = 'grande') => {
         height: 80, // Altura del código de barras
         fontSize: 26, // Tamaño de fuente fijo
         width: 3, // Ancho de las barras
-        margin: 10, // Margen
+        margin: 0, // Margen
       },
       mediano: {
         height: 60,
         fontSize: 20,
         width: 2,
-        margin: 8,
+        margin: 0,
       },
       chico: {
         height: 40,
         fontSize: 16,
         width: 2,
-        margin: 5,
+        margin: 0,
       },
     }
 
