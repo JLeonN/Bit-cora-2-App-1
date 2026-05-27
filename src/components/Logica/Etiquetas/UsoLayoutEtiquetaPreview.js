@@ -26,7 +26,8 @@ const medirAnchoTexto = (texto, tamanoPx, peso = 800) => {
   return contextoMedicion.measureText(texto).width
 }
 
-const normalizarTextoDescripcion = (descripcion = '') => String(descripcion).replace(/\s+/g, ' ').trim().toUpperCase()
+const normalizarSaltosDescripcion = (descripcion = '') => String(descripcion).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+const normalizarTextoDescripcion = (descripcion = '') => normalizarSaltosDescripcion(descripcion).replace(/\s+/g, ' ').trim().toUpperCase()
 
 const obtenerLineasObjetivoDescripcion = (descripcion) => {
   const largo = normalizarTextoDescripcion(descripcion).length
@@ -36,8 +37,8 @@ const obtenerLineasObjetivoDescripcion = (descripcion) => {
   return 5
 }
 
-const dividirTextoEnLineas = (texto, anchoMaximoPx, tamanoPx, peso = 800) => {
-  const palabras = normalizarTextoDescripcion(texto).split(' ').filter(Boolean)
+const dividirBloqueEnLineas = (texto, anchoMaximoPx, tamanoPx, peso = 800) => {
+  const palabras = String(texto || '').replace(/\s+/g, ' ').trim().toUpperCase().split(' ').filter(Boolean)
   if (!palabras.length) {
     return []
   }
@@ -53,6 +54,18 @@ const dividirTextoEnLineas = (texto, anchoMaximoPx, tamanoPx, peso = 800) => {
     }
   }
   lineas.push(lineaActual)
+  return lineas
+}
+
+const dividirTextoEnLineas = (texto, anchoMaximoPx, tamanoPx, peso = 800) => {
+  const bloques = normalizarSaltosDescripcion(texto).split('\n')
+  const lineas = []
+  for (const bloque of bloques) {
+    const lineasBloque = dividirBloqueEnLineas(bloque, anchoMaximoPx, tamanoPx, peso)
+    if (lineasBloque.length) {
+      lineas.push(...lineasBloque)
+    }
+  }
   return lineas
 }
 
@@ -77,6 +90,7 @@ export const calcularLayoutEtiquetaPreview = ({
   const { pagina } = configuracion
   const altoReferenciaPx = anchoReferenciaPx / (pagina.ancho / pagina.alto)
   const codigoNormalizado = String(etiqueta.codigo || '').trim().toUpperCase()
+  const descripcionConSaltos = normalizarSaltosDescripcion(etiqueta.descripcion).trim().toUpperCase()
   const descripcionNormalizada = normalizarTextoDescripcion(etiqueta.descripcion)
   const ubicacionNormalizada = String(etiqueta.ubicacion || 'Sin ubicación').trim() || 'Sin ubicación'
   const anchoMaximoCodigoPx = anchoReferenciaPx * 0.93
@@ -94,9 +108,9 @@ export const calcularLayoutEtiquetaPreview = ({
   const tamanoDescripcionInicialPx = Math.max(18, altoReferenciaPx * 0.17)
   const tamanoDescripcionMinimoPx = Math.max(11, altoReferenciaPx * 0.08)
   let tamanoDescripcionPx = tamanoDescripcionMinimoPx
-  let lineasDescripcion = dividirTextoEnLineas(descripcionNormalizada, anchoMaximoDescripcionPx, tamanoDescripcionMinimoPx)
+  let lineasDescripcion = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoDescripcionMinimoPx)
   for (let tamanoActual = tamanoDescripcionInicialPx; tamanoActual >= tamanoDescripcionMinimoPx; tamanoActual -= 1) {
-    const lineas = dividirTextoEnLineas(descripcionNormalizada, anchoMaximoDescripcionPx, tamanoActual)
+    const lineas = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoActual)
     if (lineas.length <= lineasObjetivo) {
       tamanoDescripcionPx = tamanoActual
       lineasDescripcion = lineas

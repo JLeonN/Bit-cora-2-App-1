@@ -29,6 +29,7 @@
           :indice-accion-edicion="indiceAccionEdicion"
           :version-accion-edicion="versionAccionEdicion"
           @borrador-campo="actualizarBorradorCampoInline"
+          @confirmar-edicion="confirmarEdicionInline"
           @cancelar-edicion="cancelarEdicionInline"
         />
         <div class="franja-controles-tarjeta">

@@ -13,11 +13,12 @@
     <input
       v-else
       ref="inputCodigoRef"
-      class="input-inline input-codigo"
+      class="input-inline input-codigo campo-editando"
       type="text"
       :value="borradorCodigo"
       :style="layoutPreview.estilos.codigo"
       @input="actualizarCodigo"
+      @blur="confirmarEdicion"
       @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
     />
@@ -40,10 +41,11 @@
     <textarea
       v-else
       ref="textareaDescripcionRef"
-      class="input-inline textarea-descripcion"
+      class="input-inline textarea-descripcion campo-editando"
       :value="borradorDescripcion"
       :style="layoutPreview.estilos.descripcion"
       @input="actualizarDescripcion"
+      @blur="confirmarEdicion"
       @keydown.esc.prevent="cancelarEdicion()"
       rows="4"
     />
@@ -61,11 +63,12 @@
     <input
       v-else
       ref="inputUbicacionRef"
-      class="input-inline input-ubicacion"
+      class="input-inline input-ubicacion campo-editando"
       type="text"
       :value="borradorUbicacion"
       :style="layoutPreview.estilos.ubicacion"
       @input="actualizarUbicacion"
+      @blur="confirmarEdicion"
       @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
     />
@@ -108,7 +111,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['borrador-campo', 'cancelar-edicion'])
+const emit = defineEmits(['borrador-campo', 'cancelar-edicion', 'confirmar-edicion'])
 const contenedorPreview = ref(null)
 const svgBarra = ref(null)
 const inputCodigoRef = ref(null)
@@ -138,9 +141,10 @@ const densidad = computed(() => {
   if (anchoPreview.value >= 360) return 'media'
   return 'compacta'
 })
+const descripcionParaLayout = computed(() => (campoEditando.value === 'descripcion' ? borradorDescripcion.value : props.nombreArticulo))
 const etiquetaParaLayout = computed(() => ({
   ...props.etiqueta,
-  descripcion: props.nombreArticulo,
+  descripcion: descripcionParaLayout.value,
 }))
 const layoutPreview = computed(() => obtenerLayoutPixeles(etiquetaParaLayout.value))
 const lineasDescripcion = computed(() => layoutPreview.value.lineasDescripcion)
@@ -183,6 +187,22 @@ function actualizarDescripcion(evento) {
 function actualizarUbicacion(evento) {
   borradorUbicacion.value = evento.target.value
   emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
+}
+
+function confirmarEdicion() {
+  if (!campoEditando.value) return
+  const campoActual = campoEditando.value
+  if (campoActual === 'codigo') {
+    emitirActualizacion('codigo', normalizarCodigo(borradorCodigo.value))
+  }
+  if (campoActual === 'descripcion') {
+    emitirActualizacion('descripcion', String(borradorDescripcion.value))
+  }
+  if (campoActual === 'ubicacion') {
+    emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
+  }
+  emit('confirmar-edicion', props.indice)
+  campoEditando.value = ''
 }
 
 function cancelarEdicion() {
@@ -336,6 +356,18 @@ onBeforeUnmount(() => {
 .input-inline:focus {
   outline: none;
   box-shadow: none;
+}
+.campo-editando {
+  background: color-mix(in oklab, var(--color-primario) 14%, white);
+  border: 2px solid var(--color-primario);
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primario) 20%, transparent);
+  color: var(--color-fondo);
+  padding: 0.08em 0.14em;
+}
+.campo-editando:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primario) 28%, transparent);
 }
 .input-codigo {
   position: absolute;
