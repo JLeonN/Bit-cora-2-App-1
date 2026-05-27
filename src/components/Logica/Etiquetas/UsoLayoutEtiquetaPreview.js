@@ -77,6 +77,13 @@ const ajustarTamanoTextoEnUnaLinea = (texto, tamanoInicialPx, tamanoMinimoPx, an
   return Number(tamanoActual.toFixed(2))
 }
 
+const obtenerAnchoCodigoBarraMm = (codigo) => {
+  const largoCodigo = String(codigo || '').trim().length
+  if (largoCodigo <= 5) return 70
+  if (largoCodigo <= 8) return 80
+  return 110
+}
+
 const pxAMm = (valorPx, altoReferenciaPx, altoPaginaMm) => (valorPx / altoReferenciaPx) * altoPaginaMm
 const pxAPt = (valorPx, altoReferenciaPx, altoPaginaMm) => pxAMm(valorPx, altoReferenciaPx, altoPaginaMm) / MM_POR_PT
 const mmAPx = (valorMm, escalaY) => valorMm * escalaY
@@ -125,7 +132,8 @@ export const calcularLayoutEtiquetaPreview = ({
   const codigoAltoPx = tamanoCodigoPx * 1.02
   const barraTopPx = codigoTopPx + codigoAltoPx + altoReferenciaPx * 0.01
   const barraAltoPx = Math.max(26, altoReferenciaPx * 0.14)
-  const barraAnchoPx = anchoReferenciaPx * 0.72
+  const barraAnchoMm = obtenerAnchoCodigoBarraMm(codigoNormalizado)
+  const barraAnchoPx = (barraAnchoMm / pagina.ancho) * anchoReferenciaPx
   const descripcionTopPx = barraTopPx + barraAltoPx + altoReferenciaPx * 0.045
   const ubicacionTamanoPx = Math.max(18, Math.min(36, altoReferenciaPx * 0.09))
   return {
