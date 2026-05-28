@@ -42,16 +42,14 @@
             @actualizar="actualizarCantidad"
           />
           <div class="columna-confirmar">
-            <span class="label-responsive">Confirmar:</span>
-            <div v-if="tieneBorrador(indice)" class="acciones-confirmar">
-              <button type="button" class="boton-confirmar boton-check" @click="confirmarEdicionInline(indice)" title="Confirmar cambios">
+            <div class="acciones-confirmar">
+              <button type="button" class="boton-confirmar boton-check" @click="confirmarEdicionInline(indice)" :disabled="!tieneBorrador(indice)" title="Guardar cambios">
                 <IconCheck :size="16" :stroke="2.2" />
               </button>
-              <button type="button" class="boton-confirmar boton-cancelar" @click="cancelarEdicionInline(indice)" title="Cancelar cambios">
-                <IconX :size="16" :stroke="2.2" />
+              <button type="button" class="boton-confirmar boton-restablecer" @click="restablecerEtiquetaDesdeMaestro(indice)" title="Restablecer valores de fábrica">
+                <IconRestore :size="16" :stroke="2.2" />
               </button>
             </div>
-            <div v-else class="sin-cambios">-</div>
           </div>
           <ControlesFilaEtiqueta modo="acciones" :etiqueta="etiqueta" :indice="indice" @eliminar="eliminarEtiqueta" />
         </div>
@@ -75,7 +73,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { IconTrash, IconTag, IconCheck, IconX } from '@tabler/icons-vue'
+import { IconTrash, IconTag, IconCheck, IconRestore } from '@tabler/icons-vue'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
@@ -161,6 +159,37 @@ function confirmarEdicionInline(indice) {
 }
 
 function cancelarEdicionInline(indice) {
+  if (borradoresEdicion.value[indice]) {
+    delete borradoresEdicion.value[indice]
+  }
+  indiceAccionEdicion.value = indice
+  versionAccionEdicion.value += 1
+}
+
+function restablecerEtiquetaDesdeMaestro(indice) {
+  const etiquetaBase = props.etiquetas[indice]
+  if (!etiquetaBase) {
+    return
+  }
+  let articuloMaestro = null
+  try {
+    const articulosCargados = obtenerArticulosCargados()
+    if (Array.isArray(articulosCargados)) {
+      articuloMaestro = articulosCargados.find(
+        (articulo) =>
+          articulo &&
+          typeof articulo.codigo === 'string' &&
+          articulo.codigo.toLowerCase() === String(etiquetaBase.codigo || '').toLowerCase(),
+      )
+    }
+  } catch (error) {
+    console.error('[restablecerEtiquetaDesdeMaestro] Error:', error)
+  }
+  const etiquetaRestablecida = {
+    ...etiquetaBase,
+    descripcion: articuloMaestro?.nombre || etiquetaBase.descripcion || '',
+  }
+  emit('editar-etiqueta', etiquetaRestablecida)
   if (borradoresEdicion.value[indice]) {
     delete borradoresEdicion.value[indice]
   }
@@ -333,17 +362,9 @@ const cantidadArticulosInexistentes = computed(() => {
 }
 .columna-confirmar {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
   justify-items: center;
   min-width: 88px;
-}
-.label-responsive {
-  font-weight: 600;
-  color: var(--color-primario-claro);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
-  line-height: 1.1;
 }
 .acciones-confirmar {
   display: flex;
@@ -365,13 +386,12 @@ const cantidadArticulosInexistentes = computed(() => {
 .boton-check {
   color: var(--color-exito);
 }
-.boton-cancelar {
-  color: var(--color-error);
+.boton-restablecer {
+  color: var(--color-carga);
 }
-.sin-cambios {
-  min-height: 30px;
-  color: var(--color-texto-secundario);
-  opacity: 0.6;
+.boton-confirmar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 @media (min-width: 601px) and (max-width: 1024px) {
   .tarjeta-etiqueta-item {

@@ -1,6 +1,5 @@
 <template>
   <div class="campo-responsive">
-    <span class="label-responsive">{{ modo === 'cantidad' ? 'Cantidad:' : 'Acciones:' }}</span>
     <div v-if="modo === 'cantidad'" class="control-cantidad">
       <button type="button" class="boton-cantidad boton-menos" @click="$emit('decrementar', indice)" :disabled="etiqueta.cantidad <= 1">
         <IconMinus :size="16" :stroke="2" />
@@ -18,7 +17,9 @@
       </button>
     </div>
     <div v-else class="acciones-ubicacion">
-      <IconTrash class="icono-ubicacion icono-borrar" @click="$emit('eliminar', indice)" title="Eliminar etiqueta" />
+      <button type="button" class="boton-cantidad boton-eliminar" @click="$emit('eliminar', indice)" title="Eliminar etiqueta">
+        <IconTrash class="icono-ubicacion icono-borrar" :size="16" :stroke="2" />
+      </button>
     </div>
   </div>
 </template>
@@ -60,15 +61,6 @@ function manejarCambioCantidad(evento) {
   display: grid;
   gap: 0.3rem;
 }
-.label-responsive {
-  display: block;
-  font-weight: 600;
-  color: var(--color-primario-claro);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
-  line-height: 1.1;
-}
 .control-cantidad {
   display: flex;
   align-items: center;
@@ -99,6 +91,8 @@ function manejarCambioCantidad(evento) {
   cursor: not-allowed;
 }
 .input-cantidad {
+  appearance: textfield;
+  -moz-appearance: textfield;
   width: 50px;
   padding: 0.3rem;
   text-align: center;
@@ -108,6 +102,11 @@ function manejarCambioCantidad(evento) {
   border-radius: 4px;
   font-size: 0.9rem;
 }
+.input-cantidad::-webkit-outer-spin-button,
+.input-cantidad::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .input-cantidad:focus {
   outline: none;
   border-color: var(--color-primario);
@@ -116,7 +115,7 @@ function manejarCambioCantidad(evento) {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 0.35rem;
 }
 .icono-ubicacion {
   cursor: pointer;
@@ -129,9 +128,6 @@ function manejarCambioCantidad(evento) {
     gap: 0.25rem;
     margin-bottom: 0.05rem;
     padding: 0.03rem 0;
-  }
-  .label-responsive {
-    font-size: 0.7rem;
   }
   .control-cantidad {
     justify-content: flex-start;
