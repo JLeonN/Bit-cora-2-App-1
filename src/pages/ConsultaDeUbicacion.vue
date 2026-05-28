@@ -22,6 +22,15 @@
           @input="manejarInputBusqueda"
           @keyup.enter="buscarArticuloExacto"
         />
+        <button
+          v-if="busquedaArticulo"
+          type="button"
+          class="boton-copiar-busqueda"
+          title="Copiar texto"
+          @click="copiarBusquedaActual"
+        >
+          <IconCopy :size="16" />
+        </button>
 
         <CodigoMasNombre
           v-if="mostrarBuscador && busquedaArticulo.length >= 3"
@@ -108,7 +117,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
-import { IconCamera, IconTrash } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../components/Logica/Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
@@ -138,6 +147,7 @@ const inputBusquedaRef = ref(null)
 const inputNuevaUbicacionRef = ref(null)
 const ultimoEspacioTiempo = ref(0)
 const seleccionRecienteDesdeBuscador = ref(false)
+const textoCopiadoBusqueda = ref('')
 
 let intervaloBaseDatos = null
 
@@ -289,6 +299,19 @@ const buscarArticuloExacto = () => {
   nuevaUbicacion.value = ''
 }
 
+const copiarBusquedaActual = async () => {
+  const texto = String(busquedaArticulo.value || '')
+  if (!texto) return
+  textoCopiadoBusqueda.value = texto
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(texto)
+    }
+  } catch (error) {
+    console.warn('[ConsultaDeUbicacion] No se pudo copiar al portapapeles:', error)
+  }
+}
+
 const seleccionarArticulo = (articulo) => {
   const historial = obtenerHistorialUbicaciones(articulo.codigo)
   busquedaArticulo.value = articulo.codigo
@@ -423,8 +446,15 @@ const guardarNuevaUbicacion = async () => {
     ...articuloConsultado.value,
     historialUbicaciones: historialActualizado,
   }
+  if (textoCopiadoBusqueda.value) {
+    busquedaArticulo.value = textoCopiadoBusqueda.value
+  }
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
+  await nextTick()
+  inputBusquedaRef.value?.focus()
+  const largoTextoBusqueda = busquedaArticulo.value.length
+  inputBusquedaRef.value?.setSelectionRange(largoTextoBusqueda, largoTextoBusqueda)
 
   Notify.create({
     type: 'positive',
@@ -517,7 +547,7 @@ onUnmounted(() => {
 }
 .input-buscador {
   width: 100%;
-  padding: 14px 12px;
+  padding: 14px 40px 14px 12px;
   border-radius: 8px;
   border: 1px solid var(--color-borde);
   background: var(--color-fondo);
@@ -525,6 +555,27 @@ onUnmounted(() => {
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s ease;
+}
+.boton-copiar-busqueda {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+.boton-copiar-busqueda:hover {
+  opacity: 1;
+  color: var(--color-acento);
+  transform: translateY(-50%) scale(1.08);
 }
 .input-buscador:focus {
   border-color: var(--color-primario);

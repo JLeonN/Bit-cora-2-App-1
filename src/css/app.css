@@ -1015,6 +1015,32 @@ button {
   position: relative;
   z-index: 50;
 }
+.ubicacion-campo-con-buscador input {
+  padding-right: 38px;
+}
+.boton-copiar-codigo {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  opacity: 0.55;
+  transition: all 0.2s ease;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-desactivado);
+}
+.boton-copiar-codigo:hover {
+  opacity: 1;
+  color: var(--color-acento);
+  transform: translateY(-50%) scale(1.08);
+}
 /* --- ASEGURAR QUE EL CONTENEDOR PRINCIPAL TENGA ESPACIO --- */
 .contenedor-principal-formulario {
   position: relative;

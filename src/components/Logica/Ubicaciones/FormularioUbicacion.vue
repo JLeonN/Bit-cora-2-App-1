@@ -15,6 +15,15 @@
           @blur="manejarDesenfoqueCodigo"
           @keydown="manejarDobleEspacio"
         />
+        <button
+          v-if="nuevoCodigo"
+          type="button"
+          class="boton-copiar-codigo"
+          title="Copiar texto"
+          @click="copiarCodigoActual"
+        >
+          <IconCopy :size="16" />
+        </button>
 
         <!-- Componente buscador -->
         <CodigoMasNombre
@@ -111,7 +120,7 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
-import { IconCamera, IconTrash } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
 import {
@@ -149,6 +158,7 @@ const articuloSeleccionadoInfo = ref(null)
 const origenSeleccionActual = ref('ninguno')
 const mantenerBuscadorVisible = ref(false)
 const autoseleccionandoCodigo = ref(false)
+const textoCopiadoCodigo = ref('')
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -311,6 +321,19 @@ function manejarDesenfoqueCodigo() {
   }, 200)
 }
 
+async function copiarCodigoActual() {
+  const texto = String(nuevoCodigo.value || '')
+  if (!texto) return
+  textoCopiadoCodigo.value = texto
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(texto)
+    }
+  } catch (error) {
+    console.warn('[FormularioUbicacion] No se pudo copiar al portapapeles:', error)
+  }
+}
+
 function manejarEnfoqueUbicacion() {
   // Solo scroll automático, sin anclar
   moverFormularioArriba()
@@ -444,6 +467,11 @@ async function gestionarEnvio() {
   mantenerBuscadorVisible.value = false
   restablecerPlaceholderCodigo()
   mostrarBuscador.value = false
+
+  // Si el usuario copió un código/nombre, reponerlo automáticamente al agregar.
+  if (textoCopiadoCodigo.value) {
+    nuevoCodigo.value = textoCopiadoCodigo.value
+  }
 
   // Volver al input de código para carga rápida en serie
   nextTick(() => {
