@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-consulta">
-    <h2 class="titulo-consulta">Consulta De Ubicacion</h2>
+    <h2 class="titulo-consulta">Consulta de ubicación</h2>
 
     <SelectorExcel
       v-if="!baseDatosCargada"
@@ -14,7 +14,7 @@
           ref="inputBusquedaRef"
           v-model="busquedaArticulo"
           type="text"
-          placeholder="Codigo o nombre del articulo"
+          placeholder="Código o nombre del artículo"
           class="input-buscador"
           @focus="manejarEnfoqueBusqueda"
           @blur="manejarDesenfoqueBusqueda"
@@ -52,7 +52,7 @@
           <p class="ubicacion-original">
             Original Excel:
             <strong :class="{ 'texto-sl-neon': esUbicacionOriginalSL }">{{
-              articuloConsultado.ubicacionAntigua || 'SIN UBICACION'
+              articuloConsultado.ubicacionAntigua || 'SIN UBICACIÓN'
             }}</strong>
           </p>
           <p class="valor-nombre">{{ articuloConsultado.nombre }}</p>
@@ -60,7 +60,7 @@
         </div>
 
         <button type="button" class="boton-actualizar-ubicacion" @click="alternarEditorUbicacion">
-          {{ mostrarEditorUbicacion ? 'Cancelar actualizacion' : 'Actualizar ubicacion' }}
+          {{ mostrarEditorUbicacion ? 'Cancelar actualización' : 'Actualizar ubicación' }}
         </button>
 
         <transition name="mostrar-editor">
@@ -74,7 +74,7 @@
                 ref="inputNuevaUbicacionRef"
                 v-model="nuevaUbicacion"
                 type="text"
-                placeholder="Nueva ubicacion"
+                placeholder="Nueva ubicación"
                 class="input-ubicacion"
                 @blur="formatearNuevaUbicacion"
               />
@@ -82,13 +82,13 @@
                 v-if="nuevaUbicacion"
                 type="button"
                 class="boton-limpiar-ubicacion"
-                title="Limpiar ubicacion"
+                title="Limpiar ubicación"
                 @click="nuevaUbicacion = ''"
               >
                 <IconTrash :size="16" />
               </button>
             </div>
-            <button type="submit" class="boton-guardar-ubicacion">Guardar ubicacion</button>
+            <button type="submit" class="boton-guardar-ubicacion">Guardar ubicación</button>
           </form>
         </transition>
       </div>
@@ -147,7 +147,7 @@ const historialVisual = computed(() => {
     ? [...articuloConsultado.value.historialUbicaciones]
     : []
   if (historial.length === 0) {
-    return [articuloConsultado.value.ubicacionAntigua || 'SIN UBICACION']
+    return [articuloConsultado.value.ubicacionAntigua || 'SIN UBICACIÓN']
   }
   return [...historial].reverse()
 })
@@ -276,7 +276,7 @@ const buscarArticuloExacto = () => {
   if (!articulo) {
     Notify.create({
       type: 'warning',
-      message: 'Articulo inexistente en la base cargada',
+      message: 'Artículo inexistente en la base cargada',
       position: 'top',
       timeout: 2200,
     })
@@ -304,7 +304,7 @@ const abrirCamara = () => {
   if (!baseDatosCargada.value) {
     Notify.create({
       type: 'warning',
-      message: 'Carga el Excel antes de escanear articulos',
+      message: 'Carga el Excel antes de escanear artículos',
       position: 'top',
       timeout: 2200,
     })
@@ -328,7 +328,7 @@ const procesarCodigosEscaneados = (codigos) => {
   if (!articulo) {
     Notify.create({
       type: 'warning',
-      message: `El codigo ${codigoPrincipal} no existe en la base cargada`,
+      message: `El código ${codigoPrincipal} no existe en la base cargada`,
       position: 'top',
       timeout: 2200,
     })
@@ -370,7 +370,7 @@ const guardarNuevaUbicacion = async () => {
   if (!nuevaUbicacion.value) {
     Notify.create({
       type: 'warning',
-      message: 'Ingresa una ubicacion nueva antes de guardar',
+      message: 'Ingresa una ubicación nueva antes de guardar',
       position: 'top',
       timeout: 2200,
     })
@@ -388,7 +388,7 @@ const guardarNuevaUbicacion = async () => {
   if ((ubicacionReferencia || '').trim().toUpperCase() === ubicacionNueva) {
     Notify.create({
       type: 'warning',
-      message: 'La ubicacion nueva es igual a la ultima conocida',
+      message: 'La ubicación nueva es igual a la última conocida',
       position: 'top',
       timeout: 2200,
     })
@@ -399,7 +399,7 @@ const guardarNuevaUbicacion = async () => {
   if (!resultado.exito) {
     Notify.create({
       type: 'negative',
-      message: resultado.mensaje || 'No se pudo actualizar la ubicacion',
+      message: resultado.mensaje || 'No se pudo actualizar la ubicación',
       position: 'top',
       timeout: 2600,
     })
@@ -428,7 +428,7 @@ const guardarNuevaUbicacion = async () => {
 
   Notify.create({
     type: 'positive',
-    message: 'Ubicacion actualizada y agregada a Ubicaciones para enviar',
+    message: 'Ubicación actualizada y agregada a Ubicaciones para enviar',
     position: 'top',
     timeout: 2600,
   })

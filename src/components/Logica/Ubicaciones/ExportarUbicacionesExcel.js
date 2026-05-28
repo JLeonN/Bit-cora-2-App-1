@@ -1,4 +1,4 @@
-import { Filesystem, Directory } from '@capacitor/filesystem'
+﻿import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
 import {
   obtenerArticulosCargados,
@@ -32,7 +32,7 @@ function obtenerNombreArticulo(codigo) {
   const articuloEncontrado = articulosCargados.find(
     (articulo) => articulo.codigo.toLowerCase() === codigoNormalizado,
   )
-  return articuloEncontrado ? articuloEncontrado.nombre : 'Articulo inexistente'
+  return articuloEncontrado ? articuloEncontrado.nombre : 'Artículo inexistente'
 }
 
 function obtenerColumnaExcelPorIndice(indice) {
@@ -75,14 +75,14 @@ function construirLibroUbicaciones(ubicaciones, nombreUsuario) {
     maximoHistorial = Math.max(maximoHistorial, historial.length)
 
     const esUbicacionSL = ubicacionAntigua.toUpperCase() === 'SL'
-    const esArticuloInexistente = descripcionArticulo === 'Articulo inexistente'
+    const esArticuloInexistente = descripcionArticulo === 'Artículo inexistente'
     const emojiInfo = esUbicacionSL || esArticuloInexistente ? '❌' : '✔️'
 
-    hojaDeTrabajo[`A${numeroFila}`] = { v: codigo || 'Sin codigo', t: 's' }
+    hojaDeTrabajo[`A${numeroFila}`] = { v: codigo || 'Sin código', t: 's' }
     hojaDeTrabajo[`B${numeroFila}`] = { v: 0, t: 'n' }
     hojaDeTrabajo[`C${numeroFila}`] = { v: 0, t: 'n' }
     hojaDeTrabajo[`D${numeroFila}`] = { v: '00000016', t: 's' }
-    hojaDeTrabajo[`E${numeroFila}`] = { v: ubicacionNueva || 'Sin ubicacion', t: 's' }
+    hojaDeTrabajo[`E${numeroFila}`] = { v: ubicacionNueva || 'Sin ubicación', t: 's' }
     hojaDeTrabajo[`F${numeroFila}`] = { v: descripcionArticulo, t: 's' }
     hojaDeTrabajo[`G${numeroFila}`] = { v: ubicacionAntigua || '', t: 's' }
     hojaDeTrabajo[`H${numeroFila}`] = { v: emojiInfo, t: 's' }
@@ -127,7 +127,7 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
   const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicaciones)
   if (!validacionDuplicados.exito) {
     throw new Error(
-      `Hay codigos duplicados en Ubicaciones: ${validacionDuplicados.codigosDuplicados.join(', ')}`,
+      `Hay códigos duplicados en Ubicaciones: ${validacionDuplicados.codigosDuplicados.join(', ')}`,
     )
   }
 
@@ -154,7 +154,8 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
 
 export async function descargarExcelUbicacionesEnNavegador(ubicaciones) {
   if (!esNavegadorWeb()) {
-    throw new Error('La descarga directa solo esta disponible en navegador')
+    throw new Error('La descarga directa solo está disponible en navegador')
   }
   return generarYGuardarExcelUbicaciones(ubicaciones)
 }
+

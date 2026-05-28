@@ -55,7 +55,7 @@
         <p class="linea-info-articulo">
           <span class="etiqueta-info-articulo">Original Excel:</span>
           <span :class="{ 'texto-sl-neon': articuloSeleccionadoInfo.ubicacionOriginal === 'SL' }">
-            {{ articuloSeleccionadoInfo.ubicacionOriginal || 'Sin ubicacion' }}
+            {{ articuloSeleccionadoInfo.ubicacionOriginal || 'Sin ubicación' }}
           </span>
         </p>
       </div>

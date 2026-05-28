@@ -109,13 +109,13 @@ function crearSelectorDeArchivo() {
       if (archivo) {
         resolve(archivo)
       } else {
-        reject(new Error('No se selecciono ningun archivo'))
+        reject(new Error('No se seleccionó ningún archivo'))
       }
       document.body.removeChild(inputArchivo)
     }
 
     inputArchivo.oncancel = () => {
-      reject(new Error('Seleccion cancelada'))
+      reject(new Error('Selección cancelada'))
       document.body.removeChild(inputArchivo)
     }
 
@@ -159,7 +159,7 @@ function procesarDatosExcel(datosJson) {
 
 export async function cargarArticulosDesdeExcel() {
   if (estadoCarga === 'cargando') {
-    return { exito: false, mensaje: 'Ya esta cargando...' }
+    return { exito: false, mensaje: 'Ya está cargando...' }
   }
 
   estadoCarga = 'cargando'
@@ -179,13 +179,13 @@ export async function cargarArticulosDesdeExcel() {
       archivoSeleccionado.type.includes('spreadsheet')
 
     if (!esExcel) {
-      throw new Error('El archivo seleccionado no es un Excel valido (.xlsx o .xls)')
+      throw new Error('El archivo seleccionado no es un Excel válido (.xlsx o .xls)')
     }
 
     const bufferArchivo = await leerArchivoComoBuffer(archivoSeleccionado)
     const libroExcel = XLSX.read(bufferArchivo, { type: 'array' })
     if (!libroExcel.SheetNames || libroExcel.SheetNames.length === 0) {
-      throw new Error('El archivo Excel no tiene hojas o esta corrupto')
+      throw new Error('El archivo Excel no tiene hojas o está corrupto')
     }
 
     const nombrePrimeraHoja = libroExcel.SheetNames[0]
@@ -198,7 +198,7 @@ export async function cargarArticulosDesdeExcel() {
       return {
         exito: false,
         mensaje:
-          'El archivo no contiene datos validos. Asegurate de que tenga al menos 2 columnas: codigo y nombre.',
+          'El archivo no contiene datos válidos. Asegúrate de que tenga al menos 2 columnas: código y nombre.',
       }
     }
 
@@ -209,23 +209,23 @@ export async function cargarArticulosDesdeExcel() {
 
     return {
       exito: true,
-      mensaje: `${articulosProcesados.length} articulos cargados desde "${informacionArchivo.nombre}"`,
+      mensaje: `${articulosProcesados.length} artículos cargados desde "${informacionArchivo.nombre}"`,
       cantidad: articulosProcesados.length,
       archivo: informacionArchivo,
     }
   } catch (error) {
     estadoCarga = 'error'
     let mensajeError = 'Error desconocido al procesar el archivo.'
-    if (error.message?.includes('No se selecciono')) {
-      mensajeError = 'No se selecciono ningun archivo.'
+    if (error.message?.includes('No se seleccionó')) {
+      mensajeError = 'No se seleccionó ningún archivo.'
     } else if (error.message?.includes('cancelada')) {
-      mensajeError = 'Seleccion de archivo cancelada.'
+      mensajeError = 'Selección de archivo cancelada.'
     } else if (error.message?.includes('no es un Excel')) {
-      mensajeError = 'El archivo seleccionado no es un Excel valido. Debe ser .xlsx o .xls'
+      mensajeError = 'El archivo seleccionado no es un Excel válido. Debe ser .xlsx o .xls'
     } else if (error.message?.includes('no tiene hojas')) {
-      mensajeError = 'El archivo Excel esta corrupto o vacio.'
+      mensajeError = 'El archivo Excel está corrupto o vacío.'
     } else if (error.message?.includes('no contiene datos')) {
-      mensajeError = 'El archivo no tiene el formato correcto. Debe tener columnas: codigo y nombre.'
+      mensajeError = 'El archivo no tiene el formato correcto. Debe tener columnas: código y nombre.'
     } else {
       mensajeError = `Error al procesar: ${error.message}`
     }
@@ -301,10 +301,10 @@ export function obtenerHistorialUbicaciones(codigo) {
 
 export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
   if (!codigo || typeof codigo !== 'string') {
-    return { exito: false, mensaje: 'Codigo invalido para actualizar ubicacion' }
+    return { exito: false, mensaje: 'Código inválido para actualizar ubicación' }
   }
   if (!nuevaUbicacion || typeof nuevaUbicacion !== 'string') {
-    return { exito: false, mensaje: 'Ubicacion invalida para actualizar' }
+    return { exito: false, mensaje: 'Ubicación inválida para actualizar' }
   }
   if (!Array.isArray(articulosDelExcel) || articulosDelExcel.length === 0) {
     return { exito: false, mensaje: 'No hay base de datos cargada para actualizar' }
@@ -317,7 +317,7 @@ export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
   )
 
   if (indiceArticulo === -1) {
-    return { exito: false, mensaje: `No se encontro el articulo ${codigoNormalizado}` }
+    return { exito: false, mensaje: `No se encontró el artículo ${codigoNormalizado}` }
   }
 
   const historialActual = Array.isArray(articulosDelExcel[indiceArticulo]?.historialUbicaciones)
@@ -325,7 +325,7 @@ export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
     : []
   const ultimaUbicacion = historialActual.at(-1)
   if (ultimaUbicacion === ubicacionNormalizada) {
-    return { exito: false, mensaje: 'La ubicacion nueva es igual a la ultima del historial' }
+    return { exito: false, mensaje: 'La ubicación nueva es igual a la última del historial' }
   }
 
   historialActual.push(ubicacionNormalizada)
@@ -355,7 +355,7 @@ export function validarCodigosDuplicadosEnUbicaciones(listaUbicaciones) {
 
 export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
   if (!Array.isArray(listaUbicaciones)) {
-    return { exito: false, mensaje: 'La lista de ubicaciones no tiene formato valido' }
+    return { exito: false, mensaje: 'La lista de ubicaciones no tiene formato válido' }
   }
   if (!Array.isArray(articulosBaseOriginal) || articulosBaseOriginal.length === 0) {
     return { exito: false, mensaje: 'No hay base de datos original para reconstruir' }
@@ -365,7 +365,7 @@ export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
   if (codigosDuplicados.length > 0) {
     return {
       exito: false,
-      mensaje: `Hay codigos duplicados en Ubicaciones: ${codigosDuplicados.join(', ')}`,
+      mensaje: `Hay códigos duplicados en Ubicaciones: ${codigosDuplicados.join(', ')}`,
       codigosDuplicados,
     }
   }

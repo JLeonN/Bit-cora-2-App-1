@@ -106,12 +106,12 @@ const emit = defineEmits(['update:modelValue', 'limpiar', 'rangoInvalido'])
 
 const labels = computed(() => ({
   mes: props.etiquetas.mes || 'Mes',
-  anio: props.etiquetas.anio || 'Ano',
-  diaExacto: props.etiquetas.diaExacto || 'Dia puntual',
+  anio: props.etiquetas.anio || 'Año',
+  diaExacto: props.etiquetas.diaExacto || 'Día puntual',
   fechaDesde: props.etiquetas.fechaDesde || 'Desde',
   fechaHasta: props.etiquetas.fechaHasta || 'Hasta',
   limpiar: props.etiquetas.limpiar || 'Limpiar filtros',
-  rangoInvalido: props.etiquetas.rangoInvalido || 'El rango Desde/Hasta no es valido.',
+  rangoInvalido: props.etiquetas.rangoInvalido || 'El rango Desde/Hasta no es válido.',
 }))
 
 const clasePopup = computed(() => props.popupClass)
