@@ -319,9 +319,7 @@ src/
 
 ---
 
-### Actualización de release 4.2.17
+### Actualización de release 4.2.18
 
-- Se corrigió la lectura de versión local para evitar que la app muestre `0.0.0` en el aviso de actualización.
-- Se ajustó la inyección de versión en compilación para tomar siempre la versión real del proyecto.
-- Se alineó el estado de versión entre la aplicación instalada y el control remoto de actualización.
-- Release vigente actualizada: 4.2.17.
+- Se incorporó autoselección inteligente en Ubicaciones cuando la búsqueda devuelve un único artículo válido.`r`n- Se mejoró la mini tarjeta de artículo con más contraste y jerarquía visual para facilitar lectura.`r`n- Se ajustó el flujo para mantener el foco en código durante autoselección y reenfocar código tras agregar.`r`n- Se corrigieron textos visibles y mensajes con acentos, además de cadenas con codificación dañada.`r`n- Release vigente actualizada: 4.2.18.
+
