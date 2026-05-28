@@ -45,7 +45,7 @@
       <!-- Campo Ubicación (autocompletado) -->
       <div class="campo-formulario">
         <label for="ubicacion-etiqueta">Ubicación</label>
-        <div class="ubicacion-campo">
+        <div class="input-con-boton ubicacion-campo">
           <input
             id="ubicacion-etiqueta"
             type="text"
@@ -68,16 +68,34 @@
       <!-- Campo Cantidad de copias -->
       <div class="campo-formulario">
         <label for="cantidad-copias">Cantidad de copias</label>
-        <input
-          id="cantidad-copias"
-          ref="inputCantidad"
-          type="number"
-          min="1"
-          v-model.number="cantidadCopias"
-          placeholder="1"
-          @focus="manejarEnfoqueCantidad"
-          :class="{ 'input-error': mostrarErrorCantidad }"
-        />
+        <div class="control-cantidad-formulario" :class="{ 'input-error': mostrarErrorCantidad }">
+          <button
+            type="button"
+            class="boton-cantidad-formulario boton-cantidad-menos"
+            @click="decrementarCantidad"
+            :disabled="cantidadCopias <= 1"
+          >
+            <IconMinus :size="16" :stroke="2" />
+          </button>
+          <input
+            id="cantidad-copias"
+            ref="inputCantidad"
+            type="number"
+            min="1"
+            v-model.number="cantidadCopias"
+            placeholder="1"
+            @focus="manejarEnfoqueCantidad"
+            @input="normalizarCantidadCopias"
+            class="input-cantidad-formulario"
+          />
+          <button
+            type="button"
+            class="boton-cantidad-formulario boton-cantidad-mas"
+            @click="incrementarCantidad"
+          >
+            <IconPlus :size="16" :stroke="2" />
+          </button>
+        </div>
       </div>
 
       <!-- Botón Agregar -->
@@ -100,7 +118,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { IconCamera, IconPlus, IconTrash } from '@tabler/icons-vue'
+import { IconCamera, IconPlus, IconTrash, IconMinus } from '@tabler/icons-vue'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
@@ -195,6 +213,27 @@ function manejarDesenfoqueCodigo() {
 function manejarEnfoqueCantidad() {
   moverFormularioArriba()
   inputCantidad.value?.select()
+}
+
+function normalizarCantidadCopias() {
+  if (!Number.isFinite(cantidadCopias.value) || cantidadCopias.value < 1) {
+    cantidadCopias.value = 1
+  } else {
+    cantidadCopias.value = Math.trunc(cantidadCopias.value)
+  }
+  mostrarErrorCantidad.value = false
+}
+
+function incrementarCantidad() {
+  normalizarCantidadCopias()
+  cantidadCopias.value += 1
+}
+
+function decrementarCantidad() {
+  normalizarCantidadCopias()
+  if (cantidadCopias.value > 1) {
+    cantidadCopias.value -= 1
+  }
 }
 
 // Seleccionar artículo del buscador
@@ -355,6 +394,7 @@ function cerrarResultadosFuera(event) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  align-content: start;
 }
 .campo-con-buscador {
   grid-column: 1 / -1;
@@ -394,6 +434,50 @@ function cerrarResultadosFuera(event) {
 }
 .input-con-boton input {
   flex: 1;
+}
+.control-cantidad-formulario {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.boton-cantidad-formulario {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+.boton-cantidad-formulario:hover:not(:disabled) {
+  background: var(--color-superficie);
+  border-color: var(--color-primario);
+  color: var(--color-primario);
+}
+.boton-cantidad-formulario:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.input-cantidad-formulario {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  width: 64px;
+  min-height: 44px;
+  padding: 0.75rem 0.5rem;
+  box-sizing: border-box;
+  text-align: center;
+  font-weight: 600;
+}
+.input-cantidad-formulario::-webkit-outer-spin-button,
+.input-cantidad-formulario::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .boton-camara {
   padding: 0.75rem;
@@ -440,6 +524,9 @@ function cerrarResultadosFuera(event) {
   display: flex;
   align-items: center;
 }
+.ubicacion-campo input {
+  flex: 1;
+}
 .boton-limpiar-ubicacion {
   position: absolute;
   right: 0.5rem;
@@ -461,6 +548,12 @@ function cerrarResultadosFuera(event) {
 .input-error::placeholder {
   color: var(--color-error);
   opacity: 0.7;
+}
+.control-cantidad-formulario.input-error {
+  border-color: transparent !important;
+}
+.control-cantidad-formulario.input-error .input-cantidad-formulario {
+  border-color: var(--color-error) !important;
 }
 @keyframes sacudida {
   0%,
@@ -491,9 +584,30 @@ function cerrarResultadosFuera(event) {
     grid-column: 1;
   }
 }
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+  .contenedor-tabla {
+    padding-top: 1rem;
+    padding-bottom: 0.75rem;
+  }
+  .formulario-etiqueta {
+    gap: 0.8rem;
+  }
+  .boton-agregar-etiqueta {
+    margin-top: 0.25rem;
+  }
+}
 @media (max-width: 600px) {
   .contenedor-tabla {
     padding: 1rem;
+  }
+  .input-cantidad-formulario {
+    width: 58px;
+    min-height: 40px;
+    padding: 0.7rem 0.45rem;
+  }
+  .boton-cantidad-formulario {
+    width: 40px;
+    height: 40px;
   }
   .boton-agregar-etiqueta {
     font-size: 0.95rem;
