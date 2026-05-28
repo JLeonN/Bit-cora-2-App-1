@@ -837,8 +837,8 @@ button {
   flex-basis: 100%;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
-  background: var(--color-fondo);
-  padding: 8px 10px;
+  background: color-mix(in oklab, var(--color-superficie) 55%, var(--color-fondo));
+  padding: 10px 12px;
   margin-top: 2px;
 }
 .tarjeta-info-articulo.tarjeta-sl-neon {
@@ -857,40 +857,51 @@ button {
   order: 3;
 }
 .titulo-info-articulo {
-  margin: 0 0 6px 0;
-  font-size: 0.8rem;
+  margin: 0 0 8px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-borde) 70%, transparent);
+  font-size: 0.82rem;
   color: var(--color-acento);
   font-weight: 700;
+  letter-spacing: 0.25px;
 }
 .linea-info-articulo {
   margin: 0;
-  font-size: 0.82rem;
+  padding: 2px 0;
+  font-size: 0.84rem;
   color: var(--color-texto-principal);
   line-height: 1.35;
+}
+.linea-info-articulo + .linea-info-articulo {
+  border-top: 1px solid color-mix(in oklab, var(--color-borde) 45%, transparent);
 }
 .linea-info-articulo.linea-historial {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 .chip-historial-ubicacion {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--color-borde);
-  background: var(--color-superficie);
+  border: 1px solid color-mix(in oklab, var(--color-borde) 80%, var(--color-primario-claro));
+  background: color-mix(in oklab, var(--color-superficie) 88%, var(--color-fondo));
   border-radius: 999px;
-  padding: 1px 8px;
+  padding: 2px 8px;
   font-size: 0.75rem;
   font-weight: 700;
+  color: var(--color-texto-principal);
 }
 .texto-sl-neon {
   color: var(--color-neon-sl-texto);
   text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
 }
 .etiqueta-info-articulo {
-  color: var(--color-texto-secundario);
-  font-weight: 600;
+  color: color-mix(in oklab, var(--color-texto-secundario) 82%, white);
+  font-weight: 700;
+  margin-right: 4px;
 }
 .contenedor-boton-agregar {
   flex-shrink: 0;

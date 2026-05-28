@@ -21,6 +21,7 @@
           v-if="mostrarBuscador && nuevoCodigo.length >= 3"
           :busqueda="nuevoCodigo"
           @articulo-seleccionado="seleccionarArticuloDelBuscador"
+          @estado-busqueda="manejarEstadoBuscador"
         />
       </div>
       <div
@@ -145,6 +146,9 @@ const mostrarBuscador = ref(false)
 const inputEnfocado = ref(false)
 const seleccionRecienteDesdeBuscador = ref(false)
 const articuloSeleccionadoInfo = ref(null)
+const origenSeleccionActual = ref('ninguno')
+const mantenerBuscadorVisible = ref(false)
+const autoseleccionandoCodigo = ref(false)
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -258,9 +262,16 @@ function manejarInputCodigo(evento) {
 
   restablecerPlaceholderCodigo()
   seleccionRecienteDesdeBuscador.value = false
+  if (autoseleccionandoCodigo.value) return
   const codigoActual = nuevoCodigo.value.trim().toUpperCase()
-  if (articuloSeleccionadoInfo.value && codigoActual !== articuloSeleccionadoInfo.value.codigo) {
+  const seleccionManualConCodigoDistinto =
+    origenSeleccionActual.value === 'manual' &&
+    articuloSeleccionadoInfo.value &&
+    codigoActual !== articuloSeleccionadoInfo.value.codigo
+  if (seleccionManualConCodigoDistinto) {
     articuloSeleccionadoInfo.value = null
+    origenSeleccionActual.value = 'ninguno'
+    mantenerBuscadorVisible.value = false
   }
 
   // Si hay texto y el input está enfocado, mostrar buscador
@@ -294,7 +305,7 @@ function manejarDesenfoqueCodigo() {
 
   // Delay para permitir el click en las opciones del buscador
   setTimeout(() => {
-    if (!inputEnfocado.value) {
+    if (!inputEnfocado.value && !mantenerBuscadorVisible.value) {
       mostrarBuscador.value = false
     }
   }, 200)
@@ -309,28 +320,70 @@ function manejarDesenfoqueUbicacion() {
   formatearUbicacion()
 }
 
-function seleccionarArticuloDelBuscador(articulo) {
+function construirInfoArticulo(articulo) {
   const historial = Array.isArray(articulo.historialUbicaciones) ? articulo.historialUbicaciones : []
-
-  nuevoCodigo.value = articulo.codigo
-  articuloSeleccionadoInfo.value = {
+  return {
     nombre: articulo.nombre,
     codigo: articulo.codigo,
     ubicacionOriginal: articulo.ubicacionAntigua || '',
     historialVisual:
       historial.length > 0 ? [...historial].reverse() : [articulo.ubicacionAntigua || 'SIN UBICACION'],
   }
+}
+
+function seleccionarArticuloDelBuscador(articulo, opciones = {}) {
+  const { esAutoseleccion = false } = opciones
+  autoseleccionandoCodigo.value = esAutoseleccion
+  if (!esAutoseleccion) {
+    nuevoCodigo.value = articulo.codigo
+  }
+  articuloSeleccionadoInfo.value = construirInfoArticulo(articulo)
+  origenSeleccionActual.value = esAutoseleccion ? 'automatica' : 'manual'
   seleccionRecienteDesdeBuscador.value = true
-  mostrarBuscador.value = false
+  mantenerBuscadorVisible.value = esAutoseleccion
+  mostrarBuscador.value = esAutoseleccion ? true : false
   inputEnfocado.value = false
   restablecerPlaceholderCodigo()
+  autoseleccionandoCodigo.value = false
 
-  // Enfocar el siguiente input (ubicación)
-  nextTick(() => {
-    if (inputUbicacion.value) {
-      inputUbicacion.value.focus()
+  // Si fue selección manual por click, enfocar ubicación para acelerar carga.
+  if (!esAutoseleccion) {
+    nextTick(() => {
+      if (inputUbicacion.value) {
+        inputUbicacion.value.focus()
+      }
+    })
+  }
+}
+
+function manejarEstadoBuscador(estado) {
+  if (!estado) return
+
+  const busquedaValida = estado.busquedaValida && estado.baseDatosCargada
+  if (!busquedaValida) {
+    if (origenSeleccionActual.value === 'automatica') {
+      articuloSeleccionadoInfo.value = null
+      origenSeleccionActual.value = 'ninguno'
+      mantenerBuscadorVisible.value = false
     }
-  })
+    return
+  }
+
+  if (estado.cantidadResultados === 1 && estado.articuloUnico) {
+    const codigoUnico = (estado.articuloUnico.codigo || '').toUpperCase()
+    const seleccionadoActual = articuloSeleccionadoInfo.value?.codigo || ''
+
+    if (seleccionadoActual !== codigoUnico) {
+      seleccionarArticuloDelBuscador(estado.articuloUnico, { esAutoseleccion: true })
+    }
+    return
+  }
+
+  if (origenSeleccionActual.value === 'automatica') {
+    articuloSeleccionadoInfo.value = null
+    origenSeleccionActual.value = 'ninguno'
+  }
+  mantenerBuscadorVisible.value = false
 }
 
 // --- Formatear ubicación ---
@@ -376,17 +429,26 @@ async function gestionarEnvio() {
   await guardarUltimaUbicacion(nuevaUbicacion.value)
 
   // Emitimos los datos al padre
+  const codigoSeleccionado = articuloSeleccionadoInfo.value?.codigo || ''
+  const codigoParaEnviar = codigoSeleccionado || nuevoCodigo.value.trim().toUpperCase()
   emit('ubicacion-agregada', {
-    codigo: nuevoCodigo.value.trim().toUpperCase(),
+    codigo: codigoParaEnviar,
     ubicacion: nuevaUbicacion.value.trim().toUpperCase(),
   })
 
   // Limpiar solo el código, mantener la ubicación para el próximo
   nuevoCodigo.value = ''
   articuloSeleccionadoInfo.value = null
+  origenSeleccionActual.value = 'ninguno'
   seleccionRecienteDesdeBuscador.value = false
+  mantenerBuscadorVisible.value = false
   restablecerPlaceholderCodigo()
   mostrarBuscador.value = false
+
+  // Volver al input de código para carga rápida en serie
+  nextTick(() => {
+    inputCodigo.value?.focus()
+  })
 
   // --- DESBLOQUEAMOS EL CLICK ---
   setTimeout(() => (bloqueandoClick.value = false), 100)

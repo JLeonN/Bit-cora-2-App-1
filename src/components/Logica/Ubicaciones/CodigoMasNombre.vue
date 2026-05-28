@@ -84,7 +84,7 @@ const props = defineProps({
 })
 
 // --- EMITS ---
-const emit = defineEmits(['articulo-seleccionado'])
+const emit = defineEmits(['articulo-seleccionado', 'estado-busqueda'])
 
 // --- ESTADO REACTIVO ---
 const articulosDisponibles = ref([])
@@ -169,6 +169,18 @@ const resultadosBusqueda = computed(() => {
   }
 
   return resultados.slice(0, maximosResultados)
+})
+
+const estadoBusqueda = computed(() => {
+  const busquedaValida = props.busqueda.length >= caracteresMinimos
+  const cantidadResultados = resultadosBusqueda.value.length
+  return {
+    busqueda: props.busqueda,
+    busquedaValida,
+    baseDatosCargada: baseDatosCargada.value,
+    cantidadResultados,
+    articuloUnico: cantidadResultados === 1 ? resultadosBusqueda.value[0].articulo : null,
+  }
 })
 
 // --- FUNCIONES ---
@@ -312,6 +324,14 @@ onUnmounted(() => {
   console.log('[CodigoMasNombre] Componente desmontado')
   detenerMonitoreo()
 })
+
+watch(
+  estadoBusqueda,
+  (nuevoEstado) => {
+    emit('estado-busqueda', nuevoEstado)
+  },
+  { immediate: true },
+)
 
 // --- WATCH PARA LOG DE BÚSQUEDAS (solo en desarrollo) ---
 if (import.meta.env.DEV) {
