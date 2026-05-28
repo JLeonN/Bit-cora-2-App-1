@@ -17,7 +17,6 @@ const ANCHOS_BASE_COLUMNAS = [
   { wch: 65 }, // F - descripcion
   { wch: 12 }, // G - ubic antigua
   { wch: 7 }, // H - info
-  { wch: 4 }, // I - libre
 ]
 
 function esNavegadorWeb() {
@@ -87,22 +86,21 @@ function construirLibroUbicaciones(ubicaciones, nombreUsuario) {
     hojaDeTrabajo[`G${numeroFila}`] = { v: ubicacionAntigua || '', t: 's' }
     hojaDeTrabajo[`H${numeroFila}`] = { v: emojiInfo, t: 's' }
 
-    // Columna I se mantiene libre a proposito.
     historial.forEach((valorHistorial, indiceHistorial) => {
-      const indiceColumna = 9 + indiceHistorial // J=9
+      const indiceColumna = 8 + indiceHistorial // I=8
       const columna = obtenerColumnaExcelPorIndice(indiceColumna)
       hojaDeTrabajo[`${columna}${numeroFila}`] = { v: valorHistorial, t: 's' }
     })
   })
 
   for (let indice = 0; indice < maximoHistorial; indice++) {
-    const indiceColumna = 9 + indice // J=9
+    const indiceColumna = 8 + indice // I=8
     const columna = obtenerColumnaExcelPorIndice(indiceColumna)
     hojaDeTrabajo[`${columna}1`] = { v: `Historial ${indice + 1}`, t: 's' }
   }
 
   const ultimaFila = ubicaciones.length + 1
-  const ultimaColumnaIndice = Math.max(8, 9 + maximoHistorial - 1)
+  const ultimaColumnaIndice = Math.max(7, 8 + maximoHistorial - 1)
   const ultimaColumna = obtenerColumnaExcelPorIndice(ultimaColumnaIndice)
   hojaDeTrabajo['!ref'] = `A1:${ultimaColumna}${ultimaFila}`
 
