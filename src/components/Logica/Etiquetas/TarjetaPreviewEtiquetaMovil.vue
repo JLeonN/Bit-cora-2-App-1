@@ -127,6 +127,9 @@ const borradorCodigo = ref('')
 const borradorDescripcion = ref('')
 const borradorUbicacion = ref('')
 const lineasDescripcionEdicion = ref([])
+const lineasDescripcionEdicionConEstilos = ref([])
+const estiloDescripcionEdicion = ref(null)
+const fontSizeDescripcionEdicionPx = ref(null)
 const {
   anchoPreview,
   obtenerEscala,
@@ -158,15 +161,17 @@ const lineasDescripcionConEstilos = computed(() => {
   if (campoEditando.value !== 'descripcion') {
     return layoutPreview.value.lineasDescripcionConEstilos
   }
-  const estilosBase = layoutPreview.value.lineasDescripcionConEstilos
   return lineasDescripcionEdicion.value.map((texto, indice) => ({
     texto,
-    estilo: estilosBase[indice]?.estilo || estilosBase[0]?.estilo || {},
+    estilo:
+      lineasDescripcionEdicionConEstilos.value[indice]?.estilo ||
+      lineasDescripcionEdicionConEstilos.value[0]?.estilo ||
+      {},
   }))
 })
 const filasDescripcionEdicion = computed(() => Math.max(3, lineasDescripcionEdicion.value.length || lineasDescripcion.value.length))
 const estiloTextareaDescripcion = computed(() => ({
-  ...layoutPreview.value.estilos.descripcion,
+  ...obtenerEstiloDescripcionParaEdicion(),
   left: '4%',
   width: '92%',
   height: '55%',
@@ -182,6 +187,40 @@ function emitirActualizacion(campo, valor) {
   emit('borrador-campo', { indice: props.indice, campo, valor })
 }
 
+function obtenerNumeroDesdePx(valor, fallback = null) {
+  if (typeof valor !== 'string') return fallback
+  const numero = Number.parseFloat(valor.replace('px', ''))
+  return Number.isFinite(numero) ? numero : fallback
+}
+
+function obtenerFontSizeMinimoDescripcion() {
+  const tamanos = lineasDescripcionEdicionConEstilos.value
+    .map((linea) => obtenerNumeroDesdePx(linea?.estilo?.fontSize))
+    .filter((tamano) => tamano !== null)
+  if (!tamanos.length) {
+    return null
+  }
+  return Math.min(...tamanos)
+}
+
+function obtenerEstiloDescripcionParaEdicion() {
+  const estiloBase = campoEditando.value === 'descripcion' && estiloDescripcionEdicion.value
+    ? estiloDescripcionEdicion.value
+    : layoutPreview.value.estilos.descripcion
+  if (campoEditando.value !== 'descripcion' || !estiloBase) {
+    return estiloBase
+  }
+  const tamanoBase = obtenerNumeroDesdePx(estiloBase.fontSize)
+  const interlineadoBase = obtenerNumeroDesdePx(estiloBase.lineHeight)
+  const tamanoMinimo = fontSizeDescripcionEdicionPx.value || tamanoBase
+  const factorInterlineado = tamanoBase && interlineadoBase ? interlineadoBase / tamanoBase : 0.93
+  return {
+    ...estiloBase,
+    fontSize: `${tamanoMinimo.toFixed(2)}px`,
+    lineHeight: `${(tamanoMinimo * factorInterlineado).toFixed(2)}px`,
+  }
+}
+
 function iniciarEdicion(campo) {
   if (campo === 'codigo') {
     borradorCodigo.value = props.etiqueta?.codigo || ''
@@ -191,6 +230,12 @@ function iniciarEdicion(campo) {
   }
   if (campo === 'descripcion') {
     lineasDescripcionEdicion.value = [...lineasDescripcion.value]
+    lineasDescripcionEdicionConEstilos.value = layoutPreview.value.lineasDescripcionConEstilos.map((linea) => ({
+      texto: linea.texto,
+      estilo: { ...linea.estilo },
+    }))
+    estiloDescripcionEdicion.value = { ...layoutPreview.value.estilos.descripcion }
+    fontSizeDescripcionEdicionPx.value = obtenerFontSizeMinimoDescripcion()
     borradorDescripcion.value = lineasDescripcionEdicion.value.join('\n')
     campoEditando.value = campo
     nextTick(() => textareaDescripcionRef.value?.focus())
@@ -226,6 +271,9 @@ function confirmarEdicion() {
   if (campoActual === 'descripcion') {
     emitirActualizacion('descripcion', String(borradorDescripcion.value))
     lineasDescripcionEdicion.value = []
+    lineasDescripcionEdicionConEstilos.value = []
+    estiloDescripcionEdicion.value = null
+    fontSizeDescripcionEdicionPx.value = null
   }
   if (campoActual === 'ubicacion') {
     emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
@@ -241,6 +289,9 @@ function cancelarEdicion() {
   borradorDescripcion.value = props.nombreArticulo || ''
   borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
   lineasDescripcionEdicion.value = []
+  lineasDescripcionEdicionConEstilos.value = []
+  estiloDescripcionEdicion.value = null
+  fontSizeDescripcionEdicionPx.value = null
   campoEditando.value = ''
 }
 
@@ -276,6 +327,9 @@ watch(
       borradorDescripcion.value = props.nombreArticulo || ''
       borradorUbicacion.value = props.etiqueta?.ubicacion || 'Sin ubicación'
       lineasDescripcionEdicion.value = []
+      lineasDescripcionEdicionConEstilos.value = []
+      estiloDescripcionEdicion.value = null
+      fontSizeDescripcionEdicionPx.value = null
     }
   },
 )

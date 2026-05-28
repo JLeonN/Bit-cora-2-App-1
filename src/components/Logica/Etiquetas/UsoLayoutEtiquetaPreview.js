@@ -59,9 +59,18 @@ const dividirBloqueEnLineas = (texto, anchoMaximoPx, tamanoPx, peso = 800) => {
 }
 
 const dividirTextoEnLineas = (texto, anchoMaximoPx, tamanoPx, peso = 800) => {
-  const bloques = normalizarSaltosDescripcion(texto).split('\n')
+  const textoNormalizado = normalizarSaltosDescripcion(texto)
+  const bloques = textoNormalizado.split('\n')
+  const tieneSaltosManuales = bloques.length > 1
   const lineas = []
   for (const bloque of bloques) {
+    if (tieneSaltosManuales) {
+      const bloqueNormalizado = String(bloque || '').replace(/\s+/g, ' ').trim().toUpperCase()
+      if (bloqueNormalizado) {
+        lineas.push(bloqueNormalizado)
+      }
+      continue
+    }
     const lineasBloque = dividirBloqueEnLineas(bloque, anchoMaximoPx, tamanoPx, peso)
     if (lineasBloque.length) {
       lineas.push(...lineasBloque)
