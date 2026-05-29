@@ -319,11 +319,11 @@ src/
 
 ---
 
-### Actualización de release 4.2.19
+### Actualización de release 4.2.20
 
-- Se estabilizó el flujo de Etiquetas para separar descarga web y compartir móvil sin errores por ruta nula.
-- Se incorporó botón específico de descarga PDF en la barra inferior para navegador web.
-- Se optimizó la generación de PDF para reducir consumo de memoria y mejorar estabilidad en cargas grandes.
-- Se corrigió la inicialización de plugins Quasar (`Loading` y `Notify`) para evitar fallos de runtime.
-- Release vigente actualizada: 4.2.19.
+- Se afinó la planificación de gestos en tablas para ejecutar primero una fase piloto en Pedidos.
+- Se dejó Etiquetas fuera del alcance inicial para proteger su flujo actual mientras se valida la interacción.
+- Se ajustaron umbrales, cierre y reinicio de confirmación del gesto para mantener consistencia visual y funcional.
+- Se corrigió la referencia de variables CSS del plan para apuntar al archivo real del proyecto.
+- Release vigente actualizada: 4.2.20.
 

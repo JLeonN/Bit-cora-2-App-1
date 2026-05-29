@@ -6,8 +6,8 @@ import { limpiarCodigoParaBarra, validarCodigoParaBarra } from './GeneradorCodig
 import { calcularLayoutEtiquetaPreview, convertirLayoutPreviewAPixeles } from './UsoLayoutEtiquetaPreview.js'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
-const PERFIL_RENDER_WEB = { anchoRenderPx: 1300, escalaCanvas: 1.5 }
-const PERFIL_RENDER_MOVIL = { anchoRenderPx: 900, escalaCanvas: 1.1 }
+const PERFIL_RENDER_WEB = { anchoRenderPx: 1200, escalaCanvas: 1.35, calidadJpeg: 0.82 }
+const PERFIL_RENDER_MOVIL = { anchoRenderPx: 680, escalaCanvas: 1, calidadJpeg: 0.68 }
 const PAUSAR_CADA_PAGINAS = 8
 const FAMILIA_FUENTE_ETIQUETA = 'Arial Black, Arial, Helvetica, sans-serif'
 
@@ -115,9 +115,11 @@ const generarCanvasEtiquetaDesdePreview = async (etiqueta, configuracion) => {
 }
 
 const crearPaginaEtiqueta = async (pdf, etiqueta, configuracion) => {
+  const perfilRender = obtenerPerfilRender()
   const { pagina } = configuracion
   const { canvas, canvasBarra } = await generarCanvasEtiquetaDesdePreview(etiqueta, configuracion)
-  pdf.addImage(canvas, 'PNG', 0, 0, pagina.ancho, pagina.alto)
+  const imagenJpegBase64 = canvas.toDataURL('image/jpeg', perfilRender.calidadJpeg)
+  pdf.addImage(imagenJpegBase64, 'JPEG', 0, 0, pagina.ancho, pagina.alto, undefined, 'FAST')
   canvas.width = 0
   canvas.height = 0
   if (canvasBarra) {
@@ -148,6 +150,7 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
       orientation: 'landscape',
       unit: 'mm',
       format: [pagina.alto, pagina.ancho],
+      compress: true,
     })
 
     pdf.setProperties({
