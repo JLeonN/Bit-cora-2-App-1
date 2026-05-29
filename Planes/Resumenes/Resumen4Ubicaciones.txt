@@ -4,7 +4,7 @@ Este mÃ³dulo administra ajustes de ubicaciÃ³n de artÃ­culos a partir del E
 
 ---
 
-### Estado funcional actual (v4.2.18)
+### Estado funcional actual (v4.2.19)
 
 - Se permite que existan filas duplicadas por cÃ³digo en la tabla para que el usuario pueda ver conflictos reales en piso.
 - Los duplicados se marcan visualmente y se informan al usuario.

@@ -319,7 +319,11 @@ src/
 
 ---
 
-### Actualización de release 4.2.18
+### Actualización de release 4.2.19
 
-- Se incorporó autoselección inteligente en Ubicaciones cuando la búsqueda devuelve un único artículo válido.`r`n- Se mejoró la mini tarjeta de artículo con más contraste y jerarquía visual para facilitar lectura.`r`n- Se ajustó el flujo para mantener el foco en código durante autoselección y reenfocar código tras agregar.`r`n- Se corrigieron textos visibles y mensajes con acentos, además de cadenas con codificación dañada.`r`n- Release vigente actualizada: 4.2.18.
+- Se estabilizó el flujo de Etiquetas para separar descarga web y compartir móvil sin errores por ruta nula.
+- Se incorporó botón específico de descarga PDF en la barra inferior para navegador web.
+- Se optimizó la generación de PDF para reducir consumo de memoria y mejorar estabilidad en cargas grandes.
+- Se corrigió la inicialización de plugins Quasar (`Loading` y `Notify`) para evitar fallos de runtime.
+- Release vigente actualizada: 4.2.19.
 

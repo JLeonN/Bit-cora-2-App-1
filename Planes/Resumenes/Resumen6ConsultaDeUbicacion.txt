@@ -4,7 +4,7 @@ Pantalla para buscar artÃ­culos y registrar cambios de ubicaciÃ³n sin salir 
 
 ---
 
-### Estado funcional actual (v4.2.18)
+### Estado funcional actual (v4.2.19)
 
 - La tarjeta principal muestra historial de movimientos en lugar de solo â€œUbicaciÃ³n actualâ€.
 - El historial se presenta con la ubicaciÃ³n mÃ¡s nueva primero.
