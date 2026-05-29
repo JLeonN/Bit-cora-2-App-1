@@ -6,11 +6,12 @@ import { limpiarCodigoParaBarra, validarCodigoParaBarra } from './GeneradorCodig
 import { calcularLayoutEtiquetaPreview, convertirLayoutPreviewAPixeles } from './UsoLayoutEtiquetaPreview.js'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
-const ANCHO_RENDER_PX = 1500
-const ESCALA_CANVAS = 2
+const PERFIL_RENDER_WEB = { anchoRenderPx: 1300, escalaCanvas: 1.5 }
+const PERFIL_RENDER_MOVIL = { anchoRenderPx: 900, escalaCanvas: 1.1 }
+const PAUSAR_CADA_PAGINAS = 8
 const FAMILIA_FUENTE_ETIQUETA = 'Arial Black, Arial, Helvetica, sans-serif'
 
-const esNavegador = () => !window.Capacitor || window.Capacitor.getPlatform() === 'web'
+export const esPlataformaWeb = () => !window.Capacitor || window.Capacitor.getPlatform() === 'web'
 
 const descargarPDFEnNavegador = (pdf, nombreArchivo) => {
   const blob = pdf.output('blob')
@@ -23,6 +24,8 @@ const descargarPDFEnNavegador = (pdf, nombreArchivo) => {
 }
 
 const obtenerNumeroPx = (valor) => Number.parseFloat(String(valor || '0').replace('px', '')) || 0
+const obtenerPerfilRender = () => (esPlataformaWeb() ? PERFIL_RENDER_WEB : PERFIL_RENDER_MOVIL)
+const pausarRenderCooperativo = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 const dibujarTextoCentrado = (contexto, texto, x, y) => {
   contexto.fillText(texto, x, y)
@@ -46,29 +49,30 @@ const crearCanvasCodigoBarra = (codigo, altoPx) => {
   return canvasBarra
 }
 
-const generarImagenEtiquetaDesdePreview = async (etiqueta, configuracion) => {
+const generarCanvasEtiquetaDesdePreview = async (etiqueta, configuracion) => {
+  const perfilRender = obtenerPerfilRender()
   const { pagina } = configuracion
-  const altoRenderPx = ANCHO_RENDER_PX / (pagina.ancho / pagina.alto)
-  const anchoCanvas = ANCHO_RENDER_PX * ESCALA_CANVAS
-  const altoCanvas = altoRenderPx * ESCALA_CANVAS
+  const altoRenderPx = perfilRender.anchoRenderPx / (pagina.ancho / pagina.alto)
+  const anchoCanvas = perfilRender.anchoRenderPx * perfilRender.escalaCanvas
+  const altoCanvas = altoRenderPx * perfilRender.escalaCanvas
   const layout = calcularLayoutEtiquetaPreview({
     etiqueta,
     configuracion,
-    anchoReferenciaPx: ANCHO_RENDER_PX,
+    anchoReferenciaPx: perfilRender.anchoRenderPx,
   })
   const layoutPx = convertirLayoutPreviewAPixeles({
     layout,
     configuracion,
-    anchoPreviewPx: ANCHO_RENDER_PX,
+    anchoPreviewPx: perfilRender.anchoRenderPx,
     altoPreviewPx: altoRenderPx,
   })
   const canvas = document.createElement('canvas')
   canvas.width = anchoCanvas
   canvas.height = altoCanvas
   const contexto = canvas.getContext('2d')
-  contexto.scale(ESCALA_CANVAS, ESCALA_CANVAS)
+  contexto.scale(perfilRender.escalaCanvas, perfilRender.escalaCanvas)
   contexto.fillStyle = '#ffffff'
-  contexto.fillRect(0, 0, ANCHO_RENDER_PX, altoRenderPx)
+  contexto.fillRect(0, 0, perfilRender.anchoRenderPx, altoRenderPx)
   contexto.fillStyle = '#000000'
   contexto.textAlign = 'center'
   contexto.textBaseline = 'top'
@@ -76,7 +80,7 @@ const generarImagenEtiquetaDesdePreview = async (etiqueta, configuracion) => {
   const tamanoCodigo = obtenerNumeroPx(layoutPx.estilos.codigo.fontSize)
   const topCodigo = obtenerNumeroPx(layoutPx.estilos.codigo.top)
   contexto.font = `900 ${tamanoCodigo}px ${FAMILIA_FUENTE_ETIQUETA}`
-  dibujarTextoCentrado(contexto, layout.codigo.texto, ANCHO_RENDER_PX / 2, topCodigo)
+  dibujarTextoCentrado(contexto, layout.codigo.texto, perfilRender.anchoRenderPx / 2, topCodigo)
 
   const leftBarra = obtenerNumeroPx(layoutPx.estilos.barra.left)
   const topBarra = obtenerNumeroPx(layoutPx.estilos.barra.top)
@@ -92,7 +96,12 @@ const generarImagenEtiquetaDesdePreview = async (etiqueta, configuracion) => {
   layoutPx.lineasDescripcionConEstilos.forEach((linea, indice) => {
     const tamanoLinea = obtenerNumeroPx(linea.estilo.fontSize)
     contexto.font = `900 ${tamanoLinea}px ${FAMILIA_FUENTE_ETIQUETA}`
-    dibujarTextoCentrado(contexto, linea.texto, ANCHO_RENDER_PX / 2, topDescripcion + indice * interlineadoDescripcion)
+    dibujarTextoCentrado(
+      contexto,
+      linea.texto,
+      perfilRender.anchoRenderPx / 2,
+      topDescripcion + indice * interlineadoDescripcion,
+    )
   })
 
   const tamanoUbicacion = obtenerNumeroPx(layoutPx.estilos.ubicacion.fontSize)
@@ -102,13 +111,19 @@ const generarImagenEtiquetaDesdePreview = async (etiqueta, configuracion) => {
   contexto.font = `400 ${tamanoUbicacion}px Arial, Helvetica, sans-serif`
   contexto.fillText(layout.ubicacion.texto, leftUbicacion, topUbicacion)
 
-  return canvas.toDataURL('image/png')
+  return { canvas, canvasBarra }
 }
 
 const crearPaginaEtiqueta = async (pdf, etiqueta, configuracion) => {
   const { pagina } = configuracion
-  const imagenEtiqueta = await generarImagenEtiquetaDesdePreview(etiqueta, configuracion)
-  pdf.addImage(imagenEtiqueta, 'PNG', 0, 0, pagina.ancho, pagina.alto)
+  const { canvas, canvasBarra } = await generarCanvasEtiquetaDesdePreview(etiqueta, configuracion)
+  pdf.addImage(canvas, 'PNG', 0, 0, pagina.ancho, pagina.alto)
+  canvas.width = 0
+  canvas.height = 0
+  if (canvasBarra) {
+    canvasBarra.width = 0
+    canvasBarra.height = 0
+  }
 }
 
 export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) => {
@@ -142,6 +157,8 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
       creator: 'GeneradorEtiquetasPDF',
     })
 
+    const inicioGeneracion = Date.now()
+    let paginasGeneradas = 0
     let esPrimeraPagina = true
     for (const etiqueta of listaEtiquetas) {
       const cantidadCopias = etiqueta.cantidad || 1
@@ -151,6 +168,10 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
         }
         esPrimeraPagina = false
         await crearPaginaEtiqueta(pdf, etiqueta, configuracion)
+        paginasGeneradas += 1
+        if (paginasGeneradas % PAUSAR_CADA_PAGINAS === 0) {
+          await pausarRenderCooperativo()
+        }
       }
     }
 
@@ -158,9 +179,15 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
     const idConfiguracionFormateado = configuracion.id.replace(/\s/g, '')
     const nombreArchivo = `Etiquetas - ${nombreUsuario} - ${idConfiguracionFormateado}.pdf`
 
-    if (esNavegador()) {
+    if (esPlataformaWeb()) {
       descargarPDFEnNavegador(pdf, nombreArchivo)
       console.log('[GeneradorEtiquetasPDF] PDF descargado en navegador')
+      console.log('[GeneradorEtiquetasPDF] Telemetría:', {
+        tiempoMs: Date.now() - inicioGeneracion,
+        paginasGeneradas,
+        plataforma: 'web',
+        ruta: 'descarga',
+      })
       return {
         exito: true,
         mensaje: 'PDF descargado correctamente',
@@ -177,6 +204,12 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
     })
 
     console.log('[GeneradorEtiquetasPDF] Documento generado:', resultado.uri)
+    console.log('[GeneradorEtiquetasPDF] Telemetría:', {
+      tiempoMs: Date.now() - inicioGeneracion,
+      paginasGeneradas,
+      plataforma: window?.Capacitor?.getPlatform?.() || 'desconocida',
+      ruta: 'share',
+    })
     return {
       exito: true,
       mensaje: 'Documento generado correctamente',

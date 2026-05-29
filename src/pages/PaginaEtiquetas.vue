@@ -48,11 +48,14 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { Loading, Notify } from 'quasar'
+import { Loading, useQuasar } from 'quasar'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
-import { generarDocumentoEtiquetas } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
+import {
+  generarDocumentoEtiquetas,
+  esPlataformaWeb,
+} from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
 // Nota técnica: existen configuraciones 5x10 y 2.5x6.7 internas, no expuestas en UI por ahora.
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
@@ -79,6 +82,7 @@ const modalActivo = ref(false)
 let intervaloPolling = null
 
 const emit = defineEmits(['configurar-barra'])
+const $q = useQuasar()
 
 // --- FUNCIÓN PARA OBTENER CONFIGURACIÓN SEGÚN TAMAÑO ---
 function obtenerConfiguracionPorTamano(tamano) {
@@ -206,13 +210,13 @@ async function generarPDF() {
       spinnerColor: 'primary',
     })
 
-    console.log('🔍 Tamaño seleccionado:', tamanoSeleccionado.value)
+    console.log('[PaginaEtiquetas] Tamaño seleccionado:', tamanoSeleccionado.value)
     console.log('[PaginaEtiquetas] Generando PDF con', listaEtiquetas.value.length, 'etiquetas')
 
     const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
 
-    console.log('📐 Configuración usada:', configuracion.nombre)
-    console.log('📏 Dimensiones:', configuracion.pagina)
+    console.log('[PaginaEtiquetas] Configuración usada:', configuracion.nombre)
+    console.log('[PaginaEtiquetas] Dimensiones:', configuracion.pagina)
 
     const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value, configuracion)
 
@@ -222,24 +226,37 @@ async function generarPDF() {
       throw new Error(resultado.mensaje)
     }
 
-    console.log('[PaginaEtiquetas] ✅ Documento generado:', resultado.rutaArchivo)
+    console.log('[PaginaEtiquetas] Documento generado:', resultado.rutaArchivo)
 
-    const compartido = await compartirArchivo(resultado.rutaArchivo, resultado.nombreArchivo)
+    if (esPlataformaWeb()) {
+      $q.notify({
+        type: 'positive',
+        message: 'Documento PDF descargado correctamente',
+        position: 'top',
+        timeout: 2000,
+      })
+      return
+    }
+
+    const compartido = await compartirArchivo(resultado.rutaArchivo, resultado.nombreArchivo, {
+      titulo: 'Etiquetas PDF',
+      texto: `Etiquetas generadas: ${resultado.nombreArchivo}`,
+    })
 
     if (compartido) {
-      Notify.create({
+      $q.notify({
         type: 'positive',
-        message: '✅ Documento generado y compartido correctamente',
+        message: 'Documento generado y compartido correctamente',
         position: 'top',
         timeout: 2000,
       })
     }
   } catch (error) {
-    console.error('[PaginaEtiquetas] ❌ Error generando PDF:', error)
+    console.error('[PaginaEtiquetas] Error generando PDF:', error)
     Loading.hide()
-    Notify.create({
+    $q.notify({
       type: 'negative',
-      message: `❌ Error: ${error.message}`,
+      message: `Error: ${error.message}`,
       position: 'top',
       timeout: 3000,
     })
