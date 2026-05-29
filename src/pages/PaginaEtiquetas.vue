@@ -48,7 +48,8 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { Loading, useQuasar } from 'quasar'
+import { Loading, Notify } from 'quasar'
+import { IconDownload } from '@tabler/icons-vue'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
@@ -82,7 +83,6 @@ const modalActivo = ref(false)
 let intervaloPolling = null
 
 const emit = defineEmits(['configurar-barra'])
-const $q = useQuasar()
 
 // --- FUNCIÓN PARA OBTENER CONFIGURACIÓN SEGÚN TAMAÑO ---
 function obtenerConfiguracionPorTamano(tamano) {
@@ -229,7 +229,7 @@ async function generarPDF() {
     console.log('[PaginaEtiquetas] Documento generado:', resultado.rutaArchivo)
 
     if (esPlataformaWeb()) {
-      $q.notify({
+      Notify.create({
         type: 'positive',
         message: 'Documento PDF descargado correctamente',
         position: 'top',
@@ -244,7 +244,7 @@ async function generarPDF() {
     })
 
     if (compartido) {
-      $q.notify({
+      Notify.create({
         type: 'positive',
         message: 'Documento generado y compartido correctamente',
         position: 'top',
@@ -254,7 +254,7 @@ async function generarPDF() {
   } catch (error) {
     console.error('[PaginaEtiquetas] Error generando PDF:', error)
     Loading.hide()
-    $q.notify({
+    Notify.create({
       type: 'negative',
       message: `Error: ${error.message}`,
       position: 'top',
@@ -269,16 +269,30 @@ const configuracionBarra = computed(() => ({
   mostrarAtras: true,
   mostrarInicio: true,
   mostrarAgregar: false,
-  mostrarEnviar: listaEtiquetas.value.length > 0,
+  mostrarEnviar: !esPlataformaWeb() && listaEtiquetas.value.length > 0,
   puedeEnviar: listaEtiquetas.value.length > 0,
-  botonesPersonalizados: [],
+  botonesPersonalizados: esPlataformaWeb()
+    ? [
+        {
+          accion: 'descargar-pdf-etiquetas',
+          icono: IconDownload,
+          titulo: 'Descargar PDF',
+          desactivado: listaEtiquetas.value.length === 0,
+          claseCSS: '',
+        },
+      ]
+    : [],
   modalActivo: modalActivo.value,
 }))
 
 const metodosParaBarra = {
   onEnviar: () => generarPDF(),
   onAgregar: () => {},
-  onAccionPersonalizada: () => {},
+  onAccionPersonalizada: (accion) => {
+    if (accion === 'descargar-pdf-etiquetas') {
+      generarPDF()
+    }
+  },
 }
 
 // Métodos para manejar el estado del modal
