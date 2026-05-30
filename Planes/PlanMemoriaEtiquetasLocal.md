@@ -1,4 +1,4 @@
-# PLAN MEMORIA LOCAL DE ETIQUETAS
+﻿# PLAN MEMORIA LOCAL DE ETIQUETAS
 
 ## Descripcion del plan
 
@@ -28,14 +28,13 @@ Implementar una memoria local en el telefono para que, cuando un usuario edite u
 
 Dejar cerrada la estructura de datos que se guardara por cada codigo.
 
-- [ ] Definir la clave principal de almacenamiento para memoria de etiquetas.
-- [ ] Definir estructura por codigo con campos minimos:
-- [ ] `codigo`
-- [ ] `descripcionFormateada`
-- [ ] `ubicacionOpcional` (si aplica)
-- [ ] `actualizadoEn`
-- [ ] Definir version de esquema para migraciones futuras.
-- [ ] Definir limite inicial de entradas y estrategia simple de recorte si supera limite.
+- [x] Definir la clave principal de almacenamiento para memoria de etiquetas.
+- [x] Definir estructura por codigo con campos minimos:
+- [x] `codigo`
+- [x] `descripcionFormateada`
+- [x] `actualizadoEn`
+- [x] Definir version de esquema para migraciones futuras.
+- [x] Definir limite inicial de entradas y estrategia simple de recorte si supera limite.
 
 ## FASE 2: Persistencia local
 
@@ -43,12 +42,12 @@ Dejar cerrada la estructura de datos que se guardara por cada codigo.
 
 Implementar lectura y escritura de memorias usando Capacitor Preferences.
 
-- [ ] Crear modulo de almacenamiento dedicado a memoria de etiquetas.
-- [ ] Implementar `upsert` por codigo (crear si no existe, actualizar si existe).
-- [ ] Implementar obtener memoria por codigo.
-- [ ] Implementar obtener todas las memorias para debug y futuro export.
-- [ ] Implementar eliminar memoria por codigo.
-- [ ] Implementar limpiar todas las memorias (solo utilidad interna controlada).
+- [x] Crear modulo de almacenamiento dedicado a memoria de etiquetas.
+- [x] Implementar `upsert` por codigo (crear si no existe, actualizar si existe).
+- [x] Implementar obtener memoria por codigo.
+- [x] Implementar obtener todas las memorias para debug y futuro export.
+- [x] Implementar eliminar memoria por codigo.
+- [x] Implementar limpiar todas las memorias (solo utilidad interna controlada).
 
 ## FASE 3: Integracion en flujo de etiquetas
 
@@ -56,12 +55,12 @@ Implementar lectura y escritura de memorias usando Capacitor Preferences.
 
 Conectar la memoria al flujo actual para que se use sin friccion para el usuario.
 
-- [ ] Al agregar etiqueta por codigo, buscar memoria y aplicar descripcion guardada si existe.
-- [ ] Al editar descripcion de etiqueta y confirmar (tic verde o confirmacion equivalente), ejecutar guardado inmediato de memoria.
-- [ ] Si se vuelve a editar la misma etiqueta, sobrescribir memoria del mismo codigo con la ultima version.
-- [ ] Al enviar o generar PDF, ejecutar persistencia de respaldo del estado actual por codigo.
-- [ ] Mantener edicion manual actual sin cambios visuales bruscos.
-- [ ] Evitar que una memoria de un codigo afecte a otro codigo diferente.
+- [x] Al agregar etiqueta por codigo, buscar memoria y aplicar descripcion guardada si existe.
+- [x] Al editar descripcion de etiqueta y confirmar (tic verde o confirmacion equivalente), ejecutar guardado inmediato de memoria.
+- [x] Si se vuelve a editar la misma etiqueta, sobrescribir memoria del mismo codigo con la ultima version.
+- [x] Al enviar o generar PDF, ejecutar persistencia de respaldo del estado actual por codigo.
+- [x] Mantener edicion manual actual sin cambios visuales bruscos.
+- [x] Evitar que una memoria de un codigo afecte a otro codigo diferente.
 
 ## FASE 4: UI minima de control
 
@@ -69,10 +68,10 @@ Conectar la memoria al flujo actual para que se use sin friccion para el usuario
 
 Permitir que el usuario entienda y controle la memoria sin complejidad.
 
-- [ ] Mostrar indicador simple cuando una etiqueta se cargue desde memoria.
-- [ ] Agregar accion para restablecer una etiqueta al valor original del maestro.
-- [ ] Agregar accion para olvidar memoria de ese codigo desde la tarjeta o tabla.
-- [ ] Confirmar mensajes claros en español para guardar, usar y borrar memoria.
+- [x] Mostrar indicador simple cuando una etiqueta se cargue desde memoria.
+- [x] Agregar accion para restablecer una etiqueta al valor original del maestro.
+- [x] Agregar accion para olvidar memoria de ese codigo desde la tarjeta o tabla.
+- [x] Confirmar mensajes claros en espanol para guardar, usar y borrar memoria.
 
 ## FASE TESTING
 
@@ -88,17 +87,17 @@ Validar de forma ejecutable por IA y revisable por humano que la memoria funcion
 - [ ] Cerrar y abrir app, recargar mismo codigo y verificar persistencia.
 - [ ] Borrar memoria de un codigo y verificar que deja de aplicarse.
 - [ ] Enviar o generar PDF y verificar guardado de respaldo sin duplicados.
-- [ ] Ejecutar `npm run lint` y corregir errores.
-- [ ] Ejecutar `npm run build` y corregir errores.
+- [x] Ejecutar `npm run lint` y corregir errores.
+- [x] Ejecutar `npm run build` y corregir errores.
 
 ## Progreso del plan
 
-- [ ] Fase 1: Definir modelo de memoria
-- [ ] Fase 2: Persistencia local
-- [ ] Fase 3: Integracion en flujo de etiquetas
-- [ ] Fase 4: UI minima de control
+- [x] Fase 1: Definir modelo de memoria
+- [x] Fase 2: Persistencia local
+- [x] Fase 3: Integracion en flujo de etiquetas
+- [x] Fase 4: UI minima de control
 - [ ] Fase Testing
 
 Fecha de creacion: 30 de Mayo 2026
 Fecha de ultima actualizacion: 30 de Mayo 2026
-Estado: BORRADOR
+Estado: EN PROCESO

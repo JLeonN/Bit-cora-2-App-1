@@ -18,6 +18,8 @@
     <TablaEtiquetas
       :etiquetas="listaEtiquetas"
       @editar-etiqueta="editarEtiqueta"
+      @guardar-memoria-etiqueta="guardarMemoriaEtiquetaDesdeTabla"
+      @olvidar-memoria-etiqueta="olvidarMemoriaEtiqueta"
       @eliminar-etiqueta="eliminarEtiqueta"
       @limpiar-todo="limpiarTodo"
       @modal-abierto="manejarModalAbierto"
@@ -67,6 +69,11 @@ import {
   obtenerEtiquetas,
   eliminarEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
+import {
+  upsertMemoriaEtiqueta,
+  obtenerMemoriaEtiquetaPorCodigo,
+  eliminarMemoriaEtiquetaPorCodigo,
+} from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
 
 // --- ESTADO REACTIVO ---
 const tamanoSeleccionado = ref('10x15cm')
@@ -126,7 +133,9 @@ async function verificarNuevasEtiquetas() {
 
     // Solo actualizar si la cantidad cambió
     if (etiquetasActuales.length !== listaEtiquetas.value.length) {
-      listaEtiquetas.value = etiquetasActuales
+      listaEtiquetas.value = await Promise.all(
+        etiquetasActuales.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)),
+      )
       console.log(
         '[PaginaEtiquetas] Etiquetas actualizadas desde almacenamiento:',
         etiquetasActuales.length,
@@ -138,25 +147,106 @@ async function verificarNuevasEtiquetas() {
 }
 
 // --- FUNCIONES ---
-function agregarEtiqueta(etiqueta) {
-  const etiquetaConId = {
+async function aplicarMemoriaEtiqueta(etiquetaBase) {
+  const etiqueta = {
+    ...etiquetaBase,
+    codigo: String(etiquetaBase?.codigo || '')
+      .trim()
+      .toUpperCase(),
+  }
+  if (!etiqueta.descripcionOriginal) {
+    etiqueta.descripcionOriginal = String(etiqueta.descripcion || '')
+  }
+  const memoria = await obtenerMemoriaEtiquetaPorCodigo(etiqueta.codigo)
+  if (!memoria) {
+    return {
+      ...etiqueta,
+      memoriaActiva: false,
+    }
+  }
+  return {
+    ...etiqueta,
+    descripcion: String(memoria.descripcionFormateada || etiqueta.descripcion || ''),
+    memoriaActiva: true,
+    memoriaActualizadaEn: memoria.actualizadoEn || null,
+  }
+}
+
+async function guardarMemoriaDesdeEtiqueta(etiqueta) {
+  if (!etiqueta?.codigo) return
+  const codigo = String(etiqueta.codigo || '').trim().toUpperCase()
+  const descripcionFormateada = String(etiqueta.descripcion || '')
+  await upsertMemoriaEtiqueta({ codigo, descripcionFormateada })
+}
+
+async function agregarEtiqueta(etiqueta) {
+  const etiquetaConIdBase = {
     ...etiqueta,
     id: Date.now(),
+    descripcionOriginal: String(etiqueta?.descripcion || ''),
   }
+  const etiquetaConId = await aplicarMemoriaEtiqueta(etiquetaConIdBase)
 
   listaEtiquetas.value.push(etiquetaConId)
   console.log('[PaginaEtiquetas] Etiqueta agregada:', etiquetaConId)
+  if (etiquetaConId.memoriaActiva) {
+    Notify.create({
+      type: 'info',
+      message: `Memoria aplicada para ${etiquetaConId.codigo}`,
+      position: 'top',
+      timeout: 1300,
+    })
+  }
 
-  persistirEtiquetas()
+  await persistirEtiquetas()
 }
 
-function editarEtiqueta(etiquetaEditada) {
+async function editarEtiqueta(etiquetaEditada) {
   const indice = listaEtiquetas.value.findIndex((e) => e.id === etiquetaEditada.id)
   if (indice !== -1) {
     listaEtiquetas.value[indice] = etiquetaEditada
     console.log('[PaginaEtiquetas] Etiqueta editada:', etiquetaEditada)
 
-    persistirEtiquetas()
+    await persistirEtiquetas()
+  }
+}
+
+async function guardarMemoriaEtiquetaDesdeTabla(etiquetaEditada) {
+  if (!etiquetaEditada?.codigo) return
+  await guardarMemoriaDesdeEtiqueta(etiquetaEditada)
+  const indice = listaEtiquetas.value.findIndex((e) => e.id === etiquetaEditada.id)
+  if (indice !== -1) {
+    listaEtiquetas.value[indice] = {
+      ...listaEtiquetas.value[indice],
+      memoriaActiva: true,
+      memoriaActualizadaEn: Date.now(),
+    }
+  }
+  Notify.create({
+    type: 'positive',
+    message: `Memoria guardada para ${etiquetaEditada.codigo}`,
+    position: 'top',
+    timeout: 1300,
+  })
+}
+
+async function olvidarMemoriaEtiqueta(indice) {
+  const etiqueta = listaEtiquetas.value[indice]
+  if (!etiqueta?.codigo) return
+  const resultado = await eliminarMemoriaEtiquetaPorCodigo(etiqueta.codigo)
+  if (resultado?.exito) {
+    listaEtiquetas.value[indice] = {
+      ...etiqueta,
+      memoriaActiva: false,
+      memoriaActualizadaEn: null,
+    }
+    await persistirEtiquetas()
+    Notify.create({
+      type: 'positive',
+      message: `Memoria eliminada para ${etiqueta.codigo}`,
+      position: 'top',
+      timeout: 1400,
+    })
   }
 }
 
@@ -214,6 +304,8 @@ async function generarPDF() {
     console.log('[PaginaEtiquetas] Generando PDF con', listaEtiquetas.value.length, 'etiquetas')
 
     const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
+
+    await Promise.all(listaEtiquetas.value.map((etiqueta) => guardarMemoriaDesdeEtiqueta(etiqueta)))
 
     console.log('[PaginaEtiquetas] Configuración usada:', configuracion.nombre)
     console.log('[PaginaEtiquetas] Dimensiones:', configuracion.pagina)
@@ -307,6 +399,7 @@ const manejarModalCerrado = () => {
 // --- LIFECYCLE ---
 onMounted(async () => {
   await cargarEtiquetasGuardadas()
+  listaEtiquetas.value = await Promise.all(listaEtiquetas.value.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)))
 
   emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
 

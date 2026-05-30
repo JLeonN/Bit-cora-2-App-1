@@ -20,6 +20,9 @@
           'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
         }"
       >
+        <div v-if="etiqueta.memoriaActiva" class="indicador-memoria">
+          Memoria activa
+        </div>
         <TarjetaPreviewEtiquetaMovil
           :etiqueta="etiqueta"
           :indice="indice"
@@ -48,6 +51,15 @@
               </button>
               <button type="button" class="boton-confirmar boton-restablecer" @click="restablecerEtiquetaDesdeMaestro(indice)" title="Restablecer valores de fábrica">
                 <IconRestore :size="16" :stroke="2.2" />
+              </button>
+              <button
+                type="button"
+                class="boton-confirmar boton-memoria"
+                @click="olvidarMemoriaEtiqueta(indice)"
+                :disabled="!etiqueta.memoriaActiva"
+                title="Olvidar memoria de este código"
+              >
+                OLV
               </button>
             </div>
           </div>
@@ -84,7 +96,15 @@ const props = defineProps({
   etiquetas: { type: Array, required: true },
 })
 
-const emit = defineEmits(['editar-etiqueta', 'eliminar-etiqueta', 'limpiar-todo', 'modal-abierto', 'modal-cerrado'])
+const emit = defineEmits([
+  'editar-etiqueta',
+  'guardar-memoria-etiqueta',
+  'olvidar-memoria-etiqueta',
+  'eliminar-etiqueta',
+  'limpiar-todo',
+  'modal-abierto',
+  'modal-cerrado',
+])
 const mostrarModalLimpiarTodo = ref(false)
 const borradoresEdicion = ref({})
 const indiceAccionEdicion = ref(-1)
@@ -153,6 +173,7 @@ function confirmarEdicionInline(indice) {
     etiquetaActualizada.ubicacion = ubicacionNormalizada || 'Sin ubicación'
   }
   emit('editar-etiqueta', etiquetaActualizada)
+  emit('guardar-memoria-etiqueta', etiquetaActualizada)
   delete borradoresEdicion.value[indice]
   indiceAccionEdicion.value = indice
   versionAccionEdicion.value += 1
@@ -188,8 +209,11 @@ function restablecerEtiquetaDesdeMaestro(indice) {
   const etiquetaRestablecida = {
     ...etiquetaBase,
     descripcion: articuloMaestro?.nombre || etiquetaBase.descripcion || '',
+    memoriaActiva: false,
+    memoriaActualizadaEn: null,
   }
   emit('editar-etiqueta', etiquetaRestablecida)
+  emit('guardar-memoria-etiqueta', etiquetaRestablecida)
   if (borradoresEdicion.value[indice]) {
     delete borradoresEdicion.value[indice]
   }
@@ -199,6 +223,10 @@ function restablecerEtiquetaDesdeMaestro(indice) {
 
 function eliminarEtiqueta(indice) {
   emit('eliminar-etiqueta', indice)
+}
+
+function olvidarMemoriaEtiqueta(indice) {
+  emit('olvidar-memoria-etiqueta', indice)
 }
 
 function confirmarLimpiar() {
@@ -344,6 +372,20 @@ const cantidadArticulosInexistentes = computed(() => {
   background: var(--color-superficie);
   width: min(100%, 15.9cm);
   justify-self: center;
+  position: relative;
+}
+.indicador-memoria {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+  background: color-mix(in oklab, var(--color-exito) 78%, transparent);
+  color: var(--color-texto-principal);
+  border: 1px solid color-mix(in oklab, var(--color-exito) 35%, var(--color-borde));
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 .tarjeta-etiqueta-duplicada {
   background: color-mix(in oklab, var(--color-error) 10%, transparent);
@@ -388,6 +430,12 @@ const cantidadArticulosInexistentes = computed(() => {
 }
 .boton-restablecer {
   color: var(--color-carga);
+}
+.boton-memoria {
+  color: var(--color-primario);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 .boton-confirmar:disabled {
   opacity: 0.45;
