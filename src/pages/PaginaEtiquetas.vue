@@ -19,7 +19,6 @@
       :etiquetas="listaEtiquetas"
       @editar-etiqueta="editarEtiqueta"
       @guardar-memoria-etiqueta="guardarMemoriaEtiquetaDesdeTabla"
-      @olvidar-memoria-etiqueta="olvidarMemoriaEtiqueta"
       @eliminar-etiqueta="eliminarEtiqueta"
       @limpiar-todo="limpiarTodo"
       @modal-abierto="manejarModalAbierto"
@@ -72,7 +71,6 @@ import {
 import {
   upsertMemoriaEtiqueta,
   obtenerMemoriaEtiquetaPorCodigo,
-  eliminarMemoriaEtiquetaPorCodigo,
 } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
 
 // --- ESTADO REACTIVO ---
@@ -228,26 +226,6 @@ async function guardarMemoriaEtiquetaDesdeTabla(etiquetaEditada) {
     position: 'top',
     timeout: 1300,
   })
-}
-
-async function olvidarMemoriaEtiqueta(indice) {
-  const etiqueta = listaEtiquetas.value[indice]
-  if (!etiqueta?.codigo) return
-  const resultado = await eliminarMemoriaEtiquetaPorCodigo(etiqueta.codigo)
-  if (resultado?.exito) {
-    listaEtiquetas.value[indice] = {
-      ...etiqueta,
-      memoriaActiva: false,
-      memoriaActualizadaEn: null,
-    }
-    await persistirEtiquetas()
-    Notify.create({
-      type: 'positive',
-      message: `Memoria eliminada para ${etiqueta.codigo}`,
-      position: 'top',
-      timeout: 1400,
-    })
-  }
 }
 
 function eliminarEtiqueta(indice) {

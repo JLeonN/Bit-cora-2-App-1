@@ -1,13 +1,16 @@
 <template>
   <div>
-    <div class="encabezado-tabla">
-      <p v-if="etiquetas.length > 0" class="texto-secundario">Etiquetas totales: {{ etiquetas.length }}</p>
-      <p v-if="etiquetas.length > 0" class="texto-secundario">Copias totales: {{ totalCopias }}</p>
-      <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos">Códigos repetidos: {{ cantidadCodigosRepetidos }}</p>
-      <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente">Artículos inexistentes: {{ cantidadArticulosInexistentes }}</p>
-    </div>
-    <div class="contenedor-boton-borrar-todo" v-if="etiquetas.length > 0">
-      <IconTrash class="icono-accion icono-borrar-todo" @click="confirmarLimpiar" title="Limpiar todas las etiquetas" />
+    <div v-if="etiquetas.length > 0" class="tarjeta-resumen-etiquetas">
+      <div class="resumen-etiquetas-contenido">
+        <p class="texto-secundario linea-resumen">Etiquetas totales: {{ etiquetas.length }}</p>
+        <p class="texto-secundario linea-resumen">Copias totales: {{ totalCopias }}</p>
+        <p class="texto-secundario linea-resumen">Memorias activas: {{ cantidadMemoriasActivas }}</p>
+        <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos linea-resumen">Códigos repetidos: {{ cantidadCodigosRepetidos }}</p>
+        <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente linea-resumen">Artículos inexistentes: {{ cantidadArticulosInexistentes }}</p>
+      </div>
+      <button type="button" class="boton-borrar-todo" @click="confirmarLimpiar" title="Limpiar todas las etiquetas">
+        <IconTrash class="icono-accion icono-borrar-todo" />
+      </button>
     </div>
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
       <article
@@ -20,9 +23,6 @@
           'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
         }"
       >
-        <div v-if="etiqueta.memoriaActiva" class="indicador-memoria">
-          Memoria activa
-        </div>
         <TarjetaPreviewEtiquetaMovil
           :etiqueta="etiqueta"
           :indice="indice"
@@ -51,15 +51,6 @@
               </button>
               <button type="button" class="boton-confirmar boton-restablecer" @click="restablecerEtiquetaDesdeMaestro(indice)" title="Restablecer valores de fábrica">
                 <IconRestore :size="16" :stroke="2.2" />
-              </button>
-              <button
-                type="button"
-                class="boton-confirmar boton-memoria"
-                @click="olvidarMemoriaEtiqueta(indice)"
-                :disabled="!etiqueta.memoriaActiva"
-                title="Olvidar memoria de este código"
-              >
-                OLV
               </button>
             </div>
           </div>
@@ -99,7 +90,6 @@ const props = defineProps({
 const emit = defineEmits([
   'editar-etiqueta',
   'guardar-memoria-etiqueta',
-  'olvidar-memoria-etiqueta',
   'eliminar-etiqueta',
   'limpiar-todo',
   'modal-abierto',
@@ -225,10 +215,6 @@ function eliminarEtiqueta(indice) {
   emit('eliminar-etiqueta', indice)
 }
 
-function olvidarMemoriaEtiqueta(indice) {
-  emit('olvidar-memoria-etiqueta', indice)
-}
-
 function confirmarLimpiar() {
   mostrarModalLimpiarTodo.value = true
 }
@@ -334,9 +320,56 @@ const cantidadArticulosInexistentes = computed(() => {
     return 0
   }
 })
+
+const cantidadMemoriasActivas = computed(() => {
+  try {
+    return props.etiquetas.filter((etiqueta) => etiqueta && etiqueta.memoriaActiva).length
+  } catch (error) {
+    console.error('[cantidadMemoriasActivas] Error:', error)
+    return 0
+  }
+})
 </script>
 
 <style scoped>
+.tarjeta-resumen-etiquetas {
+  margin: 0.35rem 0 0.65rem 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 10px;
+  background: var(--color-superficie);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+.resumen-etiquetas-contenido {
+  display: grid;
+  gap: 0.22rem;
+}
+.linea-resumen {
+  margin: 0;
+}
+.boton-borrar-todo {
+  border: 1px solid color-mix(in oklab, var(--color-error) 45%, var(--color-borde));
+  background: color-mix(in oklab, var(--color-error) 10%, var(--color-superficie));
+  color: var(--color-error);
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.boton-borrar-todo:hover {
+  transform: scale(1.06);
+}
+.icono-borrar-todo {
+  width: 22px;
+  height: 22px;
+}
 .sin-etiquetas {
   text-align: center;
   padding: 3rem 1rem;
@@ -372,20 +405,6 @@ const cantidadArticulosInexistentes = computed(() => {
   background: var(--color-superficie);
   width: min(100%, 15.9cm);
   justify-self: center;
-  position: relative;
-}
-.indicador-memoria {
-  position: absolute;
-  top: 0.35rem;
-  right: 0.4rem;
-  background: color-mix(in oklab, var(--color-exito) 78%, transparent);
-  color: var(--color-texto-principal);
-  border: 1px solid color-mix(in oklab, var(--color-exito) 35%, var(--color-borde));
-  border-radius: 999px;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
 }
 .tarjeta-etiqueta-duplicada {
   background: color-mix(in oklab, var(--color-error) 10%, transparent);
@@ -431,22 +450,27 @@ const cantidadArticulosInexistentes = computed(() => {
 .boton-restablecer {
   color: var(--color-carga);
 }
-.boton-memoria {
-  color: var(--color-primario);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
 .boton-confirmar:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
+@media (max-width: 600px) {
+  .tarjeta-resumen-etiquetas {
+    padding: 0.65rem 0.72rem;
+  }
+}
 @media (min-width: 601px) and (max-width: 1024px) {
+  .tarjeta-resumen-etiquetas {
+    padding: 0.8rem 0.9rem;
+  }
   .tarjeta-etiqueta-item {
     padding: 0.65rem;
   }
 }
 @media (min-width: 1025px) {
+  .tarjeta-resumen-etiquetas {
+    margin-bottom: 0.75rem;
+  }
   .grilla-tarjetas-etiquetas {
     gap: 1rem;
   }
@@ -455,3 +479,4 @@ const cantidadArticulosInexistentes = computed(() => {
   }
 }
 </style>
+
