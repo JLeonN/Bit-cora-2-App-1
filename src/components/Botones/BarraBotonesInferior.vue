@@ -158,7 +158,7 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   transition: bottom 0.3s ease;
 }
 .barra-botones-inferior.con-banner {
-  bottom: 55px;
+  bottom: calc(50px + 8px + env(safe-area-inset-bottom, 0px));
 }
 .boton-barra {
   width: 48px;
@@ -210,7 +210,7 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     width: 92%;
   }
   .barra-botones-inferior.con-banner {
-    bottom: 82px;
+    bottom: calc(50px + 8px + env(safe-area-inset-bottom, 0px));
   }
   .boton-barra {
     width: 44px;
@@ -229,7 +229,7 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     padding: 0 8px;
   }
   .barra-botones-inferior.con-banner {
-    bottom: 80px;
+    bottom: calc(50px + 8px + env(safe-area-inset-bottom, 0px));
   }
   .boton-barra {
     width: 40px;
