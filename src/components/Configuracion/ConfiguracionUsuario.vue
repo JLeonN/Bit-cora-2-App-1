@@ -4,6 +4,7 @@
       <div class="modal-campo">
         <label for="nombreUsuario">Tu nombre</label>
         <input
+          ref="inputNombreUsuarioRef"
           id="nombreUsuario"
           type="text"
           v-model="nombreEditado"
@@ -154,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import {
   guardarNombreUsuario,
   obtenerNombreUsuario,
@@ -191,6 +192,14 @@ const dialogVIPAbierto = ref(false)
 const claveIngresada = ref('')
 const errorClaveVIP = ref('')
 const esUsuarioVIP = ref(false)
+const inputNombreUsuarioRef = ref(null)
+
+const props = defineProps({
+  enfocarInputNombre: {
+    type: Boolean,
+    default: false,
+  },
+})
 
 // Computadas
 const puedeGuardar = computed(() => {
@@ -247,6 +256,11 @@ const mostrarMensaje = (tipo, texto) => {
   setTimeout(() => {
     mensajeEstado.value.mostrar = false
   }, 3000)
+}
+
+const enfocarCampoNombre = async () => {
+  await nextTick()
+  inputNombreUsuarioRef.value?.focus()
 }
 
 // Métodos VIP
@@ -310,7 +324,19 @@ const emit = defineEmits(['nombre-actualizado'])
 onMounted(() => {
   cargarNombreActual()
   verificarEstadoVIP()
+  if (props.enfocarInputNombre) {
+    enfocarCampoNombre()
+  }
 })
+
+watch(
+  () => props.enfocarInputNombre,
+  (debeEnfocar) => {
+    if (debeEnfocar) {
+      enfocarCampoNombre()
+    }
+  },
+)
 </script>
 
 <style scoped>

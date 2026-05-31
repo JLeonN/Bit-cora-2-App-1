@@ -42,7 +42,7 @@
       <div class="acordeon-header">
         <div class="header-izquierda">
           <IconSearch :stroke="2" class="icono-tutorial" />
-          <span class="titulo-tutorial">Cómo usar Consulta de Ubicación</span>
+          <span class="titulo-tutorial">Cómo usar Consulta De Ubicación</span>
         </div>
         <IconChevronDown
           :stroke="2"

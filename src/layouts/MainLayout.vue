@@ -3,7 +3,16 @@
     <q-layout view="lHh Lpr lff">
       <q-header elevated :class="claseHeader">
         <q-toolbar class="barra-superior">
-          <q-toolbar-title class="titulo-usuario" :title="nombreUsuario">{{ nombreUsuario }}</q-toolbar-title>
+          <q-toolbar-title
+            class="titulo-usuario titulo-usuario-clickable"
+            :title="nombreUsuario"
+            role="button"
+            tabindex="0"
+            @click="irAConfiguracionParaEditarNombre"
+            @keyup.enter="irAConfiguracionParaEditarNombre"
+          >
+            {{ nombreUsuario }}
+          </q-toolbar-title>
           <div class="pasos-header" :class="{ 'sesion-activa': sesionActivaHeader }" :title="textoPasosHeader">
             <IconPaw :size="16" :stroke="2" />
             <span>{{ valorPasosHeader }}</span>
@@ -78,7 +87,15 @@
                 <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
               </q-avatar>
               <div class="text-weight-bold">Bitácora II</div>
-              <div>@{{ nombreUsuario }}</div>
+              <div
+                class="nombre-usuario-drawer-clickable"
+                role="button"
+                tabindex="0"
+                @click="irAConfiguracionParaEditarNombre"
+                @keyup.enter="irAConfiguracionParaEditarNombre"
+              >
+                @{{ nombreUsuario }}
+              </div>
             </div>
             <div class="resumen-pasos-drawer">
               <div class="linea-pasos-drawer">
@@ -147,6 +164,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   IconTableRow,
   IconMapRoute,
@@ -167,6 +185,7 @@ import {
 import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
 
 const drawer = ref(false)
+const router = useRouter()
 const nombreUsuario = ref('Usuario desconocido')
 const hayBannerVisible = ref(false)
 const modalActivo = ref(false)
@@ -276,6 +295,11 @@ const irAPlayStore = () => {
   abrirActualizacionEnTienda(urlPlayStoreActualizacion.value)
 }
 
+const irAConfiguracionParaEditarNombre = async () => {
+  drawer.value = false
+  await router.push({ name: 'Configuracion', query: { editarNombre: '1' } })
+}
+
 const actualizarEstadoBanner = (estaVisible) => {
   hayBannerVisible.value = estaVisible
   if (!estaVisible) {
@@ -343,6 +367,9 @@ const manejarAccionPersonalizada = (accion) => {
   text-overflow: ellipsis;
   white-space: nowrap;
   padding-right: 8px;
+}
+.titulo-usuario-clickable {
+  cursor: pointer;
 }
 .pasos-header {
   position: absolute;
@@ -442,6 +469,13 @@ const manejarAccionPersonalizada = (accion) => {
 .datos-usuario-drawer {
   max-width: 118px;
   padding-right: 6px;
+}
+.nombre-usuario-drawer-clickable {
+  cursor: pointer;
+  width: fit-content;
+}
+.nombre-usuario-drawer-clickable:hover {
+  text-decoration: underline;
 }
 .resumen-pasos-drawer {
   position: absolute;

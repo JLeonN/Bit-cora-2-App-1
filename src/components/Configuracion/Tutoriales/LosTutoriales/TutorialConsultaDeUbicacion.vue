@@ -2,7 +2,7 @@
   <div class="tutorial-consulta">
     <p class="tutorial-descripcion">
       El módulo de <strong>Consulta De Ubicación</strong> permite buscar un artículo por código,
-      nombre o escaneo para ver su ubicación actual y actualizarla si es necesario.
+      nombre o escaneo para ver su historial de ubicaciones y actualizarlo si es necesario.
     </p>
 
     <div class="seccion-pasos">
@@ -30,8 +30,8 @@
       <div class="paso">
         <div class="numero-paso">3</div>
         <div class="contenido-paso">
-          <strong>Revisar resultado:</strong> La ubicación aparece destacada, seguida del nombre y
-          el código del artículo.
+          <strong>Revisar resultado:</strong> Verás el historial de ubicaciones con la más nueva
+          primero, seguido del nombre y código del artículo.
         </div>
       </div>
 

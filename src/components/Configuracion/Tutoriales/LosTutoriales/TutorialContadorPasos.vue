@@ -1,8 +1,9 @@
 <template>
   <div class="tutorial-pasos">
     <p class="tutorial-descripcion">
-      El módulo de <strong>Contador de pasos</strong> permite monitoreo continuo en Android, con
-      total diario, sesiones manuales e historial compacto por período.
+      El módulo de <strong>Contador de pasos</strong> permite monitoreo 24/7 en Android nativo, con
+      total diario, sesiones manuales e historial filtrable por período. En navegador funciona en
+      modo visual sin monitoreo nativo continuo.
     </p>
     <div class="seccion-pasos">
       <h4 class="subtitulo-tutorial">
@@ -18,8 +19,8 @@
       <div class="paso">
         <div class="numero-paso">2</div>
         <div class="contenido-paso">
-          <strong>Monitoreo:</strong> Permití actividad física y notificaciones para mantener el
-          servicio activo en segundo plano.
+          <strong>Monitoreo 24/7:</strong> Activá el toggle de monitoreo. En Android nativo podés
+          usar actividad física/notificaciones para mantenerlo activo en segundo plano.
         </div>
       </div>
       <div class="paso">
@@ -32,8 +33,8 @@
       <div class="paso">
         <div class="numero-paso">4</div>
         <div class="contenido-paso">
-          <strong>Selector de período:</strong> Usá mes, año, día puntual o rango para ver solo lo
-          que necesitás.
+          <strong>Selector de período:</strong> Usá filtros por mes, año, día exacto o rango para
+          ver solo lo que necesitás.
         </div>
       </div>
       <div class="paso">

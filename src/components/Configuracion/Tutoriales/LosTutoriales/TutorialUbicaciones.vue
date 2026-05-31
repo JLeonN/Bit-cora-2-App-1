@@ -61,7 +61,8 @@
         <div class="contenido-paso">
           <strong>Exportar Excel:</strong> Presioná el botón
           <IconSend :stroke="2" class="icono-inline" /> para generar un Excel con todas las
-          ubicaciones, incluyendo la antigua y la nueva.
+          ubicaciones. El flujo mantiene consistencia entre ubicación original, ubicación actual e
+          historial operativo.
         </div>
       </div>
     </div>
@@ -92,16 +93,16 @@
       <div class="tip">
         <IconAlertCircle :stroke="2" class="icono-tip" />
         <span
-          ><strong>Códigos duplicados:</strong> Los artículos repetidos se resaltan en naranja para
-          que los identifiques fácilmente.</span
+          ><strong>Códigos duplicados:</strong> Los artículos repetidos se resaltan en naranja. Si
+          hay duplicados, se bloquea enviar/descargar Excel hasta resolverlos.</span
         >
       </div>
 
       <div class="tip">
         <IconFileSpreadsheet :stroke="2" class="icono-tip" />
         <span
-          ><strong>Sistema de emojis:</strong> En el Excel exportado, verás ✔️ si la ubicación es
-          correcta y ❌ si falta o el artículo no existe.</span
+          ><strong>Web y móvil:</strong> En web podés descargar Excel directo. En Android/iOS se
+          usa compartir archivo desde el sistema.</span
         >
       </div>
     </div>

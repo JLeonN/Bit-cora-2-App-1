@@ -2,8 +2,15 @@
   <div class="pagina-configuracion">
     <div class="contenedor-configuracion">
       <!-- SECCIÓN: Información Personal -->
-      <TarjetaSeccion titulo="Información Personal" :icono="IconUser" :expandida-por-defecto="true">
-        <ConfiguracionUsuario @nombre-actualizado="manejarNombreActualizado" />
+      <TarjetaSeccion
+        titulo="Información Personal"
+        :icono="IconUser"
+        :expandida-por-defecto="informacionPersonalExpandida"
+      >
+        <ConfiguracionUsuario
+          :enfocar-input-nombre="debeEnfocarInputNombre"
+          @nombre-actualizado="manejarNombreActualizado"
+        />
       </TarjetaSeccion>
 
       <!-- SECCIÓN: Tutoriales y Ayuda -->
@@ -15,13 +22,19 @@
 </template>
 
 <script setup>
-import { getCurrentInstance } from 'vue'
+import { getCurrentInstance, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { IconUser, IconBook } from '@tabler/icons-vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import ConfiguracionUsuario from '../components/Configuracion/ConfiguracionUsuario.vue'
 import SeccionTutoriales from '../components/Configuracion/Tutoriales/SeccionTutoriales.vue'
 
 const instance = getCurrentInstance()
+const route = useRoute()
+
+const debeEditarNombre = computed(() => route.query.editarNombre === '1')
+const informacionPersonalExpandida = computed(() => debeEditarNombre.value)
+const debeEnfocarInputNombre = computed(() => debeEditarNombre.value)
 
 // Configurar barra de botones al montar el componente
 const configurarBarraBotones = () => {
