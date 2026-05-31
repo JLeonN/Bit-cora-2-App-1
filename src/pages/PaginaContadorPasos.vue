@@ -25,12 +25,14 @@
           <p class="valor">{{ estadoActual.sesionActiva ? estadoActual.pasosSesion : 0 }}</p>
         </div>
         <div class="tarjeta-resumen">
-          <p class="etiqueta">Últimos 7 días</p>
-          <p class="valor">{{ resumenSieteDias }}</p>
+          <p class="etiqueta">Última semana</p>
+          <p class="subetiqueta">Lun a Dom</p>
+          <p class="valor">{{ resumenSemanaActual }}</p>
         </div>
         <div class="tarjeta-resumen">
-          <p class="etiqueta">Últimos 30 días</p>
-          <p class="valor">{{ resumenTreintaDias }}</p>
+          <p class="etiqueta">Mes actual</p>
+          <p class="subetiqueta">{{ etiquetaMesActual }}</p>
+          <p class="valor">{{ resumenMesActual }}</p>
         </div>
       </div>
     </div>
@@ -201,8 +203,49 @@ const textoEstadoMonitoreo = computed(() => {
   return estadoMonitoreo.value ? 'Monitoreo activo' : 'Monitoreo inactivo'
 })
 
-const resumenSieteDias = computed(() => sumarUltimosDias(7))
-const resumenTreintaDias = computed(() => sumarUltimosDias(30))
+const NOMBRES_MESES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
+
+const etiquetaMesActual = computed(() => {
+  const ahora = new Date()
+  return `${NOMBRES_MESES[ahora.getMonth()]} ${ahora.getFullYear()}`
+})
+
+const resumenSemanaActual = computed(() => {
+  const ahora = new Date()
+  const inicioSemana = obtenerInicioSemanaLocal(ahora)
+  const finSemana = obtenerFinSemanaLocal(ahora)
+  return historialDiario.value
+    .filter((item) => {
+      const fechaItem = convertirFechaISOAFechaLocal(item.fecha)
+      return fechaItem >= inicioSemana && fechaItem <= finSemana
+    })
+    .reduce((acumulado, item) => acumulado + Number(item.totalPasos || 0), 0)
+})
+
+const resumenMesActual = computed(() => {
+  const ahora = new Date()
+  const anioActual = ahora.getFullYear()
+  const mesActual = ahora.getMonth()
+  return historialDiario.value
+    .filter((item) => {
+      const fechaItem = convertirFechaISOAFechaLocal(item.fecha)
+      return fechaItem.getFullYear() === anioActual && fechaItem.getMonth() === mesActual
+    })
+    .reduce((acumulado, item) => acumulado + Number(item.totalPasos || 0), 0)
+})
 
 const diarioFiltrado = computed(() => {
   const base = [...historialDiario.value].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
@@ -289,12 +332,25 @@ watch(
   },
 )
 
-function sumarUltimosDias(cantidad) {
-  const limite = new Date()
-  limite.setDate(limite.getDate() - cantidad)
-  return historialDiario.value
-    .filter((item) => new Date(`${item.fecha}T00:00:00`) >= limite)
-    .reduce((acc, item) => acc + (item.totalPasos || 0), 0)
+function convertirFechaISOAFechaLocal(fechaISO) {
+  const [anio, mes, dia] = fechaISO.split('-').map(Number)
+  return new Date(anio, mes - 1, dia, 0, 0, 0, 0)
+}
+
+function obtenerInicioSemanaLocal(fechaBase) {
+  const fecha = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), fechaBase.getDate(), 0, 0, 0, 0)
+  const diaSemana = fecha.getDay()
+  const diasDesdeLunes = diaSemana === 0 ? 6 : diaSemana - 1
+  fecha.setDate(fecha.getDate() - diasDesdeLunes)
+  return fecha
+}
+
+function obtenerFinSemanaLocal(fechaBase) {
+  const inicioSemana = obtenerInicioSemanaLocal(fechaBase)
+  const finSemana = new Date(inicioSemana)
+  finSemana.setDate(finSemana.getDate() + 6)
+  finSemana.setHours(23, 59, 59, 999)
+  return finSemana
 }
 
 function fechaCumpleFiltros(fechaISO, aplicarDiaExacto = true) {
@@ -501,6 +557,11 @@ onUnmounted(() => {
   margin: 0;
   color: var(--color-texto-secundario);
   font-size: 0.85rem;
+}
+.subetiqueta {
+  margin: 2px 0 0 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.75rem;
 }
 .valor {
   margin: 4px 0 0 0;
