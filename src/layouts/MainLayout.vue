@@ -154,7 +154,7 @@ import {
 } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
-import { esModoPruebaPublicidad } from 'components/Configuracion/ModoPublicidad.js'
+import { esModoPruebaPublicidad } from 'components/Configuracion/ConfiguracionPublicidad.js'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
   obtenerEstadoActualizacion,
@@ -447,6 +447,3 @@ const manejarAccionPersonalizada = (accion) => {
   }
 }
 </style>
-
-
-

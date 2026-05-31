@@ -13,7 +13,7 @@ import {
   esModoPruebaPublicidad,
   DISPOSITIVOS_PRUEBA_ADMOB,
   obtenerBannerAdUnitId,
-} from '../Configuracion/ModoPublicidad.js'
+} from '../Configuracion/ConfiguracionPublicidad.js'
 
 const mostrarBanner = ref(false)
 const bannerInicializado = ref(false)
