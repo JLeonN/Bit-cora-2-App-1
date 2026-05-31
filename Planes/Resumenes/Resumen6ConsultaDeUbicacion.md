@@ -1,0 +1,33 @@
+### Módulo de Consulta De Ubicación - Bitácora II
+
+Pantalla para buscar artículos y registrar cambios de ubicación sin salir del flujo operativo.
+
+---
+
+### Estado funcional actual (v4.2.22)
+
+- La tarjeta principal muestra historial de movimientos en lugar de solo “Ubicación actual”.
+- El historial se presenta con la ubicación más nueva primero.
+- Si el artículo tiene origen `SL`, se aplica resaltado visual neón para facilitar detección.
+- Al guardar ubicación:
+  - Se conserva `ubicacionAntigua` como dato original del Excel base.
+  - Se agrega el nuevo movimiento al historial del artículo.
+  - Se sincroniza el registro con el módulo Ubicaciones para exportación posterior.
+- Si el código ya existe en Ubicaciones, se permite coexistencia de filas para que el usuario vea duplicados y los resuelva manualmente.
+
+---
+
+### Integraciones
+
+- `SelectorExcel.vue`: usa la misma base cargada que Ubicaciones.
+- `CodigoMasNombre.vue`: búsqueda por código/nombre.
+- `CamaraEscaneo.vue`: carga por escaneo.
+- `LectorExcel.js`: fuente de artículo base + historial.
+- `usoAlmacenamientoUbicaciones.js`: persistencia de filas operativas para enviar/exportar.
+
+---
+
+### Regla operativa
+
+- Consulta De Ubicación no decide automáticamente qué fila conservar ante duplicados.
+- El sistema prioriza visibilidad del conflicto para que la decisión la tome el usuario en Ubicaciones.

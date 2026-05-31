@@ -7,11 +7,11 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 ### 📦 **Estructura General**
 
 La aplicación se divide en 6 módulos principales:
-- **Pedidos**: Gestión de pedidos diarios con sistema de estadísticas completo (ver `ResumenPedidos.txt`)
-- **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `ResumenUbicaciones.txt`)
-- **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.txt`)
-- **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `ResumenEtiquetas.txt`)
-- **Configuración**: Sistema de configuración de usuario (ver `ResumenConfiguracion.txt`)
+- **Pedidos**: Gestión de pedidos diarios con sistema de estadísticas completo (ver `Resumen3Pedidos.md`)
+- **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `Resumen4Ubicaciones.md`)
+- **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.md`)
+- **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `Resumen5Etiquetas.md`)
+- **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
 - **Inicio**: Pantalla principal de navegación
 
 ---
@@ -42,7 +42,7 @@ La aplicación se divide en 6 módulos principales:
 - **Integración en MainLayout**: Nombre dinámico en header y drawer
 - **Nombres personalizados**: Todos los archivos exportados usan el nombre configurado
 
-**Ver detalle completo en:** `ResumenConfiguracion.txt`
+**Ver detalle completo en:** `Resumen2Configuracion.md`
 
 ---
 
@@ -83,7 +83,7 @@ La aplicación se divide en 6 módulos principales:
   - `obtenerUbicacionAntigua(codigo)`: Retorna ubicación antigua
   - `obtenerStock(codigo)`: Retorna stock
 
-**Ver detalle completo en:** `ResumenUbicaciones.txt`
+**Ver detalle completo en:** `Resumen4Ubicaciones.md`
 
 ---
 
@@ -96,7 +96,7 @@ La aplicación se divide en 6 módulos principales:
 - **Máximo 3 resultados** por búsqueda
 - **Compatible con persistencia automática**
 
-**Ver detalle completo en:** `ResumenUbicaciones.txt`
+**Ver detalle completo en:** `Resumen4Ubicaciones.md`
 
 ---
 
@@ -319,11 +319,12 @@ src/
 
 ---
 
-### Actualización de release 4.2.20
+### Actualización de release 4.2.22
 
 - Se afinó la planificación de gestos en tablas para ejecutar primero una fase piloto en Pedidos.
 - Se dejó Etiquetas fuera del alcance inicial para proteger su flujo actual mientras se valida la interacción.
 - Se ajustaron umbrales, cierre y reinicio de confirmación del gesto para mantener consistencia visual y funcional.
 - Se corrigió la referencia de variables CSS del plan para apuntar al archivo real del proyecto.
-- Release vigente actualizada: 4.2.20.
+- Release vigente actualizada: 4.2.22.
+
 

@@ -4,7 +4,7 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 ---
 
-### Estado funcional actual (v4.2.19)
+### Estado funcional actual (v4.2.22)
 
 - En web se muestra botón específico de descarga PDF y se oculta el botón enviar.
 - En móvil se mantiene compartir nativo del PDF generado.
@@ -208,7 +208,7 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Verificación** de existencia de artículos
 - **Detección** de artículos inexistentes en la tabla
 
-**Para información completa**, ver: `ResumenUbicaciones.txt`
+**Para información completa**, ver: `Resumen4Ubicaciones.md`
 
 ---
 
@@ -220,7 +220,7 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Priorización** de resultados exactos
 - **Selección automática** con click
 
-**Para información completa**, ver: `ResumenUbicaciones.txt`
+**Para información completa**, ver: `Resumen4Ubicaciones.md`
 
 ---
 
@@ -231,7 +231,7 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Formateo automático** de ubicaciones (espacios → guiones)
 - **Botón IconTrash** para limpiar ubicación
 
-**Para información completa**, ver: `ResumenUbicaciones.txt`
+**Para información completa**, ver: `Resumen4Ubicaciones.md`
 
 ---
 
