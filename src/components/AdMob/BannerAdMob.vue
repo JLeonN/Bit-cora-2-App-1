@@ -20,6 +20,7 @@ import {
 
 const bannerInicializado = ref(false)
 let escuchaTamanoBanner = null
+const ALTURA_MAXIMA_BANNER_CSS = 120
 
 // Emit para comunicar al padre si el banner está visible.
 const emit = defineEmits(['banner-visible', 'banner-altura'])
@@ -82,11 +83,34 @@ const registrarEscuchaTamanoBanner = async () => {
     return
   }
   escuchaTamanoBanner = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (tamanoBanner) => {
-    const alturaBanner = Number(tamanoBanner?.height ?? 0)
-    const alturaValida = Number.isFinite(alturaBanner) && alturaBanner > 0 ? alturaBanner : 0
+    const alturaValida = normalizarAlturaBanner(tamanoBanner)
     emit('banner-altura', alturaValida)
     emit('banner-visible', alturaValida > 0)
   })
+}
+
+const normalizarAlturaBanner = (tamanoBanner) => {
+  const alturaReportada = Number(tamanoBanner?.height ?? 0)
+  if (!Number.isFinite(alturaReportada) || alturaReportada <= 0) {
+    return 0
+  }
+  const anchoReportado = Number(tamanoBanner?.width ?? 0)
+  const anchoVentana = typeof window !== 'undefined' ? Number(window.innerWidth || 0) : 0
+  const densidadPantalla =
+    typeof window !== 'undefined' ? Math.max(Number(window.devicePixelRatio || 1), 1) : 1
+  const parecePixelesFisicosPorAncho =
+    Number.isFinite(anchoReportado) && anchoReportado > anchoVentana * 1.4
+  const parecePixelesFisicosPorAlto =
+    alturaReportada > ALTURA_MAXIMA_BANNER_CSS && densidadPantalla > 1
+  const debeConvertirACssPx = parecePixelesFisicosPorAncho || parecePixelesFisicosPorAlto
+  const alturaNormalizada = debeConvertirACssPx ? alturaReportada / densidadPantalla : alturaReportada
+  console.info('[AdMob] Tamaño banner normalizado', {
+    anchoReportado,
+    alturaReportada,
+    densidadPantalla,
+    alturaNormalizada,
+  })
+  return Math.round(Math.max(0, alturaNormalizada))
 }
 
 const inicializarAdMob = async () => {
