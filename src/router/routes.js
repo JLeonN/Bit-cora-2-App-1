@@ -50,6 +50,11 @@ const routes = [
         name: 'Etiquetas',
         component: () => import('pages/PaginaEtiquetas.vue'),
       },
+      {
+        path: '/etiquetas/memorias',
+        name: 'MemoriasEtiquetas',
+        component: () => import('pages/PaginaMemoriasEtiquetas.vue'),
+      },
       // FOTOS - Gestión de fotos de productos
       {
         path: '/fotos',

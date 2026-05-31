@@ -1,32 +1,18 @@
-<template>
+﻿<template>
   <div class="contenedor-tabla">
-    <!-- HEADER CON TÍTULO Y SELECTOR DE TAMAÑO -->
     <div class="header-etiquetas">
       <h2 class="titulo-tabla">Etiquetas</h2>
-
       <p class="texto-info-tamano">Las etiquetas se generan en formato <strong>10x15 cm</strong></p>
     </div>
 
     <div class="tarjeta-acciones-memoria">
       <h3 class="titulo-acciones-memoria">Memoria compartida</h3>
-      <div class="acciones-memoria">
-        <button
-          type="button"
-          class="boton-accion-memoria"
-          :disabled="importandoMemorias || exportandoMemorias"
-          @click="exportarMemorias"
-        >
-          {{ exportandoMemorias ? 'Exportando...' : 'Exportar memorias' }}
-        </button>
-        <button
-          type="button"
-          class="boton-accion-memoria"
-          :disabled="importandoMemorias || exportandoMemorias"
-          @click="importarMemorias"
-        >
-          {{ importandoMemorias ? 'Importando...' : 'Importar memorias' }}
-        </button>
-      </div>
+      <p class="descripcion-acciones-memoria">
+        Accedé al apartado de memorias para importar, exportar y ver estado de sincronización.
+      </p>
+      <button type="button" class="boton-abrir-memorias" @click="abrirApartadoMemorias">
+        Abrir memorias
+      </button>
     </div>
 
     <TarjetaSeccion titulo="Agregar etiquetas" :expandida-por-defecto="false">
@@ -37,7 +23,6 @@
       />
     </TarjetaSeccion>
 
-    <!-- TABLA DE ARTÍCULOS -->
     <TablaEtiquetas
       :etiquetas="listaEtiquetas"
       @editar-etiqueta="editarEtiqueta"
@@ -48,7 +33,6 @@
       @modal-cerrado="manejarModalCerrado"
     />
 
-    <!-- MODAL ELIMINAR ETIQUETA INDIVIDUAL -->
     <ModalEliminar
       v-if="mostrarModalEliminar"
       :texto="`la etiqueta del artículo ${etiquetaAEliminar?.codigo}`"
@@ -58,7 +42,6 @@
       @modal-cerrado="manejarModalCerrado"
     />
 
-    <!-- MODAL ELIMINAR TODO -->
     <ModalEliminar
       v-if="mostrarModalLimpiarTodo"
       texto="todas las etiquetas"
@@ -72,9 +55,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { Loading, Notify } from 'quasar'
 import { IconDownload } from '@tabler/icons-vue'
-import { Filesystem, Directory } from '@capacitor/filesystem'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
@@ -83,7 +66,6 @@ import {
   generarDocumentoEtiquetas,
   esPlataformaWeb,
 } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
-// Nota técnica: existen configuraciones 5x10 y 2.5x6.7 internas, no expuestas en UI por ahora.
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
 import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
@@ -94,22 +76,20 @@ import {
   leerTextoArchivoCompartido,
 } from '../components/Logica/Etiquetas/ServicioArchivoCompartido.js'
 import {
+  importarMemoriasDesdeTexto as importarMemoriasDesdeTextoServicio,
+} from '../components/Logica/Etiquetas/ServicioMemoriasEtiquetas.js'
+import {
   guardarEtiquetas,
   obtenerEtiquetas,
   eliminarEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
-import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
   upsertMemoriaEtiqueta,
   obtenerMemoriaEtiquetaPorCodigo,
-  obtenerTodasLasMemoriasEtiquetas,
-  construirJsonCompartirMemorias,
-  parsearJsonCompartirMemorias,
-  fusionarMemoriasDesdeJsonPayload,
-  crearRespaldoMemoriaEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
 
-// --- ESTADO REACTIVO ---
+const router = useRouter()
+
 const tamanoSeleccionado = ref('10x15cm')
 const listaEtiquetas = ref([])
 const mostrarModalEliminar = ref(false)
@@ -118,27 +98,21 @@ const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
 const importandoMemorias = ref(false)
-const exportandoMemorias = ref(false)
-
-// Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
 
 let intervaloPolling = null
 
 const emit = defineEmits(['configurar-barra'])
 
-// --- FUNCIÓN PARA OBTENER CONFIGURACIÓN SEGÚN TAMAÑO ---
 function obtenerConfiguracionPorTamano(tamano) {
   const configuraciones = {
     '10x15cm': configuracionEtiqueta10x15,
     '5x10cm': configuracionEtiqueta5x10,
     '2.5x6.7cm': configuracionEtiqueta2_5x6_7,
   }
-
   return configuraciones[tamano] || configuracionEtiqueta10x15
 }
 
-// --- FUNCIONES DE PERSISTENCIA ---
 async function cargarEtiquetasGuardadas() {
   try {
     const etiquetasGuardadas = await obtenerEtiquetas()
@@ -160,29 +134,22 @@ async function persistirEtiquetas() {
   }
 }
 
-// --- POLLING PARA DETECTAR ETIQUETAS AGREGADAS DESDE UBICACIONES ---
 async function verificarNuevasEtiquetas() {
   try {
     const etiquetasActuales = await obtenerEtiquetas()
-
     if (!etiquetasActuales) return
 
-    // Solo actualizar si la cantidad cambió
     if (etiquetasActuales.length !== listaEtiquetas.value.length) {
       listaEtiquetas.value = await Promise.all(
         etiquetasActuales.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)),
       )
-      console.log(
-        '[PaginaEtiquetas] Etiquetas actualizadas desde almacenamiento:',
-        etiquetasActuales.length,
-      )
+      console.log('[PaginaEtiquetas] Etiquetas actualizadas desde almacenamiento:', etiquetasActuales.length)
     }
   } catch (error) {
     console.error('[PaginaEtiquetas] Error en polling:', error)
   }
 }
 
-// --- FUNCIONES ---
 async function aplicarMemoriaEtiqueta(etiquetaBase) {
   const etiqueta = {
     ...etiquetaBase,
@@ -224,7 +191,6 @@ async function agregarEtiqueta(etiqueta) {
   const etiquetaConId = await aplicarMemoriaEtiqueta(etiquetaConIdBase)
 
   listaEtiquetas.value.push(etiquetaConId)
-  console.log('[PaginaEtiquetas] Etiqueta agregada:', etiquetaConId)
   if (etiquetaConId.memoriaActiva) {
     Notify.create({
       type: 'info',
@@ -233,7 +199,6 @@ async function agregarEtiqueta(etiqueta) {
       timeout: 1300,
     })
   }
-
   await persistirEtiquetas()
 }
 
@@ -241,8 +206,6 @@ async function editarEtiqueta(etiquetaEditada) {
   const indice = listaEtiquetas.value.findIndex((e) => e.id === etiquetaEditada.id)
   if (indice !== -1) {
     listaEtiquetas.value[indice] = etiquetaEditada
-    console.log('[PaginaEtiquetas] Etiqueta editada:', etiquetaEditada)
-
     await persistirEtiquetas()
   }
 }
@@ -274,10 +237,7 @@ function eliminarEtiqueta(indice) {
 
 function confirmarEliminar() {
   listaEtiquetas.value.splice(indiceAEliminar.value, 1)
-  console.log('[PaginaEtiquetas] Etiqueta eliminada')
-
   persistirEtiquetas()
-
   cerrarModalEliminar()
 }
 
@@ -294,10 +254,7 @@ function limpiarTodo() {
 
 async function confirmarLimpiarTodo() {
   listaEtiquetas.value = []
-  console.log('[PaginaEtiquetas] Lista de etiquetas limpiada')
-
   await eliminarEtiquetas()
-
   cerrarModalLimpiarTodo()
 }
 
@@ -305,92 +262,60 @@ function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
 }
 
-function sanitizarTextoParaNombreArchivo(texto = '') {
-  const base = String(texto || '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-zA-Z0-9-]/g, '')
-  return base || 'Usua-des'
+function abrirApartadoMemorias() {
+  router.push({ name: 'MemoriasEtiquetas' })
 }
 
-function crearNombreArchivoMemorias(nombreUsuario = '') {
-  const nombreSanitizado = sanitizarTextoParaNombreArchivo(nombreUsuario)
-  const ahora = new Date()
-  const fecha = ahora.toISOString().split('T')[0]
-  const hora = ahora.toTimeString().slice(0, 5).replace(':', '-')
-  return `Memorias ${nombreSanitizado} ${fecha} # ${hora}.json`
-}
-
-function descargarJsonEnWeb(nombreArchivo, contenidoJson) {
-  const blob = new Blob([contenidoJson], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const enlace = document.createElement('a')
-  enlace.href = url
-  enlace.download = nombreArchivo
-  document.body.appendChild(enlace)
-  enlace.click()
-  document.body.removeChild(enlace)
-  URL.revokeObjectURL(url)
-}
-
-async function leerArchivoJsonDesdeSelector() {
-  return new Promise((resolve, reject) => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json,application/json'
-    input.onchange = async (evento) => {
-      try {
-        const archivo = evento?.target?.files?.[0]
-        if (!archivo) {
-          resolve(null)
-          return
-        }
-        const texto = await archivo.text()
-        resolve({ nombre: archivo.name, texto })
-      } catch (error) {
-        reject(error)
+async function reaplicarMemoriasEnPantalla() {
+  let cambios = 0
+  const listaActualizada = await Promise.all(
+    listaEtiquetas.value.map(async (etiqueta) => {
+      const descripcionPrev = String(etiqueta?.descripcion || '')
+      const etiquetaActualizada = await aplicarMemoriaEtiqueta(etiqueta)
+      if (String(etiquetaActualizada?.descripcion || '') !== descripcionPrev) {
+        cambios += 1
       }
-    }
-    input.click()
-  })
+      return etiquetaActualizada
+    }),
+  )
+  listaEtiquetas.value = listaActualizada
+  if (cambios > 0) {
+    await persistirEtiquetas()
+  }
+  return cambios
 }
 
 async function importarMemoriasDesdeTexto(textoJson, origenImportacion = '') {
-  const parseado = parsearJsonCompartirMemorias(textoJson)
-  if (!parseado.exito) {
+  Loading.show({
+    message: `Importando memorias (${origenImportacion || 'archivo compartido'})...`,
+    spinnerColor: 'primary',
+  })
+  const resultado = await importarMemoriasDesdeTextoServicio({
+    textoJson,
+    alAplicarCambios: reaplicarMemoriasEnPantalla,
+  })
+  Loading.hide()
+
+  if (!resultado.exito) {
     Notify.create({
       type: 'negative',
-      message: parseado.mensaje || 'Archivo JSON inválido.',
+      message: resultado.mensaje || 'No se pudo importar las memorias.',
       position: 'top',
       timeout: 2500,
     })
-    return false
+    return
   }
-
-  const payload = parseado.payload
-  const textoOrigen = origenImportacion ? ` (${origenImportacion})` : ''
-  Loading.show({
-    message: `Importando memorias de ${payload.exportadoPor}${textoOrigen}...`,
-    spinnerColor: 'primary',
-  })
-
-  await crearRespaldoMemoriaEtiquetas()
-  const resultado = await fusionarMemoriasDesdeJsonPayload(payload)
-  const cantidadCambiosPantalla = await reaplicarMemoriasEnPantalla()
-  Loading.hide()
 
   Notify.create({
     type: 'positive',
-    message: `Importación lista (${payload.exportadoPor}): +${resultado.resumen.nuevas} nuevas, ${resultado.resumen.actualizadas} actualizadas, ${resultado.resumen.ignoradas} ignoradas, ${parseado.entradasInvalidas} inválidas, ${cantidadCambiosPantalla} aplicadas en pantalla.`,
+    message: `Importación lista (${resultado.payload.exportadoPor}): +${resultado.resumen.nuevas} nuevas, ${resultado.resumen.actualizadas} actualizadas, ${resultado.resumen.ignoradas} ignoradas, ${resultado.entradasInvalidas} inválidas, ${resultado.cantidadCambiosPantalla} aplicadas en pantalla.`,
     position: 'top',
     timeout: 3600,
   })
-  return true
 }
 
 async function procesarArchivoCompartidoPendiente() {
-  if (importandoMemorias.value || exportandoMemorias.value) return
-
+  if (importandoMemorias.value) return
   const pendiente = await obtenerArchivoCompartidoPendiente()
   if (!pendiente?.uri) return
 
@@ -422,143 +347,24 @@ async function procesarArchivoCompartidoPendiente() {
   }
 }
 
-async function exportarMemorias() {
-  if (exportandoMemorias.value || importandoMemorias.value) return
-  exportandoMemorias.value = true
-  try {
-    const entradas = await obtenerTodasLasMemoriasEtiquetas()
-    if (!Array.isArray(entradas) || entradas.length === 0) {
-      Notify.create({
-        type: 'warning',
-        message: 'No hay memorias para exportar.',
-        position: 'top',
-        timeout: 1800,
-      })
-      return
-    }
-
-    const nombreUsuario = await obtenerNombreUsuario()
-    const payload = construirJsonCompartirMemorias({
-      entradas,
-      exportadoPor: nombreUsuario,
-      exportadoEn: Date.now(),
-    })
-    const contenidoJson = JSON.stringify(payload, null, 2)
-    const nombreArchivo = crearNombreArchivoMemorias(nombreUsuario)
-
-    if (esPlataformaWeb()) {
-      descargarJsonEnWeb(nombreArchivo, contenidoJson)
-    } else {
-      const resultado = await Filesystem.writeFile({
-        path: nombreArchivo,
-        directory: Directory.Cache,
-        data: contenidoJson,
-        encoding: 'utf8',
-        recursive: true,
-      })
-      const compartido = await compartirArchivo(resultado.uri, nombreArchivo, {
-        titulo: 'Memorias de etiquetas',
-        texto: `Memorias exportadas por ${payload.exportadoPor}`,
-      })
-      if (!compartido) {
-        Notify.create({
-          type: 'warning',
-          message: 'No se pudo abrir el menú de compartir.',
-          position: 'top',
-          timeout: 2200,
-        })
-        return
-      }
-    }
-
-    Notify.create({
-      type: 'positive',
-      message: `Memorias exportadas: ${payload.cantidad}`,
-      position: 'top',
-      timeout: 1800,
-    })
-  } catch (error) {
-    console.error('[PaginaEtiquetas] Error exportando memorias:', error)
-    Notify.create({
-      type: 'negative',
-      message: 'No se pudo exportar las memorias.',
-      position: 'top',
-      timeout: 2200,
-    })
-  } finally {
-    exportandoMemorias.value = false
-  }
-}
-
-async function reaplicarMemoriasEnPantalla() {
-  let cambios = 0
-  const listaActualizada = await Promise.all(
-    listaEtiquetas.value.map(async (etiqueta) => {
-      const descripcionPrev = String(etiqueta?.descripcion || '')
-      const etiquetaActualizada = await aplicarMemoriaEtiqueta(etiqueta)
-      if (String(etiquetaActualizada?.descripcion || '') !== descripcionPrev) {
-        cambios += 1
-      }
-      return etiquetaActualizada
-    }),
-  )
-  listaEtiquetas.value = listaActualizada
-  if (cambios > 0) {
-    await persistirEtiquetas()
-  }
-  return cambios
-}
-
-async function importarMemorias() {
-  if (importandoMemorias.value || exportandoMemorias.value) return
-  importandoMemorias.value = true
-  try {
-    const archivo = await leerArchivoJsonDesdeSelector()
-    if (!archivo) return
-    await importarMemoriasDesdeTexto(archivo.texto, archivo.nombre || 'archivo manual')
-  } catch (error) {
-    console.error('[PaginaEtiquetas] Error importando memorias:', error)
-    Loading.hide()
-    Notify.create({
-      type: 'negative',
-      message: 'No se pudo importar las memorias.',
-      position: 'top',
-      timeout: 2500,
-    })
-  } finally {
-    importandoMemorias.value = false
-  }
-}
 async function generarPDF() {
   if (listaEtiquetas.value.length === 0) return
 
   try {
     generandoDocumento.value = true
-
     Loading.show({
       message: 'Generando documento PDF...',
       spinnerColor: 'primary',
     })
 
-    console.log('[PaginaEtiquetas] Tamaño seleccionado:', tamanoSeleccionado.value)
-    console.log('[PaginaEtiquetas] Generando PDF con', listaEtiquetas.value.length, 'etiquetas')
-
     const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
-
     await Promise.all(listaEtiquetas.value.map((etiqueta) => guardarMemoriaDesdeEtiqueta(etiqueta)))
-
-    console.log('[PaginaEtiquetas] Configuración usada:', configuracion.nombre)
-    console.log('[PaginaEtiquetas] Dimensiones:', configuracion.pagina)
-
     const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value, configuracion)
 
     Loading.hide()
-
     if (!resultado.exito) {
       throw new Error(resultado.mensaje)
     }
-
-    console.log('[PaginaEtiquetas] Documento generado:', resultado.rutaArchivo)
 
     if (esPlataformaWeb()) {
       Notify.create({
@@ -627,7 +433,6 @@ const metodosParaBarra = {
   },
 }
 
-// Métodos para manejar el estado del modal
 const manejarModalAbierto = () => {
   modalActivo.value = true
 }
@@ -636,7 +441,6 @@ const manejarModalCerrado = () => {
   modalActivo.value = false
 }
 
-// --- LIFECYCLE ---
 onMounted(async () => {
   await cargarEtiquetasGuardadas()
   listaEtiquetas.value = await Promise.all(listaEtiquetas.value.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)))
@@ -644,19 +448,14 @@ onMounted(async () => {
 
   emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
 
-  // Iniciar polling cada 2 segundos
   intervaloPolling = setInterval(() => {
     verificarNuevasEtiquetas()
   }, 2000)
-
-  console.log('[PaginaEtiquetas] Polling iniciado')
 })
 
 onUnmounted(() => {
-  // Limpiar polling
   if (intervaloPolling) {
     clearInterval(intervaloPolling)
-    console.log('[PaginaEtiquetas] Polling detenido')
   }
 
   emit(
@@ -682,7 +481,6 @@ watch(
   { deep: true },
 )
 
-// Watcher para actualizar cuando cambia el estado del modal
 watch(
   () => modalActivo.value,
   () => {
@@ -713,75 +511,6 @@ watch(
   font-weight: bold;
   margin: 0;
 }
-.selector-tamano {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 0.75rem;
-  background: var(--color-fondo);
-  border-radius: 8px;
-  border: 1px solid var(--color-borde);
-  flex-wrap: wrap;
-}
-.label-tamano {
-  font-weight: 600;
-  color: var(--color-texto-secundario);
-  font-size: 0.95rem;
-}
-.opcion-tamano {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  transition: background 0.2s ease;
-}
-.opcion-tamano:hover {
-  background: var(--color-superficie);
-}
-.opcion-tamano input[type='radio'] {
-  cursor: pointer;
-  accent-color: var(--color-primario);
-  width: 18px;
-  height: 18px;
-}
-.opcion-tamano span {
-  font-size: 0.95rem;
-  color: var(--color-texto-principal);
-  font-weight: 500;
-}
-@media (max-width: 600px) {
-  .contenedor-tabla {
-    padding: 0.75rem;
-  }
-  .header-etiquetas {
-    padding: 1rem;
-  }
-  .titulo-tabla {
-    font-size: 1.5rem;
-  }
-  .selector-tamano {
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-  .label-tamano {
-    font-size: 0.9rem;
-  }
-  .opcion-tamano {
-    width: 100%;
-    justify-content: center;
-    padding: 0.6rem 1rem;
-  }
-}
-@media (max-width: 900px) and (min-width: 601px) {
-  .titulo-tabla {
-    font-size: 1.8rem;
-  }
-}
 .texto-info-tamano {
   text-align: center;
   color: var(--color-texto-secundario);
@@ -803,34 +532,38 @@ watch(
   margin-bottom: 1rem;
 }
 .titulo-acciones-memoria {
-  margin: 0 0 0.55rem 0;
+  margin: 0 0 0.5rem 0;
   color: var(--color-texto-principal);
   font-size: 0.95rem;
 }
-.acciones-memoria {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
+.descripcion-acciones-memoria {
+  margin: 0 0 0.7rem 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.9rem;
 }
-.boton-accion-memoria {
+.boton-abrir-memorias {
   border: 1px solid var(--color-borde);
   background: var(--color-fondo);
   color: var(--color-texto-principal);
   border-radius: 8px;
-  padding: 0.5rem 0.72rem;
-  font-size: 0.86rem;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: filter 0.2s ease;
 }
-.boton-accion-memoria:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.boton-accion-memoria:hover:not(:disabled) {
+.boton-abrir-memorias:hover {
   filter: brightness(1.1);
 }
+@media (max-width: 600px) {
+  .contenedor-tabla {
+    padding: 0.75rem;
+  }
+  .header-etiquetas {
+    padding: 1rem;
+  }
+  .titulo-tabla {
+    font-size: 1.5rem;
+  }
+}
 </style>
-
-
-
