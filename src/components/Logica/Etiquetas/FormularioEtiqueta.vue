@@ -1,5 +1,5 @@
 <template>
-  <div class="contenedor-tabla">
+  <div class="contenedor-formulario-etiqueta">
     <form ref="formularioRef" @submit.prevent="agregarEtiqueta" class="formulario-etiqueta">
       <!-- Campo Código con buscador integrado -->
       <div class="campo-con-buscador">
@@ -383,12 +383,8 @@ function cerrarResultadosFuera(event) {
 </script>
 
 <style scoped>
-.contenedor-tabla {
-  background-color: var(--color-superficie);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  margin-bottom: 1.5rem;
+.contenedor-formulario-etiqueta {
+  width: 100%;
 }
 .formulario-etiqueta {
   display: grid;
@@ -585,7 +581,7 @@ function cerrarResultadosFuera(event) {
   }
 }
 @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
-  .contenedor-tabla {
+  .contenedor-formulario-etiqueta {
     padding-top: 1rem;
     padding-bottom: 0.75rem;
   }
@@ -597,9 +593,6 @@ function cerrarResultadosFuera(event) {
   }
 }
 @media (max-width: 600px) {
-  .contenedor-tabla {
-    padding: 1rem;
-  }
   .input-cantidad-formulario {
     width: 58px;
     min-height: 40px;

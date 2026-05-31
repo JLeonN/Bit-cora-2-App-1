@@ -7,12 +7,35 @@
       <p class="texto-info-tamano">Las etiquetas se generan en formato <strong>10x15 cm</strong></p>
     </div>
 
-    <!-- FORMULARIO DE ENTRADA -->
-    <FormularioEtiqueta
-      @agregar-etiqueta="agregarEtiqueta"
-      @modal-abierto="manejarModalAbierto"
-      @modal-cerrado="manejarModalCerrado"
-    />
+    <div class="tarjeta-acciones-memoria">
+      <h3 class="titulo-acciones-memoria">Memoria compartida</h3>
+      <div class="acciones-memoria">
+        <button
+          type="button"
+          class="boton-accion-memoria"
+          :disabled="importandoMemorias || exportandoMemorias"
+          @click="importarMemorias"
+        >
+          {{ importandoMemorias ? 'Importando...' : 'Importar memorias' }}
+        </button>
+        <button
+          type="button"
+          class="boton-accion-memoria"
+          :disabled="importandoMemorias || exportandoMemorias"
+          @click="exportarMemorias"
+        >
+          {{ exportandoMemorias ? 'Exportando...' : 'Exportar memorias' }}
+        </button>
+      </div>
+    </div>
+
+    <TarjetaSeccion titulo="Agregar etiquetas" :expandida-por-defecto="false">
+      <FormularioEtiqueta
+        @agregar-etiqueta="agregarEtiqueta"
+        @modal-abierto="manejarModalAbierto"
+        @modal-cerrado="manejarModalCerrado"
+      />
+    </TarjetaSeccion>
 
     <!-- TABLA DE ARTÍCULOS -->
     <TablaEtiquetas
@@ -51,9 +74,11 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Loading, Notify } from 'quasar'
 import { IconDownload } from '@tabler/icons-vue'
+import { Filesystem, Directory } from '@capacitor/filesystem'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
+import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import {
   generarDocumentoEtiquetas,
   esPlataformaWeb,
@@ -68,9 +93,15 @@ import {
   obtenerEtiquetas,
   eliminarEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
+import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
   upsertMemoriaEtiqueta,
   obtenerMemoriaEtiquetaPorCodigo,
+  obtenerTodasLasMemoriasEtiquetas,
+  construirJsonCompartirMemorias,
+  parsearJsonCompartirMemorias,
+  fusionarMemoriasDesdeJsonPayload,
+  crearRespaldoMemoriaEtiquetas,
 } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
 
 // --- ESTADO REACTIVO ---
@@ -81,6 +112,8 @@ const mostrarModalLimpiarTodo = ref(false)
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
+const importandoMemorias = ref(false)
+const exportandoMemorias = ref(false)
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
@@ -265,6 +298,187 @@ async function confirmarLimpiarTodo() {
 
 function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
+}
+
+function sanitizarTextoParaNombreArchivo(texto = '') {
+  const base = String(texto || '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9-]/g, '')
+  return base || 'Usua-des'
+}
+
+function crearNombreArchivoMemorias(nombreUsuario = '') {
+  const nombreSanitizado = sanitizarTextoParaNombreArchivo(nombreUsuario)
+  const ahora = new Date()
+  const yyyy = String(ahora.getFullYear())
+  const mm = String(ahora.getMonth() + 1).padStart(2, '0')
+  const dd = String(ahora.getDate()).padStart(2, '0')
+  const hh = String(ahora.getHours()).padStart(2, '0')
+  const min = String(ahora.getMinutes()).padStart(2, '0')
+  const ss = String(ahora.getSeconds()).padStart(2, '0')
+  return `MemoriasEtiquetas-${nombreSanitizado}-${yyyy}${mm}${dd}-${hh}${min}${ss}.json`
+}
+
+function descargarJsonEnWeb(nombreArchivo, contenidoJson) {
+  const blob = new Blob([contenidoJson], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombreArchivo
+  document.body.appendChild(enlace)
+  enlace.click()
+  document.body.removeChild(enlace)
+  URL.revokeObjectURL(url)
+}
+
+async function leerArchivoJsonDesdeSelector() {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json,application/json'
+    input.onchange = async (evento) => {
+      try {
+        const archivo = evento?.target?.files?.[0]
+        if (!archivo) {
+          resolve(null)
+          return
+        }
+        const texto = await archivo.text()
+        resolve({ nombre: archivo.name, texto })
+      } catch (error) {
+        reject(error)
+      }
+    }
+    input.click()
+  })
+}
+
+async function exportarMemorias() {
+  if (exportandoMemorias.value || importandoMemorias.value) return
+  exportandoMemorias.value = true
+  try {
+    const entradas = await obtenerTodasLasMemoriasEtiquetas()
+    if (!Array.isArray(entradas) || entradas.length === 0) {
+      Notify.create({
+        type: 'warning',
+        message: 'No hay memorias para exportar.',
+        position: 'top',
+        timeout: 1800,
+      })
+      return
+    }
+
+    const nombreUsuario = await obtenerNombreUsuario()
+    const payload = construirJsonCompartirMemorias({
+      entradas,
+      exportadoPor: nombreUsuario,
+      exportadoEn: Date.now(),
+    })
+    const contenidoJson = JSON.stringify(payload, null, 2)
+    const nombreArchivo = crearNombreArchivoMemorias(nombreUsuario)
+
+    if (esPlataformaWeb()) {
+      descargarJsonEnWeb(nombreArchivo, contenidoJson)
+    } else {
+      const resultado = await Filesystem.writeFile({
+        path: nombreArchivo,
+        directory: Directory.Documents,
+        data: contenidoJson,
+        encoding: 'utf8',
+        recursive: true,
+      })
+      await compartirArchivo(resultado.uri, nombreArchivo, {
+        titulo: 'Memorias de etiquetas',
+        texto: `Memorias exportadas por ${payload.exportadoPor}`,
+      })
+    }
+
+    Notify.create({
+      type: 'positive',
+      message: `Memorias exportadas: ${payload.cantidad}`,
+      position: 'top',
+      timeout: 1800,
+    })
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error exportando memorias:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'No se pudo exportar las memorias.',
+      position: 'top',
+      timeout: 2200,
+    })
+  } finally {
+    exportandoMemorias.value = false
+  }
+}
+
+async function reaplicarMemoriasEnPantalla() {
+  let cambios = 0
+  const listaActualizada = await Promise.all(
+    listaEtiquetas.value.map(async (etiqueta) => {
+      const descripcionPrev = String(etiqueta?.descripcion || '')
+      const etiquetaActualizada = await aplicarMemoriaEtiqueta(etiqueta)
+      if (String(etiquetaActualizada?.descripcion || '') !== descripcionPrev) {
+        cambios += 1
+      }
+      return etiquetaActualizada
+    }),
+  )
+  listaEtiquetas.value = listaActualizada
+  if (cambios > 0) {
+    await persistirEtiquetas()
+  }
+  return cambios
+}
+
+async function importarMemorias() {
+  if (importandoMemorias.value || exportandoMemorias.value) return
+  importandoMemorias.value = true
+  try {
+    const archivo = await leerArchivoJsonDesdeSelector()
+    if (!archivo) return
+
+    const parseado = parsearJsonCompartirMemorias(archivo.texto)
+    if (!parseado.exito) {
+      Notify.create({
+        type: 'negative',
+        message: parseado.mensaje || 'Archivo JSON inválido.',
+        position: 'top',
+        timeout: 2500,
+      })
+      return
+    }
+
+    const payload = parseado.payload
+    Loading.show({
+      message: `Importando memorias de ${payload.exportadoPor}...`,
+      spinnerColor: 'primary',
+    })
+
+    await crearRespaldoMemoriaEtiquetas()
+    const resultado = await fusionarMemoriasDesdeJsonPayload(payload)
+    const cantidadCambiosPantalla = await reaplicarMemoriasEnPantalla()
+    Loading.hide()
+
+    Notify.create({
+      type: 'positive',
+      message: `Importación lista (${payload.exportadoPor}): +${resultado.resumen.nuevas} nuevas, ${resultado.resumen.actualizadas} actualizadas, ${resultado.resumen.ignoradas} ignoradas, ${parseado.entradasInvalidas} inválidas, ${cantidadCambiosPantalla} aplicadas en pantalla.`,
+      position: 'top',
+      timeout: 3600,
+    })
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error importando memorias:', error)
+    Loading.hide()
+    Notify.create({
+      type: 'negative',
+      message: 'No se pudo importar las memorias.',
+      position: 'top',
+      timeout: 2500,
+    })
+  } finally {
+    importandoMemorias.value = false
+  }
 }
 
 async function generarPDF() {
@@ -531,5 +745,40 @@ watch(
 .texto-info-tamano strong {
   color: var(--color-primario);
   font-weight: 600;
+}
+.tarjeta-acciones-memoria {
+  background-color: var(--color-superficie);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-borde);
+  margin-bottom: 1rem;
+}
+.titulo-acciones-memoria {
+  margin: 0 0 0.55rem 0;
+  color: var(--color-texto-principal);
+  font-size: 0.95rem;
+}
+.acciones-memoria {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.boton-accion-memoria {
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 8px;
+  padding: 0.5rem 0.72rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+.boton-accion-memoria:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.boton-accion-memoria:hover:not(:disabled) {
+  filter: brightness(1.1);
 }
 </style>

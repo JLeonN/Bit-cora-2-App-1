@@ -149,17 +149,17 @@ Validar que el intercambio por JSON funcione sin perder memoria local ni crear d
 - [ ] Verificar que no se guarde ubicacion dentro del JSON.
 - [ ] Verificar estado de carga en importacion y exportacion.
 - [ ] Probar visualmente los botones en la tarjeta de resumen en movil.
-- [ ] Ejecutar `npm run lint` y corregir errores.
-- [ ] Ejecutar `npm run build` y corregir errores.
+- [x] Ejecutar `npm run lint` y corregir errores.
+- [x] Ejecutar `npm run build` y corregir errores.
 
 ## Progreso del plan
 
-- [ ] Fase 1: Definir formato JSON
-- [ ] Fase 2: Exportar memorias
-- [ ] Fase 3: Importar y fusionar memorias
-- [ ] Fase 4: Integrar botones en resumen de etiquetas
+- [x] Fase 1: Definir formato JSON
+- [x] Fase 2: Exportar memorias
+- [x] Fase 3: Importar y fusionar memorias
+- [x] Fase 4: Integrar botones en resumen de etiquetas
 - [ ] Fase Testing
 
 Fecha de creacion: 31 de Mayo 2026
 Fecha de ultima actualizacion: 31 de Mayo 2026
-Estado: BORRADOR
+Estado: IMPLEMENTADO (pendiente testing manual funcional)
