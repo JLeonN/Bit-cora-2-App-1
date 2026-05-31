@@ -3,15 +3,17 @@
     <q-layout view="lHh Lpr lff">
       <q-header elevated :class="claseHeader">
         <q-toolbar class="barra-superior">
-          <q-toolbar-title
-            class="titulo-usuario titulo-usuario-clickable"
-            :title="nombreUsuario"
-            role="button"
-            tabindex="0"
-            @click="irAConfiguracionParaEditarNombre"
-            @keyup.enter="irAConfiguracionParaEditarNombre"
-          >
-            {{ nombreUsuario }}
+          <q-toolbar-title class="titulo-usuario">
+            <span
+              class="titulo-usuario-clickable"
+              :title="nombreUsuario"
+              role="button"
+              tabindex="0"
+              @click="irAConfiguracionParaEditarNombre"
+              @keyup.enter="irAConfiguracionParaEditarNombre"
+            >
+              {{ nombreUsuario }}
+            </span>
           </q-toolbar-title>
           <div class="pasos-header" :class="{ 'sesion-activa': sesionActivaHeader }" :title="textoPasosHeader">
             <IconPaw :size="16" :stroke="2" />
@@ -88,7 +90,7 @@
               </q-avatar>
               <div class="text-weight-bold">Bitácora II</div>
               <div
-                class="nombre-usuario-drawer-clickable"
+                class="titulo-usuario-clickable"
                 role="button"
                 tabindex="0"
                 @click="irAConfiguracionParaEditarNombre"
@@ -369,7 +371,24 @@ const manejarAccionPersonalizada = (accion) => {
   padding-right: 8px;
 }
 .titulo-usuario-clickable {
+  display: inline-block;
+  width: fit-content;
   cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 6px;
+  transition: background-color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+}
+.titulo-usuario-clickable:hover {
+  background: color-mix(in oklab, var(--color-texto-principal) 16%, transparent);
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--color-fondo) 40%, transparent);
+}
+.titulo-usuario-clickable:active {
+  transform: scale(0.97);
+  background: color-mix(in oklab, var(--color-texto-principal) 24%, transparent);
+}
+.titulo-usuario-clickable:focus-visible {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 2px;
 }
 .pasos-header {
   position: absolute;
@@ -469,13 +488,6 @@ const manejarAccionPersonalizada = (accion) => {
 .datos-usuario-drawer {
   max-width: 118px;
   padding-right: 6px;
-}
-.nombre-usuario-drawer-clickable {
-  cursor: pointer;
-  width: fit-content;
-}
-.nombre-usuario-drawer-clickable:hover {
-  text-decoration: underline;
 }
 .resumen-pasos-drawer {
   position: absolute;
