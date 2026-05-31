@@ -5,17 +5,32 @@
       <p class="texto-info-tamano">Las etiquetas se generan en formato <strong>10x15 cm</strong></p>
     </div>
 
-    <div class="tarjeta-acciones-memoria">
-      <h3 class="titulo-acciones-memoria">Memoria compartida</h3>
-      <p class="descripcion-acciones-memoria">
+    <TarjetaSeccion
+      titulo="Memoria compartida"
+      :expandida-por-defecto="false"
+      descripcion-resumen="Accedé al apartado de memorias para importar, exportar y ver estado de sincronización."
+      :ocultar-resumen-al-expandir="true"
+    >
+      <p class="texto-memoria-completa">
         Accedé al apartado de memorias para importar, exportar y ver estado de sincronización.
       </p>
-      <button type="button" class="boton-abrir-memorias" @click="abrirApartadoMemorias">
-        Abrir memorias
-      </button>
-    </div>
+      <template #accionFija>
+        <button type="button" class="boton-abrir-memorias" @click.stop="abrirApartadoMemorias">
+          Abrir memorias
+        </button>
+      </template>
+    </TarjetaSeccion>
 
-    <TarjetaSeccion titulo="Agregar etiquetas" :expandida-por-defecto="false">
+    <TarjetaSeccion
+      titulo="Agregar etiquetas"
+      :expandida-por-defecto="false"
+      descripcion-resumen="Ingresá código, descripción, ubicación y cantidad para crear etiquetas."
+      :ocultar-resumen-al-expandir="true"
+    >
+      <p class="texto-agregar-etiquetas-completo">
+        Ingresá código, descripción, ubicación y cantidad para crear etiquetas. También podés escanear el
+        código para cargar más rápido y luego ajustar la descripción antes de guardar.
+      </p>
       <FormularioEtiqueta
         @agregar-etiqueta="agregarEtiqueta"
         @modal-abierto="manejarModalAbierto"
@@ -524,23 +539,6 @@ watch(
   color: var(--color-primario);
   font-weight: 600;
 }
-.tarjeta-acciones-memoria {
-  background-color: var(--color-superficie);
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-borde);
-  margin-bottom: 1rem;
-}
-.titulo-acciones-memoria {
-  margin: 0 0 0.5rem 0;
-  color: var(--color-texto-principal);
-  font-size: 0.95rem;
-}
-.descripcion-acciones-memoria {
-  margin: 0 0 0.7rem 0;
-  color: var(--color-texto-secundario);
-  font-size: 0.9rem;
-}
 .boton-abrir-memorias {
   border: 1px solid var(--color-borde);
   background: var(--color-fondo);
@@ -551,6 +549,18 @@ watch(
   font-weight: 600;
   cursor: pointer;
   transition: filter 0.2s ease;
+}
+.texto-memoria-completa {
+  margin: 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.texto-agregar-etiquetas-completo {
+  margin: 0 0 0.8rem 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.92rem;
+  line-height: 1.4;
 }
 .boton-abrir-memorias:hover {
   filter: brightness(1.1);

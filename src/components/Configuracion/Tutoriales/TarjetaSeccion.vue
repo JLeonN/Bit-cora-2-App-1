@@ -3,7 +3,16 @@
     <div class="tarjeta-header" @click="alternarExpansion">
       <div class="header-contenido">
         <component v-if="icono" :is="icono" :stroke="2" class="icono-seccion" />
-        <h3 class="titulo-seccion">{{ titulo }}</h3>
+        <div class="bloque-titulos">
+          <h3 class="titulo-seccion">{{ titulo }}</h3>
+          <p
+            v-if="descripcionResumen"
+            class="descripcion-resumen"
+            :class="{ 'descripcion-resumen-oculta': ocultarResumenAlExpandir && estaExpandida }"
+          >
+            {{ descripcionResumen }}
+          </p>
+        </div>
       </div>
       <IconChevronDown
         :stroke="2"
@@ -17,12 +26,18 @@
         <slot></slot>
       </div>
     </transition>
+
+    <div v-if="$slots.accionFija" class="contenedor-accion-fija">
+      <slot name="accionFija"></slot>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import { IconChevronDown } from '@tabler/icons-vue'
+
+const emit = defineEmits(['cambio-expansion'])
 
 const props = defineProps({
   titulo: {
@@ -37,12 +52,21 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  descripcionResumen: {
+    type: String,
+    default: '',
+  },
+  ocultarResumenAlExpandir: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const estaExpandida = ref(props.expandidaPorDefecto)
 
 const alternarExpansion = () => {
   estaExpandida.value = !estaExpandida.value
+  emit('cambio-expansion', estaExpandida.value)
 }
 
 // Watch por si se cambia desde fuera
@@ -50,6 +74,7 @@ watch(
   () => props.expandidaPorDefecto,
   (nuevoValor) => {
     estaExpandida.value = nuevoValor
+    emit('cambio-expansion', estaExpandida.value)
   },
 )
 </script>
@@ -80,8 +105,13 @@ watch(
 }
 .header-contenido {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+}
+.bloque-titulos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 .icono-seccion {
   color: var(--color-primario);
@@ -93,6 +123,18 @@ watch(
   font-size: 18px;
   font-weight: 600;
 }
+.descripcion-resumen {
+  margin: 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.88rem;
+  max-width: min(70vw, 520px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.descripcion-resumen-oculta {
+  display: none;
+}
 .icono-chevron {
   color: var(--color-texto-secundario);
   transition: transform 0.3s ease;
@@ -102,6 +144,9 @@ watch(
   transform: rotate(180deg);
 }
 .tarjeta-contenido {
+  padding: 0 20px 20px 20px;
+}
+.contenedor-accion-fija {
   padding: 0 20px 20px 20px;
 }
 /* Animación de expansión */
@@ -129,6 +174,9 @@ watch(
     font-size: 16px;
   }
   .tarjeta-contenido {
+    padding: 0 16px 16px 16px;
+  }
+  .contenedor-accion-fija {
     padding: 0 16px 16px 16px;
   }
 }

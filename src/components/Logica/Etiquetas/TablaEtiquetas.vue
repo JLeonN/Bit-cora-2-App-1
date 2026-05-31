@@ -1,17 +1,30 @@
 <template>
   <div>
-    <div v-if="etiquetas.length > 0" class="tarjeta-resumen-etiquetas">
-      <div class="resumen-etiquetas-contenido">
-        <p class="texto-secundario linea-resumen">Etiquetas totales: {{ etiquetas.length }}</p>
-        <p class="texto-secundario linea-resumen">Copias totales: {{ totalCopias }}</p>
-        <p class="texto-secundario linea-resumen">Memorias activas: {{ cantidadMemoriasActivas }}</p>
-        <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos linea-resumen">Códigos repetidos: {{ cantidadCodigosRepetidos }}</p>
-        <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente linea-resumen">Artículos inexistentes: {{ cantidadArticulosInexistentes }}</p>
+    <TarjetaSeccion
+      v-if="etiquetas.length > 0"
+      titulo="Información"
+      :expandida-por-defecto="informacionExpandida"
+      descripcion-resumen="Resumen rápido de cantidades, memorias activas y alertas de artículos."
+      :ocultar-resumen-al-expandir="true"
+      @cambio-expansion="manejarCambioExpansionInformacion"
+    >
+      <p class="texto-info-completa">
+        Revisá aquí los totales y alertas. Si aparece un artículo inexistente o un código repetido,
+        esta sección se abre automáticamente para que no se te pase.
+      </p>
+      <div class="tarjeta-resumen-etiquetas">
+        <div class="resumen-etiquetas-contenido">
+          <p class="texto-secundario linea-resumen">Etiquetas totales: {{ etiquetas.length }}</p>
+          <p class="texto-secundario linea-resumen">Copias totales: {{ totalCopias }}</p>
+          <p class="texto-secundario linea-resumen">Memorias activas: {{ cantidadMemoriasActivas }}</p>
+          <p v-if="cantidadCodigosRepetidos > 0" class="texto-secundario texto-repetidos linea-resumen">Códigos repetidos: {{ cantidadCodigosRepetidos }}</p>
+          <p v-if="cantidadArticulosInexistentes > 0" class="texto-secundario texto-inexistente linea-resumen">Artículos inexistentes: {{ cantidadArticulosInexistentes }}</p>
+        </div>
+        <button type="button" class="boton-borrar-todo" @click="confirmarLimpiar" title="Limpiar todas las etiquetas">
+          <IconTrash class="icono-accion icono-borrar-todo" />
+        </button>
       </div>
-      <button type="button" class="boton-borrar-todo" @click="confirmarLimpiar" title="Limpiar todas las etiquetas">
-        <IconTrash class="icono-accion icono-borrar-todo" />
-      </button>
-    </div>
+    </TarjetaSeccion>
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
       <article
         v-for="(etiqueta, indice) in etiquetas"
@@ -75,11 +88,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { IconTrash, IconTag, IconCheck, IconRestore } from '@tabler/icons-vue'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
+import TarjetaSeccion from '../../Configuracion/Tutoriales/TarjetaSeccion.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 
@@ -96,6 +110,7 @@ const emit = defineEmits([
   'modal-cerrado',
 ])
 const mostrarModalLimpiarTodo = ref(false)
+const informacionExpandida = ref(false)
 const borradoresEdicion = ref({})
 const indiceAccionEdicion = ref(-1)
 const versionAccionEdicion = ref(0)
@@ -227,6 +242,9 @@ function confirmarLimpiarTodo() {
 function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
 }
+function manejarCambioExpansionInformacion(estaExpandida) {
+  informacionExpandida.value = !!estaExpandida
+}
 
 function normalizarCodigo(codigo) {
   if (!codigo || typeof codigo !== 'string') {
@@ -329,9 +347,27 @@ const cantidadMemoriasActivas = computed(() => {
     return 0
   }
 })
+
+const firmaAlertas = computed(() => `${cantidadCodigosRepetidos.value}|${cantidadArticulosInexistentes.value}`)
+
+watch(
+  () => firmaAlertas.value,
+  (firmaNueva, firmaAnterior) => {
+    if (firmaNueva !== firmaAnterior && (cantidadCodigosRepetidos.value > 0 || cantidadArticulosInexistentes.value > 0)) {
+      informacionExpandida.value = true
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
+.texto-info-completa {
+  margin: 0 0 0.8rem 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
 .tarjeta-resumen-etiquetas {
   margin: 0.35rem 0 0.65rem 0;
   border: 1px solid var(--color-borde);
