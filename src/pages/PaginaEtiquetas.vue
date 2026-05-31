@@ -89,6 +89,11 @@ import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/Config
 import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
+  obtenerArchivoCompartidoPendiente,
+  limpiarArchivoCompartidoPendiente,
+  leerTextoArchivoCompartido,
+} from '../components/Logica/Etiquetas/ServicioArchivoCompartido.js'
+import {
   guardarEtiquetas,
   obtenerEtiquetas,
   eliminarEtiquetas,
@@ -350,6 +355,73 @@ async function leerArchivoJsonDesdeSelector() {
   })
 }
 
+async function importarMemoriasDesdeTexto(textoJson, origenImportacion = '') {
+  const parseado = parsearJsonCompartirMemorias(textoJson)
+  if (!parseado.exito) {
+    Notify.create({
+      type: 'negative',
+      message: parseado.mensaje || 'Archivo JSON inválido.',
+      position: 'top',
+      timeout: 2500,
+    })
+    return false
+  }
+
+  const payload = parseado.payload
+  const textoOrigen = origenImportacion ? ` (${origenImportacion})` : ''
+  Loading.show({
+    message: `Importando memorias de ${payload.exportadoPor}${textoOrigen}...`,
+    spinnerColor: 'primary',
+  })
+
+  await crearRespaldoMemoriaEtiquetas()
+  const resultado = await fusionarMemoriasDesdeJsonPayload(payload)
+  const cantidadCambiosPantalla = await reaplicarMemoriasEnPantalla()
+  Loading.hide()
+
+  Notify.create({
+    type: 'positive',
+    message: `Importación lista (${payload.exportadoPor}): +${resultado.resumen.nuevas} nuevas, ${resultado.resumen.actualizadas} actualizadas, ${resultado.resumen.ignoradas} ignoradas, ${parseado.entradasInvalidas} inválidas, ${cantidadCambiosPantalla} aplicadas en pantalla.`,
+    position: 'top',
+    timeout: 3600,
+  })
+  return true
+}
+
+async function procesarArchivoCompartidoPendiente() {
+  if (importandoMemorias.value || exportandoMemorias.value) return
+
+  const pendiente = await obtenerArchivoCompartidoPendiente()
+  if (!pendiente?.uri) return
+
+  importandoMemorias.value = true
+  try {
+    const textoJson = await leerTextoArchivoCompartido(pendiente.uri)
+    if (!textoJson) {
+      Notify.create({
+        type: 'negative',
+        message: 'No se pudo leer el archivo compartido para importar memorias.',
+        position: 'top',
+        timeout: 2600,
+      })
+      return
+    }
+    await importarMemoriasDesdeTexto(textoJson, pendiente.nombre || 'archivo compartido')
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error importando archivo compartido pendiente:', error)
+    Loading.hide()
+    Notify.create({
+      type: 'negative',
+      message: 'Falló la importación automática del archivo compartido.',
+      position: 'top',
+      timeout: 2600,
+    })
+  } finally {
+    await limpiarArchivoCompartidoPendiente()
+    importandoMemorias.value = false
+  }
+}
+
 async function exportarMemorias() {
   if (exportandoMemorias.value || importandoMemorias.value) return
   exportandoMemorias.value = true
@@ -443,35 +515,7 @@ async function importarMemorias() {
   try {
     const archivo = await leerArchivoJsonDesdeSelector()
     if (!archivo) return
-
-    const parseado = parsearJsonCompartirMemorias(archivo.texto)
-    if (!parseado.exito) {
-      Notify.create({
-        type: 'negative',
-        message: parseado.mensaje || 'Archivo JSON inválido.',
-        position: 'top',
-        timeout: 2500,
-      })
-      return
-    }
-
-    const payload = parseado.payload
-    Loading.show({
-      message: `Importando memorias de ${payload.exportadoPor}...`,
-      spinnerColor: 'primary',
-    })
-
-    await crearRespaldoMemoriaEtiquetas()
-    const resultado = await fusionarMemoriasDesdeJsonPayload(payload)
-    const cantidadCambiosPantalla = await reaplicarMemoriasEnPantalla()
-    Loading.hide()
-
-    Notify.create({
-      type: 'positive',
-      message: `Importación lista (${payload.exportadoPor}): +${resultado.resumen.nuevas} nuevas, ${resultado.resumen.actualizadas} actualizadas, ${resultado.resumen.ignoradas} ignoradas, ${parseado.entradasInvalidas} inválidas, ${cantidadCambiosPantalla} aplicadas en pantalla.`,
-      position: 'top',
-      timeout: 3600,
-    })
+    await importarMemoriasDesdeTexto(archivo.texto, archivo.nombre || 'archivo manual')
   } catch (error) {
     console.error('[PaginaEtiquetas] Error importando memorias:', error)
     Loading.hide()
@@ -485,7 +529,6 @@ async function importarMemorias() {
     importandoMemorias.value = false
   }
 }
-
 async function generarPDF() {
   if (listaEtiquetas.value.length === 0) return
 
@@ -597,6 +640,7 @@ const manejarModalCerrado = () => {
 onMounted(async () => {
   await cargarEtiquetasGuardadas()
   listaEtiquetas.value = await Promise.all(listaEtiquetas.value.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)))
+  await procesarArchivoCompartidoPendiente()
 
   emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
 
@@ -787,3 +831,6 @@ watch(
   filter: brightness(1.1);
 }
 </style>
+
+
+
