@@ -200,8 +200,10 @@ const pasosDiaHeader = ref(0)
 const pasosSesionHeader = ref(0)
 const sesionActivaHeader = ref(false)
 const anchoPantalla = ref(typeof window !== 'undefined' ? window.innerWidth : 0)
-const altoPantalla = ref(typeof window !== 'undefined' ? window.innerHeight : 0)
 const alturaBannerReportada = ref(0)
+const ESPACIO_BASE_BARRA = 8
+const SEPARACION_BARRA_BANNER = 4
+const ESPACIO_EXTRA_CONTENIDO = 16
 const configuracionBarra = reactive({
   mostrarAgregar: false,
   mostrarEnviar: false,
@@ -253,25 +255,24 @@ const textoPasosHeader = computed(() => {
 const valorPasosHeader = computed(() =>
   sesionActivaHeader.value ? pasosSesionHeader.value : pasosDiaHeader.value,
 )
-const alturaBannerEstimada = computed(() => {
-  if (alturaBannerReportada.value > 0) {
-    return alturaBannerReportada.value
+const alturaBannerActiva = computed(() => (hayBannerVisible.value ? alturaBannerReportada.value : 0))
+const posicionInferiorBarra = computed(() => {
+  if (!hayBannerVisible.value) {
+    return `calc(${ESPACIO_BASE_BARRA}px + env(safe-area-inset-bottom, 0px))`
   }
-  return anchoPantalla.value >= 768 || altoPantalla.value >= 900 ? 90 : 50
+  return `${alturaBannerActiva.value + SEPARACION_BARRA_BANNER}px`
 })
 const estiloBarraInferior = computed(() => ({
-  '--espacio-base-barra': '8px',
-  '--separacion-barra-banner': '4px',
-  '--alto-banner-activo': hayBannerVisible.value ? `${alturaBannerEstimada.value}px` : '0px',
+  '--posicion-inferior-barra': posicionInferiorBarra.value,
 }))
 const estiloContenedorConBarra = computed(() => {
   const altoBarra = anchoPantalla.value <= 480 ? 56 : 60
-  const espacioBase = 8
-  const separacionBanner = hayBannerVisible.value ? 4 : 0
-  const altoBanner = hayBannerVisible.value ? alturaBannerEstimada.value : 0
-  const espacioExtra = 16
-  const paddingCalculado = altoBarra + espacioBase + separacionBanner + altoBanner + espacioExtra
-  return { paddingBottom: `calc(${paddingCalculado}px + env(safe-area-inset-bottom, 0px))` }
+  const espacioInferior = hayBannerVisible.value
+    ? alturaBannerActiva.value + SEPARACION_BARRA_BANNER
+    : ESPACIO_BASE_BARRA
+  const paddingCalculado = altoBarra + espacioInferior + ESPACIO_EXTRA_CONTENIDO
+  const safeAreaInferior = hayBannerVisible.value ? '0px' : 'env(safe-area-inset-bottom, 0px)'
+  return { paddingBottom: `calc(${paddingCalculado}px + ${safeAreaInferior})` }
 })
 
 const cargarNombreUsuario = async () => {
@@ -313,6 +314,7 @@ const actualizarAlturaBanner = (altura) => {
   const alturaNumerica = Number(altura)
   if (Number.isFinite(alturaNumerica) && alturaNumerica >= 0) {
     alturaBannerReportada.value = alturaNumerica
+    hayBannerVisible.value = alturaNumerica > 0
   }
 }
 
@@ -321,7 +323,6 @@ const actualizarDimensionesPantalla = () => {
     return
   }
   anchoPantalla.value = window.innerWidth
-  altoPantalla.value = window.innerHeight
 }
 
 const manejarConfiguracionBarra = (configuracion, refPagina) => {

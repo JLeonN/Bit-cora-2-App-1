@@ -137,11 +137,9 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 
 <style scoped>
 .barra-botones-inferior {
-  --espacio-base-barra: 8px;
-  --alto-banner-activo: 50px;
-  --separacion-barra-banner: 4px;
+  --posicion-inferior-barra: calc(8px + env(safe-area-inset-bottom, 0px));
   position: fixed;
-  bottom: calc(var(--espacio-base-barra) + env(safe-area-inset-bottom, 0px));
+  bottom: var(--posicion-inferior-barra);
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
@@ -159,11 +157,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   padding: 0 16px;
   box-sizing: border-box;
   transition: bottom 0.3s ease;
-}
-.barra-botones-inferior.con-banner {
-  bottom: calc(
-    var(--alto-banner-activo) + var(--separacion-barra-banner) + env(safe-area-inset-bottom, 0px)
-  );
 }
 .boton-barra {
   width: 48px;
@@ -214,11 +207,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
     padding: 0 12px;
     width: 92%;
   }
-  .barra-botones-inferior.con-banner {
-    bottom: calc(
-      var(--alto-banner-activo) + var(--separacion-barra-banner) + env(safe-area-inset-bottom, 0px)
-    );
-  }
   .boton-barra {
     width: 44px;
     height: 44px;
@@ -234,11 +222,6 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   .barra-botones-inferior {
     gap: 12px;
     padding: 0 8px;
-  }
-  .barra-botones-inferior.con-banner {
-    bottom: calc(
-      var(--alto-banner-activo) + var(--separacion-barra-banner) + env(safe-area-inset-bottom, 0px)
-    );
   }
   .boton-barra {
     width: 40px;

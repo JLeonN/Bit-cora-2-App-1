@@ -4,7 +4,7 @@
 // Control principal del modo de anuncios.
 // true: fuerza modo de prueba visual y evita impresiones reales.
 // false: usa IDs y comportamiento de producción.
-export const esModoPruebaPublicidad = false // Cambiar a true solo cuando estés probando anuncios.
+export const esModoPruebaPublicidad = true // Cambiar a true solo cuando estés probando anuncios.
 
 // ID oficial de pruebas de Google AdMob para banner.
 export const BANNER_AD_UNIT_ID_PRUEBA = 'ca-app-pub-3940256099942544/6300978111'
@@ -21,5 +21,3 @@ export const DISPOSITIVOS_PRUEBA_ADMOB = ['YOUR_TEST_DEVICE_ID']
 // Se usa para centralizar la decisión y evitar duplicar lógica en componentes.
 export const obtenerBannerAdUnitId = () =>
   esModoPruebaPublicidad ? BANNER_AD_UNIT_ID_PRUEBA : BANNER_AD_UNIT_ID_PRODUCCION
-
-

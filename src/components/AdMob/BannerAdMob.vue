@@ -1,13 +1,16 @@
 <template>
-  <div v-if="mostrarBanner" class="contenedor-banner-admob">
-    <div id="banner-admob" class="banner-admob"></div>
-  </div>
+  <div class="contenedor-banner-admob" aria-hidden="true"></div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Capacitor } from '@capacitor/core'
-import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob'
+import {
+  AdMob,
+  BannerAdSize,
+  BannerAdPosition,
+  BannerAdPluginEvents,
+} from '@capacitor-community/admob'
 import { tieneAccesoVIP } from '../BaseDeDatos/usoAlmacenamientoVIP'
 import {
   esModoPruebaPublicidad,
@@ -15,29 +18,18 @@ import {
   obtenerBannerAdUnitId,
 } from '../Configuracion/ConfiguracionPublicidad.js'
 
-const mostrarBanner = ref(false)
 const bannerInicializado = ref(false)
+let escuchaTamanoBanner = null
 
 // Emit para comunicar al padre si el banner está visible.
 const emit = defineEmits(['banner-visible', 'banner-altura'])
-
-const obtenerAlturaBannerEstimada = () => {
-  if (typeof window === 'undefined') {
-    return 50
-  }
-  const ancho = window.innerWidth || 0
-  const alto = window.innerHeight || 0
-  return ancho >= 768 || alto >= 900 ? 90 : 50
-}
 
 onMounted(async () => {
   console.log('[AdMob] Inicializando componente banner...')
 
   // En web no reservamos espacio para banner nativo.
   if (Capacitor.getPlatform() === 'web') {
-    mostrarBanner.value = false
-    emit('banner-visible', false)
-    emit('banner-altura', 0)
+    emitirBannerOculto()
     return
   }
 
@@ -46,25 +38,29 @@ onMounted(async () => {
 
   if (esVIP) {
     console.log('[AdMob] Usuario VIP detectado - Banner desactivado')
-    mostrarBanner.value = false
-    emit('banner-visible', false)
-    emit('banner-altura', 0)
+    emitirBannerOculto()
     return
   }
 
   console.log('[AdMob] Usuario estándar - Mostrando banner')
-  mostrarBanner.value = true
-  emit('banner-visible', true)
-  emit('banner-altura', obtenerAlturaBannerEstimada())
 
   try {
     await inicializarAdMob()
   } catch (error) {
     console.error('[AdMob] Error al inicializar:', error)
+    emitirBannerOculto()
   }
 })
 
 onUnmounted(async () => {
+  if (escuchaTamanoBanner) {
+    try {
+      await escuchaTamanoBanner.remove()
+      escuchaTamanoBanner = null
+    } catch (error) {
+      console.error('[AdMob] Error al remover escucha de tamaño:', error)
+    }
+  }
   if (bannerInicializado.value) {
     try {
       await AdMob.removeBanner()
@@ -73,7 +69,25 @@ onUnmounted(async () => {
       console.error('[AdMob] Error al remover banner:', error)
     }
   }
+  emitirBannerOculto()
 })
+
+const emitirBannerOculto = () => {
+  emit('banner-visible', false)
+  emit('banner-altura', 0)
+}
+
+const registrarEscuchaTamanoBanner = async () => {
+  if (escuchaTamanoBanner) {
+    return
+  }
+  escuchaTamanoBanner = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (tamanoBanner) => {
+    const alturaBanner = Number(tamanoBanner?.height ?? 0)
+    const alturaValida = Number.isFinite(alturaBanner) && alturaBanner > 0 ? alturaBanner : 0
+    emit('banner-altura', alturaValida)
+    emit('banner-visible', alturaValida > 0)
+  })
+}
 
 const inicializarAdMob = async () => {
   try {
@@ -86,11 +100,14 @@ const inicializarAdMob = async () => {
 
     console.log('[AdMob] SDK inicializado correctamente')
 
-    setTimeout(async () => {
-      await mostrarBannerPublicitario()
-    }, 500)
+    await registrarEscuchaTamanoBanner()
+    await new Promise((resolver) => {
+      setTimeout(resolver, 500)
+    })
+    await mostrarBannerPublicitario()
   } catch (error) {
     console.error('[AdMob] Error en inicialización:', error)
+    emitirBannerOculto()
   }
 }
 
@@ -100,7 +117,7 @@ const mostrarBannerPublicitario = async () => {
 
     const opciones = {
       adId: obtenerBannerAdUnitId(),
-      adSize: BannerAdSize.BANNER,
+      adSize: BannerAdSize.ADAPTIVE_BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
       isTesting: esModoPruebaPublicidad,
@@ -112,21 +129,13 @@ const mostrarBannerPublicitario = async () => {
     console.log('[AdMob] Banner mostrado correctamente')
   } catch (error) {
     console.error('[AdMob] Error al mostrar banner:', error)
+    emitirBannerOculto()
   }
 }
 </script>
 
 <style scoped>
 .contenedor-banner-admob {
-  width: 100%;
-  height: 60px;
-  background: var(--color-fondo);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.banner-admob {
-  width: 100%;
-  height: 50px;
+  display: none;
 }
 </style>
