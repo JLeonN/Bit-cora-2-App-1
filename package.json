@@ -23,6 +23,7 @@
         "@capacitor-community/admob": "^7.0.3",
         "@capacitor-community/camera-preview": "^7.0.2",
         "@capacitor/android": "^7.4.2",
+        "@capacitor/app": "^7.1.2",
         "@capacitor/camera": "^7.0.2",
         "@capacitor/cli": "^7.4.2",
         "@capacitor/core": "^7.4.2",
@@ -63,4 +64,3 @@
         "yarn": ">= 1.21.1"
     }
 }
-

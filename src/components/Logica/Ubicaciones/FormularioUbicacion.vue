@@ -492,6 +492,18 @@ function cerrarCamara() {
   mostrarCamara.value = false
 }
 
+function cerrarPasoAtrasNativo() {
+  if (mostrarCamara.value) {
+    cerrarCamara()
+    return true
+  }
+  if (mostrarBuscador.value) {
+    mostrarBuscador.value = false
+    return true
+  }
+  return false
+}
+
 function procesarUbicacionesEscaneadas(ubicaciones) {
   for (const item of ubicaciones) {
     emit('ubicacion-agregada', {
@@ -520,5 +532,9 @@ const manejarModalAbierto = () => {
 const manejarModalCerrado = () => {
   emit('modal-cerrado')
 }
+
+defineExpose({
+  cerrarPasoAtrasNativo,
+})
 </script>
 

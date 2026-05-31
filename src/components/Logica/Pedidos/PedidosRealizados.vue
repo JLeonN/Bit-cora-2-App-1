@@ -317,6 +317,7 @@ const metodosParaBarra = {
       descargarPedidos()
     }
   },
+  onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
 // Función para actualizar la configuración de la barra
@@ -391,6 +392,20 @@ async function confirmarEliminacion() {
   }
   mostrarModalEliminar.value = false
   actualizarConfiguracionBarra()
+}
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarModalEditar.value) {
+    mostrarModalEditar.value = false
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEliminar.value) {
+    mostrarModalEliminar.value = false
+    modalActivo.value = false
+    return true
+  }
+  return false
 }
 
 // Métodos para descargar y enviar

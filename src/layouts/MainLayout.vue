@@ -185,6 +185,10 @@ import {
   abrirActualizacionEnTienda,
 } from 'components/Actualizacion/ServicioActualizacionApp.js'
 import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
+import {
+  configurarEstadoBotonAtrasNativo,
+  limpiarEstadoBotonAtrasNativo,
+} from 'src/components/Logica/Navegacion/ServicioBotonAtrasNativo.js'
 
 const drawer = ref(false)
 const router = useRouter()
@@ -217,6 +221,14 @@ const claseHeader = esModoPruebaPublicidad
   : 'bg-primario-oscuro texto-principal'
 
 onMounted(async () => {
+  configurarEstadoBotonAtrasNativo({
+    estaDrawerAbierto: () => drawer.value,
+    cerrarDrawer: () => {
+      drawer.value = false
+    },
+    obtenerRutaActual: () => router.currentRoute.value.path,
+    obtenerManejadorPagina: () => paginaActivaRef?.onAtrasNativo,
+  })
   await Promise.all([cargarNombreUsuario(), verificarActualizacion()])
   setInterval(cargarNombreUsuario, 5000)
   const monitoreoHabilitado = await servicioPasos.obtenerPreferenciaMonitoreo()
@@ -238,6 +250,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  limpiarEstadoBotonAtrasNativo()
   if (desuscribirPasos) {
     desuscribirPasos()
   }

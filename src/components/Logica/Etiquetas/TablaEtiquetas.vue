@@ -242,6 +242,15 @@ function confirmarLimpiarTodo() {
 function cerrarModalLimpiarTodo() {
   mostrarModalLimpiarTodo.value = false
 }
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarModalLimpiarTodo.value) {
+    cerrarModalLimpiarTodo()
+    return true
+  }
+  return false
+}
+
 function manejarCambioExpansionInformacion(estaExpandida) {
   informacionExpandida.value = !!estaExpandida
 }
@@ -359,6 +368,10 @@ watch(
   },
   { immediate: true },
 )
+
+defineExpose({
+  cerrarPasoAtrasNativo,
+})
 </script>
 
 <style scoped>

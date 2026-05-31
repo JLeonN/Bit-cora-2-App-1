@@ -280,6 +280,18 @@ const cerrarDialogVIP = () => {
   errorClaveVIP.value = ''
 }
 
+function cerrarPasoAtrasNativo() {
+  if (dialogVIPAbierto.value) {
+    cerrarDialogVIP()
+    return true
+  }
+  if (mostrarModal.value) {
+    cerrarModal()
+    return true
+  }
+  return false
+}
+
 const validarYGuardarClave = async () => {
   const clave = claveIngresada.value.trim()
 
@@ -337,6 +349,10 @@ watch(
     }
   },
 )
+
+defineExpose({
+  cerrarPasoAtrasNativo,
+})
 </script>
 
 <style scoped>

@@ -8,6 +8,7 @@
         :expandida-por-defecto="informacionPersonalExpandida"
       >
         <ConfiguracionUsuario
+          ref="configuracionUsuarioRef"
           :enfocar-input-nombre="debeEnfocarInputNombre"
           @nombre-actualizado="manejarNombreActualizado"
         />
@@ -22,7 +23,7 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, computed } from 'vue'
+import { getCurrentInstance, computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { IconUser, IconBook } from '@tabler/icons-vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
@@ -35,6 +36,7 @@ const route = useRoute()
 const debeEditarNombre = computed(() => route.query.editarNombre === '1')
 const informacionPersonalExpandida = computed(() => debeEditarNombre.value)
 const debeEnfocarInputNombre = computed(() => debeEditarNombre.value)
+const configuracionUsuarioRef = ref(null)
 
 // Configurar barra de botones al montar el componente
 const configurarBarraBotones = () => {
@@ -45,8 +47,14 @@ const configurarBarraBotones = () => {
       mostrarEnviar: false,
       puedeEnviar: false,
       botonesPersonalizados: [],
+    }, {
+      onAtrasNativo: cerrarPasoAtrasNativo,
     })
   }
+}
+
+function cerrarPasoAtrasNativo() {
+  return !!configuracionUsuarioRef.value?.cerrarPasoAtrasNativo?.()
 }
 
 // Manejar actualización de nombre

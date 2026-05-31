@@ -178,6 +178,7 @@ const metodosParaBarra = {
   onAgregar: () => {},
   onEnviar: () => {},
   onAccionPersonalizada: () => {},
+  onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
 const actualizarConfiguracionBarra = () => {
@@ -478,6 +479,24 @@ const manejarModalAbierto = () => {
 
 const manejarModalCerrado = () => {
   modalActivo.value = false
+}
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarCamara.value) {
+    cerrarCamara()
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarEditorUbicacion.value) {
+    mostrarEditorUbicacion.value = false
+    nuevaUbicacion.value = ''
+    return true
+  }
+  if (mostrarBuscador.value) {
+    mostrarBuscador.value = false
+    return true
+  }
+  return false
 }
 
 watch(

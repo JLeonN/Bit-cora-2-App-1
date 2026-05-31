@@ -280,6 +280,7 @@ const metodosParaBarra = {
     enviarPedidosDelDia()
   },
   onAccionPersonalizada: () => {},
+  onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
 // Función para actualizar la configuración de la barra
@@ -438,6 +439,25 @@ async function confirmarEliminacion() {
   }
   mostrarModalEliminar.value = false
   actualizarConfiguracionBarra()
+}
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarModalEditarPedido.value) {
+    mostrarModalEditarPedido.value = false
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEditarFalta.value) {
+    mostrarModalEditarFalta.value = false
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEliminar.value) {
+    mostrarModalEliminar.value = false
+    modalActivo.value = false
+    return true
+  }
+  return false
 }
 
 // Enviar pedidos del día (solo pedidos normales, no faltas)

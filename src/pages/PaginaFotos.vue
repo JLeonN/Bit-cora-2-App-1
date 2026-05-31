@@ -5,10 +5,13 @@
 
       <!-- Tabla de fotos -->
       <TablaFotos
+        ref="tablaFotosRef"
         :fotos="fotos"
         @editar-codigo="editarCodigoFoto"
         @eliminar-foto="eliminarFoto"
         @limpiar-todo="limpiarTodasFotos"
+        @modal-abierto="manejarModalAbierto"
+        @modal-cerrado="manejarModalCerrado"
       />
 
       <!-- Modal de cámara -->
@@ -30,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, getCurrentInstance } from 'vue'
+import { ref, onMounted, onUnmounted, getCurrentInstance } from 'vue'
 import { useQuasar } from 'quasar'
 import TablaFotos from '../components/Logica/Fotos/TablaFotos.vue'
 import CamaraFotos from '../components/Logica/Fotos/CamaraFotos.vue'
@@ -49,7 +52,9 @@ const instance = getCurrentInstance()
 
 // Estado
 const fotos = ref([])
+const tablaFotosRef = ref(null)
 const mostrarCamara = ref(false)
+const modalTablaActiva = ref(false)
 const cargando = ref(false)
 const mensajeCarga = ref('')
 
@@ -59,12 +64,13 @@ function configurarBarra() {
     mostrarAgregar: true,
     mostrarEnviar: fotos.value.length > 0,
     puedeEnviar: fotos.value.length > 0,
-    modalActivo: mostrarCamara.value,
+    modalActivo: mostrarCamara.value || modalTablaActiva.value,
   }
 
   instance?.emit('configurar-barra', configuracion, {
     onAgregar: abrirCamara,
     onEnviar: enviarFotos,
+    onAtrasNativo: cerrarPasoAtrasNativo,
   })
 }
 
@@ -72,6 +78,16 @@ function configurarBarra() {
 onMounted(async () => {
   await cargarFotos()
   configurarBarra()
+})
+
+onUnmounted(() => {
+  instance?.emit('configurar-barra', {
+    mostrarAgregar: false,
+    mostrarEnviar: false,
+    puedeEnviar: false,
+    botonesPersonalizados: [],
+    modalActivo: false,
+  })
 })
 
 // Cargar fotos desde storage
@@ -95,6 +111,29 @@ function abrirCamara() {
 function cerrarCamara() {
   mostrarCamara.value = false
   configurarBarra()
+}
+
+function manejarModalAbierto() {
+  modalTablaActiva.value = true
+  configurarBarra()
+}
+
+function manejarModalCerrado() {
+  modalTablaActiva.value = false
+  configurarBarra()
+}
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarCamara.value) {
+    cerrarCamara()
+    return true
+  }
+  if (tablaFotosRef.value?.cerrarPasoAtrasNativo?.()) {
+    modalTablaActiva.value = false
+    configurarBarra()
+    return true
+  }
+  return false
 }
 
 // Guardar fotos en lista (callback de cámara)

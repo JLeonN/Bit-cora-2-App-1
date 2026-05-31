@@ -117,7 +117,7 @@
     <ModalEditarFoto
       v-if="mostrarModalEditar"
       :foto="fotoAEditar"
-      @cerrar="mostrarModalEditar = false"
+      @cerrar="cerrarModalEditar"
       @guardar="actualizarCodigo"
     />
 
@@ -125,7 +125,7 @@
     <ModalEliminar
       v-if="mostrarModalEliminar"
       :texto="textoEliminar"
-      @cerrar="mostrarModalEliminar = false"
+      @cerrar="cerrarModalEliminar"
       @confirmar="ejecutarEliminacion"
     />
   </div>
@@ -145,7 +145,13 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['editar-codigo', 'eliminar-foto', 'limpiar-todo'])
+const emit = defineEmits([
+  'editar-codigo',
+  'eliminar-foto',
+  'limpiar-todo',
+  'modal-abierto',
+  'modal-cerrado',
+])
 
 // Estado
 const mostrarModalEditar = ref(false)
@@ -193,11 +199,17 @@ const textoEliminar = computed(() => {
 function editarFoto(foto) {
   fotoAEditar.value = foto
   mostrarModalEditar.value = true
+  emit('modal-abierto')
 }
 
 function actualizarCodigo(id, nuevoCodigo, nuevoNombre) {
   emit('editar-codigo', id, nuevoCodigo, nuevoNombre)
+  cerrarModalEditar()
+}
+
+function cerrarModalEditar() {
   mostrarModalEditar.value = false
+  emit('modal-cerrado')
 }
 
 // Eliminar foto individual
@@ -205,12 +217,14 @@ function confirmarEliminar(foto) {
   fotoAEliminar.value = foto
   accionEliminar.value = 'individual'
   mostrarModalEliminar.value = true
+  emit('modal-abierto')
 }
 
 // Limpiar todo
 function confirmarLimpiarTodo() {
   accionEliminar.value = 'todo'
   mostrarModalEliminar.value = true
+  emit('modal-abierto')
 }
 
 // Ejecutar eliminación
@@ -220,9 +234,31 @@ function ejecutarEliminacion() {
   } else if (fotoAEliminar.value) {
     emit('eliminar-foto', fotoAEliminar.value.id)
   }
-  mostrarModalEliminar.value = false
+  cerrarModalEliminar()
   fotoAEliminar.value = null
 }
+
+function cerrarModalEliminar() {
+  mostrarModalEliminar.value = false
+  fotoAEliminar.value = null
+  emit('modal-cerrado')
+}
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarModalEditar.value) {
+    cerrarModalEditar()
+    return true
+  }
+  if (mostrarModalEliminar.value) {
+    cerrarModalEliminar()
+    return true
+  }
+  return false
+}
+
+defineExpose({
+  cerrarPasoAtrasNativo,
+})
 </script>
 
 <style scoped>

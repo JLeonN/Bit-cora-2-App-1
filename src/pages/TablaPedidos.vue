@@ -144,6 +144,7 @@ const metodosParaBarra = {
   onAccionPersonalizada: (accion) => {
     console.log('Acción personalizada:', accion)
   },
+  onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
 // Función para actualizar la configuración de la barra
@@ -270,6 +271,34 @@ function cerrarCamaraPedidos() {
 function abrirModalConfirmarEscaneados(arrayPedidos) {
   pedidosEscaneados.value = arrayPedidos
   mostrarModalConfirmarEscaneados.value = true
+}
+
+function cerrarPasoAtrasNativo() {
+  if (mostrarCamaraPedidos.value) {
+    cerrarCamaraPedidos()
+    return true
+  }
+  if (mostrarModalConfirmarEscaneados.value) {
+    mostrarModalConfirmarEscaneados.value = false
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalAgregar.value) {
+    mostrarModalAgregar.value = false
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEditar.value) {
+    mostrarModalEditar.value = false
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEliminar.value) {
+    mostrarModalEliminar.value = false
+    modalActivo.value = false
+    return true
+  }
+  return false
 }
 
 // Navegación a resumen anual

@@ -7,6 +7,7 @@
 
     <!-- Formulario de ubicación -->
     <FormularioUbicacion
+      ref="formularioUbicacionRef"
       @ubicacion-agregada="agregarUbicacion"
       @modal-abierto="manejarModalAbierto"
       @modal-cerrado="manejarModalCerrado"
@@ -90,6 +91,7 @@ const emit = defineEmits(['configurar-barra'])
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
+const formularioUbicacionRef = ref(null)
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
@@ -157,6 +159,7 @@ const metodosParaBarra = {
       descargarUbicacionesExcelWeb()
     }
   },
+  onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
 // Función para actualizar la configuración de la barra
@@ -484,6 +487,29 @@ async function confirmarEliminacionTodas() {
 // Cerrar modal eliminar todas
 function cerrarModalEliminarTodas() {
   mostrarModalEliminarTodas.value = false
+}
+
+function cerrarPasoAtrasNativo() {
+  if (formularioUbicacionRef.value?.cerrarPasoAtrasNativo?.()) {
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEditar.value) {
+    cerrarModalEditar()
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEliminar.value) {
+    cerrarModalEliminar()
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEliminarTodas.value) {
+    cerrarModalEliminarTodas()
+    modalActivo.value = false
+    return true
+  }
+  return false
 }
 
 // --- FUNCIÓN ENVIAR UBICACIONES COMO EXCEL

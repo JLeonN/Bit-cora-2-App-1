@@ -269,6 +269,18 @@ function cerrarCamara() {
   mostrarCamara.value = false
 }
 
+function cerrarPasoAtrasNativo() {
+  if (mostrarCamara.value) {
+    cerrarCamara()
+    return true
+  }
+  if (mostrarResultados.value) {
+    mostrarResultados.value = false
+    return true
+  }
+  return false
+}
+
 // Procesar códigos escaneados
 function procesarCodigosEscaneados(codigos) {
   if (codigos.length > 0) {
@@ -380,6 +392,10 @@ function cerrarResultadosFuera(event) {
     mostrarResultados.value = false
   }
 }
+
+defineExpose({
+  cerrarPasoAtrasNativo,
+})
 </script>
 
 <style scoped>

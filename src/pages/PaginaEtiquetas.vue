@@ -32,6 +32,7 @@
         código para cargar más rápido y luego ajustar la descripción antes de guardar.
       </p>
       <FormularioEtiqueta
+        ref="formularioEtiquetaRef"
         @agregar-etiqueta="agregarEtiqueta"
         @modal-abierto="manejarModalAbierto"
         @modal-cerrado="manejarModalCerrado"
@@ -39,6 +40,7 @@
     </TarjetaSeccion>
 
     <TablaEtiquetas
+      ref="tablaEtiquetasRef"
       :etiquetas="listaEtiquetas"
       @editar-etiqueta="editarEtiqueta"
       @guardar-memoria-etiqueta="guardarMemoriaEtiquetaDesdeTabla"
@@ -107,6 +109,8 @@ const router = useRouter()
 
 const tamanoSeleccionado = ref('10x15cm')
 const listaEtiquetas = ref([])
+const formularioEtiquetaRef = ref(null)
+const tablaEtiquetasRef = ref(null)
 const mostrarModalEliminar = ref(false)
 const mostrarModalLimpiarTodo = ref(false)
 const etiquetaAEliminar = ref(null)
@@ -446,6 +450,7 @@ const metodosParaBarra = {
       generarPDF()
     }
   },
+  onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
 const manejarModalAbierto = () => {
@@ -454,6 +459,28 @@ const manejarModalAbierto = () => {
 
 const manejarModalCerrado = () => {
   modalActivo.value = false
+}
+
+function cerrarPasoAtrasNativo() {
+  if (formularioEtiquetaRef.value?.cerrarPasoAtrasNativo?.()) {
+    modalActivo.value = false
+    return true
+  }
+  if (tablaEtiquetasRef.value?.cerrarPasoAtrasNativo?.()) {
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalEliminar.value) {
+    cerrarModalEliminar()
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalLimpiarTodo.value) {
+    cerrarModalLimpiarTodo()
+    modalActivo.value = false
+    return true
+  }
+  return false
 }
 
 onMounted(async () => {
