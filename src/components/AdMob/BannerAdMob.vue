@@ -19,7 +19,16 @@ const mostrarBanner = ref(false)
 const bannerInicializado = ref(false)
 
 // Emit para comunicar al padre si el banner está visible.
-const emit = defineEmits(['banner-visible'])
+const emit = defineEmits(['banner-visible', 'banner-altura'])
+
+const obtenerAlturaBannerEstimada = () => {
+  if (typeof window === 'undefined') {
+    return 50
+  }
+  const ancho = window.innerWidth || 0
+  const alto = window.innerHeight || 0
+  return ancho >= 768 || alto >= 900 ? 90 : 50
+}
 
 onMounted(async () => {
   console.log('[AdMob] Inicializando componente banner...')
@@ -28,6 +37,7 @@ onMounted(async () => {
   if (Capacitor.getPlatform() === 'web') {
     mostrarBanner.value = false
     emit('banner-visible', false)
+    emit('banner-altura', 0)
     return
   }
 
@@ -38,12 +48,14 @@ onMounted(async () => {
     console.log('[AdMob] Usuario VIP detectado - Banner desactivado')
     mostrarBanner.value = false
     emit('banner-visible', false)
+    emit('banner-altura', 0)
     return
   }
 
   console.log('[AdMob] Usuario estándar - Mostrando banner')
   mostrarBanner.value = true
   emit('banner-visible', true)
+  emit('banner-altura', obtenerAlturaBannerEstimada())
 
   try {
     await inicializarAdMob()

@@ -103,7 +103,10 @@
           </q-item>
         </div>
       </q-drawer>
-      <q-page-container class="fondo-app texto-principal contenedor-con-barra-inferior">
+      <q-page-container
+        class="fondo-app texto-principal contenedor-con-barra-inferior"
+        :style="estiloContenedorConBarra"
+      >
         <router-view @configurar-barra="manejarConfiguracionBarra" />
       </q-page-container>
       <BarraBotonesInferior
@@ -113,11 +116,12 @@
         :botones-personalizados="configuracionBarra.botonesPersonalizados"
         :hay-banner-visible="hayBannerVisible"
         :modal-activo="modalActivo"
+        :style="estiloBarraInferior"
         @agregar="manejarAgregar"
         @enviar="manejarEnviar"
         @accion-personalizada="manejarAccionPersonalizada"
       />
-      <BannerAdMob @banner-visible="actualizarEstadoBanner" />
+      <BannerAdMob @banner-visible="actualizarEstadoBanner" @banner-altura="actualizarAlturaBanner" />
       <q-dialog v-model="mostrarModalActualizacion">
         <q-card class="tarjeta-actualizacion">
           <q-card-section>
@@ -174,6 +178,9 @@ const urlPlayStoreActualizacion = ref('')
 const pasosDiaHeader = ref(0)
 const pasosSesionHeader = ref(0)
 const sesionActivaHeader = ref(false)
+const anchoPantalla = ref(typeof window !== 'undefined' ? window.innerWidth : 0)
+const altoPantalla = ref(typeof window !== 'undefined' ? window.innerHeight : 0)
+const alturaBannerReportada = ref(0)
 const configuracionBarra = reactive({
   mostrarAgregar: false,
   mostrarEnviar: false,
@@ -202,11 +209,17 @@ onMounted(async () => {
     pasosSesionHeader.value = estado.pasosSesion
     sesionActivaHeader.value = estado.sesionActiva
   })
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', actualizarDimensionesPantalla)
+  }
 })
 
 onUnmounted(() => {
   if (desuscribirPasos) {
     desuscribirPasos()
+  }
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', actualizarDimensionesPantalla)
   }
 })
 
@@ -219,6 +232,26 @@ const textoPasosHeader = computed(() => {
 const valorPasosHeader = computed(() =>
   sesionActivaHeader.value ? pasosSesionHeader.value : pasosDiaHeader.value,
 )
+const alturaBannerEstimada = computed(() => {
+  if (alturaBannerReportada.value > 0) {
+    return alturaBannerReportada.value
+  }
+  return anchoPantalla.value >= 768 || altoPantalla.value >= 900 ? 90 : 50
+})
+const estiloBarraInferior = computed(() => ({
+  '--espacio-base-barra': '8px',
+  '--separacion-barra-banner': '4px',
+  '--alto-banner-activo': hayBannerVisible.value ? `${alturaBannerEstimada.value}px` : '0px',
+}))
+const estiloContenedorConBarra = computed(() => {
+  const altoBarra = anchoPantalla.value <= 480 ? 56 : 60
+  const espacioBase = 8
+  const separacionBanner = hayBannerVisible.value ? 4 : 0
+  const altoBanner = hayBannerVisible.value ? alturaBannerEstimada.value : 0
+  const espacioExtra = 16
+  const paddingCalculado = altoBarra + espacioBase + separacionBanner + altoBanner + espacioExtra
+  return { paddingBottom: `calc(${paddingCalculado}px + env(safe-area-inset-bottom, 0px))` }
+})
 
 const cargarNombreUsuario = async () => {
   try {
@@ -245,6 +278,24 @@ const irAPlayStore = () => {
 
 const actualizarEstadoBanner = (estaVisible) => {
   hayBannerVisible.value = estaVisible
+  if (!estaVisible) {
+    alturaBannerReportada.value = 0
+  }
+}
+
+const actualizarAlturaBanner = (altura) => {
+  const alturaNumerica = Number(altura)
+  if (Number.isFinite(alturaNumerica) && alturaNumerica >= 0) {
+    alturaBannerReportada.value = alturaNumerica
+  }
+}
+
+const actualizarDimensionesPantalla = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  anchoPantalla.value = window.innerWidth
+  altoPantalla.value = window.innerHeight
 }
 
 const manejarConfiguracionBarra = (configuracion, refPagina) => {
@@ -276,7 +327,7 @@ const manejarAccionPersonalizada = (accion) => {
 
 <style scoped>
 .contenedor-con-barra-inferior {
-  padding-bottom: 140px;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 .barra-superior {
   position: relative;
