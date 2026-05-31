@@ -14,17 +14,17 @@
           type="button"
           class="boton-accion-memoria"
           :disabled="importandoMemorias || exportandoMemorias"
-          @click="importarMemorias"
+          @click="exportarMemorias"
         >
-          {{ importandoMemorias ? 'Importando...' : 'Importar memorias' }}
+          {{ exportandoMemorias ? 'Exportando...' : 'Exportar memorias' }}
         </button>
         <button
           type="button"
           class="boton-accion-memoria"
           :disabled="importandoMemorias || exportandoMemorias"
-          @click="exportarMemorias"
+          @click="importarMemorias"
         >
-          {{ exportandoMemorias ? 'Exportando...' : 'Exportar memorias' }}
+          {{ importandoMemorias ? 'Importando...' : 'Importar memorias' }}
         </button>
       </div>
     </div>
@@ -311,13 +311,9 @@ function sanitizarTextoParaNombreArchivo(texto = '') {
 function crearNombreArchivoMemorias(nombreUsuario = '') {
   const nombreSanitizado = sanitizarTextoParaNombreArchivo(nombreUsuario)
   const ahora = new Date()
-  const yyyy = String(ahora.getFullYear())
-  const mm = String(ahora.getMonth() + 1).padStart(2, '0')
-  const dd = String(ahora.getDate()).padStart(2, '0')
-  const hh = String(ahora.getHours()).padStart(2, '0')
-  const min = String(ahora.getMinutes()).padStart(2, '0')
-  const ss = String(ahora.getSeconds()).padStart(2, '0')
-  return `MemoriasEtiquetas-${nombreSanitizado}-${yyyy}${mm}${dd}-${hh}${min}${ss}.json`
+  const fecha = ahora.toISOString().split('T')[0]
+  const hora = ahora.toTimeString().slice(0, 5).replace(':', '-')
+  return `Memorias ${nombreSanitizado} ${fecha} # ${hora}.json`
 }
 
 function descargarJsonEnWeb(nombreArchivo, contenidoJson) {
@@ -383,15 +379,24 @@ async function exportarMemorias() {
     } else {
       const resultado = await Filesystem.writeFile({
         path: nombreArchivo,
-        directory: Directory.Documents,
+        directory: Directory.Cache,
         data: contenidoJson,
         encoding: 'utf8',
         recursive: true,
       })
-      await compartirArchivo(resultado.uri, nombreArchivo, {
+      const compartido = await compartirArchivo(resultado.uri, nombreArchivo, {
         titulo: 'Memorias de etiquetas',
         texto: `Memorias exportadas por ${payload.exportadoPor}`,
       })
+      if (!compartido) {
+        Notify.create({
+          type: 'warning',
+          message: 'No se pudo abrir el menú de compartir.',
+          position: 'top',
+          timeout: 2200,
+        })
+        return
+      }
     }
 
     Notify.create({
@@ -760,8 +765,8 @@ watch(
 }
 .acciones-memoria {
   display: flex;
-  gap: 0.55rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 .boton-accion-memoria {
   border: 1px solid var(--color-borde);
