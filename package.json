@@ -1,6 +1,6 @@
 {
     "name": "bit-cora-2-app",
-    "version": "4.2.22",
+    "version": "4.2.23",
     "description": "Aplicación móvil para registrar tareas y actividades diarias.",
     "productName": "Bitácora 2",
     "author": "Leonardo",
@@ -63,3 +63,4 @@
         "yarn": ">= 1.21.1"
     }
 }
+

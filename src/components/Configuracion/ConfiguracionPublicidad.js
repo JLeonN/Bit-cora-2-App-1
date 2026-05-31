@@ -21,3 +21,5 @@ export const DISPOSITIVOS_PRUEBA_ADMOB = ['YOUR_TEST_DEVICE_ID']
 // Se usa para centralizar la decisión y evitar duplicar lógica en componentes.
 export const obtenerBannerAdUnitId = () =>
   esModoPruebaPublicidad ? BANNER_AD_UNIT_ID_PRUEBA : BANNER_AD_UNIT_ID_PRODUCCION
+
+

@@ -1,4 +1,4 @@
-﻿### **Estado Actual del Proyecto: Bitácora II**
+### **Estado Actual del Proyecto: Bitácora II**
 
 Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la gestión de **pedidos internos, ubicaciones e inventario**. Sistema pensado para correr como aplicación móvil en Android, **ya publicada en la Play Store de Google**.
 
@@ -319,12 +319,13 @@ src/
 
 ---
 
-### Actualización de release 4.2.22
+### Actualización de release 4.2.23
 
 - Se afinó la planificación de gestos en tablas para ejecutar primero una fase piloto en Pedidos.
 - Se dejó Etiquetas fuera del alcance inicial para proteger su flujo actual mientras se valida la interacción.
 - Se ajustaron umbrales, cierre y reinicio de confirmación del gesto para mantener consistencia visual y funcional.
 - Se corrigió la referencia de variables CSS del plan para apuntar al archivo real del proyecto.
-- Release vigente actualizada: 4.2.22.
+- Release vigente actualizada: 4.2.23.
+
 
 
