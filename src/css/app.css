@@ -1297,6 +1297,30 @@ button {
 .fila-articulo-inexistente {
   background: color-mix(in oklab, var(--color-carga) 10%, transparent);
 }
+.texto-info-completa {
+  margin: 0 0 0.8rem 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.tarjeta-resumen-etiquetas {
+  margin: 0.35rem 0 0.65rem 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 10px;
+  background: var(--color-superficie);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+.resumen-etiquetas-contenido {
+  display: grid;
+  gap: 0.22rem;
+}
+.linea-resumen {
+  margin: 0;
+}
 /* Contenedor nombre y código */
 .contenedor-nombre-codigo {
   display: flex;

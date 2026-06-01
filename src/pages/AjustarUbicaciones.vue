@@ -2,8 +2,17 @@
   <div class="contenedor-tabla">
     <h2 class="titulo-tabla">Ubicaciones</h2>
 
-    <!-- Selector de Excel para cargar base de datos -->
-    <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
+    <TarjetaSeccion
+      titulo="Base de datos para búsqueda"
+      :expandida-por-defecto="false"
+      descripcion-resumen="Cargá o recargá el Excel con artículos para habilitar búsqueda, validaciones y alertas."
+      :ocultar-resumen-al-expandir="true"
+    >
+      <p class="texto-secundario texto-explicacion-base">
+        Cargá el archivo Excel de artículos para actualizar la base de búsqueda y validar códigos en tiempo real.
+      </p>
+      <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
+    </TarjetaSeccion>
 
     <!-- Formulario de ubicación -->
     <FormularioUbicacion
@@ -70,6 +79,7 @@ import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
+import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
@@ -619,3 +629,9 @@ onUnmounted(() => {
   )
 })
 </script>
+
+<style scoped>
+.texto-explicacion-base {
+  margin: 0 0 0.8rem 0;
+}
+</style>
