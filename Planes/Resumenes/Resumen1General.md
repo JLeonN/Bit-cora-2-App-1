@@ -319,13 +319,10 @@ src/
 
 ---
 
-### Actualización de release 4.2.23
+### Actualización de release 4.2.24
 
-- Se afinó la planificación de gestos en tablas para ejecutar primero una fase piloto en Pedidos.
-- Se dejó Etiquetas fuera del alcance inicial para proteger su flujo actual mientras se valida la interacción.
-- Se ajustaron umbrales, cierre y reinicio de confirmación del gesto para mantener consistencia visual y funcional.
-- Se corrigió la referencia de variables CSS del plan para apuntar al archivo real del proyecto.
-- Release vigente actualizada: 4.2.23.
-
-
-
+- Se ajustó la barra flotante para quedar lo más abajo posible y subir solo por el espacio real del banner.
+- Se incorporó banner adaptativo de AdMob con medición y normalización de altura para distintos celulares.
+- Se agregó manejo del botón Atrás nativo para cerrar primero modales, cámaras, buscadores o drawer antes de navegar.
+- Se habilitó acceso directo a configuración al tocar el nombre de usuario y foco automático al editarlo.
+- Release vigente actualizada: 4.2.24.
