@@ -326,3 +326,10 @@ src/
 - Se agregó manejo del botón Atrás nativo para cerrar primero modales, cámaras, buscadores o drawer antes de navegar.
 - Se habilitó acceso directo a configuración al tocar el nombre de usuario y foco automático al editarlo.
 - Release vigente actualizada: 4.2.24.
+
+### Actualización de release 4.2.25
+
+- Se agregó al modal de actualización una lista de novedades dinámica cargada desde `version.json`.
+- Se sumó un aviso fijo para informar que la versión puede tardar hasta 20 minutos en verse en Play Store.
+- Se incorporaron notas públicas de mejoras recientes en escaneo, visualización de códigos y PDFs de etiquetas.
+- Release vigente actualizada: 4.2.25.

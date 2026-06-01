@@ -1,12 +1,12 @@
 {
-  "versionDisponible": "4.2.24",
+  "versionDisponible": "4.2.25",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": [
-    "✖️ Ahora podés cerrar la tarjeta de artículo seleccionado para seguir más rápido.",
-    "🧩 Se unificaron paneles en Ubicaciones para una vista más ordenada.",
-    "🔎 Los códigos se muestran completos, sin \"...\".",
-    "📷 Mejor reconocimiento de escaneo en artículos: ahora ignora el prefijo P06 y también texto extra al final (como XXX) cuando corresponde.",
-    "🏷️ El PDF de etiquetas ahora incluye fecha y hora en el nombre."
+    "Ahora podés cerrar la tarjeta de artículo seleccionado para seguir más rápido.",
+    "Se ordenó mejor la pantalla de Ubicaciones con paneles desplegables.",
+    "Los códigos se muestran completos en la lista, sin recortes con puntos.",
+    "El escaneo reconoce mejor códigos con prefijo P06 o texto extra al final.",
+    "El PDF de etiquetas ahora incluye fecha y hora en el nombre."
   ]
 }
