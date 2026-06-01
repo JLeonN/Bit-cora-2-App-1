@@ -26,6 +26,7 @@
           v-if="mostrarResultados && codigoIngresado.length >= 3"
           :busqueda="codigoIngresado"
           @articulo-seleccionado="seleccionarArticulo"
+          @estado-busqueda="manejarEstadoBuscador"
         />
       </div>
 
@@ -237,7 +238,8 @@ function decrementarCantidad() {
 }
 
 // Seleccionar artículo del buscador
-function seleccionarArticulo(articulo) {
+function seleccionarArticulo(articulo, opciones = {}) {
+  const { esAutoseleccionEscaner = false } = opciones
   codigoIngresado.value = articulo.codigo
   descripcionIngresada.value = articulo.nombre
   seleccionRecienteDesdeBuscador.value = true
@@ -251,14 +253,27 @@ function seleccionarArticulo(articulo) {
     ubicacionIngresada.value = articuloCompleto.ubicacionAntigua
   }
 
-  mostrarResultados.value = false
-  inputEnfocado.value = false
+  mostrarResultados.value = esAutoseleccionEscaner
+  inputEnfocado.value = esAutoseleccionEscaner
 
-  // Focus en cantidad
-  document.getElementById('cantidad-copias')?.focus()
+  if (!esAutoseleccionEscaner) {
+    document.getElementById('cantidad-copias')?.focus()
+  }
 }
 
-// Abrir cámara
+function manejarEstadoBuscador(estado) {
+  if (
+    !estado?.baseDatosCargada ||
+    !estado?.busquedaValida ||
+    estado.tipoCoincidenciaUnica !== 'codigo-escaneado' ||
+    !estado.articuloUnico
+  ) {
+    return
+  }
+  if (codigoIngresado.value === estado.articuloUnico.codigo) return
+  seleccionarArticulo(estado.articuloUnico, { esAutoseleccionEscaner: true })
+}
+
 function abrirCamara() {
   mostrarCamara.value = true
   mostrarResultados.value = false

@@ -357,9 +357,7 @@ function construirInfoArticulo(articulo) {
 function seleccionarArticuloDelBuscador(articulo, opciones = {}) {
   const { esAutoseleccion = false } = opciones
   autoseleccionandoCodigo.value = esAutoseleccion
-  if (!esAutoseleccion) {
-    nuevoCodigo.value = articulo.codigo
-  }
+  nuevoCodigo.value = articulo.codigo
   articuloSeleccionadoInfo.value = construirInfoArticulo(articulo)
   origenSeleccionActual.value = esAutoseleccion ? 'automatica' : 'manual'
   seleccionRecienteDesdeBuscador.value = true

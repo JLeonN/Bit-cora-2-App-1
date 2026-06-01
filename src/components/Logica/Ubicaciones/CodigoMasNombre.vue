@@ -94,16 +94,74 @@ const cantidadArticulos = ref(0)
 // --- CONFIGURACIÓN DEL BUSCADOR ---
 const caracteresMinimos = 3
 const maximosResultados = 50
+const PREFIJO_ESCANER_CHINO = 'P06'
 
 // --- COMPUTED PARA MOSTRAR/OCULTAR LISTA ---
 const mostrarLista = computed(() => {
   return props.busqueda.length >= caracteresMinimos
 })
 
+function normalizarCodigoBusqueda(valor) {
+  return String(valor || '')
+    .trim()
+    .toUpperCase()
+}
+
+function crearResultadoEscaneado(articulo) {
+  return {
+    articulo,
+    tipoCoincidencia: 'codigo-escaneado',
+  }
+}
+
+function obtenerResultadoEscaneado() {
+  const terminoBusqueda = normalizarCodigoBusqueda(props.busqueda)
+  if (terminoBusqueda.length < caracteresMinimos) return null
+
+  const buscarExacto = (codigoBuscado) =>
+    articulosDisponibles.value.filter(
+      (articulo) => normalizarCodigoBusqueda(articulo.codigo) === codigoBuscado,
+    )
+
+  const codigosParaProbar = [terminoBusqueda]
+  if (terminoBusqueda.startsWith(PREFIJO_ESCANER_CHINO)) {
+    codigosParaProbar.push(terminoBusqueda.slice(PREFIJO_ESCANER_CHINO.length))
+  }
+
+  for (const codigoParaProbar of codigosParaProbar) {
+    const coincidenciasExactas = buscarExacto(codigoParaProbar)
+    if (coincidenciasExactas.length === 1 && codigoParaProbar !== terminoBusqueda) {
+      return crearResultadoEscaneado(coincidenciasExactas[0])
+    }
+  }
+
+  const textoSinPrefijo = terminoBusqueda.startsWith(PREFIJO_ESCANER_CHINO)
+    ? terminoBusqueda.slice(PREFIJO_ESCANER_CHINO.length)
+    : terminoBusqueda
+  const coincidenciasPorCodigoCompleto = articulosDisponibles.value.filter((articulo) => {
+    const codigoArticulo = normalizarCodigoBusqueda(articulo.codigo)
+    return codigoArticulo && textoSinPrefijo.startsWith(codigoArticulo)
+  })
+
+  if (coincidenciasPorCodigoCompleto.length === 1) {
+    const articulo = coincidenciasPorCodigoCompleto[0]
+    if (normalizarCodigoBusqueda(articulo.codigo) !== terminoBusqueda) {
+      return crearResultadoEscaneado(articulo)
+    }
+  }
+
+  return null
+}
+
 // --- COMPUTED PARA RESULTADOS DE BÚSQUEDA (sin ubicaciones antiguas) ---
 const resultadosBusqueda = computed(() => {
   if (props.busqueda.length < caracteresMinimos || !baseDatosCargada.value) {
     return []
+  }
+
+  const resultadoEscaneado = obtenerResultadoEscaneado()
+  if (resultadoEscaneado) {
+    return [resultadoEscaneado]
   }
 
   const terminoBusqueda = props.busqueda.toLowerCase().trim()
@@ -180,6 +238,8 @@ const estadoBusqueda = computed(() => {
     baseDatosCargada: baseDatosCargada.value,
     cantidadResultados,
     articuloUnico: cantidadResultados === 1 ? resultadosBusqueda.value[0].articulo : null,
+    tipoCoincidenciaUnica:
+      cantidadResultados === 1 ? resultadosBusqueda.value[0].tipoCoincidencia : '',
   }
 })
 

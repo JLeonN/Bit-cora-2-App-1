@@ -36,6 +36,7 @@
           v-if="mostrarBuscador && busquedaArticulo.length >= 3"
           :busqueda="busquedaArticulo"
           @articulo-seleccionado="seleccionarArticulo"
+          @estado-busqueda="manejarEstadoBuscador"
         />
       </div>
 
@@ -313,15 +314,29 @@ const copiarBusquedaActual = async () => {
   }
 }
 
-const seleccionarArticulo = (articulo) => {
+const seleccionarArticulo = (articulo, opciones = {}) => {
+  const { esAutoseleccionEscaner = false } = opciones
   const historial = obtenerHistorialUbicaciones(articulo.codigo)
   busquedaArticulo.value = articulo.codigo
   seleccionRecienteDesdeBuscador.value = true
   articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
-  mostrarBuscador.value = false
-  inputEnfocado.value = false
+  mostrarBuscador.value = esAutoseleccionEscaner
+  inputEnfocado.value = esAutoseleccionEscaner
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
+}
+
+const manejarEstadoBuscador = (estado) => {
+  if (
+    !estado?.baseDatosCargada ||
+    !estado?.busquedaValida ||
+    estado.tipoCoincidenciaUnica !== 'codigo-escaneado' ||
+    !estado.articuloUnico
+  ) {
+    return
+  }
+  if (articuloConsultado.value?.codigo === estado.articuloUnico.codigo) return
+  seleccionarArticulo(estado.articuloUnico, { esAutoseleccionEscaner: true })
 }
 
 const abrirCamara = () => {
