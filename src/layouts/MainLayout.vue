@@ -148,6 +148,20 @@
             <div class="detalle-actualizacion">
               Tu versión: {{ versionInstalada }} | Nueva versión: {{ versionDisponible }}
             </div>
+            <div class="aviso-tiempo-actualizacion">
+              <q-icon name="schedule" size="16px" />
+              <span>La actualización puede demorar hasta 20 minutos en aparecer en Play Store.</span>
+            </div>
+            <!-- Notas de parche del modal: cargar desde version.json en el campo cambios (array de strings). -->
+            <!-- La IA debe proponer texto corto y accionable, luego Leo decide qué líneas conservar. -->
+            <div v-if="cambiosActualizacion.length" class="seccion-cambios-actualizacion">
+              <div class="titulo-cambios-actualizacion">Novedades de esta versión</div>
+              <ul class="lista-cambios-actualizacion">
+                <li v-for="(cambio, indice) in cambiosActualizacion" :key="`cambio-${indice}`">
+                  {{ cambio }}
+                </li>
+              </ul>
+            </div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" @click="mostrarModalActualizacion = false" />
@@ -200,6 +214,7 @@ const mostrarModalActualizacion = ref(false)
 const versionDisponible = ref('')
 const versionInstalada = ref('')
 const urlPlayStoreActualizacion = ref('')
+const cambiosActualizacion = ref([])
 const pasosDiaHeader = ref(0)
 const pasosSesionHeader = ref(0)
 const sesionActivaHeader = ref(false)
@@ -305,6 +320,9 @@ const verificarActualizacion = async () => {
   versionDisponible.value = estadoActualizacion.versionDisponible
   versionInstalada.value = estadoActualizacion.versionInstalada
   urlPlayStoreActualizacion.value = estadoActualizacion.urlPlayStore
+  cambiosActualizacion.value = Array.isArray(estadoActualizacion.cambios)
+    ? estadoActualizacion.cambios
+    : []
 }
 
 const irAPlayStore = () => {
@@ -489,6 +507,30 @@ const manejarAccionPersonalizada = (accion) => {
 .detalle-actualizacion {
   margin-top: 8px;
   color: var(--color-texto-secundario);
+}
+.aviso-tiempo-actualizacion {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.87rem;
+  color: var(--color-texto-secundario);
+}
+.seccion-cambios-actualizacion {
+  margin-top: 12px;
+}
+.titulo-cambios-actualizacion {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+}
+.lista-cambios-actualizacion {
+  margin: 8px 0 0 0;
+  padding-left: 18px;
+  color: var(--color-texto-secundario);
+}
+.lista-cambios-actualizacion li + li {
+  margin-top: 4px;
 }
 .boton-actualizar {
   background: var(--color-error);

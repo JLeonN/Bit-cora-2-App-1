@@ -37,7 +37,17 @@ const crearEstadoSinActualizacion = () => ({
   versionInstalada: VERSION_INSTALADA,
   versionDisponible: '',
   urlPlayStore: URL_PLAY_STORE_POR_DEFECTO,
+  cambios: [],
 })
+
+const normalizarCambios = (cambios) => {
+  if (!Array.isArray(cambios)) {
+    return []
+  }
+  return cambios
+    .map((item) => `${item || ''}`.trim())
+    .filter(Boolean)
+}
 
 export const obtenerEstadoActualizacion = async () => {
   if (!URL_VERSION_REMOTA) {
@@ -59,6 +69,7 @@ export const obtenerEstadoActualizacion = async () => {
     const versionDisponible = `${versionRemota?.versionDisponible || ''}`.trim()
     const mostrarActualizacion = versionRemota?.mostrarActualizacion === true
     const urlPlayStore = `${versionRemota?.urlPlayStore || URL_PLAY_STORE_POR_DEFECTO}`.trim()
+    const cambios = normalizarCambios(versionRemota?.cambios)
     if (!versionDisponible || !mostrarActualizacion) {
       return crearEstadoSinActualizacion()
     }
@@ -69,6 +80,7 @@ export const obtenerEstadoActualizacion = async () => {
       versionInstalada: VERSION_INSTALADA,
       versionDisponible,
       urlPlayStore,
+      cambios,
     }
   } catch (error) {
     console.error('Error al consultar version remota:', error)
