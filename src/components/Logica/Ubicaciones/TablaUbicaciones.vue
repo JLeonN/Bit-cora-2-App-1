@@ -62,7 +62,7 @@
                   {{ obtenerNombreArticulo(item.codigo) }}
                 </div>
                 <div class="codigo-articulo">
-                  {{ mostrarCodigoTruncado(item.codigo) }}
+                  {{ mostrarCodigoCompleto(item.codigo) }}
                 </div>
               </div>
             </span>
@@ -146,13 +146,13 @@ function normalizarCodigo(codigo) {
   return codigo.trim().toUpperCase()
 }
 
-// --- Función para mostrar código truncado ---
-function mostrarCodigoTruncado(codigo) {
+// --- Función para mostrar código completo ---
+function mostrarCodigoCompleto(codigo) {
   if (!codigo || typeof codigo !== 'string') {
     return 'Sin código'
   }
 
-  return codigo.length > 15 ? `${codigo.slice(0, 15)}...` : codigo
+  return codigo
 }
 
 // --- Función para obtener el nombre del artículo ---
