@@ -27,6 +27,13 @@ const obtenerNumeroPx = (valor) => Number.parseFloat(String(valor || '0').replac
 const obtenerPerfilRender = () => (esPlataformaWeb() ? PERFIL_RENDER_WEB : PERFIL_RENDER_MOVIL)
 const pausarRenderCooperativo = () => new Promise((resolve) => setTimeout(resolve, 0))
 
+const crearMarcaFechaHoraArchivo = () => {
+  const ahora = new Date()
+  const fecha = ahora.toISOString().split('T')[0]
+  const hora = ahora.toTimeString().slice(0, 5).replace(':', '-')
+  return `${fecha} # ${hora}`
+}
+
 const dibujarTextoCentrado = (contexto, texto, x, y) => {
   contexto.fillText(texto, x, y)
 }
@@ -180,7 +187,8 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
 
     const nombreUsuario = await obtenerNombreUsuario()
     const idConfiguracionFormateado = configuracion.id.replace(/\s/g, '')
-    const nombreArchivo = `Etiquetas - ${nombreUsuario} - ${idConfiguracionFormateado}.pdf`
+    const marcaFechaHora = crearMarcaFechaHoraArchivo()
+    const nombreArchivo = `Etiquetas - ${nombreUsuario} - ${idConfiguracionFormateado} ${marcaFechaHora}.pdf`
 
     if (esPlataformaWeb()) {
       descargarPDFEnNavegador(pdf, nombreArchivo)
