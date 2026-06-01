@@ -38,7 +38,17 @@
         class="tarjeta-info-articulo"
         :class="{ 'tarjeta-sl-neon': articuloSeleccionadoInfo.ubicacionOriginal === 'SL' }"
       >
-        <p class="titulo-info-articulo">Artículo seleccionado</p>
+        <div class="encabezado-info-articulo">
+          <p class="titulo-info-articulo">Artículo seleccionado</p>
+          <button
+            type="button"
+            class="boton-cerrar-info-articulo"
+            title="Cerrar artículo seleccionado"
+            @click="cerrarTarjetaArticuloSeleccionado"
+          >
+            <span aria-hidden="true" class="texto-cerrar-info-articulo">×</span>
+          </button>
+        </div>
         <p class="linea-info-articulo">
           <span class="etiqueta-info-articulo">Nombre:</span>
           {{ articuloSeleccionadoInfo.nombre }}
@@ -375,6 +385,20 @@ function seleccionarArticuloDelBuscador(articulo, opciones = {}) {
       }
     })
   }
+}
+
+function cerrarTarjetaArticuloSeleccionado() {
+  articuloSeleccionadoInfo.value = null
+  origenSeleccionActual.value = 'ninguno'
+  seleccionRecienteDesdeBuscador.value = false
+  mantenerBuscadorVisible.value = false
+  autoseleccionandoCodigo.value = false
+  mostrarBuscador.value = false
+  nuevoCodigo.value = ''
+  restablecerPlaceholderCodigo()
+  nextTick(() => {
+    inputCodigo.value?.focus()
+  })
 }
 
 function manejarEstadoBuscador(estado) {
