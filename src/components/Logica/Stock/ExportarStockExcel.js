@@ -9,6 +9,7 @@ const ANCHOS_COLUMNAS = [
   { wch: 14 },
   { wch: 14 },
   { wch: 7 },
+  { wch: 12 },
 ]
 
 function esNavegadorWeb() {
@@ -22,12 +23,22 @@ function construirLibro(registros, nombreUsuario) {
     Number(registro.stockExcel),
     Number(registro.stockContado),
     registro.ubicacionActual || '',
-    registro.ubicacionOriginalExcel === 'SL' || registro.nombre === 'ARTÍCULO INEXISTENTE'
+    String(registro.ubicacionActual || '').trim().toUpperCase() === 'SL' ||
+    registro.nombre === 'ARTÍCULO INEXISTENTE'
       ? '❌'
       : '✔️',
+    Number(registro.stockContado) - Number(registro.stockExcel),
   ])
   const hoja = XLSX.utils.aoa_to_sheet([
-    ['Código', 'Descripción', 'Stock Excel', 'Stock contado', 'Última ubicación', 'Info'],
+    [
+      'Código',
+      'Descripción',
+      'Stock Excel',
+      'Stock contado',
+      'Última ubicación',
+      'Info',
+      'Diferencia',
+    ],
     ...filas,
   ])
   hoja['!cols'] = ANCHOS_COLUMNAS

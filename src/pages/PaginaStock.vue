@@ -134,7 +134,7 @@
             id="ubicacionStock"
             v-model="ubicacionSeleccionada"
             type="text"
-            class="input-ubicacion-stock"
+            class="input-ubicacion-stock sin-enfoque-automatico"
             placeholder="Ubicación opcional"
             @input="marcarUbicacionComoUsuario"
             @blur="formatearUbicacionSeleccionada"
@@ -177,7 +177,7 @@
         Pendientes: {{ informe.pendientes }}
       </p>
       <p v-if="informe.sl > 0" class="texto-informe texto-sl-neon">
-        Ubicación original SL: {{ informe.sl }}
+        Ubicación SL: {{ informe.sl }}
       </p>
       <p v-if="informe.inexistentes > 0" class="texto-informe texto-inexistente">
         Artículos inexistentes: {{ informe.inexistentes }}
@@ -384,7 +384,7 @@ const informe = computed(() => {
     confirmados: confirmados.length,
     pendientes: registrosVisuales.value.length - confirmados.length,
     sl: registrosVisuales.value.filter(
-      (registro) => registro.ubicacionOriginalExcel === 'SL',
+      (registro) => formatearUbicacion(registro.ubicacionActual) === 'SL',
     ).length,
     inexistentes: registrosVisuales.value.filter(
       (registro) => registro.nombre === 'ARTÍCULO INEXISTENTE',
@@ -706,7 +706,6 @@ async function confirmarRegistroPendiente(registro) {
   try {
     await guardarRegistro({ ...registro, confirmado: true }, registro.ubicacionActual)
     notificar('positive', 'Conteo confirmado')
-    nextTick(() => inputBusquedaRef.value?.focus())
   } catch (error) {
     notificar('negative', error.message)
   }
@@ -731,7 +730,6 @@ async function confirmarEliminarRegistro() {
   sesion.value = await eliminarRegistroStock(registroAEliminar.value.codigo)
   registroAEliminar.value = null
   notificar('positive', 'Registro eliminado')
-  nextTick(() => inputBusquedaRef.value?.focus())
 }
 
 async function confirmarEliminarTodos() {

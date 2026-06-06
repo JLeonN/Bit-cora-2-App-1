@@ -67,6 +67,14 @@ function normalizarRegistro(registro) {
   }
 }
 
+function obtenerSiguienteFechaActualizacion(registros) {
+  const fechaMayor = registros.reduce(
+    (mayor, registro) => Math.max(mayor, Number(registro?.fechaActualizacion || 0)),
+    0,
+  )
+  return Math.max(Date.now(), fechaMayor + 1)
+}
+
 function crearSesionVacia(fuenteExcel = null) {
   return {
     version: VERSION_STOCK,
@@ -129,7 +137,7 @@ export async function guardarRegistroStock(registro, fuenteExcel) {
   }
   const registroNormalizado = normalizarRegistro({
     ...registro,
-    fechaActualizacion: Date.now(),
+    fechaActualizacion: obtenerSiguienteFechaActualizacion(sesion.registros),
   })
   if (!registroNormalizado.codigo) {
     throw new Error('El registro de Stock no tiene código')
@@ -155,8 +163,13 @@ export async function guardarRegistrosStock(registros, fuenteExcel) {
     throw new Error('La sesión de Stock pertenece a otro archivo Excel')
   }
   const mapa = new Map(sesion.registros.map((registro) => [registro.codigo, registro]))
-  registros.forEach((registro) => {
-    const normalizado = normalizarRegistro(registro)
+  const fechaInicial =
+    obtenerSiguienteFechaActualizacion(sesion.registros) + Math.max(0, registros.length - 1)
+  registros.forEach((registro, indice) => {
+    const normalizado = normalizarRegistro({
+      ...registro,
+      fechaActualizacion: fechaInicial - indice,
+    })
     if (normalizado.codigo) {
       mapa.set(normalizado.codigo, normalizado)
     }

@@ -45,12 +45,12 @@ Los artículos inexistentes no se envían. En un envío masivo se omiten y se in
 La sección Información muestra:
 
 - Artículos totales, confirmados y pendientes.
-- Conteos confirmados con diferencias.
-- Artículos con ubicación original `SL`.
+- Artículos cuya ubicación actual es `SL`.
 - Artículos inexistentes.
-- Total Excel confirmado.
-- Total contado confirmado.
-- Diferencia total calculada como `Contado - Excel`.
+
+Cada tarjeta confirmada muestra `Faltan N unidades` o `Se contaron N unidades más` cuando el
+conteo no coincide con el Excel. Las coincidencias y los registros pendientes no muestran esa
+línea.
 
 ## Excel de Stock
 
@@ -62,6 +62,9 @@ La sección Información muestra:
 - D: Stock contado.
 - E: Última ubicación.
 - F: Info con `✔️` o `❌`.
+- G: Diferencia numérica calculada como `Stock contado - Stock Excel`.
+
+La columna Info usa `❌` cuando la ubicación actual es `SL` o el artículo es inexistente.
 
 El nombre sigue el formato `Stock [Nombre de usuario] AAAA-MM-DD # HH-MM.xlsx`. En navegador se descarga directamente y en Android se guarda en caché para compartir.
 

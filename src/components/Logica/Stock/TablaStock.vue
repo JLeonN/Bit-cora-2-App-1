@@ -22,7 +22,7 @@
         class="fila-stock"
         :class="{
           'fila-stock-pendiente': !registro.confirmado,
-          'fila-stock-sl': registro.ubicacionOriginalExcel === 'SL',
+          'fila-stock-sl': esUbicacionActualSL(registro),
         }"
       >
         <div class="encabezado-fila-stock">
@@ -53,10 +53,20 @@
               <IconPencil :size="16" />
             </button>
           </div>
+          <p
+            v-if="registro.confirmado && obtenerDiferencia(registro) !== 0"
+            class="diferencia-stock"
+            :class="{
+              'diferencia-stock-faltante': obtenerDiferencia(registro) < 0,
+              'diferencia-stock-sobrante': obtenerDiferencia(registro) > 0,
+            }"
+          >
+            {{ obtenerTextoDiferencia(registro) }}
+          </p>
           <p v-if="codigoEditando !== registro.codigo">
             {{ registro.ubicacionOrigen === 'excel' ? 'Ubicación del Excel' : 'Ubicación' }}:
             <strong>
-              <span :class="{ 'texto-sl-neon': registro.ubicacionOriginalExcel === 'SL' }">
+              <span :class="{ 'texto-sl-neon': esUbicacionActualSL(registro) }">
                 {{ registro.ubicacionActual || 'Sin ubicación registrada' }}
               </span>
             </strong>
@@ -84,7 +94,7 @@
             :id="`ubicacion-${registro.codigo}`"
             v-model="ubicacionEdicion"
             type="text"
-            class="input-ubicacion-edicion"
+            class="input-ubicacion-edicion sin-enfoque-automatico"
             placeholder="Ubicación"
             @blur="formatearUbicacion"
           />
@@ -174,6 +184,25 @@ const cantidadEdicion = ref(0)
 const cantidadValidaAnterior = ref(0)
 const ubicacionEdicion = ref('')
 const inputCantidadEdicionRef = ref(null)
+
+function esUbicacionActualSL(registro) {
+  return String(registro?.ubicacionActual || '')
+    .trim()
+    .toUpperCase() === 'SL'
+}
+
+function obtenerDiferencia(registro) {
+  return Number(registro?.stockContado || 0) - Number(registro?.stockExcel || 0)
+}
+
+function obtenerTextoDiferencia(registro) {
+  const diferencia = obtenerDiferencia(registro)
+  const cantidad = Math.abs(diferencia)
+  const unidad = cantidad === 1 ? 'unidad' : 'unidades'
+  return diferencia < 0
+    ? `Faltan ${cantidad} ${unidad}`
+    : `Se contaron ${cantidad} ${unidad} más`
+}
 
 async function iniciarEdicion(registro) {
   codigoEditando.value = registro.codigo
@@ -323,6 +352,15 @@ defineExpose({
 .datos-fila-stock .aviso-stock-ajustado {
   color: var(--color-carga);
   font-size: 0.82rem;
+}
+.datos-fila-stock .diferencia-stock {
+  font-weight: 700;
+}
+.datos-fila-stock .diferencia-stock-faltante {
+  color: var(--color-error);
+}
+.datos-fila-stock .diferencia-stock-sobrante {
+  color: var(--color-exito);
 }
 .boton-valor-editable {
   border: 0;

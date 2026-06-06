@@ -24,11 +24,14 @@
     </p>
     <p>
       <strong>6. Etiquetas e informes:</strong> cada fila puede enviarse a Etiquetas con cantidad
-      fija 1. Información resume pendientes, diferencias, artículos SL e inexistentes.
+      fija 1. Las filas confirmadas indican cuántas unidades faltan o cuántas se contaron de más
+      cuando el conteo no coincide con el Excel. Información resume pendientes, artículos SL e
+      inexistentes.
     </p>
     <p>
       <strong>7. Excel final:</strong> enviar o descargar genera un archivo únicamente con conteos
-      confirmados. Una sesión queda vinculada al Excel con el que fue creada.
+      confirmados e incluye la diferencia `Contado - Excel`. Una sesión queda vinculada al Excel
+      con el que fue creada.
     </p>
   </div>
 </template>
