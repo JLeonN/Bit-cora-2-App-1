@@ -8,7 +8,10 @@
           <p
             v-if="descripcionResumen"
             class="descripcion-resumen"
-            :class="{ 'descripcion-resumen-oculta': ocultarResumenAlExpandir && estaExpandida }"
+            :class="{
+              'descripcion-resumen-oculta': ocultarResumenAlExpandir && estaExpandida,
+              'descripcion-resumen-expandida': !ocultarResumenAlExpandir && estaExpandida,
+            }"
           >
             {{ descripcionResumen }}
           </p>
@@ -134,6 +137,11 @@ watch(
 }
 .descripcion-resumen-oculta {
   display: none;
+}
+.descripcion-resumen-expandida {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 .icono-chevron {
   color: var(--color-texto-secundario);

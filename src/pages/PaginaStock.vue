@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-stock">
-    <h2 class="titulo-stock">Stock</h2>
+    <h2 class="titulo-tabla">Stock</h2>
 
     <SelectorExcel
       v-if="!baseDatosCargada"
@@ -18,7 +18,6 @@
       titulo="Base e importación"
       :expandida-por-defecto="false"
       descripcion-resumen="Cargá el Excel o prepará artículos desde la tabla de Ubicaciones."
-      :ocultar-resumen-al-expandir="true"
     >
       <SelectorExcel
         v-if="baseDatosCargada"
@@ -146,21 +145,24 @@
     <TarjetaSeccion
       v-if="registrosVisuales.length > 0"
       titulo="Información"
-      :expandida-por-defecto="informacionExpandida"
-      descripcion-resumen="Resumen de conteos, diferencias y alertas."
-      :ocultar-resumen-al-expandir="true"
-      @cambio-expansion="informacionExpandida = $event"
+      :expandida-por-defecto="false"
+      descripcion-resumen="Revisá los artículos totales, confirmados, pendientes y las alertas detectadas."
     >
       <p class="texto-informe">Artículos totales: {{ informe.total }}</p>
-      <p class="texto-informe">Confirmados: {{ informe.confirmados }}</p>
-      <p class="texto-informe">Pendientes: {{ informe.pendientes }}</p>
-      <p class="texto-informe">Con diferencias: {{ informe.diferencias }}</p>
-      <p class="texto-informe">Ubicación original SL: {{ informe.sl }}</p>
-      <p class="texto-informe">Artículos inexistentes: {{ informe.inexistentes }}</p>
-      <p class="texto-informe">Total Excel confirmado: {{ informe.totalExcel }}</p>
-      <p class="texto-informe">Total contado confirmado: {{ informe.totalContado }}</p>
-      <p class="texto-informe">
-        Diferencia total (Contado - Excel): <strong>{{ informe.diferenciaTotal }}</strong>
+      <p v-if="informe.confirmados > 0" class="texto-informe">
+        Confirmados: {{ informe.confirmados }}
+      </p>
+      <p v-if="informe.pendientes > 0" class="texto-informe">
+        Pendientes: {{ informe.pendientes }}
+      </p>
+      <p v-if="informe.sl > 0" class="texto-informe texto-sl-neon">
+        Ubicación original SL: {{ informe.sl }}
+      </p>
+      <p v-if="informe.inexistentes > 0" class="texto-informe texto-inexistente">
+        Artículos inexistentes: {{ informe.inexistentes }}
+      </p>
+      <p v-if="informe.duplicados > 0" class="texto-informe texto-duplicado">
+        Duplicado: {{ informe.duplicados }}
       </p>
     </TarjetaSeccion>
 
@@ -267,7 +269,6 @@ const conteoValidoAnterior = ref(0)
 const ubicacionSeleccionada = ref('')
 const mostrarCamara = ref(false)
 const modalActivo = ref(false)
-const informacionExpandida = ref(false)
 const registroAEliminar = ref(null)
 const mostrarModalEliminarTodos = ref(false)
 const mostrarModalNuevaSesion = ref(false)
@@ -332,33 +333,38 @@ const registrosVisuales = computed(() =>
 )
 const informe = computed(() => {
   const confirmados = registrosVisuales.value.filter((registro) => registro.confirmado)
-  const totalExcel = confirmados.reduce((total, registro) => total + registro.stockExcel, 0)
-  const totalContado = confirmados.reduce((total, registro) => total + registro.stockContado, 0)
+  const conteoCodigosExcel = new Map()
+  const articulosExcel = baseDatosCargada.value ? obtenerArticulosCargados() : []
+  articulosExcel.forEach((articulo) => {
+    const codigo = String(articulo?.codigo || '')
+      .trim()
+      .toUpperCase()
+    if (codigo) conteoCodigosExcel.set(codigo, (conteoCodigosExcel.get(codigo) || 0) + 1)
+  })
+  const codigosDuplicados = new Set(
+    [...conteoCodigosExcel.entries()]
+      .filter(([, cantidad]) => cantidad > 1)
+      .map(([codigo]) => codigo),
+  )
   return {
     total: registrosVisuales.value.length,
     confirmados: confirmados.length,
     pendientes: registrosVisuales.value.length - confirmados.length,
-    diferencias: confirmados.filter(
-      (registro) => registro.stockContado !== registro.stockExcel,
-    ).length,
     sl: registrosVisuales.value.filter(
       (registro) => registro.ubicacionOriginalExcel === 'SL',
     ).length,
     inexistentes: registrosVisuales.value.filter(
       (registro) => registro.nombre === 'ARTÍCULO INEXISTENTE',
     ).length,
-    totalExcel,
-    totalContado,
-    diferenciaTotal: totalContado - totalExcel,
+    duplicados: articulosExcel.filter((articulo) =>
+      codigosDuplicados.has(
+        String(articulo?.codigo || '')
+          .trim()
+          .toUpperCase(),
+      ),
+    ).length,
   }
 })
-const hayAlertas = computed(
-  () =>
-    informe.value.pendientes > 0 ||
-    informe.value.diferencias > 0 ||
-    informe.value.sl > 0 ||
-    informe.value.inexistentes > 0,
-)
 const confirmados = computed(() =>
   registrosVisuales.value.filter((registro) => registro.confirmado),
 )
@@ -772,9 +778,6 @@ function actualizarBarra() {
 }
 
 watch(configuracionBarra, actualizarBarra, { deep: true })
-watch(hayAlertas, (valor) => {
-  if (valor) informacionExpandida.value = true
-})
 
 onMounted(async () => {
   await recargarDatos()
