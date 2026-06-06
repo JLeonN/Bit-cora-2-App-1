@@ -327,9 +327,10 @@ src/
 - Se habilitó acceso directo a configuración al tocar el nombre de usuario y foco automático al editarlo.
 - Release vigente actualizada: 4.2.24.
 
-### Actualización de release 4.2.25
+### Actualización de release 4.2.26
 
-- Se agregó al modal de actualización una lista de novedades dinámica cargada desde `version.json`.
-- Se sumó un aviso fijo para informar que la versión puede tardar hasta 20 minutos en verse en Play Store.
-- Se incorporaron notas públicas de mejoras recientes en escaneo, visualización de códigos y PDFs de etiquetas.
-- Release vigente actualizada: 4.2.25.
+- El escaneo de pedidos muestra primero el código más reciente y permite ajustar cantidades con controles de menos y más.
+- La lista escaneada admite códigos largos y la cámara incorpora una guía visual con una miniatura completa.
+- El buscador compartido por Ubicaciones, Consulta De Ubicación y Etiquetas ordena las coincidencias por relevancia.
+- El modal de actualización agrupa las novedades por apartado y conserva las notas al regenerar `version.json`.
+- Release vigente actualizada: 4.2.26.
