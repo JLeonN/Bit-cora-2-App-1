@@ -107,6 +107,97 @@ function normalizarCodigoBusqueda(valor) {
     .toUpperCase()
 }
 
+function normalizarTextoRelevancia(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function calcularPuntajeRelevancia(nombre, terminoBusqueda) {
+  const nombreNormalizado = normalizarTextoRelevancia(nombre)
+  const terminoNormalizado = normalizarTextoRelevancia(terminoBusqueda)
+  const palabrasBuscadas = terminoNormalizado.split(/\s+/).filter(Boolean)
+  const palabrasNombre = nombreNormalizado.split(/\s+/).filter(Boolean)
+
+  if (!terminoNormalizado || palabrasBuscadas.length === 0) return 0
+
+  let puntaje = 0
+
+  if (nombreNormalizado === terminoNormalizado) {
+    puntaje += 10000
+  } else if (nombreNormalizado.startsWith(`${terminoNormalizado} `)) {
+    puntaje += 7000
+  } else if (nombreNormalizado.includes(terminoNormalizado)) {
+    puntaje += 6000
+  }
+
+  let posicionAnterior = -1
+  let palabrasEnOrden = true
+
+  palabrasBuscadas.forEach((palabra) => {
+    const indicePalabraExacta = palabrasNombre.indexOf(palabra)
+    const indicePalabraParcial = palabrasNombre.findIndex((palabraNombre) =>
+      palabraNombre.includes(palabra),
+    )
+    const indiceCoincidencia =
+      indicePalabraExacta !== -1 ? indicePalabraExacta : indicePalabraParcial
+
+    if (indicePalabraExacta !== -1) {
+      puntaje += 500
+    } else if (indicePalabraParcial !== -1) {
+      puntaje += 250
+    }
+
+    if (indiceCoincidencia < posicionAnterior) {
+      palabrasEnOrden = false
+    }
+    posicionAnterior = indiceCoincidencia
+  })
+
+  if (palabrasEnOrden) {
+    puntaje += 800
+  }
+
+  const primeraCoincidencia = palabrasNombre.findIndex((palabraNombre) =>
+    palabrasBuscadas.some((palabraBuscada) => palabraNombre.includes(palabraBuscada)),
+  )
+  if (primeraCoincidencia === 0) {
+    puntaje += 600
+  } else if (primeraCoincidencia > 0) {
+    puntaje -= primeraCoincidencia * 80
+  }
+
+  const palabrasAdicionales = Math.max(0, palabrasNombre.length - palabrasBuscadas.length)
+  const caracteresAdicionales = Math.max(0, nombreNormalizado.length - terminoNormalizado.length)
+  puntaje -= palabrasAdicionales * 120
+  puntaje -= caracteresAdicionales * 3
+
+  return puntaje
+}
+
+function ordenarPorRelevancia(articulos, terminoBusqueda) {
+  return [...articulos].sort((articuloA, articuloB) => {
+    const diferenciaPuntaje =
+      calcularPuntajeRelevancia(articuloB.nombre, terminoBusqueda) -
+      calcularPuntajeRelevancia(articuloA.nombre, terminoBusqueda)
+
+    if (diferenciaPuntaje !== 0) return diferenciaPuntaje
+
+    const diferenciaLongitud =
+      normalizarTextoRelevancia(articuloA.nombre).length -
+      normalizarTextoRelevancia(articuloB.nombre).length
+
+    if (diferenciaLongitud !== 0) return diferenciaLongitud
+
+    return articuloA.nombre.localeCompare(articuloB.nombre, 'es', {
+      sensitivity: 'base',
+    })
+  })
+}
+
 function crearResultadoEscaneado(articulo) {
   return {
     articulo,
@@ -187,7 +278,7 @@ const resultadosBusqueda = computed(() => {
     )
   })
   resultados.push(
-    ...nombresCoinciden.map((articulo) => ({
+    ...ordenarPorRelevancia(nombresCoinciden, terminoBusqueda).map((articulo) => ({
       articulo,
       tipoCoincidencia: 'nombre-completo',
     })),
@@ -219,7 +310,7 @@ const resultadosBusqueda = computed(() => {
       )
     })
     resultados.push(
-      ...nombresParcialesCoinciden.map((articulo) => ({
+      ...ordenarPorRelevancia(nombresParcialesCoinciden, terminoBusqueda).map((articulo) => ({
         articulo,
         tipoCoincidencia: 'nombre-parcial',
       })),
