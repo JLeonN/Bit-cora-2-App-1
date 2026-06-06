@@ -1,6 +1,6 @@
 <template>
   <div class="contenedor-formulario-etiqueta">
-    <form ref="formularioRef" @submit.prevent="agregarEtiqueta" class="formulario-etiqueta">
+    <form @submit.prevent="agregarEtiqueta" class="formulario-etiqueta">
       <!-- Campo Código con buscador integrado -->
       <div class="campo-con-buscador">
         <label for="codigo-etiqueta">Código del artículo</label>
@@ -38,7 +38,6 @@
           type="text"
           v-model="descripcionIngresada"
           placeholder="Descripción del artículo"
-          @focus="moverFormularioArriba"
           :class="{ 'input-error': mostrarErrorDescripcion }"
         />
       </div>
@@ -52,7 +51,6 @@
             type="text"
             v-model="ubicacionIngresada"
             placeholder="Ubicación"
-            @focus="moverFormularioArriba"
           />
           <button
             v-if="ubicacionIngresada"
@@ -142,7 +140,6 @@ const mostrarErrorCantidad = ref(false)
 const animarErrorCodigo = ref(false)
 
 // Referencias
-const formularioRef = ref(null)
 const inputCodigo = ref(null)
 const inputCantidad = ref(null)
 
@@ -160,19 +157,6 @@ const manejarModalCerrado = () => {
 }
 
 // --- FUNCIONES ---
-
-// Función para mover el formulario arriba suavemente
-function moverFormularioArriba() {
-  if (!formularioRef.value) return
-
-  const rect = formularioRef.value.getBoundingClientRect()
-  const offset = 82
-
-  window.scrollTo({
-    top: window.scrollY + rect.top - offset,
-    behavior: 'smooth',
-  })
-}
 
 // Manejar búsqueda en tiempo real
 function manejarBusqueda() {
@@ -192,8 +176,6 @@ function manejarEnfoqueCodigo() {
     inputCodigo.value?.select()
     seleccionRecienteDesdeBuscador.value = false
   }
-  moverFormularioArriba()
-
   if (codigoIngresado.value.length >= 3) {
     mostrarResultados.value = true
   }
@@ -212,7 +194,6 @@ function manejarDesenfoqueCodigo() {
 
 // Manejar enfoque de cantidad
 function manejarEnfoqueCantidad() {
-  moverFormularioArriba()
   inputCantidad.value?.select()
 }
 

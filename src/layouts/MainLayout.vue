@@ -224,6 +224,10 @@ import {
   configurarEstadoBotonAtrasNativo,
   limpiarEstadoBotonAtrasNativo,
 } from 'src/components/Logica/Navegacion/ServicioBotonAtrasNativo.js'
+import {
+  activarEnfoqueGlobalInputs,
+  desactivarEnfoqueGlobalInputs,
+} from 'src/components/Logica/Compartidos/ServicioEnfoqueInput.js'
 
 const drawer = ref(false)
 const router = useRouter()
@@ -257,6 +261,7 @@ const claseHeader = esModoPruebaPublicidad
   : 'bg-primario-oscuro texto-principal'
 
 onMounted(async () => {
+  activarEnfoqueGlobalInputs()
   configurarEstadoBotonAtrasNativo({
     estaDrawerAbierto: () => drawer.value,
     cerrarDrawer: () => {
@@ -286,6 +291,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  desactivarEnfoqueGlobalInputs()
   limpiarEstadoBotonAtrasNativo()
   if (desuscribirPasos) {
     desuscribirPasos()

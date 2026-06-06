@@ -1,5 +1,5 @@
 ﻿<template>
-  <form ref="formularioRef" class="formulario" @submit.prevent="gestionarEnvio">
+  <form class="formulario" @submit.prevent="gestionarEnvio">
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
@@ -85,11 +85,11 @@
           ref="inputUbicacion"
           v-model="nuevaUbicacion"
           type="text"
+          class="sin-enfoque-automatico"
           :placeholder="placeholderUbicacion"
           :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
           @animationend="animarErrorUbicacion = false"
           @input="restablecerPlaceholderUbicacion"
-          @focus="manejarEnfoqueUbicacion"
           @blur="manejarDesenfoqueUbicacion"
         />
 
@@ -140,7 +140,6 @@ import {
 } from './recordarUltimaTipografia.js'
 
 // --- REFS DEL TEMPLATE ---
-const formularioRef = ref(null)
 const inputCodigo = ref(null)
 const inputUbicacion = ref(null)
 
@@ -251,19 +250,6 @@ async function limpiarUbicacionRecordada() {
   console.log('[FormularioUbicacion] Ubicación recordada limpiada')
 }
 
-// --- FUNCIÓN DE SCROLL AUTOMÁTICO ---
-function moverFormularioArriba() {
-  if (!formularioRef.value) return
-
-  const rect = formularioRef.value.getBoundingClientRect()
-  const offset = 82 // píxeles desde arriba
-
-  window.scrollTo({
-    top: window.scrollY + rect.top - offset,
-    behavior: 'smooth',
-  })
-}
-
 // --- FUNCIONES DEL BUSCADOR Y ENFOQUE ---
 function manejarInputCodigo(evento) {
   const valorOriginal = evento.target.value
@@ -311,9 +297,6 @@ function manejarEnfoqueCodigo() {
     seleccionRecienteDesdeBuscador.value = false
   }
 
-  // Solo scroll automático, sin anclar
-  moverFormularioArriba()
-
   // Si ya hay texto suficiente, mostrar buscador inmediatamente
   if (nuevoCodigo.value.length >= 3) {
     mostrarBuscador.value = true
@@ -342,11 +325,6 @@ async function copiarCodigoActual() {
   } catch (error) {
     console.warn('[FormularioUbicacion] No se pudo copiar al portapapeles:', error)
   }
-}
-
-function manejarEnfoqueUbicacion() {
-  // Solo scroll automático, sin anclar
-  moverFormularioArriba()
 }
 
 function manejarDesenfoqueUbicacion() {
