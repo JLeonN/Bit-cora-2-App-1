@@ -87,7 +87,14 @@
               >. Puedes actualizar la cantidad.
             </p>
           </div>
-          <button type="button" class="boton-cerrar-tarjeta" @click="cancelarSeleccion">×</button>
+          <button
+            type="button"
+            class="boton-cerrar-info-articulo"
+            title="Cerrar artículo seleccionado"
+            @click="cancelarSeleccion"
+          >
+            <span aria-hidden="true" class="texto-cerrar-info-articulo texto-repetidos">×</span>
+          </button>
         </div>
         <p class="nombre-articulo-stock">{{ articuloSeleccionado.nombre }}</p>
         <p class="dato-articulo-stock">Código: <strong>{{ articuloSeleccionado.codigo }}</strong></p>
@@ -133,10 +140,12 @@
 
         <div class="acciones-tarjeta-stock">
           <button type="button" class="boton-confirmar-stock" @click="confirmarConteoSeleccionado">
-            Confirmar conteo
+            <span class="texto-accion-completo">Confirmar conteo</span>
+            <span class="texto-accion-corto">Confirmar</span>
           </button>
           <button type="button" class="boton-cancelar-stock" @click="cancelarSeleccion">
-            Cancelar conteo
+            <span class="texto-accion-completo">Cancelar conteo</span>
+            <span class="texto-accion-corto">Cancelar</span>
           </button>
         </div>
       </section>
@@ -319,14 +328,24 @@ const registrosVisuales = computed(() =>
   [...(sesion.value.registros || [])]
     .map((registro) => {
       const articulo = obtenerArticuloPorCodigo(registro.codigo)
+      const ubicacionOriginalExcel =
+        articulo?.ubicacionAntigua || registro.ubicacionOriginalExcel || ''
+      const ubicacionRegistrada = obtenerUltimaUbicacionRegistrada(
+        registro.codigo,
+        ubicaciones.value,
+        articulo,
+        registro.ubicacionActual,
+      )
       return {
         ...registro,
-        ubicacionActual: obtenerUltimaUbicacionRegistrada(
-          registro.codigo,
-          ubicaciones.value,
-          articulo,
-          registro.ubicacionActual,
-        ),
+        ubicacionActual: ubicacionRegistrada || ubicacionOriginalExcel,
+        ubicacionOrigen:
+          registro.ubicacionOrigen === 'usuario' ||
+          (ubicacionRegistrada &&
+            formatearUbicacion(ubicacionRegistrada) !==
+              formatearUbicacion(ubicacionOriginalExcel))
+            ? 'usuario'
+            : 'excel',
       }
     })
     .sort((registroA, registroB) => registroB.fechaActualizacion - registroA.fechaActualizacion),
@@ -539,9 +558,14 @@ function formatearUbicacionSeleccionada() {
 }
 
 async function guardarRegistro(registro, ubicacionAnterior = '') {
-  let ubicacionFinal = formatearUbicacion(registro.ubicacionActual)
+  const ubicacionIngresada = formatearUbicacion(registro.ubicacionActual)
+  const ubicacionOriginalExcel = formatearUbicacion(registro.ubicacionOriginalExcel)
+  const ubicacionOrigen = ubicacionIngresada ? registro.ubicacionOrigen || 'usuario' : 'excel'
+  const ubicacionFinal = ubicacionIngresada || ubicacionOriginalExcel
   const cambioUbicacion =
-    ubicacionFinal && ubicacionFinal !== formatearUbicacion(ubicacionAnterior)
+    ubicacionOrigen === 'usuario' &&
+    ubicacionFinal &&
+    ubicacionFinal !== formatearUbicacion(ubicacionAnterior)
   if (cambioUbicacion) {
     const resultadoUbicacion = await registrarUbicacionArticulo(registro.codigo, ubicacionFinal)
     if (!resultadoUbicacion.exito) {
@@ -550,7 +574,7 @@ async function guardarRegistro(registro, ubicacionAnterior = '') {
     ubicaciones.value = await obtenerUbicaciones()
   }
   sesion.value = await guardarRegistroStock(
-    { ...registro, ubicacionActual: ubicacionFinal },
+    { ...registro, ubicacionActual: ubicacionFinal, ubicacionOrigen },
     informacionArchivo.value,
   )
 }
@@ -573,6 +597,7 @@ async function confirmarConteoSeleccionado() {
         stockContado: conteoValidoAnterior.value,
         ubicacionActual: ubicacionSeleccionada.value,
         ubicacionOriginalExcel: articuloSeleccionado.value.ubicacionAntigua,
+        ubicacionOrigen: ubicacionSeleccionada.value ? 'usuario' : 'excel',
         confirmado: true,
       },
       registroAnterior?.ubicacionActual || ultimaUbicacionSeleccionada.value,
@@ -623,6 +648,7 @@ async function importarDesdeUbicaciones() {
       stockContado: existente?.stockContado ?? stockExcel.valor ?? 0,
       ubicacionActual: formatearUbicacion(movimiento.ubicacion),
       ubicacionOriginalExcel: articulo?.ubicacionAntigua || '',
+      ubicacionOrigen: 'usuario',
       confirmado: false,
       fechaActualizacion: Date.now(),
     })
@@ -901,7 +927,11 @@ onUnmounted(() => {
 .encabezado-tarjeta-stock {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
+}
+.encabezado-tarjeta-stock > div {
+  min-width: 0;
 }
 .subtitulo-tarjeta-stock {
   margin: 0;
@@ -913,18 +943,12 @@ onUnmounted(() => {
   margin: 0.35rem 0 0 0;
   font-size: 0.9rem;
 }
-.boton-cerrar-tarjeta {
-  border: 0;
-  background: transparent;
-  color: var(--color-texto-secundario);
-  font-size: 1.8rem;
-  cursor: pointer;
-}
 .nombre-articulo-stock {
   color: var(--color-texto-principal);
   font-size: 1.35rem;
   font-weight: 700;
   margin: 0.8rem 0 0 0;
+  overflow-wrap: anywhere;
 }
 .dato-articulo-stock {
   color: var(--color-texto-secundario);
@@ -950,19 +974,27 @@ onUnmounted(() => {
 }
 .contador-stock {
   display: grid;
-  grid-template-columns: 52px 1fr 52px;
+  grid-template-columns: minmax(42px, 52px) minmax(0, 1fr) minmax(42px, 52px);
   gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
 }
 .contador-stock button,
 .contador-stock input,
 .input-ubicacion-stock {
+  box-sizing: border-box;
   min-height: 50px;
+  min-width: 0;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-superficie);
   color: var(--color-texto-principal);
   text-align: center;
   font-size: 1.1rem;
+}
+.contador-stock input {
+  width: 100%;
+  padding: 0 0.35rem;
 }
 .input-ubicacion-stock {
   width: 100%;
@@ -992,6 +1024,9 @@ onUnmounted(() => {
   border: 1px solid var(--color-borde);
   color: var(--color-texto-secundario);
 }
+.texto-accion-corto {
+  display: none;
+}
 .texto-informe {
   margin: 0.35rem 0;
   color: var(--color-texto-secundario);
@@ -1014,8 +1049,13 @@ onUnmounted(() => {
   .titulo-stock {
     font-size: 1.6rem;
   }
-  .acciones-tarjeta-stock {
-    grid-template-columns: 1fr;
+}
+@media (max-width: 420px) {
+  .texto-accion-completo {
+    display: none;
+  }
+  .texto-accion-corto {
+    display: inline;
   }
 }
 </style>

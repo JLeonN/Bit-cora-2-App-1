@@ -55,6 +55,13 @@ function normalizarRegistro(registro) {
     stockExcelAjustado: Boolean(registro?.stockExcelAjustado || cantidadExcel.ajustado),
     ubicacionActual: normalizarTexto(registro?.ubicacionActual),
     ubicacionOriginalExcel: normalizarTexto(registro?.ubicacionOriginalExcel),
+    ubicacionOrigen:
+      registro?.ubicacionOrigen === 'excel' ||
+      (!registro?.ubicacionOrigen &&
+        normalizarTexto(registro?.ubicacionActual) ===
+          normalizarTexto(registro?.ubicacionOriginalExcel))
+        ? 'excel'
+        : 'usuario',
     confirmado: Boolean(registro?.confirmado),
     fechaActualizacion: Number(registro?.fechaActualizacion || Date.now()),
   }

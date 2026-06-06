@@ -54,7 +54,8 @@
             </button>
           </div>
           <p v-if="codigoEditando !== registro.codigo">
-            Ubicación: <strong>{{ registro.ubicacionActual || 'Sin ubicación registrada' }}</strong>
+            {{ registro.ubicacionOrigen === 'excel' ? 'Ubicación del Excel' : 'Ubicación' }}:
+            <strong>{{ registro.ubicacionActual || 'Sin ubicación registrada' }}</strong>
           </p>
         </div>
 
@@ -211,10 +212,16 @@ function formatearUbicacion() {
 
 function guardarEdicion(registro) {
   formatearUbicacion()
+  const ubicacionOriginalExcel = String(registro.ubicacionOriginalExcel || '')
+    .trim()
+    .toUpperCase()
+  const conservaUbicacionExcel =
+    registro.ubicacionOrigen === 'excel' && ubicacionEdicion.value === ubicacionOriginalExcel
   emit('guardar-edicion', {
     ...registro,
     stockContado: cantidadValidaAnterior.value,
     ubicacionActual: ubicacionEdicion.value,
+    ubicacionOrigen: conservaUbicacionExcel || !ubicacionEdicion.value ? 'excel' : 'usuario',
   })
   cancelarEdicion()
 }
