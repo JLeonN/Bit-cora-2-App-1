@@ -10,6 +10,10 @@
         <div v-if="ultimaCaptura" class="overlay-miniatura">
           <img :src="ultimaCaptura" alt="Última captura" class="mini-captura" />
         </div>
+        <div class="guia-lectura-pedidos" aria-hidden="true">
+          <div class="guia-lectura-pedidos-etiqueta">Zona de lectura</div>
+          <div class="guia-lectura-pedidos-linea"></div>
+        </div>
       </div>
 
       <!-- Mensaje temporal -->
@@ -17,26 +21,38 @@
         {{ mensajeTemporal }}
       </div>
 
-      <!-- Lista de pedidos escaneados con inputs de items -->
+      <!-- Lista de pedidos escaneados -->
       <div v-if="pedidosEscaneados.length > 0" class="contenedor-lista-pedidos">
         <div class="lista-pedidos-escaneados">
           <div
-            v-for="(pedido, index) in pedidosEscaneados"
-            :key="index"
+            v-for="pedido in pedidosEscaneados"
+            :key="pedido.codigo"
             class="item-pedido-escaneado"
           >
             <span class="numero-pedido-escaneado">{{ pedido.codigo }}</span>
-            <input
-              type="number"
-              inputmode="numeric"
-              min="1"
-              v-model.number="pedido.items"
-              class="input-items-escaneado"
-              placeholder="Items"
-            />
-            <button class="boton-eliminar-escaneado" @click="eliminarPedidoEscaneado(index)">
-              <IconX :size="18" :stroke="2" />
-            </button>
+            <div class="acciones-pedido-escaneado">
+              <div class="control-cantidad-escaneada">
+                <button
+                  type="button"
+                  class="boton-cantidad-escaneada"
+                  :disabled="pedido.items <= 1"
+                  @click="decrementarItemsPedido(pedido.codigo)"
+                >
+                  <IconMinus :size="16" :stroke="2" />
+                </button>
+                <span class="cantidad-pedido-escaneado">{{ pedido.items }}</span>
+                <button
+                  type="button"
+                  class="boton-cantidad-escaneada"
+                  @click="incrementarItemsPedido(pedido.codigo)"
+                >
+                  <IconPlus :size="16" :stroke="2" />
+                </button>
+              </div>
+              <button class="boton-eliminar-escaneado" @click="eliminarPedidoEscaneado(pedido.codigo)">
+                <IconX :size="18" :stroke="2" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -67,7 +83,7 @@ import {
   DecodeHintType,
   NotFoundException,
 } from '@zxing/library'
-import { IconX } from '@tabler/icons-vue'
+import { IconMinus, IconPlus, IconX } from '@tabler/icons-vue'
 
 const emit = defineEmits(['cancelar', 'codigo-detectado', 'modal-abierto', 'modal-cerrado'])
 
@@ -92,7 +108,7 @@ const procesarCodigoDetectado = (codigo) => {
   if (pedidosEscaneados.value.some((p) => p.codigo === codigo)) {
     mostrarMensaje(`El pedido ${codigo} ya está en la lista`)
   } else {
-    pedidosEscaneados.value.push({
+    pedidosEscaneados.value.unshift({
       codigo: codigo,
       items: 1,
     })
@@ -103,10 +119,29 @@ const procesarCodigoDetectado = (codigo) => {
 }
 
 // Eliminar pedido escaneado de la lista
-const eliminarPedidoEscaneado = (index) => {
-  const pedidoEliminado = pedidosEscaneados.value[index]
-  pedidosEscaneados.value.splice(index, 1)
-  mostrarMensaje(`Eliminado: ${pedidoEliminado.codigo}`)
+const eliminarPedidoEscaneado = (codigo) => {
+  const pedidoEliminado = pedidosEscaneados.value.find((pedido) => pedido.codigo === codigo)
+  pedidosEscaneados.value = pedidosEscaneados.value.filter((pedido) => pedido.codigo !== codigo)
+  mostrarMensaje(`Eliminado: ${pedidoEliminado?.codigo || codigo}`)
+}
+
+const normalizarItems = (items) => {
+  const cantidad = Number(items)
+  return Number.isFinite(cantidad) && cantidad > 1 ? Math.floor(cantidad) : 1
+}
+
+const incrementarItemsPedido = (codigo) => {
+  const pedido = pedidosEscaneados.value.find((pedidoEscaneado) => pedidoEscaneado.codigo === codigo)
+  if (!pedido) return
+  pedido.items = normalizarItems(pedido.items) + 1
+}
+
+const decrementarItemsPedido = (codigo) => {
+  const pedido = pedidosEscaneados.value.find((pedidoEscaneado) => pedidoEscaneado.codigo === codigo)
+  if (!pedido) return
+  const cantidadActual = normalizarItems(pedido.items)
+  if (cantidadActual <= 1) return
+  pedido.items = cantidadActual - 1
 }
 
 // Iniciar cámara + escaneo
@@ -161,7 +196,7 @@ const emitirFinalizar = () => {
       'codigo-detectado',
       pedidosEscaneados.value.map((p) => ({
         numero: p.codigo,
-        items: p.items || 1,
+        items: normalizarItems(p.items),
       })),
     )
   } else {
