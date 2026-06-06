@@ -3,10 +3,20 @@
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": [
-    "Ahora podés cerrar la tarjeta de artículo seleccionado para seguir más rápido.",
-    "Se ordenó mejor la pantalla de Ubicaciones con paneles desplegables.",
-    "Los códigos se muestran completos en la lista, sin recortes con puntos.",
-    "El escaneo reconoce mejor códigos con prefijo P06 o texto extra al final.",
-    "El PDF de etiquetas ahora incluye fecha y hora en el nombre."
+    {
+      "apartado": "Pedidos",
+      "novedades": [
+        "El escaneo ahora muestra primero el código más reciente.",
+        "La cantidad se ajusta fácilmente con botones de menos y más.",
+        "Mejor visualización de códigos largos en pantallas pequeñas.",
+        "Nueva guía visual para facilitar el escaneo."
+      ]
+    },
+    {
+      "apartado": "Ubicaciones, Consulta de ubicaciones y Etiquetas",
+      "novedades": [
+        "Los resultados más relevantes aparecen primero."
+      ]
+    }
   ]
 }

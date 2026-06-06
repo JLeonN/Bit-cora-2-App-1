@@ -24,6 +24,7 @@ if (fs.existsSync(rutaVersionJson)) {
         versionExistente.urlPlayStore ||
         'https://play.google.com/store/apps/details?id=bitacora.v2',
       mostrarActualizacion: versionExistente.mostrarActualizacion ?? true,
+      cambios: Array.isArray(versionExistente.cambios) ? versionExistente.cambios : [],
     }
   } catch (error) {
     console.warn('No se pudo leer public/version.json existente, se regenerara desde cero.')

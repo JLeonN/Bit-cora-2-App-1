@@ -152,15 +152,29 @@
               <q-icon name="schedule" size="16px" />
               <span>La actualización puede demorar hasta 20 minutos en aparecer en Play Store.</span>
             </div>
-            <!-- Notas de parche del modal: cargar desde version.json en el campo cambios (array de strings). -->
-            <!-- La IA debe proponer texto corto y accionable, luego Leo decide qué líneas conservar. -->
+            <!-- Notas de parche: cargar desde version.json como grupos con apartado y novedades. -->
+            <!-- La IA debe agrupar las novedades con subtítulos según los apartados afectados de la app. -->
+            <!-- Si una mejora es compartida, nombrar todos los apartados afectados antes de describirla. -->
+            <!-- Usar texto corto y claro; Leo decide qué líneas conservar antes de publicar. -->
             <div v-if="cambiosActualizacion.length" class="seccion-cambios-actualizacion">
               <div class="titulo-cambios-actualizacion">Novedades de esta versión</div>
-              <ul class="lista-cambios-actualizacion">
-                <li v-for="(cambio, indice) in cambiosActualizacion" :key="`cambio-${indice}`">
-                  {{ cambio }}
-                </li>
-              </ul>
+              <div
+                v-for="(grupoCambios, indice) in cambiosActualizacion"
+                :key="`grupo-cambios-${indice}`"
+                class="grupo-cambios-actualizacion"
+              >
+                <div v-if="grupoCambios.apartado" class="subtitulo-cambios-actualizacion">
+                  {{ grupoCambios.apartado }}
+                </div>
+                <ul class="lista-cambios-actualizacion">
+                  <li
+                    v-for="(novedad, indiceNovedad) in grupoCambios.novedades"
+                    :key="`novedad-${indice}-${indiceNovedad}`"
+                  >
+                    {{ novedad }}
+                  </li>
+                </ul>
+              </div>
             </div>
           </q-card-section>
           <q-card-actions align="right">
@@ -524,8 +538,16 @@ const manejarAccionPersonalizada = (accion) => {
   font-weight: 600;
   color: var(--color-texto-principal);
 }
+.grupo-cambios-actualizacion {
+  margin-top: 8px;
+}
+.subtitulo-cambios-actualizacion {
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+}
 .lista-cambios-actualizacion {
-  margin: 8px 0 0 0;
+  margin: 4px 0 0 0;
   padding-left: 18px;
   color: var(--color-texto-secundario);
 }

@@ -45,7 +45,17 @@ const normalizarCambios = (cambios) => {
     return []
   }
   return cambios
-    .map((item) => `${item || ''}`.trim())
+    .map((grupo) => {
+      if (typeof grupo === 'string') {
+        const novedad = grupo.trim()
+        return novedad ? { apartado: '', novedades: [novedad] } : null
+      }
+      const apartado = `${grupo?.apartado || ''}`.trim()
+      const novedades = Array.isArray(grupo?.novedades)
+        ? grupo.novedades.map((novedad) => `${novedad || ''}`.trim()).filter(Boolean)
+        : []
+      return apartado && novedades.length ? { apartado, novedades } : null
+    })
     .filter(Boolean)
 }
 
