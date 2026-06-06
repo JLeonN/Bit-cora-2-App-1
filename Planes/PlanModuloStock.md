@@ -67,14 +67,14 @@ Cada lista de Stock representa una sesión de conteo ligada al archivo Excel des
 
 Incorporar Stock como un módulo principal de la aplicación respetando el orden y diseño actuales.
 
-- [ ] Crear la página principal de Stock siguiendo la estructura existente del proyecto.
-- [ ] Usar `PaginaStock.vue` como página y `src/components/Logica/Stock/` para componentes y servicios específicos.
-- [ ] Agregar la ruta de Stock entre Consulta de ubicación y Etiquetas.
-- [ ] Agregar la tarjeta de Stock en el inicio entre Consulta de ubicación y Etiquetas.
-- [ ] Agregar Stock al drawer en el mismo orden.
-- [ ] Elegir un icono de Tabler consistente con inventario o cajas.
-- [ ] Integrar la configuración de la barra inferior y el botón Atrás nativo.
-- [ ] Mantener el diseño responsive y las transiciones existentes.
+- [x] Crear la página principal de Stock siguiendo la estructura existente del proyecto.
+- [x] Usar `PaginaStock.vue` como página y `src/components/Logica/Stock/` para componentes y servicios específicos.
+- [x] Agregar la ruta de Stock entre Consulta de ubicación y Etiquetas.
+- [x] Agregar la tarjeta de Stock en el inicio entre Consulta de ubicación y Etiquetas.
+- [x] Agregar Stock al drawer en el mismo orden.
+- [x] Elegir un icono de Tabler consistente con inventario o cajas.
+- [x] Integrar la configuración de la barra inferior y el botón Atrás nativo.
+- [x] Mantener el diseño responsive y las transiciones existentes.
 
 ## FASE 2: Crear el almacenamiento independiente de Stock
 
@@ -82,24 +82,24 @@ Incorporar Stock como un módulo principal de la aplicación respetando el orden
 
 Persistir los conteos sin alterar la tabla de Ubicaciones ni los datos originales del Excel.
 
-- [ ] Crear `UsoAlmacenamientoStock.js` usando `@capacitor/preferences`.
-- [ ] Definir una clave exclusiva para los registros de Stock.
-- [ ] Guardar un único registro por código.
-- [ ] Guardar una estructura versionada con metadatos de sesión y un array de registros.
-- [ ] Definir los metadatos `version`, `fuenteExcel` y `fechaInicio`.
-- [ ] Definir como mínimo los campos `codigo`, `nombre`, `stockExcel`, `stockContado`, `ubicacionActual`, `ubicacionOriginalExcel`, `confirmado` y `fechaActualizacion`.
-- [ ] Normalizar códigos, cantidades y ubicaciones antes de persistir.
-- [ ] Convertir stock vacío, inválido o negativo a `0` sin producir `NaN`.
-- [ ] Truncar hacia cero los decimales provenientes del Excel y alertar al usuario.
-- [ ] Rechazar decimales ingresados manualmente y conservar el último valor válido.
-- [ ] Implementar funciones para obtener la sesión, guardar o actualizar por código y eliminar registros.
-- [ ] Hacer que las funciones de escritura devuelvan un resultado verificable o lancen un error; no ocultar fallos de persistencia.
-- [ ] Implementar una función para eliminar toda la sesión; la confirmación visual queda a cargo de la página.
-- [ ] Reemplazar el registro anterior cuando se confirme nuevamente el mismo código.
-- [ ] Mantener compatibilidad ante datos incompletos o versiones anteriores del almacenamiento.
-- [ ] Detectar si el Excel cargado coincide con `fuenteExcel`.
-- [ ] Bloquear operaciones que mezclarían fuentes distintas y mostrar opciones claras para resolverlo.
-- [ ] No borrar automáticamente una sesión por cargar o limpiar la base Excel.
+- [x] Crear `UsoAlmacenamientoStock.js` usando `@capacitor/preferences`.
+- [x] Definir una clave exclusiva para los registros de Stock.
+- [x] Guardar un único registro por código.
+- [x] Guardar una estructura versionada con metadatos de sesión y un array de registros.
+- [x] Definir los metadatos `version`, `fuenteExcel` y `fechaInicio`.
+- [x] Definir como mínimo los campos `codigo`, `nombre`, `stockExcel`, `stockContado`, `ubicacionActual`, `ubicacionOriginalExcel`, `confirmado` y `fechaActualizacion`.
+- [x] Normalizar códigos, cantidades y ubicaciones antes de persistir.
+- [x] Convertir stock vacío, inválido o negativo a `0` sin producir `NaN`.
+- [x] Truncar hacia cero los decimales provenientes del Excel y alertar al usuario.
+- [x] Rechazar decimales ingresados manualmente y conservar el último valor válido.
+- [x] Implementar funciones para obtener la sesión, guardar o actualizar por código y eliminar registros.
+- [x] Hacer que las funciones de escritura devuelvan un resultado verificable o lancen un error; no ocultar fallos de persistencia.
+- [x] Implementar una función para eliminar toda la sesión; la confirmación visual queda a cargo de la página.
+- [x] Reemplazar el registro anterior cuando se confirme nuevamente el mismo código.
+- [x] Mantener compatibilidad ante datos incompletos o versiones anteriores del almacenamiento.
+- [x] Detectar si el Excel cargado coincide con `fuenteExcel`.
+- [x] Bloquear operaciones que mezclarían fuentes distintas y mostrar opciones claras para resolverlo.
+- [x] No borrar automáticamente una sesión por cargar o limpiar la base Excel.
 
 ## FASE 3: Construir la búsqueda y selección del artículo
 
@@ -107,16 +107,16 @@ Persistir los conteos sin alterar la tabla de Ubicaciones ni los datos originale
 
 Ofrecer un flujo de búsqueda rápido y consistente con Ubicaciones.
 
-- [ ] Reutilizar `SelectorExcel.vue` cuando no exista una base cargada.
-- [ ] Reutilizar `CodigoMasNombre.vue` para buscar por código o descripción.
-- [ ] Reutilizar la normalización del input, el doble espacio, el resaltado y el botón para copiar texto.
-- [ ] Autoseleccionar el artículo cuando la búsqueda tenga una sola coincidencia, incluyendo búsquedas normales y escaneadas.
-- [ ] Ajustar el contrato reutilizable de `CodigoMasNombre.vue` si es necesario, sin cambiar el comportamiento actual de Ubicaciones y Consulta de ubicación.
-- [ ] Extraer lógica compartida únicamente cuando elimine duplicación real y pueda verificarse en los módulos existentes.
-- [ ] Mostrar la mini tarjeta al seleccionar un artículo.
-- [ ] Agregar una cruz para cancelar, limpiar la selección y volver a enfocar el buscador.
-- [ ] Permitir iniciar inmediatamente otra búsqueda después de confirmar o cancelar.
-- [ ] Reutilizar el sistema de cámara y escaneo si encaja sin duplicar lógica.
+- [x] Reutilizar `SelectorExcel.vue` cuando no exista una base cargada.
+- [x] Reutilizar `CodigoMasNombre.vue` para buscar por código o descripción.
+- [x] Reutilizar la normalización del input, el doble espacio, el resaltado y el botón para copiar texto.
+- [x] Autoseleccionar el artículo cuando la búsqueda tenga una sola coincidencia, incluyendo búsquedas normales y escaneadas.
+- [x] Ajustar el contrato reutilizable de `CodigoMasNombre.vue` si es necesario, sin cambiar el comportamiento actual de Ubicaciones y Consulta de ubicación.
+- [x] Extraer lógica compartida únicamente cuando elimine duplicación real y pueda verificarse en los módulos existentes.
+- [x] Mostrar la mini tarjeta al seleccionar un artículo.
+- [x] Agregar una cruz para cancelar, limpiar la selección y volver a enfocar el buscador.
+- [x] Permitir iniciar inmediatamente otra búsqueda después de confirmar o cancelar.
+- [x] Reutilizar el sistema de cámara y escaneo si encaja sin duplicar lógica.
 
 ## FASE 4: Diseñar la mini tarjeta y el contador
 
@@ -124,28 +124,28 @@ Ofrecer un flujo de búsqueda rápido y consistente con Ubicaciones.
 
 Mostrar la información necesaria y permitir ajustar el conteo con rapidez.
 
-- [ ] Mostrar el encabezado `Artículo seleccionado` y la cruz de cierre.
-- [ ] Mostrar nombre y código del artículo.
-- [ ] Mostrar el stock original del Excel en la mini tarjeta.
-- [ ] Mostrar únicamente la última ubicación registrada por el usuario, si existe.
-- [ ] Mostrar la ubicación original del Excel.
-- [ ] Aplicar borde y texto neón cuando la ubicación original sea `SL`.
-- [ ] Agregar un input numérico con botones `−` y `+`.
-- [ ] Evitar valores negativos mediante controles y validación.
-- [ ] Usar teclado numérico móvil y seleccionar el contenido al enfocar para facilitar reemplazos.
-- [ ] Iniciar un artículo nuevo con el stock original del Excel.
-- [ ] Iniciar un artículo ya registrado con el último total contado.
-- [ ] Mostrar `Este artículo ya fue contado. Puedes actualizar la cantidad.` cuando exista un registro previo.
-- [ ] Indicar la ubicación asociada al conteo anterior para ayudar a detectar artículos encontrados en más de un estante.
-- [ ] Permitir sumar unidades encontradas posteriormente usando el total guardado como punto de partida.
-- [ ] Mantener visible el total acumulado; los botones `−` y `+` modifican ese total y no una cantidad separada.
-- [ ] Agregar el botón verde `Confirmar conteo`.
-- [ ] Agregar el botón `Cancelar conteo`.
-- [ ] Hacer que confirmar, cancelar o cerrar la tarjeta devuelva el foco al buscador.
-- [ ] Marcar el registro como confirmado aunque la cantidad coincida con el stock Excel.
-- [ ] Si el artículo ya estaba pendiente, confirmar el mismo registro sin crear duplicados.
-- [ ] Si el artículo ya estaba confirmado, guardar los cambios sobre el mismo registro y actualizar `fechaActualizacion`.
-- [ ] Si falla el guardado, conservar la tarjeta y el valor ingresado para permitir reintentar.
+- [x] Mostrar el encabezado `Artículo seleccionado` y la cruz de cierre.
+- [x] Mostrar nombre y código del artículo.
+- [x] Mostrar el stock original del Excel en la mini tarjeta.
+- [x] Mostrar únicamente la última ubicación registrada por el usuario, si existe.
+- [x] Mostrar la ubicación original del Excel.
+- [x] Aplicar borde y texto neón cuando la ubicación original sea `SL`.
+- [x] Agregar un input numérico con botones `−` y `+`.
+- [x] Evitar valores negativos mediante controles y validación.
+- [x] Usar teclado numérico móvil y seleccionar el contenido al enfocar para facilitar reemplazos.
+- [x] Iniciar un artículo nuevo con el stock original del Excel.
+- [x] Iniciar un artículo ya registrado con el último total contado.
+- [x] Mostrar `Este artículo ya fue contado. Puedes actualizar la cantidad.` cuando exista un registro previo.
+- [x] Indicar la ubicación asociada al conteo anterior para ayudar a detectar artículos encontrados en más de un estante.
+- [x] Permitir sumar unidades encontradas posteriormente usando el total guardado como punto de partida.
+- [x] Mantener visible el total acumulado; los botones `−` y `+` modifican ese total y no una cantidad separada.
+- [x] Agregar el botón verde `Confirmar conteo`.
+- [x] Agregar el botón `Cancelar conteo`.
+- [x] Hacer que confirmar, cancelar o cerrar la tarjeta devuelva el foco al buscador.
+- [x] Marcar el registro como confirmado aunque la cantidad coincida con el stock Excel.
+- [x] Si el artículo ya estaba pendiente, confirmar el mismo registro sin crear duplicados.
+- [x] Si el artículo ya estaba confirmado, guardar los cambios sobre el mismo registro y actualizar `fechaActualizacion`.
+- [x] Si falla el guardado, conservar la tarjeta y el valor ingresado para permitir reintentar.
 
 ## FASE 5: Importar artículos desde Ubicaciones
 
@@ -153,22 +153,22 @@ Mostrar la información necesaria y permitir ajustar el conteo con rapidez.
 
 Preparar conteos a partir de los artículos que el usuario ya tiene en la tabla de trabajo de Ubicaciones.
 
-- [ ] Agregar debajo del título un desplegable cerrado por defecto.
-- [ ] Reutilizar `TarjetaSeccion.vue` para el desplegable.
-- [ ] Incluir la acción `Importar artículos desde Ubicaciones`.
-- [ ] Leer únicamente los artículos existentes en la tabla de trabajo de Ubicaciones.
-- [ ] Crear un solo registro por código aunque el código aparezca repetido en Ubicaciones.
-- [ ] Resolver duplicados conservando la primera aparición del código en la lista actual de Ubicaciones.
-- [ ] Inicializar cada registro importado con el stock original del Excel.
-- [ ] Usar la última ubicación registrada disponible.
-- [ ] Marcar todos los registros importados como pendientes de confirmar.
-- [ ] Mostrar el subtítulo `Pendiente de confirmar` en la tabla.
-- [ ] Quitar el subtítulo y mostrar un check cuando el usuario confirme el conteo.
-- [ ] Permitir artículos inexistentes con stock Excel `0` y su alerta correspondiente.
-- [ ] Conservar sin cambios todos los registros confirmados.
-- [ ] Actualizar registros pendientes ya importados sin duplicarlos y mantenerlos pendientes.
-- [ ] Mostrar al terminar un resumen con cantidades importadas, actualizadas, omitidas por estar confirmadas e inexistentes.
-- [ ] No iniciar la importación si la sesión pertenece a otro Excel.
+- [x] Agregar debajo del título un desplegable cerrado por defecto.
+- [x] Reutilizar `TarjetaSeccion.vue` para el desplegable.
+- [x] Incluir la acción `Importar artículos desde Ubicaciones`.
+- [x] Leer únicamente los artículos existentes en la tabla de trabajo de Ubicaciones.
+- [x] Crear un solo registro por código aunque el código aparezca repetido en Ubicaciones.
+- [x] Resolver duplicados conservando la primera aparición del código en la lista actual de Ubicaciones.
+- [x] Inicializar cada registro importado con el stock original del Excel.
+- [x] Usar la última ubicación registrada disponible.
+- [x] Marcar todos los registros importados como pendientes de confirmar.
+- [x] Mostrar el subtítulo `Pendiente de confirmar` en la tabla.
+- [x] Quitar el subtítulo y mostrar un check cuando el usuario confirme el conteo.
+- [x] Permitir artículos inexistentes con stock Excel `0` y su alerta correspondiente.
+- [x] Conservar sin cambios todos los registros confirmados.
+- [x] Actualizar registros pendientes ya importados sin duplicarlos y mantenerlos pendientes.
+- [x] Mostrar al terminar un resumen con cantidades importadas, actualizadas, omitidas por estar confirmadas e inexistentes.
+- [x] No iniciar la importación si la sesión pertenece a otro Excel.
 
 ## FASE 6: Crear la tabla de Stock y la edición en línea
 
@@ -176,28 +176,28 @@ Preparar conteos a partir de los artículos que el usuario ya tiene en la tabla 
 
 Mostrar todos los registros y permitir corregirlos sin abandonar la tabla.
 
-- [ ] Reutilizar la estructura visual y responsive de las tablas existentes.
-- [ ] Mostrar el nombre con mayor jerarquía visual.
-- [ ] Mostrar el código en tamaño normal.
-- [ ] Mostrar el stock original del Excel en cada fila.
-- [ ] Mostrar el stock contado con la misma jerarquía visual que el nombre.
-- [ ] Mostrar el estado pendiente o confirmado.
-- [ ] Agregar una acción visible para confirmar una fila pendiente sin abrir nuevamente la mini tarjeta.
-- [ ] Permitir editar en línea el stock contado al tocarlo.
-- [ ] Mostrar botones `−` y `+` durante la edición en línea.
-- [ ] Permitir editar en línea la ubicación antes o después de confirmar el conteo.
-- [ ] Mantener pendiente un registro pendiente después de editarlo hasta que el usuario lo confirme explícitamente.
-- [ ] Mantener confirmado un registro confirmado después de editarlo.
-- [ ] Guardar las ediciones solo con cantidades enteras válidas y nunca menores que `0`.
-- [ ] Permitir cancelar la edición en línea y restaurar el valor persistido.
-- [ ] Evitar que más de una fila quede en edición simultáneamente.
-- [ ] Agregar una acción individual para enviar el artículo a Etiquetas.
-- [ ] Enviar a Etiquetas código, descripción, ubicación y cantidad fija `1`.
-- [ ] Agregar un icono de papelera para eliminar el registro.
-- [ ] Reutilizar `ModalEliminar.vue` para confirmar eliminaciones.
-- [ ] Agregar una acción para eliminar todos los registros reutilizando el patrón existente.
-- [ ] Devolver el foco al buscador después de confirmar, cancelar o eliminar una fila.
-- [ ] Mostrar un estado vacío claro cuando todavía no existan registros de Stock.
+- [x] Reutilizar la estructura visual y responsive de las tablas existentes.
+- [x] Mostrar el nombre con mayor jerarquía visual.
+- [x] Mostrar el código en tamaño normal.
+- [x] Mostrar el stock original del Excel en cada fila.
+- [x] Mostrar el stock contado con la misma jerarquía visual que el nombre.
+- [x] Mostrar el estado pendiente o confirmado.
+- [x] Agregar una acción visible para confirmar una fila pendiente sin abrir nuevamente la mini tarjeta.
+- [x] Permitir editar en línea el stock contado al tocarlo.
+- [x] Mostrar botones `−` y `+` durante la edición en línea.
+- [x] Permitir editar en línea la ubicación antes o después de confirmar el conteo.
+- [x] Mantener pendiente un registro pendiente después de editarlo hasta que el usuario lo confirme explícitamente.
+- [x] Mantener confirmado un registro confirmado después de editarlo.
+- [x] Guardar las ediciones solo con cantidades enteras válidas y nunca menores que `0`.
+- [x] Permitir cancelar la edición en línea y restaurar el valor persistido.
+- [x] Evitar que más de una fila quede en edición simultáneamente.
+- [x] Agregar una acción individual para enviar el artículo a Etiquetas.
+- [x] Enviar a Etiquetas código, descripción, ubicación y cantidad fija `1`.
+- [x] Agregar un icono de papelera para eliminar el registro.
+- [x] Reutilizar `ModalEliminar.vue` para confirmar eliminaciones.
+- [x] Agregar una acción para eliminar todos los registros reutilizando el patrón existente.
+- [x] Devolver el foco al buscador después de confirmar, cancelar o eliminar una fila.
+- [x] Mostrar un estado vacío claro cuando todavía no existan registros de Stock.
 
 ## FASE 7: Integrar cambios de ubicación con Ubicaciones
 
@@ -205,21 +205,21 @@ Mostrar todos los registros y permitir corregirlos sin abandonar la tabla.
 
 Permitir corregir la ubicación desde Stock y sincronizar el cambio con el flujo actual.
 
-- [ ] Reutilizar el formato, normalización y validaciones del editor de ubicación existente.
-- [ ] Permitir cambiar la ubicación desde la mini tarjeta.
-- [ ] Permitir cambiar la ubicación mediante edición en línea en la tabla.
-- [ ] Actualizar el historial del artículo usando `actualizarUbicacionArticulo`.
-- [ ] Mantener intacta la ubicación original del Excel.
-- [ ] Agregar la ubicación nueva a la tabla de trabajo de Ubicaciones.
-- [ ] Actualizar inmediatamente la ubicación visible en Stock.
-- [ ] Guardar la ubicación nueva como última ubicación asociada al conteo.
-- [ ] Mostrar una notificación clara indicando que la ubicación fue enviada a Ubicaciones.
-- [ ] Respetar las reglas actuales de duplicados de la tabla de Ubicaciones.
-- [ ] Crear o reutilizar una operación compartida que coordine historial Excel y tabla de Ubicaciones.
-- [ ] No marcar la ubicación como guardada en Stock hasta completar ambas persistencias.
-- [ ] Si una de las dos escrituras falla, restaurar el estado anterior cuando sea posible y mostrar un error específico.
-- [ ] Mantener el comportamiento actual de Consulta de ubicación: agregar el movimiento al inicio de Ubicaciones sin reemplazar filas anteriores.
-- [ ] No reconstruir ni ocultar conflictos cuando la nueva fila produce un código duplicado en Ubicaciones.
+- [x] Reutilizar el formato, normalización y validaciones del editor de ubicación existente.
+- [x] Permitir cambiar la ubicación desde la mini tarjeta.
+- [x] Permitir cambiar la ubicación mediante edición en línea en la tabla.
+- [x] Actualizar el historial del artículo usando `actualizarUbicacionArticulo`.
+- [x] Mantener intacta la ubicación original del Excel.
+- [x] Agregar la ubicación nueva a la tabla de trabajo de Ubicaciones.
+- [x] Actualizar inmediatamente la ubicación visible en Stock.
+- [x] Guardar la ubicación nueva como última ubicación asociada al conteo.
+- [x] Mostrar una notificación clara indicando que la ubicación fue enviada a Ubicaciones.
+- [x] Respetar las reglas actuales de duplicados de la tabla de Ubicaciones.
+- [x] Crear o reutilizar una operación compartida que coordine historial Excel y tabla de Ubicaciones.
+- [x] No marcar la ubicación como guardada en Stock hasta completar ambas persistencias.
+- [x] Si una de las dos escrituras falla, restaurar el estado anterior cuando sea posible y mostrar un error específico.
+- [x] Mantener el comportamiento actual de Consulta de ubicación: agregar el movimiento al inicio de Ubicaciones sin reemplazar filas anteriores.
+- [x] No reconstruir ni ocultar conflictos cuando la nueva fila produce un código duplicado en Ubicaciones.
 
 ## FASE 8: Integrar Stock con Etiquetas
 
@@ -227,18 +227,18 @@ Permitir corregir la ubicación desde Stock y sincronizar el cambio con el flujo
 
 Enviar artículos de Stock al módulo de Etiquetas usando el contrato existente.
 
-- [ ] Reutilizar el mecanismo actual de envío desde Ubicaciones hacia Etiquetas.
-- [ ] Agregar envío individual desde cada fila.
-- [ ] Permitir envío individual tanto para artículos pendientes como confirmados.
-- [ ] Agregar una acción general para enviar todos los artículos válidos de Stock.
-- [ ] Usar siempre cantidad de etiquetas `1`.
-- [ ] Enviar código, descripción y última ubicación disponible.
-- [ ] Mantener el contrato actual de Etiquetas: `id`, `codigo`, `descripcion`, `ubicacion`, `cantidad: 1` y `tamano: '10x15cm'`.
-- [ ] Generar identificadores únicos también durante envíos masivos.
-- [ ] Bloquear el envío individual de artículos inexistentes.
-- [ ] Omitir artículos inexistentes en el envío masivo e informar la cantidad excluida.
-- [ ] Mostrar notificaciones y animaciones consistentes con Ubicaciones.
-- [ ] Evitar duplicar la lógica de construcción y persistencia de etiquetas.
+- [x] Reutilizar el mecanismo actual de envío desde Ubicaciones hacia Etiquetas.
+- [x] Agregar envío individual desde cada fila.
+- [x] Permitir envío individual tanto para artículos pendientes como confirmados.
+- [x] Agregar una acción general para enviar todos los artículos válidos de Stock.
+- [x] Usar siempre cantidad de etiquetas `1`.
+- [x] Enviar código, descripción y última ubicación disponible.
+- [x] Mantener el contrato actual de Etiquetas: `id`, `codigo`, `descripcion`, `ubicacion`, `cantidad: 1` y `tamano: '10x15cm'`.
+- [x] Generar identificadores únicos también durante envíos masivos.
+- [x] Bloquear el envío individual de artículos inexistentes.
+- [x] Omitir artículos inexistentes en el envío masivo e informar la cantidad excluida.
+- [x] Mostrar notificaciones y animaciones consistentes con Ubicaciones.
+- [x] Evitar duplicar la lógica de construcción y persistencia de etiquetas.
 
 ## FASE 9: Agregar Información e informes
 
@@ -246,23 +246,23 @@ Enviar artículos de Stock al módulo de Etiquetas usando el contrato existente.
 
 Mostrar un resumen compacto del estado del conteo y abrirlo automáticamente cuando exista una alerta.
 
-- [ ] Agregar una sección desplegable `Información`.
-- [ ] Reutilizar `TarjetaSeccion.vue` y el diseño del informe de Ubicaciones.
-- [ ] Mantener la sección cerrada por defecto.
-- [ ] Mostrar artículos totales.
-- [ ] Mostrar conteos confirmados.
-- [ ] Mostrar artículos pendientes de confirmar.
-- [ ] Mostrar artículos con diferencias respecto al stock Excel.
-- [ ] Mostrar artículos cuya ubicación original sea `SL`.
-- [ ] Mostrar artículos inexistentes.
-- [ ] Mostrar el total de unidades del Excel.
-- [ ] Mostrar el total de unidades contadas confirmadas.
-- [ ] Mostrar la diferencia total de unidades.
-- [ ] Calcular diferencias y totales de unidades únicamente sobre registros confirmados.
-- [ ] Contar pendientes, artículos `SL` e inexistentes sobre todos los registros.
-- [ ] Mostrar explícitamente la fórmula de diferencia como `Contado - Excel`.
-- [ ] Abrir automáticamente la sección ante artículos pendientes, diferencias, ubicación `SL` o artículos inexistentes.
-- [ ] Mantener textos breves y comprensibles para el usuario.
+- [x] Agregar una sección desplegable `Información`.
+- [x] Reutilizar `TarjetaSeccion.vue` y el diseño del informe de Ubicaciones.
+- [x] Mantener la sección cerrada por defecto.
+- [x] Mostrar artículos totales.
+- [x] Mostrar conteos confirmados.
+- [x] Mostrar artículos pendientes de confirmar.
+- [x] Mostrar artículos con diferencias respecto al stock Excel.
+- [x] Mostrar artículos cuya ubicación original sea `SL`.
+- [x] Mostrar artículos inexistentes.
+- [x] Mostrar el total de unidades del Excel.
+- [x] Mostrar el total de unidades contadas confirmadas.
+- [x] Mostrar la diferencia total de unidades.
+- [x] Calcular diferencias y totales de unidades únicamente sobre registros confirmados.
+- [x] Contar pendientes, artículos `SL` e inexistentes sobre todos los registros.
+- [x] Mostrar explícitamente la fórmula de diferencia como `Contado - Excel`.
+- [x] Abrir automáticamente la sección ante artículos pendientes, diferencias, ubicación `SL` o artículos inexistentes.
+- [x] Mantener textos breves y comprensibles para el usuario.
 
 ## FASE 10: Generar y enviar el Excel de Stock
 
@@ -270,28 +270,28 @@ Mostrar un resumen compacto del estado del conteo y abrirlo automáticamente cua
 
 Exportar únicamente los conteos confirmados con el formato requerido.
 
-- [ ] Crear un generador de Excel específico para Stock reutilizando la estructura de `ExportarUbicacionesExcel.js`.
-- [ ] Usar `ExportarStockExcel.js` y reutilizar helpers existentes de plataforma, escritura y compartir cuando sea posible.
-- [ ] Colocar en la columna A el código.
-- [ ] Colocar en la columna B la descripción.
-- [ ] Colocar en la columna C el stock original del Excel.
-- [ ] Colocar en la columna D el stock contado por el usuario.
-- [ ] Colocar en la columna E la última ubicación registrada por el usuario.
-- [ ] Colocar en la columna F `✔️` o `❌`.
-- [ ] Usar `❌` cuando el artículo sea inexistente o su ubicación original del Excel sea `SL`.
-- [ ] Usar `✔️` en los demás casos.
-- [ ] Excluir todos los registros pendientes de confirmar.
-- [ ] Exportar la última ubicación aplicando el contrato de prioridad definido en este plan.
-- [ ] Usar anchos explícitos: A `18`, B `65`, C `14`, D `14`, E `14` y F `7`.
-- [ ] Guardar stock Excel y stock contado como celdas numéricas.
-- [ ] Definir encabezados exactos: `Código`, `Descripción`, `Stock Excel`, `Stock contado`, `Última ubicación` e `Info`.
-- [ ] Reutilizar el guardado con `Filesystem`, la descarga web y el menú nativo para compartir.
-- [ ] Configurar el nombre `Stock [Nombre de usuario] AAAA-MM-DD # HH-MM.xlsx`.
-- [ ] Mostrar el botón de enviar en móvil cuando existan registros confirmados.
-- [ ] Mostrar en navegador un botón personalizado de descarga en lugar del botón nativo de enviar.
-- [ ] Informar claramente cuando no existan registros confirmados para exportar.
-- [ ] Bloquear la exportación si la fuente Excel activa no coincide con la sesión.
-- [ ] Ordenar las filas exportadas igual que la tabla visible.
+- [x] Crear un generador de Excel específico para Stock reutilizando la estructura de `ExportarUbicacionesExcel.js`.
+- [x] Usar `ExportarStockExcel.js` y reutilizar helpers existentes de plataforma, escritura y compartir cuando sea posible.
+- [x] Colocar en la columna A el código.
+- [x] Colocar en la columna B la descripción.
+- [x] Colocar en la columna C el stock original del Excel.
+- [x] Colocar en la columna D el stock contado por el usuario.
+- [x] Colocar en la columna E la última ubicación registrada por el usuario.
+- [x] Colocar en la columna F `✔️` o `❌`.
+- [x] Usar `❌` cuando el artículo sea inexistente o su ubicación original del Excel sea `SL`.
+- [x] Usar `✔️` en los demás casos.
+- [x] Excluir todos los registros pendientes de confirmar.
+- [x] Exportar la última ubicación aplicando el contrato de prioridad definido en este plan.
+- [x] Usar anchos explícitos: A `18`, B `65`, C `14`, D `14`, E `14` y F `7`.
+- [x] Guardar stock Excel y stock contado como celdas numéricas.
+- [x] Definir encabezados exactos: `Código`, `Descripción`, `Stock Excel`, `Stock contado`, `Última ubicación` e `Info`.
+- [x] Reutilizar el guardado con `Filesystem`, la descarga web y el menú nativo para compartir.
+- [x] Configurar el nombre `Stock [Nombre de usuario] AAAA-MM-DD # HH-MM.xlsx`.
+- [x] Mostrar el botón de enviar en móvil cuando existan registros confirmados.
+- [x] Mostrar en navegador un botón personalizado de descarga en lugar del botón nativo de enviar.
+- [x] Informar claramente cuando no existan registros confirmados para exportar.
+- [x] Bloquear la exportación si la fuente Excel activa no coincide con la sesión.
+- [x] Ordenar las filas exportadas igual que la tabla visible.
 
 ## FASE 11: Crear tutorial y documentación técnica
 
@@ -299,19 +299,19 @@ Exportar únicamente los conteos confirmados con el formato requerido.
 
 Documentar el uso para el usuario y la arquitectura para futuras tareas de mantenimiento.
 
-- [ ] Crear un tutorial de Stock dentro de Configuración.
-- [ ] Explicar búsqueda, selección automática, conteo, pendientes, edición, Ubicaciones, Etiquetas, informes y Excel.
-- [ ] Integrar el tutorial en la sección actual de tutoriales.
-- [ ] Crear `Planes/Resumenes/Resumen7Stock.md`.
-- [ ] Documentar componentes, persistencia, estructura de registros e integraciones.
-- [ ] Documentar la sesión de conteo y su vínculo con el Excel de origen.
-- [ ] Documentar el significado de pendiente y confirmado.
-- [ ] Documentar cómo se calcula la última ubicación.
-- [ ] Documentar las fórmulas de informes y la política de importación y reimportación.
-- [ ] Documentar las reglas de `SL`, artículos inexistentes y columna Info del Excel.
-- [ ] Documentar qué lógica fue reutilizada y dónde se encuentran los contratos compartidos.
-- [ ] Actualizar el resumen general para incluir Stock como módulo principal.
-- [ ] Revisar que toda la documentación quede en UTF-8 y español natural.
+- [x] Crear un tutorial de Stock dentro de Configuración.
+- [x] Explicar búsqueda, selección automática, conteo, pendientes, edición, Ubicaciones, Etiquetas, informes y Excel.
+- [x] Integrar el tutorial en la sección actual de tutoriales.
+- [x] Crear `Planes/Resumenes/Resumen7Stock.md`.
+- [x] Documentar componentes, persistencia, estructura de registros e integraciones.
+- [x] Documentar la sesión de conteo y su vínculo con el Excel de origen.
+- [x] Documentar el significado de pendiente y confirmado.
+- [x] Documentar cómo se calcula la última ubicación.
+- [x] Documentar las fórmulas de informes y la política de importación y reimportación.
+- [x] Documentar las reglas de `SL`, artículos inexistentes y columna Info del Excel.
+- [x] Documentar qué lógica fue reutilizada y dónde se encuentran los contratos compartidos.
+- [x] Actualizar el resumen general para incluir Stock como módulo principal.
+- [x] Revisar que toda la documentación quede en UTF-8 y español natural.
 
 ## FASE TESTING
 
@@ -319,66 +319,66 @@ Documentar el uso para el usuario y la arquitectura para futuras tareas de mante
 
 Validar de forma ejecutable por IA y revisable por humano el flujo completo de Stock.
 
-- [ ] Verificar que Stock aparece entre Consulta de ubicación y Etiquetas en inicio y drawer.
-- [ ] Entrar sin base Excel y comprobar que aparece el selector existente.
+- [x] Verificar que Stock aparece entre Consulta de ubicación y Etiquetas en inicio y drawer.
+- [x] Entrar sin base Excel y comprobar que aparece el selector existente.
 - [ ] Buscar por código y por nombre y comprobar la selección correcta.
-- [ ] Confirmar que una única coincidencia se selecciona automáticamente.
+- [x] Confirmar que una única coincidencia se selecciona automáticamente.
 - [ ] Comprobar el botón de copiar y el escaneo.
 - [ ] Cerrar o cancelar la tarjeta y verificar que el buscador recupera el foco.
-- [ ] Seleccionar un artículo nuevo y comprobar que inicia con el stock Excel.
+- [x] Seleccionar un artículo nuevo y comprobar que inicia con el stock Excel.
 - [ ] Probar stock Excel vacío, texto, decimal y negativo y verificar su normalización.
 - [ ] Ingresar manualmente un decimal y comprobar que se rechaza sin perder el último valor válido.
 - [ ] Ajustar el contador con `−` y `+` y verificar que nunca baja de `0`.
 - [ ] Confirmar una cantidad igual al stock Excel y comprobar que queda confirmada.
 - [ ] Buscar nuevamente el mismo artículo y comprobar el aviso, total y ubicación anteriores.
 - [ ] Sumar unidades encontradas en otra ubicación y verificar que se reemplaza el total guardado.
-- [ ] Importar artículos desde Ubicaciones y comprobar que quedan pendientes.
+- [x] Importar artículos desde Ubicaciones y comprobar que quedan pendientes.
 - [ ] Importar códigos repetidos y verificar que se conserva la aparición más reciente sin duplicar Stock.
 - [ ] Reimportar y verificar que los confirmados se conservan y los pendientes se actualizan.
 - [ ] Confirmar un artículo importado y comprobar que desaparece `Pendiente de confirmar` y aparece el check.
 - [ ] Editar cantidad y ubicación en línea antes y después de confirmar.
 - [ ] Cancelar una edición en línea y verificar que se restaura el valor persistido.
 - [ ] Intentar editar dos filas a la vez y verificar que solo una permanece en edición.
-- [ ] Cambiar una ubicación y verificar historial, tabla de Ubicaciones y vista de Stock.
+- [x] Cambiar una ubicación y verificar historial, tabla de Ubicaciones y vista de Stock.
 - [ ] Enviar un artículo a Etiquetas y comprobar cantidad fija `1`.
 - [ ] Enviar todos los registros válidos a Etiquetas y comprobar que pendientes y confirmados usan cantidad `1`.
 - [ ] Intentar enviar un artículo inexistente y comprobar que se bloquea con un mensaje claro.
 - [ ] Ejecutar envío masivo con inexistentes y comprobar que se omiten y se informa la cantidad excluida.
 - [ ] Eliminar un registro y eliminar todos usando confirmaciones.
-- [ ] Validar todas las métricas de Información.
-- [ ] Verificar que los totales de unidades y diferencias excluyen registros pendientes.
-- [ ] Provocar una diferencia, un artículo `SL`, un inexistente y un pendiente para comprobar la apertura automática del informe.
-- [ ] Generar el Excel y verificar columnas A a F, datos, checks, cruces y anchos.
-- [ ] Confirmar que el Excel excluye pendientes.
-- [ ] Confirmar el nombre `Stock [Nombre de usuario] AAAA-MM-DD # HH-MM.xlsx`.
+- [x] Validar todas las métricas de Información.
+- [x] Verificar que los totales de unidades y diferencias excluyen registros pendientes.
+- [x] Provocar una diferencia, un artículo `SL`, un inexistente y un pendiente para comprobar la apertura automática del informe.
+- [x] Generar el Excel y verificar columnas A a F, datos, checks, cruces y anchos.
+- [x] Confirmar que el Excel excluye pendientes.
+- [x] Confirmar el nombre `Stock [Nombre de usuario] AAAA-MM-DD # HH-MM.xlsx`.
 - [ ] Verificar tipos numéricos y anchos exactos de las seis columnas.
 - [ ] Cargar un Excel distinto con una sesión activa y comprobar que se bloquean altas, importación y exportación.
 - [ ] Confirmar que la sesión anterior no se elimina automáticamente.
 - [ ] Iniciar una sesión nueva mediante confirmación y comprobar que queda vinculada al Excel nuevo.
-- [ ] Descargar el Excel en navegador.
+- [x] Descargar el Excel en navegador.
 - [ ] Compartir el Excel desde Android.
-- [ ] Recargar la app y verificar la persistencia de conteos y estados.
-- [ ] Revisar tutorial y resumen técnico.
-- [ ] Ejecutar `npm run lint`.
-- [ ] Ejecutar `npm run build`.
-- [ ] Revisar visualmente el flujo en resolución móvil y escritorio.
-- [ ] Revisar consola y confirmar que no quedan errores ni advertencias nuevas durante los flujos principales.
+- [x] Recargar la app y verificar la persistencia de conteos y estados.
+- [x] Revisar tutorial y resumen técnico.
+- [x] Ejecutar `npm run lint`.
+- [x] Ejecutar `npm run build`.
+- [x] Revisar visualmente el flujo en resolución móvil y escritorio.
+- [x] Revisar consola y confirmar que no quedan errores ni advertencias nuevas durante los flujos principales.
 
 ## Progreso del plan
 
-- [ ] Fase 1: Integrar Stock en la navegación
-- [ ] Fase 2: Crear el almacenamiento independiente de Stock
-- [ ] Fase 3: Construir la búsqueda y selección del artículo
-- [ ] Fase 4: Diseñar la mini tarjeta y el contador
-- [ ] Fase 5: Importar artículos desde Ubicaciones
-- [ ] Fase 6: Crear la tabla de Stock y la edición en línea
-- [ ] Fase 7: Integrar cambios de ubicación con Ubicaciones
-- [ ] Fase 8: Integrar Stock con Etiquetas
-- [ ] Fase 9: Agregar Información e informes
-- [ ] Fase 10: Generar y enviar el Excel de Stock
-- [ ] Fase 11: Crear tutorial y documentación técnica
+- [x] Fase 1: Integrar Stock en la navegación
+- [x] Fase 2: Crear el almacenamiento independiente de Stock
+- [x] Fase 3: Construir la búsqueda y selección del artículo
+- [x] Fase 4: Diseñar la mini tarjeta y el contador
+- [x] Fase 5: Importar artículos desde Ubicaciones
+- [x] Fase 6: Crear la tabla de Stock y la edición en línea
+- [x] Fase 7: Integrar cambios de ubicación con Ubicaciones
+- [x] Fase 8: Integrar Stock con Etiquetas
+- [x] Fase 9: Agregar Información e informes
+- [x] Fase 10: Generar y enviar el Excel de Stock
+- [x] Fase 11: Crear tutorial y documentación técnica
 - [ ] Fase Testing
 
 Fecha de creación: 06 de Junio 2026
 Fecha de última actualización: 06 de Junio 2026
-Estado: BORRADOR
+Estado: EN PROCESO

@@ -6,10 +6,11 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 
 ### 📦 **Estructura General**
 
-La aplicación se divide en 6 módulos principales:
+La aplicación se divide en 7 módulos principales:
 - **Pedidos**: Gestión de pedidos diarios con sistema de estadísticas completo (ver `Resumen3Pedidos.md`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `Resumen4Ubicaciones.md`)
 - **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.md`)
+- **Stock**: Conteo de artículos, comparación con Excel e integración con Ubicaciones y Etiquetas (ver `Resumen7Stock.md`)
 - **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `Resumen5Etiquetas.md`)
 - **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
 - **Inicio**: Pantalla principal de navegación

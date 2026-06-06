@@ -123,15 +123,11 @@ import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../components/Logica/Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
 import {
-  actualizarUbicacionArticulo,
   obtenerArticulosCargados,
   obtenerEstadoCarga,
   obtenerHistorialUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
-import {
-  guardarUbicaciones,
-  obtenerUbicaciones,
-} from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones.js'
+import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 
 const emit = defineEmits(['configurar-barra'])
 
@@ -389,20 +385,6 @@ const alternarEditorUbicacion = async () => {
   }
 }
 
-const agregarUbicacionALista = async (codigo, ubicacion, listaBase = null) => {
-  const ubicacionesActuales = await obtenerUbicaciones()
-  const lista = Array.isArray(listaBase)
-    ? listaBase
-    : Array.isArray(ubicacionesActuales)
-      ? ubicacionesActuales
-      : []
-  const codigoNormalizado = String(codigo || '')
-    .trim()
-    .toUpperCase()
-  lista.unshift({ codigo: codigoNormalizado, ubicacion })
-  await guardarUbicaciones(lista)
-}
-
 const guardarNuevaUbicacion = async () => {
   if (!articuloConsultado.value?.codigo) return
   formatearNuevaUbicacion()
@@ -434,23 +416,14 @@ const guardarNuevaUbicacion = async () => {
     return
   }
 
-  const resultado = await actualizarUbicacionArticulo(articuloConsultado.value.codigo, ubicacionNueva)
+  const resultado = await registrarUbicacionArticulo(
+    articuloConsultado.value.codigo,
+    ubicacionNueva,
+  )
   if (!resultado.exito) {
     Notify.create({
       type: 'negative',
       message: resultado.mensaje || 'No se pudo actualizar la ubicación',
-      position: 'top',
-      timeout: 2600,
-    })
-    return
-  }
-
-  try {
-    await agregarUbicacionALista(articuloConsultado.value.codigo, ubicacionNueva)
-  } catch (error) {
-    Notify.create({
-      type: 'negative',
-      message: error.message,
       position: 'top',
       timeout: 2600,
     })

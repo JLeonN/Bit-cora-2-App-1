@@ -86,10 +86,7 @@ import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
-import {
-  guardarEtiquetas,
-  obtenerEtiquetas,
-} from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
+import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import {
   obtenerArticuloPorCodigo,
   reconstruirUbicacionesDesdeLista,
@@ -281,24 +278,13 @@ async function enviarAEtiquetas(ubicacion) {
   try {
     const articulo = obtenerArticuloPorCodigo(ubicacion.codigo)
     const nombreArticulo = articulo ? articulo.nombre : 'Artículo desconocido'
-
-    const nuevaEtiqueta = {
-      id: Date.now(),
-      codigo: ubicacion.codigo,
-      descripcion: nombreArticulo,
-      ubicacion: ubicacion.ubicacion,
-      cantidad: 1,
-      tamano: '10x15cm',
-    }
-
-    const etiquetasActuales = await obtenerEtiquetas()
-    const listaActualizada = etiquetasActuales
-      ? [...etiquetasActuales, nuevaEtiqueta]
-      : [nuevaEtiqueta]
-
-    await guardarEtiquetas(listaActualizada)
-
-    console.log('[AjustarUbicaciones] Etiqueta enviada:', nuevaEtiqueta)
+    await agregarEtiquetasDesdeArticulos([
+      {
+        codigo: ubicacion.codigo,
+        nombre: nombreArticulo,
+        ubicacion: ubicacion.ubicacion,
+      },
+    ])
 
     Notify.create({
       type: 'positive',
@@ -320,12 +306,12 @@ async function enviarAEtiquetas(ubicacion) {
 // Mensaje específico para envío masivo
 async function enviarTodasAEtiquetas(etiquetas) {
   try {
-    const etiquetasActuales = await obtenerEtiquetas()
-    const listaActualizada = etiquetasActuales
-      ? [...etiquetasActuales, ...etiquetas]
-      : [...etiquetas]
-
-    await guardarEtiquetas(listaActualizada)
+    const articulos = etiquetas.map((etiqueta) => ({
+      codigo: etiqueta.codigo,
+      nombre: etiqueta.descripcion,
+      ubicacion: etiqueta.ubicacion,
+    }))
+    await agregarEtiquetasDesdeArticulos(articulos)
 
     Notify.create({
       type: 'positive',

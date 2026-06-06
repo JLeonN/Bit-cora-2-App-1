@@ -38,6 +38,12 @@ const routes = [
         name: 'ConsultaDeUbicacion',
         component: () => import('pages/ConsultaDeUbicacion.vue'),
       },
+      // STOCK - Conteo de artículos y exportación de inventario
+      {
+        path: '/stock',
+        name: 'Stock',
+        component: () => import('pages/PaginaStock.vue'),
+      },
       // CONFIGURACIÓN - Ajustes de usuario y preferencias de la app
       {
         path: '/configuracion',

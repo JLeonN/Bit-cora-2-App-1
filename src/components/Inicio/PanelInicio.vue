@@ -22,6 +22,13 @@
         <h3 class="tarjeta-inicio-titulo">Consulta de ubicación</h3>
         <p class="tarjeta-inicio-descripcion">Busca un artículo y consulta o actualiza su ubicación</p>
       </div>
+      <div class="tarjeta-inicio-modulo" @click="irA('/stock')">
+        <div class="tarjeta-inicio-icono">
+          <IconPackages :size="48" :stroke="1.5" />
+        </div>
+        <h3 class="tarjeta-inicio-titulo">Stock</h3>
+        <p class="tarjeta-inicio-descripcion">Cuenta artículos y compara el resultado con el Excel</p>
+      </div>
       <div class="tarjeta-inicio-modulo" @click="irA('/etiquetas')">
         <div class="tarjeta-inicio-icono">
           <IconTag :size="48" :stroke="1.5" />
@@ -36,7 +43,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { IconTableRow, IconMapRoute, IconSearch, IconTag } from '@tabler/icons-vue'
+import { IconTableRow, IconMapRoute, IconSearch, IconPackages, IconTag } from '@tabler/icons-vue'
 import TarjetaContadorPasos from 'src/components/Logica/Pasos/TarjetaContadorPasos.vue'
 
 const router = useRouter()
