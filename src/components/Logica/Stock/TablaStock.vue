@@ -55,7 +55,11 @@
           </div>
           <p v-if="codigoEditando !== registro.codigo">
             {{ registro.ubicacionOrigen === 'excel' ? 'Ubicación del Excel' : 'Ubicación' }}:
-            <strong>{{ registro.ubicacionActual || 'Sin ubicación registrada' }}</strong>
+            <strong>
+              <span :class="{ 'texto-sl-neon': registro.ubicacionOriginalExcel === 'SL' }">
+                {{ registro.ubicacionActual || 'Sin ubicación registrada' }}
+              </span>
+            </strong>
           </p>
         </div>
 
@@ -110,7 +114,7 @@
             title="Editar"
             @click="iniciarEdicion(registro)"
           >
-            <IconPencil :size="19" />
+            <IconPencil class="icono-ubicacion icono-editar" :size="19" />
           </button>
           <button
             type="button"
@@ -118,7 +122,7 @@
             title="Enviar a Etiquetas"
             @click="$emit('enviar-etiqueta', registro)"
           >
-            <IconTag :size="19" />
+            <IconTag class="icono-ubicacion icono-etiqueta" :size="19" />
           </button>
           <button
             type="button"
@@ -126,7 +130,7 @@
             title="Eliminar"
             @click="$emit('eliminar', registro)"
           >
-            <IconTrash :size="19" />
+            <IconTrash class="icono-ubicacion icono-borrar" :size="19" />
           </button>
         </div>
       </article>

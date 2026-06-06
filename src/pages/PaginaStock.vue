@@ -129,14 +129,26 @@
         </div>
 
         <label class="etiqueta-campo-stock" for="ubicacionStock">Ubicación</label>
-        <input
-          id="ubicacionStock"
-          v-model="ubicacionSeleccionada"
-          type="text"
-          class="input-ubicacion-stock"
-          placeholder="Ubicación opcional"
-          @blur="formatearUbicacionSeleccionada"
-        />
+        <div class="campo-ubicacion-stock">
+          <input
+            id="ubicacionStock"
+            v-model="ubicacionSeleccionada"
+            type="text"
+            class="input-ubicacion-stock"
+            placeholder="Ubicación opcional"
+            @input="marcarUbicacionComoUsuario"
+            @blur="formatearUbicacionSeleccionada"
+          />
+          <button
+            v-if="ubicacionSeleccionada"
+            type="button"
+            class="boton-limpiar-ubicacion"
+            title="Limpiar ubicación"
+            @click="limpiarUbicacionSeleccionada"
+          >
+            <IconTrash :size="16" />
+          </button>
+        </div>
 
         <div class="acciones-tarjeta-stock">
           <button type="button" class="boton-confirmar-stock" @click="confirmarConteoSeleccionado">
@@ -231,6 +243,7 @@ import {
   IconCopy,
   IconDatabaseImport,
   IconDownload,
+  IconTrash,
 } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../components/Logica/Ubicaciones/CodigoMasNombre.vue'
@@ -276,6 +289,7 @@ const articuloSeleccionado = ref(null)
 const conteoActual = ref(0)
 const conteoValidoAnterior = ref(0)
 const ubicacionSeleccionada = ref('')
+const ubicacionOrigenSeleccionada = ref('excel')
 const mostrarCamara = ref(false)
 const modalActivo = ref(false)
 const registroAEliminar = ref(null)
@@ -502,12 +516,25 @@ async function seleccionarArticulo(articulo) {
   const cantidad = registro?.stockContado ?? stockExcelSeleccionado.value
   conteoActual.value = cantidad
   conteoValidoAnterior.value = cantidad
-  ubicacionSeleccionada.value = obtenerUltimaUbicacionRegistrada(
+  const ubicacionActual = obtenerUltimaUbicacionRegistrada(
     articulo.codigo,
     ubicaciones.value,
     articulo,
     registro?.ubicacionActual,
   )
+  const ubicacionExcel = formatearUbicacion(articulo.ubicacionAntigua)
+  const tieneUbicacionEnMemoria = ubicaciones.value.some(
+    (item) =>
+      formatearUbicacion(item?.codigo) === formatearUbicacion(articulo.codigo) &&
+      Boolean(formatearUbicacion(item?.ubicacion)),
+  )
+  ubicacionSeleccionada.value = ubicacionActual || ubicacionExcel
+  ubicacionOrigenSeleccionada.value =
+    registro?.ubicacionOrigen === 'usuario' ||
+    tieneUbicacionEnMemoria ||
+    (ubicacionActual && formatearUbicacion(ubicacionActual) !== ubicacionExcel)
+      ? 'usuario'
+      : 'excel'
   await nextTick()
   inputConteoRef.value?.focus()
   inputConteoRef.value?.select()
@@ -557,6 +584,15 @@ function formatearUbicacionSeleccionada() {
   ubicacionSeleccionada.value = formatearUbicacion(ubicacionSeleccionada.value)
 }
 
+function marcarUbicacionComoUsuario() {
+  ubicacionOrigenSeleccionada.value = ubicacionSeleccionada.value ? 'usuario' : 'excel'
+}
+
+function limpiarUbicacionSeleccionada() {
+  ubicacionSeleccionada.value = ''
+  ubicacionOrigenSeleccionada.value = 'excel'
+}
+
 async function guardarRegistro(registro, ubicacionAnterior = '') {
   const ubicacionIngresada = formatearUbicacion(registro.ubicacionActual)
   const ubicacionOriginalExcel = formatearUbicacion(registro.ubicacionOriginalExcel)
@@ -597,7 +633,7 @@ async function confirmarConteoSeleccionado() {
         stockContado: conteoValidoAnterior.value,
         ubicacionActual: ubicacionSeleccionada.value,
         ubicacionOriginalExcel: articuloSeleccionado.value.ubicacionAntigua,
-        ubicacionOrigen: ubicacionSeleccionada.value ? 'usuario' : 'excel',
+        ubicacionOrigen: ubicacionOrigenSeleccionada.value,
         confirmado: true,
       },
       registroAnterior?.ubicacionActual || ultimaUbicacionSeleccionada.value,
@@ -615,6 +651,7 @@ function cancelarSeleccion() {
   conteoActual.value = 0
   conteoValidoAnterior.value = 0
   ubicacionSeleccionada.value = ''
+  ubicacionOrigenSeleccionada.value = 'excel'
   mostrarBuscador.value = false
   nextTick(() => inputBusquedaRef.value?.focus())
 }
@@ -996,10 +1033,13 @@ onUnmounted(() => {
   width: 100%;
   padding: 0 0.35rem;
 }
+.campo-ubicacion-stock {
+  position: relative;
+}
 .input-ubicacion-stock {
   width: 100%;
   text-align: left;
-  padding: 0 0.75rem;
+  padding: 0 2.75rem 0 0.75rem;
 }
 .acciones-tarjeta-stock {
   display: grid;
