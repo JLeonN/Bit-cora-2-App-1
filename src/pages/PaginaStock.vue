@@ -727,7 +727,6 @@ async function guardarEdicionRegistro(registro) {
   try {
     await guardarRegistro(registro, anterior?.ubicacionActual)
     notificar('positive', 'Registro actualizado')
-    nextTick(() => inputBusquedaRef.value?.focus())
   } catch (error) {
     notificar('negative', error.message)
   }
@@ -855,7 +854,6 @@ onMounted(async () => {
   await recargarDatos()
   actualizarBarra()
   intervaloBase = setInterval(actualizarEstadoBase, 1000)
-  nextTick(() => inputBusquedaRef.value?.focus())
 })
 
 onUnmounted(() => {
