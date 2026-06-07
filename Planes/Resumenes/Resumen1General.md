@@ -343,3 +343,8 @@ src/
 - Se mejoró el enfoque de campos en dispositivos táctiles y el comportamiento de los modales de Pedidos.
 - Se agregó el tutorial completo de Stock con pasos básicos y consejos de uso.
 - Release vigente actualizada: 4.2.27.
+
+### Actualización de release 4.2.28
+
+- El modal de actualización limita su altura, permite desplazar las novedades con el dedo y mantiene sus acciones visibles.
+- Release vigente actualizada: 4.2.28.

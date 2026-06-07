@@ -149,7 +149,7 @@
       <BannerAdMob @banner-visible="actualizarEstadoBanner" @banner-altura="actualizarAlturaBanner" />
       <q-dialog v-model="mostrarModalActualizacion">
         <q-card class="tarjeta-actualizacion">
-          <q-card-section>
+          <q-card-section class="contenido-actualizacion">
             <div class="titulo-actualizacion">Hay una actualización disponible</div>
             <div class="detalle-actualizacion">
               Tu versión: {{ versionInstalada }} | Nueva versión: {{ versionDisponible }}
@@ -183,7 +183,7 @@
               </div>
             </div>
           </q-card-section>
-          <q-card-actions align="right">
+          <q-card-actions align="right" class="acciones-actualizacion">
             <q-btn flat label="Cancelar" @click="mostrarModalActualizacion = false" />
             <q-btn
               unelevated
@@ -523,9 +523,29 @@ const manejarAccionPersonalizada = (accion) => {
 }
 .tarjeta-actualizacion {
   width: min(90vw, 430px);
+  max-height: min(75dvh, 620px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--color-borde);
   background: var(--color-superficie);
   color: var(--color-texto-principal);
+}
+.contenido-actualizacion {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.contenido-actualizacion::-webkit-scrollbar {
+  display: none;
+}
+.acciones-actualizacion {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-borde);
+  background: var(--color-superficie);
 }
 .titulo-actualizacion {
   font-size: 1.05rem;
@@ -608,6 +628,13 @@ const manejarAccionPersonalizada = (accion) => {
   border-color: color-mix(in oklab, var(--color-exito) 55%, var(--color-borde));
 }
 @media (max-width: 400px) {
+  .tarjeta-actualizacion {
+    width: min(88vw, 430px);
+    max-height: 68dvh;
+  }
+  .contenido-actualizacion {
+    padding: 14px;
+  }
   .pasos-header {
     max-width: 86px;
     font-size: 0.78rem;
