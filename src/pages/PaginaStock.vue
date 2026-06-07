@@ -261,6 +261,7 @@ import {
   iniciarSesionStock,
   normalizarCantidadStock,
   obtenerSesionStock,
+  ordenarRegistrosStock,
 } from '../components/BaseDeDatos/UsoAlmacenamientoStock.js'
 import {
   obtenerArticuloPorCodigo,
@@ -339,8 +340,8 @@ const ultimaUbicacionSeleccionada = computed(() =>
     : '',
 )
 const registrosVisuales = computed(() =>
-  [...(sesion.value.registros || [])]
-    .map((registro) => {
+  ordenarRegistrosStock(
+    (sesion.value.registros || []).map((registro) => {
       const articulo = obtenerArticuloPorCodigo(registro.codigo)
       const ubicacionOriginalExcel =
         articulo?.ubicacionAntigua || registro.ubicacionOriginalExcel || ''
@@ -361,8 +362,8 @@ const registrosVisuales = computed(() =>
             ? 'usuario'
             : 'excel',
       }
-    })
-    .sort((registroA, registroB) => registroB.fechaActualizacion - registroA.fechaActualizacion),
+    }),
+  ),
 )
 const informe = computed(() => {
   const confirmados = registrosVisuales.value.filter((registro) => registro.confirmado)

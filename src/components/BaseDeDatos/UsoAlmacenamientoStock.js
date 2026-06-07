@@ -47,6 +47,7 @@ export function coincidenFuentesExcel(fuenteA, fuenteB) {
 function normalizarRegistro(registro) {
   const cantidadExcel = normalizarCantidadStock(registro?.stockExcel, { permitirDecimal: true })
   const cantidadContada = normalizarCantidadStock(registro?.stockContado)
+  const fechaActualizacion = Number(registro?.fechaActualizacion || Date.now())
   return {
     codigo: normalizarTexto(registro?.codigo),
     nombre: normalizarTexto(registro?.nombre) || 'ARTÍCULO INEXISTENTE',
@@ -63,16 +64,26 @@ function normalizarRegistro(registro) {
         ? 'excel'
         : 'usuario',
     confirmado: Boolean(registro?.confirmado),
-    fechaActualizacion: Number(registro?.fechaActualizacion || Date.now()),
+    fechaIngreso: Number(registro?.fechaIngreso || fechaActualizacion),
+    fechaActualizacion,
   }
 }
 
-function obtenerSiguienteFechaActualizacion(registros) {
+function obtenerSiguienteFecha(registros, propiedad) {
   const fechaMayor = registros.reduce(
-    (mayor, registro) => Math.max(mayor, Number(registro?.fechaActualizacion || 0)),
+    (mayor, registro) => Math.max(mayor, Number(registro?.[propiedad] || 0)),
     0,
   )
   return Math.max(Date.now(), fechaMayor + 1)
+}
+
+export function ordenarRegistrosStock(registros) {
+  return [...registros].sort((registroA, registroB) => {
+    if (registroA.confirmado !== registroB.confirmado) {
+      return registroA.confirmado ? -1 : 1
+    }
+    return registroB.fechaIngreso - registroA.fechaIngreso
+  })
 }
 
 function crearSesionVacia(fuenteExcel = null) {
@@ -98,9 +109,7 @@ function normalizarSesion(sesion) {
     version: VERSION_STOCK,
     fuenteExcel: crearIdentidadExcel(sesion.fuenteExcel),
     fechaInicio: Number(sesion.fechaInicio || Date.now()),
-    registros: Array.from(mapaRegistros.values()).sort(
-      (registroA, registroB) => registroB.fechaActualizacion - registroA.fechaActualizacion,
-    ),
+    registros: ordenarRegistrosStock(Array.from(mapaRegistros.values())),
   }
 }
 
@@ -135,21 +144,24 @@ export async function guardarRegistroStock(registro, fuenteExcel) {
   if (!coincidenFuentesExcel(sesion.fuenteExcel, crearIdentidadExcel(fuenteExcel))) {
     throw new Error('La sesión de Stock pertenece a otro archivo Excel')
   }
-  const registroNormalizado = normalizarRegistro({
-    ...registro,
-    fechaActualizacion: obtenerSiguienteFechaActualizacion(sesion.registros),
-  })
-  if (!registroNormalizado.codigo) {
+  const codigo = normalizarTexto(registro?.codigo)
+  if (!codigo) {
     throw new Error('El registro de Stock no tiene código')
   }
   const indice = sesion.registros.findIndex(
-    (registroGuardado) => registroGuardado.codigo === registroNormalizado.codigo,
+    (registroGuardado) => registroGuardado.codigo === codigo,
   )
+  const registroExistente = indice === -1 ? null : sesion.registros[indice]
+  const registroNormalizado = normalizarRegistro({
+    ...registro,
+    fechaIngreso:
+      registroExistente?.fechaIngreso || obtenerSiguienteFecha(sesion.registros, 'fechaIngreso'),
+    fechaActualizacion: obtenerSiguienteFecha(sesion.registros, 'fechaActualizacion'),
+  })
   if (indice === -1) {
-    sesion.registros.unshift(registroNormalizado)
+    sesion.registros.push(registroNormalizado)
   } else {
-    sesion.registros.splice(indice, 1)
-    sesion.registros.unshift(registroNormalizado)
+    sesion.registros.splice(indice, 1, registroNormalizado)
   }
   return guardarSesion(sesion)
 }
@@ -164,19 +176,23 @@ export async function guardarRegistrosStock(registros, fuenteExcel) {
   }
   const mapa = new Map(sesion.registros.map((registro) => [registro.codigo, registro]))
   const fechaInicial =
-    obtenerSiguienteFechaActualizacion(sesion.registros) + Math.max(0, registros.length - 1)
+    obtenerSiguienteFecha(sesion.registros, 'fechaIngreso') + Math.max(0, registros.length - 1)
+  const fechaActualizacionInicial =
+    obtenerSiguienteFecha(sesion.registros, 'fechaActualizacion') +
+    Math.max(0, registros.length - 1)
   registros.forEach((registro, indice) => {
+    const codigo = normalizarTexto(registro?.codigo)
+    const registroExistente = mapa.get(codigo)
     const normalizado = normalizarRegistro({
       ...registro,
-      fechaActualizacion: fechaInicial - indice,
+      fechaIngreso: registroExistente?.fechaIngreso || fechaInicial - indice,
+      fechaActualizacion: fechaActualizacionInicial - indice,
     })
     if (normalizado.codigo) {
       mapa.set(normalizado.codigo, normalizado)
     }
   })
-  sesion.registros = Array.from(mapa.values()).sort(
-    (registroA, registroB) => registroB.fechaActualizacion - registroA.fechaActualizacion,
-  )
+  sesion.registros = ordenarRegistrosStock(Array.from(mapa.values()))
   return guardarSesion(sesion)
 }
 

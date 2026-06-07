@@ -30,11 +30,6 @@
             <p class="nombre-stock">{{ registro.nombre }}</p>
             <p class="codigo-stock">{{ registro.codigo }}</p>
           </div>
-          <div class="estado-stock" :class="{ 'estado-confirmado': registro.confirmado }">
-            <IconCircleCheck v-if="registro.confirmado" :size="18" />
-            <IconClock v-else :size="18" />
-            {{ registro.confirmado ? 'Confirmado' : 'Pendiente de confirmar' }}
-          </div>
         </div>
 
         <div class="datos-fila-stock">
@@ -108,40 +103,51 @@
           </div>
         </div>
 
-        <div class="acciones-fila-stock">
-          <button
-            v-if="!registro.confirmado"
-            type="button"
-            class="boton-fila boton-confirmar-fila"
-            title="Confirmar conteo"
-            @click="$emit('confirmar', registro)"
-          >
-            <IconCheck :size="19" />
-          </button>
-          <button
-            type="button"
-            class="boton-fila"
-            title="Editar"
-            @click="iniciarEdicion(registro)"
-          >
-            <IconPencil class="icono-ubicacion icono-editar" :size="19" />
-          </button>
-          <button
-            type="button"
-            class="boton-fila"
-            title="Enviar a Etiquetas"
-            @click="$emit('enviar-etiqueta', registro)"
-          >
-            <IconTag class="icono-ubicacion icono-etiqueta" :size="19" />
-          </button>
-          <button
-            type="button"
-            class="boton-fila boton-eliminar-fila"
-            title="Eliminar"
-            @click="$emit('eliminar', registro)"
-          >
-            <IconTrash class="icono-ubicacion icono-borrar" :size="19" />
-          </button>
+        <div class="pie-fila-stock">
+          <div class="estado-stock" :class="{ 'estado-confirmado': registro.confirmado }">
+            <IconCircleCheck v-if="registro.confirmado" :size="18" />
+            <IconClock v-else :size="18" />
+            <span v-if="registro.confirmado">Confirmado</span>
+            <template v-else>
+              <span class="texto-pendiente-completo">Pendiente de confirmar</span>
+              <span class="texto-pendiente-corto">Pendiente</span>
+            </template>
+          </div>
+          <div class="acciones-fila-stock">
+            <button
+              v-if="!registro.confirmado"
+              type="button"
+              class="boton-fila boton-confirmar-fila"
+              title="Confirmar conteo"
+              @click="$emit('confirmar', registro)"
+            >
+              <IconCheck :size="19" />
+            </button>
+            <button
+              type="button"
+              class="boton-fila"
+              title="Editar"
+              @click="iniciarEdicion(registro)"
+            >
+              <IconPencil class="icono-ubicacion icono-editar" :size="19" />
+            </button>
+            <button
+              type="button"
+              class="boton-fila"
+              title="Enviar a Etiquetas"
+              @click="$emit('enviar-etiqueta', registro)"
+            >
+              <IconTag class="icono-ubicacion icono-etiqueta" :size="19" />
+            </button>
+            <button
+              type="button"
+              class="boton-fila boton-eliminar-fila"
+              title="Eliminar"
+              @click="$emit('eliminar', registro)"
+            >
+              <IconTrash class="icono-ubicacion icono-borrar" :size="19" />
+            </button>
+          </div>
         </div>
       </article>
     </div>
@@ -334,13 +340,25 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 0.3rem;
+  flex-shrink: 0;
   color: var(--color-carga);
   font-size: 0.82rem;
   font-weight: 700;
-  text-align: right;
+  text-align: left;
+  white-space: nowrap;
 }
 .estado-confirmado {
   color: var(--color-exito);
+}
+.texto-pendiente-corto {
+  display: none;
+}
+.pie-fila-stock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
 }
 .datos-fila-stock p {
   margin: 0.45rem 0 0 0;
@@ -414,6 +432,8 @@ defineExpose({
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+.acciones-editor {
   margin-top: 0.8rem;
 }
 .boton-guardar-edicion,
@@ -455,19 +475,30 @@ defineExpose({
   text-align: center;
   color: var(--color-texto-secundario);
 }
+@media (max-width: 420px) {
+  .texto-pendiente-completo {
+    display: none;
+  }
+  .texto-pendiente-corto {
+    display: inline;
+  }
+}
 @media (max-width: 560px) {
-  .encabezado-fila-stock {
-    flex-direction: column;
-  }
-  .estado-stock {
-    text-align: left;
-  }
   .acciones-generales-stock {
     justify-content: stretch;
   }
   .boton-accion-general {
     flex: 1;
     justify-content: center;
+  }
+}
+@media (max-width: 370px) {
+  .pie-fila-stock {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .acciones-fila-stock {
+    align-self: flex-end;
   }
 }
 </style>
