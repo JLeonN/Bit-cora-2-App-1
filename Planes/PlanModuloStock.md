@@ -43,8 +43,8 @@ Cada lista de Stock representa una sesión de conteo ligada al archivo Excel des
 ### Contratos funcionales cerrados
 
 - `stockExcel` es una copia numérica del stock del Excel al crear el registro y no cambia durante esa sesión.
-- Si el stock Excel contiene decimales, se trunca hacia cero y se muestra una alerta; si está vacío, es negativo o no es numérico, se usa `0` y se informa como dato inválido.
-- `stockContado` siempre es un número entero igual o mayor que `0`.
+- Si el stock Excel contiene decimales, se trunca hacia cero y se muestra una alerta; si está vacío o no es numérico, se usa `0` y se informa como dato inválido. Los enteros negativos se conservan.
+- `stockContado` siempre es un número entero y puede ser negativo.
 - Un registro pendiente puede editarse, pero solo pasa a confirmado mediante `Confirmar conteo` o la acción de confirmación de su fila.
 - Editar cantidad o ubicación de un registro ya confirmado mantiene su estado confirmado.
 - Cancelar o cerrar una selección nunca modifica el registro guardado.
@@ -89,7 +89,7 @@ Persistir los conteos sin alterar la tabla de Ubicaciones ni los datos originale
 - [x] Definir los metadatos `version`, `fuenteExcel` y `fechaInicio`.
 - [x] Definir como mínimo los campos `codigo`, `nombre`, `stockExcel`, `stockContado`, `ubicacionActual`, `ubicacionOriginalExcel`, `confirmado` y `fechaActualizacion`.
 - [x] Normalizar códigos, cantidades y ubicaciones antes de persistir.
-- [x] Convertir stock vacío, inválido o negativo a `0` sin producir `NaN`.
+- [x] Convertir stock vacío o inválido a `0` sin producir `NaN` y conservar enteros negativos.
 - [x] Truncar hacia cero los decimales provenientes del Excel y alertar al usuario.
 - [x] Rechazar decimales ingresados manualmente y conservar el último valor válido.
 - [x] Implementar funciones para obtener la sesión, guardar o actualizar por código y eliminar registros.
@@ -131,7 +131,7 @@ Mostrar la información necesaria y permitir ajustar el conteo con rapidez.
 - [x] Mostrar la ubicación original del Excel.
 - [x] Aplicar borde y texto neón cuando la ubicación original sea `SL`.
 - [x] Agregar un input numérico con botones `−` y `+`.
-- [x] Evitar valores negativos mediante controles y validación.
+- [x] Admitir valores enteros negativos mediante escritura directa y controles de suma o resta.
 - [x] Usar teclado numérico móvil y seleccionar el contenido al enfocar para facilitar reemplazos.
 - [x] Iniciar un artículo nuevo con el stock original del Excel.
 - [x] Iniciar un artículo ya registrado con el último total contado.
@@ -326,9 +326,9 @@ Validar de forma ejecutable por IA y revisable por humano el flujo completo de S
 - [ ] Comprobar el botón de copiar y el escaneo.
 - [ ] Cerrar o cancelar la tarjeta y verificar que el buscador recupera el foco.
 - [x] Seleccionar un artículo nuevo y comprobar que inicia con el stock Excel.
-- [ ] Probar stock Excel vacío, texto, decimal y negativo y verificar su normalización.
+- [ ] Probar stock Excel vacío, texto y decimal, y verificar que los valores negativos se conserven.
 - [ ] Ingresar manualmente un decimal y comprobar que se rechaza sin perder el último valor válido.
-- [ ] Ajustar el contador con `−` y `+` y verificar que nunca baja de `0`.
+- [ ] Ajustar el contador con `−` y `+` y verificar que admite valores negativos.
 - [ ] Confirmar una cantidad igual al stock Excel y comprobar que queda confirmada.
 - [ ] Buscar nuevamente el mismo artículo y comprobar el aviso, total y ubicación anteriores.
 - [ ] Sumar unidades encontradas en otra ubicación y verificar que se reemplaza el total guardado.

@@ -76,9 +76,7 @@
               ref="inputCantidadEdicionRef"
               v-model="cantidadEdicion"
               type="number"
-              min="0"
               step="1"
-              inputmode="numeric"
               @focus="$event.target.select()"
               @input="validarCantidad"
             />
@@ -224,8 +222,10 @@ async function iniciarEdicion(registro) {
 }
 
 function validarCantidad() {
+  const textoCantidad = String(cantidadEdicion.value ?? '').trim()
+  if (textoCantidad === '' || textoCantidad === '-') return
   const numero = Number(cantidadEdicion.value)
-  if (!Number.isInteger(numero) || numero < 0) {
+  if (!Number.isInteger(numero)) {
     cantidadEdicion.value = cantidadValidaAnterior.value
     return
   }
@@ -233,7 +233,7 @@ function validarCantidad() {
 }
 
 function restarCantidad() {
-  cantidadEdicion.value = Math.max(0, Number(cantidadValidaAnterior.value) - 1)
+  cantidadEdicion.value = Number(cantidadValidaAnterior.value) - 1
   cantidadValidaAnterior.value = cantidadEdicion.value
 }
 

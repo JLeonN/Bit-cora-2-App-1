@@ -14,7 +14,7 @@ export function normalizarCantidadStock(valor, { permitirDecimal = false } = {})
     return { valor: 0, ajustado: true, motivo: 'vacío' }
   }
   const numero = Number(valor)
-  if (!Number.isFinite(numero) || numero < 0) {
+  if (!Number.isFinite(numero)) {
     return { valor: 0, ajustado: true, motivo: 'inválido' }
   }
   if (!Number.isInteger(numero)) {

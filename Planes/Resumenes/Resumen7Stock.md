@@ -16,7 +16,8 @@ Stock permite contar artículos usando la base Excel compartida por Ubicaciones,
 - `UsoAlmacenamientoStock.js` guarda una estructura versionada en Capacitor Preferences.
 - La sesión conserva la identidad del Excel mediante nombre, tamaño y fecha de modificación.
 - Si el usuario carga un Excel distinto, se bloquean altas, importación y exportación hasta volver al archivo anterior o iniciar una sesión nueva.
-- `stockExcel` queda congelado durante la sesión y `stockContado` siempre es un entero igual o mayor que cero.
+- `stockExcel` queda congelado durante la sesión y conserva los valores negativos del archivo original.
+- `stockContado` admite cualquier entero, incluidos valores negativos ingresados por el usuario.
 
 ## Ubicaciones
 

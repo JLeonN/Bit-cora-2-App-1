@@ -119,9 +119,7 @@
             ref="inputConteoRef"
             v-model="conteoActual"
             type="number"
-            min="0"
             step="1"
-            inputmode="numeric"
             @focus="$event.target.select()"
             @input="validarConteo"
           />
@@ -343,6 +341,13 @@ const registrosVisuales = computed(() =>
   ordenarRegistrosStock(
     (sesion.value.registros || []).map((registro) => {
       const articulo = obtenerArticuloPorCodigo(registro.codigo)
+      const stockExcelOriginal = normalizarCantidadStock(articulo?.stock, {
+        permitirDecimal: true,
+      })
+      const recuperarNegativoAnterior =
+        registro.stockExcelAjustado &&
+        Number.isInteger(Number(articulo?.stock)) &&
+        Number(articulo?.stock) < 0
       const ubicacionOriginalExcel =
         articulo?.ubicacionAntigua || registro.ubicacionOriginalExcel || ''
       const ubicacionRegistrada = obtenerUltimaUbicacionRegistrada(
@@ -353,6 +358,8 @@ const registrosVisuales = computed(() =>
       )
       return {
         ...registro,
+        stockExcel: recuperarNegativoAnterior ? stockExcelOriginal.valor : registro.stockExcel,
+        stockExcelAjustado: recuperarNegativoAnterior ? false : registro.stockExcelAjustado,
         ubicacionActual: ubicacionRegistrada || ubicacionOriginalExcel,
         ubicacionOrigen:
           registro.ubicacionOrigen === 'usuario' ||
@@ -553,19 +560,22 @@ function manejarEstadoBuscador(estado) {
   }
 }
 
-function validarConteo() {
+function validarConteo(finalizar = false) {
+  const textoCantidad = String(conteoActual.value ?? '').trim()
+  if (!finalizar && (textoCantidad === '' || textoCantidad === '-')) return true
   const normalizado = normalizarCantidadStock(conteoActual.value)
   if (normalizado.valor === null) {
     conteoActual.value = conteoValidoAnterior.value
     notificar('warning', 'El conteo debe ser un número entero')
-    return
+    return false
   }
   conteoActual.value = normalizado.valor
   conteoValidoAnterior.value = normalizado.valor
+  return true
 }
 
 function restarConteo() {
-  conteoActual.value = Math.max(0, conteoValidoAnterior.value - 1)
+  conteoActual.value = conteoValidoAnterior.value - 1
   conteoValidoAnterior.value = conteoActual.value
 }
 
@@ -618,7 +628,7 @@ async function guardarRegistro(registro, ubicacionAnterior = '') {
 
 async function confirmarConteoSeleccionado() {
   if (!articuloSeleccionado.value || !asegurarFuenteValida()) return
-  validarConteo()
+  if (!validarConteo(true)) return
   formatearUbicacionSeleccionada()
   const registroAnterior = registroSeleccionado.value
   const stockExcel = normalizarCantidadStock(articuloSeleccionado.value.stock, {

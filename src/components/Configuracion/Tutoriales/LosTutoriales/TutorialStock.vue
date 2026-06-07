@@ -7,7 +7,8 @@
     <p>
       <strong>2. Buscá y contá:</strong> escribí un código o nombre. Cuando queda una sola
       coincidencia, el artículo se selecciona automáticamente. Ajustá la cantidad con los botones
-      menos y más y presioná <strong>Confirmar conteo</strong>.
+      menos y más o escribí un entero, incluso negativo, y presioná
+      <strong>Confirmar conteo</strong>.
     </p>
     <p>
       <strong>3. Artículos repetidos:</strong> si encontrás el mismo artículo en otro estante, Stock
