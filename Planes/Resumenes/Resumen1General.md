@@ -335,3 +335,11 @@ src/
 - El buscador compartido por Ubicaciones, Consulta De Ubicación y Etiquetas ordena las coincidencias por relevancia.
 - El modal de actualización agrupa las novedades por apartado y conserva las notas al regenerar `version.json`.
 - Release vigente actualizada: 4.2.26.
+
+### Actualización de release 4.2.27
+
+- Se incorporó el módulo Stock con conteos confirmados y pendientes, diferencias, ubicaciones y exportación Excel.
+- Stock admite valores negativos, conserva el orden de llegada y permite continuar conteos repetidos.
+- Se mejoró el enfoque de campos en dispositivos táctiles y el comportamiento de los modales de Pedidos.
+- Se agregó el tutorial completo de Stock con pasos básicos y consejos de uso.
+- Release vigente actualizada: 4.2.27.
