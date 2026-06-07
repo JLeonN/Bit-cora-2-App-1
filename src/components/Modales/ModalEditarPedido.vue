@@ -1,6 +1,6 @@
 <template>
   <div class="modal-fondo" @click.self="$emit('cerrar')">
-    <div :class="['modal-contenido', { activo: modalActivo }]">
+    <div class="modal-contenido">
       <h3 class="modal-titulo">Editar Pedido</h3>
 
       <!-- Campo: Número de pedido -->
@@ -10,8 +10,6 @@
           id="pedido"
           type="text"
           v-model="pedidoEditado"
-          @focus="modalActivo = true"
-          @blur="modalActivo = false"
         />
       </div>
 
@@ -24,8 +22,6 @@
           inputmode="numeric"
           min="1"
           v-model.number="itemsEditados"
-          @focus="modalActivo = true"
-          @blur="modalActivo = false"
         />
       </div>
 
@@ -54,7 +50,6 @@ const emit = defineEmits(['guardar', 'cerrar', 'modal-abierto', 'modal-cerrado']
 
 const pedidoEditado = ref(props.pedido)
 const itemsEditados = ref(props.items || 1)
-const modalActivo = ref(false)
 
 watch(
   () => props.pedido,
@@ -108,10 +103,6 @@ onUnmounted(() => {
   width: 90%;
   max-width: 400px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease;
-}
-.modal-contenido.activo {
-  transform: translateY(-30%);
 }
 .modal-titulo {
   margin: 0 0 1.5rem 0;

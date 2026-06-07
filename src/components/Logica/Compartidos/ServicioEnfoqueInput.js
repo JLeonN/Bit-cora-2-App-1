@@ -12,7 +12,8 @@ const TIPOS_INPUT_EDITABLES = new Set([
   'url',
   'week',
 ])
-const SELECTOR_DIALOGO = '.q-dialog, [role="dialog"], .modal-fondo, .modal-contenido'
+const SELECTOR_DIALOGO =
+  '.q-dialog, [role="dialog"], .modal-fondo, .modal-contenido, .modal-fondo-fotos, .modal-camara-fotos'
 const MARGEN_HEADER = 12
 const DEMORAS_AJUSTE = [80, 320]
 
@@ -34,7 +35,8 @@ function esCampoEditable(elemento) {
     !(elemento instanceof HTMLElement) ||
     elemento.hasAttribute('disabled') ||
     elemento.hasAttribute('readonly') ||
-    elemento.classList.contains('sin-enfoque-automatico')
+    elemento.classList.contains('sin-enfoque-automatico') ||
+    elemento.closest(SELECTOR_DIALOGO)
   ) {
     return false
   }
@@ -69,45 +71,8 @@ function eliminarEspaciadorTemporal() {
   espaciadorTemporal = null
 }
 
-function puedeDesplazarse(elemento) {
-  if (!(elemento instanceof HTMLElement)) return false
-  const estilo = window.getComputedStyle(elemento)
-  const overflowVertical = estilo.overflowY
-  return (
-    (overflowVertical === 'auto' || overflowVertical === 'scroll') &&
-    elemento.scrollHeight > elemento.clientHeight
-  )
-}
-
-function obtenerContenedorDesplazableDialogo(campo, dialogo) {
-  let elemento = campo.parentElement
-  while (elemento && elemento !== document.body) {
-    if (puedeDesplazarse(elemento)) return elemento
-    if (elemento === dialogo) break
-    elemento = elemento.parentElement
-  }
-  return puedeDesplazarse(dialogo) ? dialogo : null
-}
-
-function desplazarDentroDialogo(campo, dialogo) {
-  const contenedor = obtenerContenedorDesplazableDialogo(campo, dialogo)
-  if (!contenedor) return
-  const rectCampo = campo.getBoundingClientRect()
-  const rectContenedor = contenedor.getBoundingClientRect()
-  contenedor.scrollTo({
-    top: Math.max(0, contenedor.scrollTop + rectCampo.top - rectContenedor.top - MARGEN_HEADER),
-    behavior: 'smooth',
-  })
-}
-
 function desplazarCampo(campo) {
   if (!campo.isConnected || document.activeElement !== campo) return
-  const dialogo = campo.closest(SELECTOR_DIALOGO)
-  if (dialogo) {
-    eliminarEspaciadorTemporal()
-    desplazarDentroDialogo(campo, dialogo)
-    return
-  }
   asegurarEspacioDesplazable()
   const rect = campo.getBoundingClientRect()
   window.scrollTo({
@@ -133,6 +98,7 @@ export function activarEnfoqueGlobalInputs() {
     return false
   }
   manejadorEnfoqueActivo = (evento) => {
+    cancelarAjustesPendientes()
     if (esCampoEditable(evento.target)) programarDesplazamiento(evento.target)
   }
   manejadorDesenfoqueActivo = () => {

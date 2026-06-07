@@ -1,28 +1,20 @@
 <template>
   <div class="modal-fondo">
     <div
-      :class="['modal-contenido']"
-      :style="
-        esMovil && alturaDesplazamiento > 0
-          ? { transform: `translateY(-${alturaDesplazamiento}%)` }
-          : {}
-      "
+      ref="modalContenidoRef"
+      class="modal-contenido"
+      :style="estiloPosicionModal"
     >
       <h2 class="modal-titulo">Nuevo pedido</h2>
 
       <form @submit.prevent="confirmarTodosPedidos">
-        <!-- Contador de pedidos agregados -->
-        <div v-if="pedidosTemporales.length > 0" class="contador-pedidos-arriba">
-          <span class="badge-contador"
-            >{{ pedidosTemporales.length }} pedido{{
-              pedidosTemporales.length !== 1 ? 's' : ''
-            }}
-            agregado{{ pedidosTemporales.length !== 1 ? 's' : '' }}</span
-          >
+        <div ref="encabezadoPedidoRef" class="encabezado-campo-pedido">
+          <label for="numeroPedido" class="label-pedido">Número de pedido</label>
+          <span v-if="pedidosTemporales.length > 0" class="badge-contador">
+            {{ pedidosTemporales.length }} pedido{{ pedidosTemporales.length !== 1 ? 's' : '' }}
+            agregado{{ pedidosTemporales.length !== 1 ? 's' : '' }}
+          </span>
         </div>
-
-        <!-- Label -->
-        <label for="numeroPedido" class="label-pedido">Número de pedido</label>
 
         <!-- Fila: Input con flecha integrada y botón cámara -->
         <div class="fila-input-camara">
@@ -43,6 +35,7 @@
               :inputmode="modoTexto ? 'text' : 'numeric'"
               autocomplete="off"
               :placeholder="textoPlaceholder"
+              @focus="subirModalAlEncabezado"
               @input="restablecerPlaceholder"
               @keyup.enter="agregarPedidoALista"
               :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
@@ -79,6 +72,7 @@
               type="number"
               inputmode="numeric"
               min="1"
+              @focus="subirModalAlEncabezado"
               @input="validarItems"
             />
 
@@ -144,6 +138,8 @@ const emit = defineEmits(['agregar-pedido', 'cerrar', 'modal-abierto', 'modal-ce
 // Referencias
 const inputPedidoRef = ref(null)
 const inputItemsRef = ref(null)
+const modalContenidoRef = ref(null)
+const encabezadoPedidoRef = ref(null)
 
 // Estado
 const numeroPedido = ref('')
@@ -160,12 +156,56 @@ const toggleTeclado = () => {
   modoTexto.value = !modoTexto.value
   nextTick(() => inputPedidoRef.value?.focus())
 }
-const alturaDesplazamiento = ref(0)
+const posicionBaseModal = ref(null)
+const posicionSuperiorModal = ref(null)
 const esMovil = Capacitor.isNativePlatform()
+const DEMORA_RETORNO_MODAL = 20000
+const MARGEN_HEADER_MODAL = 8
+let temporizadorRetornoModal = null
+
+function cancelarRetornoModal() {
+  if (!temporizadorRetornoModal) return
+  clearTimeout(temporizadorRetornoModal)
+  temporizadorRetornoModal = null
+}
+
+function programarRetornoModal() {
+  cancelarRetornoModal()
+  temporizadorRetornoModal = setTimeout(() => {
+    posicionSuperiorModal.value = null
+    temporizadorRetornoModal = null
+  }, DEMORA_RETORNO_MODAL)
+}
+
+async function subirModalAlEncabezado() {
+  if (!esMovil) return
+  cancelarRetornoModal()
+  if (posicionSuperiorModal.value !== null) return
+  await nextTick()
+  const encabezado = encabezadoPedidoRef.value
+  const modal = modalContenidoRef.value
+  if (!encabezado || !modal) return
+  const header = document.querySelector('.q-header')
+  const limiteSuperior = Math.max(0, header?.getBoundingClientRect().bottom || 0)
+  const distanciaInternaEncabezado = encabezado.offsetTop
+  posicionSuperiorModal.value = Math.round(
+    limiteSuperior + MARGEN_HEADER_MODAL - distanciaInternaEncabezado,
+  )
+}
 
 // Computed
 const puedeAgregar = computed(() => {
   return numeroPedido.value.trim() !== ''
+})
+const estiloPosicionModal = computed(() => {
+  const posicionActual = posicionSuperiorModal.value ?? posicionBaseModal.value
+  if (posicionActual === null) return {}
+  return {
+    position: 'fixed',
+    top: `${posicionActual}px`,
+    left: '50%',
+    transform: 'translateX(-50%)',
+  }
 })
 const pedidosTemporalesVisuales = computed(() => {
   return [...pedidosTemporales.value].reverse()
@@ -298,28 +338,28 @@ const manejarModalCerrado = () => {
 
 onMounted(() => {
   nextTick(() => {
-    if (inputPedidoRef.value) {
-      inputPedidoRef.value.focus()
-    }
+    const modal = modalContenidoRef.value
+    if (modal) posicionBaseModal.value = Math.round(modal.getBoundingClientRect().top)
+    inputPedidoRef.value?.focus()
   })
 
   // Emitir que el modal está abierto
   emit('modal-abierto')
 
   if (esMovil) {
-    Keyboard.addListener('keyboardWillShow', (info) => {
-      const alturaVentana = window.innerHeight
-      const alturaTeclado = info.keyboardHeight
-      alturaDesplazamiento.value = (alturaTeclado / alturaVentana) * 50
+    Keyboard.addListener('keyboardWillShow', () => {
+      cancelarRetornoModal()
+      subirModalAlEncabezado()
     })
 
-    Keyboard.addListener('keyboardWillHide', () => {
-      alturaDesplazamiento.value = 0
+    Keyboard.addListener('keyboardDidHide', () => {
+      programarRetornoModal()
     })
   }
 })
 
 onUnmounted(() => {
+  cancelarRetornoModal()
   if (esMovil) {
     Keyboard.removeAllListeners()
   }
@@ -348,33 +388,47 @@ onUnmounted(() => {
   width: 90%;
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease;
+  transition:
+    top 0.3s ease,
+    transform 0.3s ease;
 }
 .modal-titulo {
-  margin: 0 0 0.75rem 0;
+  margin: 0.2rem 0 0.55rem 0;
   font-size: 1.5rem;
   font-weight: 700;
+  line-height: 1.15;
   color: var(--color-texto-principal);
 }
-.contador-pedidos-arriba {
+.encabezado-campo-pedido {
+  container-name: encabezado-pedido;
+  container-type: inline-size;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
+  min-width: 0;
 }
 .badge-contador {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   background: var(--color-acento);
   color: white;
   padding: 0.35rem 0.75rem;
   border-radius: 16px;
   font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 .label-pedido {
-  display: block;
-  font-size: 0.95rem;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(0.75rem, 3.2vw, 0.95rem);
   color: var(--color-texto-secundario);
-  margin-bottom: 0.5rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .fila-input-camara {
   display: flex;
@@ -634,6 +688,18 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .modal-contenido {
     padding: 0.75rem;
+  }
+}
+@container encabezado-pedido (max-width: 225px) {
+  .label-pedido {
+    display: none;
+  }
+  .encabezado-campo-pedido {
+    justify-content: flex-end;
+  }
+  .badge-contador {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.85rem;
   }
 }
 </style>
