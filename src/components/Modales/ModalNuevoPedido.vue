@@ -8,7 +8,7 @@
       <h2 class="modal-titulo">Nuevo pedido</h2>
 
       <form @submit.prevent="confirmarTodosPedidos">
-        <div ref="encabezadoPedidoRef" class="encabezado-campo-pedido">
+        <div class="encabezado-campo-pedido">
           <label for="numeroPedido" class="label-pedido">Número de pedido</label>
           <span v-if="pedidosTemporales.length > 0" class="badge-contador">
             {{ pedidosTemporales.length }} pedido{{ pedidosTemporales.length !== 1 ? 's' : '' }}
@@ -35,7 +35,7 @@
               :inputmode="modoTexto ? 'text' : 'numeric'"
               autocomplete="off"
               :placeholder="textoPlaceholder"
-              @focus="subirModalAlEncabezado"
+              @focus="subirModalCompleto"
               @input="restablecerPlaceholder"
               @keyup.enter="agregarPedidoALista"
               :class="{ 'input-error': mostrarError, 'animar-error': animarError }"
@@ -72,7 +72,7 @@
               type="number"
               inputmode="numeric"
               min="1"
-              @focus="subirModalAlEncabezado"
+              @focus="subirModalCompleto"
               @input="validarItems"
             />
 
@@ -113,6 +113,8 @@
         />
       </form>
 
+    </div>
+    <Teleport to="body">
       <!-- Modal de la cámara -->
       <CamaraPedidos
         v-if="mostrarCamaraPedidos"
@@ -121,7 +123,7 @@
         @modal-abierto="manejarModalAbierto"
         @modal-cerrado="manejarModalCerrado"
       />
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -139,7 +141,6 @@ const emit = defineEmits(['agregar-pedido', 'cerrar', 'modal-abierto', 'modal-ce
 const inputPedidoRef = ref(null)
 const inputItemsRef = ref(null)
 const modalContenidoRef = ref(null)
-const encabezadoPedidoRef = ref(null)
 
 // Estado
 const numeroPedido = ref('')
@@ -177,20 +178,16 @@ function programarRetornoModal() {
   }, DEMORA_RETORNO_MODAL)
 }
 
-async function subirModalAlEncabezado() {
+async function subirModalCompleto() {
   if (!esMovil) return
   cancelarRetornoModal()
   if (posicionSuperiorModal.value !== null) return
   await nextTick()
-  const encabezado = encabezadoPedidoRef.value
   const modal = modalContenidoRef.value
-  if (!encabezado || !modal) return
+  if (!modal) return
   const header = document.querySelector('.q-header')
   const limiteSuperior = Math.max(0, header?.getBoundingClientRect().bottom || 0)
-  const distanciaInternaEncabezado = encabezado.offsetTop
-  posicionSuperiorModal.value = Math.round(
-    limiteSuperior + MARGEN_HEADER_MODAL - distanciaInternaEncabezado,
-  )
+  posicionSuperiorModal.value = Math.round(limiteSuperior + MARGEN_HEADER_MODAL)
 }
 
 // Computed
@@ -349,7 +346,7 @@ onMounted(() => {
   if (esMovil) {
     Keyboard.addListener('keyboardWillShow', () => {
       cancelarRetornoModal()
-      subirModalAlEncabezado()
+      subirModalCompleto()
     })
 
     Keyboard.addListener('keyboardDidHide', () => {

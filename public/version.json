@@ -6,34 +6,8 @@
     {
       "apartado": "Pedidos",
       "novedades": [
-        "El escaneo ahora muestra primero el código más reciente.",
-        "La cantidad se ajusta fácilmente con botones de menos y más.",
-        "Mejor visualización de códigos largos en pantallas pequeñas.",
-        "Nueva guía visual para facilitar el escaneo.",
-        "Ajustamos los modales para que sean más cómodos al usar el teclado."
-      ]
-    },
-    {
-      "apartado": "Ubicaciones, Consulta de ubicaciones y Etiquetas",
-      "novedades": [
-        "Los resultados más relevantes aparecen primero."
-      ]
-    },
-    {
-      "apartado": "Stock",
-      "novedades": [
-        "Evitamos enfoques automáticos molestos al entrar o editar.",
-        "Ahora podés ver y registrar cantidades negativas.",
-        "Las tarjetas mantienen el orden de llegada, con las pendientes al final.",
-        "Mejoramos el proceso de conteo y confirmación.",
-        "Mejoramos la gestión de ubicaciones de los artículos.",
-        "Adaptamos las tarjetas para que se vean mejor en pantallas pequeñas."
-      ]
-    },
-    {
-      "apartado": "Toda la aplicación",
-      "novedades": [
-        "Optimizamos el enfoque de los campos para evitar movimientos incómodos."
+        "La cámara vuelve a ocupar toda la pantalla al escanear pedidos.",
+        "El modal de nuevo pedido ahora se muestra completo al abrir el teclado."
       ]
     }
   ]
