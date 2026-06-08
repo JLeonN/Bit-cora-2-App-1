@@ -33,11 +33,12 @@ Sistema completo para gestión de pedidos diarios con historial, exportación, e
 - **Modal para agregar pedidos** manualmente
 - **Input manual**: agrega un solo pedido y cierra automáticamente
 - **Botón de cámara**: abre CamaraPedidos.vue para escanear múltiples códigos
+- **Teclado móvil**: mantiene visible el título completo del modal al enfocar los campos
 - **Validaciones** con feedback visual
 - **Integración** con sistema de persistencia
 
 #### **CamaraPedidos.vue**
-- **Modal con cámara embebida** para escaneo en tiempo real
+- **Modal de pantalla completa** para escaneo en tiempo real
 - **@zxing/library** para escaneo de códigos de barra y QR
 - **Miniatura de última captura**
 - **Lista de códigos escaneados** con opción de eliminar
