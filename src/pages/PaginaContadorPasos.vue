@@ -33,9 +33,18 @@
             ‹
           </button>
           <div class="contenido-resumen">
-            <p class="etiqueta">{{ tarjeta.titulo }}</p>
-            <p class="subetiqueta">{{ tarjeta.subtitulo }}</p>
-            <p class="valor">{{ tarjeta.valor }}</p>
+            <div
+              :key="`${tarjeta.tipo}-${tarjeta.claveAnimacion}`"
+              class="contenido-resumen-animado"
+              :class="{
+                'animacion-resumen-anterior': tarjeta.animacionActiva && tarjeta.direccionAnimacion > 0,
+                'animacion-resumen-siguiente': tarjeta.animacionActiva && tarjeta.direccionAnimacion < 0,
+              }"
+            >
+              <p class="etiqueta">{{ tarjeta.titulo }}</p>
+              <p class="subetiqueta">{{ tarjeta.subtitulo }}</p>
+              <p class="valor">{{ tarjeta.valor }}</p>
+            </div>
           </div>
           <button
             type="button"
@@ -61,7 +70,7 @@
       <q-btn
         v-if="!estadoActual.sesionActiva"
         class="boton-sesion iniciar"
-        label="Iniciar sesion"
+        label="Iniciar sesión"
         @click="iniciarSesion"
       />
       <q-btn
@@ -141,7 +150,7 @@
               <strong>{{ mes.totalPasos }}</strong>
             </button>
             <div v-if="mesesExpandidos.has(mes.mes)" class="detalle-mes">
-              <div v-if="mes.dias.length === 0" class="vacio">Sin dias para este mes</div>
+              <div v-if="mes.dias.length === 0" class="vacio">Sin días para este mes</div>
               <div v-for="dia in mes.dias" :key="dia.fecha" class="fila-historial">
                 <span>{{ formatearFechaISO(dia.fecha) }}</span>
                 <strong>{{ dia.totalPasos }}</strong>
@@ -208,6 +217,12 @@ const indiceSesionResumen = ref(0)
 const indiceSemanaResumen = ref(0)
 const indiceMesResumen = ref(0)
 const toqueResumen = ref({ tipo: '', inicioX: 0, inicioY: 0 })
+const animacionesResumen = reactive({
+  dia: { version: 0, direccion: 0 },
+  sesion: { version: 0, direccion: 0 },
+  semana: { version: 0, direccion: 0 },
+  mes: { version: 0, direccion: 0 },
+})
 let desuscribir = null
 const $q = useQuasar()
 
@@ -454,6 +469,7 @@ function obtenerFinSemanaLocal(fechaBase) {
 }
 
 function crearTarjetaResumen(tipo, lista, indice) {
+  const animacion = animacionesResumen[tipo]
   if (!lista.length) {
     return {
       tipo,
@@ -462,6 +478,9 @@ function crearTarjetaResumen(tipo, lista, indice) {
       valor: 0,
       puedeAnterior: false,
       puedeSiguiente: false,
+      claveAnimacion: animacion.version,
+      direccionAnimacion: animacion.direccion,
+      animacionActiva: animacion.version > 0,
     }
   }
   const indiceSeguro = Math.min(indice, lista.length - 1)
@@ -471,6 +490,9 @@ function crearTarjetaResumen(tipo, lista, indice) {
     ...obtenerContenidoResumen(tipo, item),
     puedeAnterior: indiceSeguro < lista.length - 1,
     puedeSiguiente: indiceSeguro > 0,
+    claveAnimacion: animacion.version,
+    direccionAnimacion: animacion.direccion,
+    animacionActiva: animacion.version > 0,
   }
 }
 
@@ -559,14 +581,28 @@ function moverResumen(tipo, direccion) {
   const lista = obtenerListaResumen(tipo)
   if (!lista.length) return
   const indice = obtenerIndiceResumen(tipo)
-  indice.value = Math.min(Math.max(indice.value + direccion, 0), lista.length - 1)
+  const nuevoIndice = Math.min(Math.max(indice.value + direccion, 0), lista.length - 1)
+  if (nuevoIndice === indice.value) return
+  indice.value = nuevoIndice
+  animarResumen(tipo, direccion)
 }
 
 function volverResumenAlPresente() {
-  indiceDiaResumen.value = 0
-  indiceSesionResumen.value = 0
-  indiceSemanaResumen.value = 0
-  indiceMesResumen.value = 0
+  reiniciarResumen('dia', indiceDiaResumen)
+  reiniciarResumen('sesion', indiceSesionResumen)
+  reiniciarResumen('semana', indiceSemanaResumen)
+  reiniciarResumen('mes', indiceMesResumen)
+}
+
+function reiniciarResumen(tipo, indice) {
+  if (indice.value === 0) return
+  indice.value = 0
+  animarResumen(tipo, -1)
+}
+
+function animarResumen(tipo, direccion) {
+  animacionesResumen[tipo].direccion = direccion
+  animacionesResumen[tipo].version += 1
 }
 
 function iniciarToqueResumen(evento, tipo) {
@@ -796,10 +832,25 @@ onUnmounted(() => {
   gap: 2px;
   touch-action: pan-y;
   user-select: none;
+  overflow: hidden;
+  perspective: 620px;
 }
 .contenido-resumen {
   min-width: 0;
   text-align: center;
+  perspective: 620px;
+}
+.contenido-resumen-animado {
+  min-width: 0;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+.animacion-resumen-anterior {
+  animation: giro-resumen-anterior 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.animacion-resumen-siguiente {
+  animation: giro-resumen-siguiente 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .flecha-resumen {
   width: 24px;
@@ -1006,6 +1057,32 @@ onUnmounted(() => {
   }
   .valor {
     font-size: 1.18rem;
+  }
+}
+@keyframes giro-resumen-anterior {
+  0% {
+    opacity: 0.2;
+    transform: translateX(16px) rotateY(-72deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotateY(0) scale(1);
+  }
+}
+@keyframes giro-resumen-siguiente {
+  0% {
+    opacity: 0.2;
+    transform: translateX(-16px) rotateY(72deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animacion-resumen-anterior,
+  .animacion-resumen-siguiente {
+    animation: none;
   }
 }
 </style>
