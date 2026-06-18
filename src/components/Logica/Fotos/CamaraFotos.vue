@@ -27,7 +27,7 @@
             v-model="busquedaCodigo"
             type="text"
             placeholder="Buscar por código o nombre..."
-            @input="busquedaCodigo = busquedaCodigo.toUpperCase()"
+            @input="manejarInputBusqueda"
             @focus="manejarEnfoqueBusqueda"
           />
         </div>
@@ -77,6 +77,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { IconCamera, IconX, IconCheck, IconTrash } from '@tabler/icons-vue'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
+import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 
 const emit = defineEmits(['cerrar', 'fotos-guardadas'])
 
@@ -285,6 +286,18 @@ function manejarEnfoqueBusqueda() {
     inputBusqueda.value?.select()
     seleccionRecienteDesdeBuscador.value = false
   }
+}
+
+// Mantener mayúsculas sin mover el cursor al final.
+function manejarInputBusqueda(evento) {
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: (valor) => valor.toUpperCase(),
+    asignarValor: (valor) => {
+      busquedaCodigo.value = valor
+    },
+    referenciaInput: inputBusqueda,
+  })
 }
 
 // Seleccionar artículo del buscador

@@ -44,6 +44,7 @@
 <script setup>
 import { ref, onMounted, nextTick, computed } from 'vue'
 import CodigoMasNombre from '../Logica/Ubicaciones/CodigoMasNombre.vue'
+import { normalizarInputPreservandoCursor } from '../Logica/Compartidos/NormalizarInputCursor.js'
 
 const props = defineProps({
   foto: {
@@ -69,8 +70,15 @@ const mostrarBuscador = computed(() => {
 })
 
 // Manejar input (activar buscador al escribir)
-function handleInput() {
-  nuevoCodigo.value = nuevoCodigo.value.toUpperCase()
+function handleInput(evento) {
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: (valor) => valor.toUpperCase(),
+    asignarValor: (valor) => {
+      nuevoCodigo.value = valor
+    },
+    referenciaInput: inputCodigo,
+  })
   seleccionRecienteDesdeBuscador.value = false
   mostrarResultadosBuscador.value = true
 }

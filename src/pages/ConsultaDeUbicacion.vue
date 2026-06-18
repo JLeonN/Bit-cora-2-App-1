@@ -128,6 +128,7 @@ import {
   obtenerHistorialUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
+import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
 
 const emit = defineEmits(['configurar-barra'])
 
@@ -227,16 +228,14 @@ const manejarDobleEspacio = (evento) => {
 
 const manejarInputBusqueda = (evento) => {
   seleccionRecienteDesdeBuscador.value = false
-  const valorOriginal = evento.target.value
-  const valorNormalizado = normalizarTextoBusqueda(valorOriginal)
-  if (valorOriginal !== valorNormalizado) {
-    busquedaArticulo.value = valorNormalizado
-    nextTick(() => {
-      if (inputBusquedaRef.value) {
-        inputBusquedaRef.value.setSelectionRange(valorNormalizado.length, valorNormalizado.length)
-      }
-    })
-  }
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: normalizarTextoBusqueda,
+    asignarValor: (valor) => {
+      busquedaArticulo.value = valor
+    },
+    referenciaInput: inputBusquedaRef,
+  })
   mostrarBuscador.value =
     inputEnfocado.value && busquedaArticulo.value.length >= 3 && baseDatosCargada.value
 }

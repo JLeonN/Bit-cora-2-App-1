@@ -133,6 +133,7 @@ import TresBotones from '../../Botones/TresBotones.vue'
 import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
+import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 import {
   guardarUltimaUbicacion,
   obtenerUltimaUbicacion,
@@ -252,19 +253,14 @@ async function limpiarUbicacionRecordada() {
 
 // --- FUNCIONES DEL BUSCADOR Y ENFOQUE ---
 function manejarInputCodigo(evento) {
-  const valorOriginal = evento.target.value
-  const valorNormalizado = normalizarCodigo(valorOriginal)
-
-  // Solo actualizar si cambió algo
-  if (valorOriginal !== valorNormalizado) {
-    nuevoCodigo.value = valorNormalizado
-    // Mantener el cursor en la posición correcta
-    nextTick(() => {
-      if (inputCodigo.value) {
-        inputCodigo.value.setSelectionRange(valorNormalizado.length, valorNormalizado.length)
-      }
-    })
-  }
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: normalizarCodigo,
+    asignarValor: (valor) => {
+      nuevoCodigo.value = valor
+    },
+    referenciaInput: inputCodigo,
+  })
 
   restablecerPlaceholderCodigo()
   seleccionRecienteDesdeBuscador.value = false

@@ -271,6 +271,7 @@ import {
   obtenerUltimaUbicacionRegistrada,
   registrarUbicacionArticulo,
 } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
+import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import { generarYGuardarExcelStock } from '../components/Logica/Stock/ExportarStockExcel.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
@@ -473,7 +474,14 @@ function normalizarBusqueda(valor) {
 }
 
 function manejarInputBusqueda(evento) {
-  busquedaArticulo.value = normalizarBusqueda(evento.target.value)
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: normalizarBusqueda,
+    asignarValor: (valor) => {
+      busquedaArticulo.value = valor
+    },
+    referenciaInput: inputBusquedaRef,
+  })
   mostrarBuscador.value =
     inputEnfocado.value && busquedaArticulo.value.length >= 3 && baseDatosCargada.value
 }
@@ -495,7 +503,13 @@ function manejarDobleEspacio(evento) {
   const ahora = Date.now()
   if (ahora - ultimoEspacioTiempo.value < 300) {
     evento.preventDefault()
-    busquedaArticulo.value = `${busquedaArticulo.value.trimEnd()}-`
+    const posicion = evento.target.selectionStart ?? busquedaArticulo.value.length
+    const textoAntes = busquedaArticulo.value.substring(0, posicion - 1)
+    const textoDespues = busquedaArticulo.value.substring(posicion)
+    busquedaArticulo.value = `${textoAntes}-${textoDespues}`
+    nextTick(() => {
+      inputBusquedaRef.value?.setSelectionRange(posicion, posicion)
+    })
     ultimoEspacioTiempo.value = 0
     return
   }

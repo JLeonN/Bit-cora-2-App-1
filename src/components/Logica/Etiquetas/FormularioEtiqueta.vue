@@ -49,7 +49,9 @@
           <input
             id="ubicacion-etiqueta"
             type="text"
+            ref="inputUbicacion"
             v-model="ubicacionIngresada"
+            @input="manejarInputUbicacion"
             placeholder="Ubicación"
           />
           <button
@@ -121,6 +123,7 @@ import { IconCamera, IconPlus, IconTrash, IconMinus } from '@tabler/icons-vue'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
+import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 
 const emit = defineEmits(['agregar-etiqueta', 'modal-abierto', 'modal-cerrado'])
 
@@ -142,6 +145,7 @@ const animarErrorCodigo = ref(false)
 // Referencias
 const inputCodigo = ref(null)
 const inputCantidad = ref(null)
+const inputUbicacion = ref(null)
 
 // Estado del buscador
 const inputEnfocado = ref(false)
@@ -204,6 +208,23 @@ function normalizarCantidadCopias() {
     cantidadCopias.value = Math.trunc(cantidadCopias.value)
   }
   mostrarErrorCantidad.value = false
+}
+
+function normalizarUbicacionIngresada(valor) {
+  return String(valor || '')
+    .toUpperCase()
+    .replace(/\s+/g, '-')
+}
+
+function manejarInputUbicacion(evento) {
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: normalizarUbicacionIngresada,
+    asignarValor: (valor) => {
+      ubicacionIngresada.value = valor
+    },
+    referenciaInput: inputUbicacion,
+  })
 }
 
 function incrementarCantidad() {
@@ -369,16 +390,6 @@ watch(mostrarResultados, (nuevo) => {
     }, 100)
   } else {
     document.removeEventListener('click', cerrarResultadosFuera)
-  }
-})
-
-// Observador para formatear el campo de ubicación en tiempo real.
-watch(ubicacionIngresada, (newValue) => {
-  if (typeof newValue === 'string') {
-    const formattedValue = newValue.toUpperCase().replace(/\s+/g, '-')
-    if (formattedValue !== ubicacionIngresada.value) {
-      ubicacionIngresada.value = formattedValue
-    }
   }
 })
 

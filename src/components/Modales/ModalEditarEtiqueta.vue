@@ -32,8 +32,10 @@
         <label for="ubicacion-editar">Ubicación</label>
         <input
           id="ubicacion-editar"
+          ref="inputUbicacion"
           type="text"
           v-model="etiquetaEditada.ubicacion"
+          @input="manejarInputUbicacion"
           @focus="modalActivo = true"
           @blur="modalActivo = false"
         />
@@ -65,6 +67,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import DosBotones from '../Botones/TresBotones.vue'
+import { normalizarInputPreservandoCursor } from '../Logica/Compartidos/NormalizarInputCursor.js'
 
 const props = defineProps({
   etiqueta: {
@@ -85,6 +88,7 @@ const etiquetaEditada = ref({
 })
 
 const modalActivo = ref(false)
+const inputUbicacion = ref(null)
 
 watch(
   () => props.etiqueta,
@@ -101,17 +105,22 @@ watch(
   { deep: true },
 )
 
-watch(
-  () => etiquetaEditada.value.ubicacion,
-  (newValue) => {
-    if (typeof newValue === 'string') {
-      const formattedValue = newValue.toUpperCase().replace(/\s+/g, '-')
-      if (formattedValue !== etiquetaEditada.value.ubicacion) {
-        etiquetaEditada.value.ubicacion = formattedValue
-      }
-    }
-  },
-)
+function normalizarUbicacionEditada(valor) {
+  return String(valor || '')
+    .toUpperCase()
+    .replace(/\s+/g, '-')
+}
+
+function manejarInputUbicacion(evento) {
+  normalizarInputPreservandoCursor({
+    evento,
+    normalizarValor: normalizarUbicacionEditada,
+    asignarValor: (valor) => {
+      etiquetaEditada.value.ubicacion = valor
+    },
+    referenciaInput: inputUbicacion,
+  })
+}
 
 function guardarCambios() {
   if (!etiquetaEditada.value.codigo.trim()) {
