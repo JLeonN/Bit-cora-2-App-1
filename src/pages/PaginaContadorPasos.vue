@@ -16,25 +16,46 @@
     </div>
     <div class="tarjeta-resumen-general">
       <div class="tarjetas-resumen">
-        <div class="tarjeta-resumen">
-          <p class="etiqueta">Pasos hoy</p>
-          <p class="valor">{{ estadoActual.pasosDia }}</p>
-        </div>
-        <div class="tarjeta-resumen">
-          <p class="etiqueta">Sesión actual</p>
-          <p class="valor">{{ estadoActual.sesionActiva ? estadoActual.pasosSesion : 0 }}</p>
-        </div>
-        <div class="tarjeta-resumen">
-          <p class="etiqueta">Última semana</p>
-          <p class="subetiqueta">Lun a Dom</p>
-          <p class="valor">{{ resumenSemanaActual }}</p>
-        </div>
-        <div class="tarjeta-resumen">
-          <p class="etiqueta">Mes actual</p>
-          <p class="subetiqueta">{{ etiquetaMesActual }}</p>
-          <p class="valor">{{ resumenMesActual }}</p>
+        <div
+          v-for="tarjeta in tarjetasResumen"
+          :key="tarjeta.tipo"
+          class="tarjeta-resumen tarjeta-resumen-carrusel"
+          @touchstart.passive="iniciarToqueResumen($event, tarjeta.tipo)"
+          @touchend.passive="finalizarToqueResumen($event, tarjeta.tipo)"
+        >
+          <button
+            type="button"
+            class="flecha-resumen flecha-resumen-izquierda"
+            :disabled="!tarjeta.puedeAnterior"
+            :aria-label="`Ver anterior en ${tarjeta.titulo}`"
+            @click="moverResumen(tarjeta.tipo, 1)"
+          >
+            ‹
+          </button>
+          <div class="contenido-resumen">
+            <p class="etiqueta">{{ tarjeta.titulo }}</p>
+            <p class="subetiqueta">{{ tarjeta.subtitulo }}</p>
+            <p class="valor">{{ tarjeta.valor }}</p>
+          </div>
+          <button
+            type="button"
+            class="flecha-resumen flecha-resumen-derecha"
+            :disabled="!tarjeta.puedeSiguiente"
+            :aria-label="`Volver hacia el presente en ${tarjeta.titulo}`"
+            @click="moverResumen(tarjeta.tipo, -1)"
+          >
+            ›
+          </button>
         </div>
       </div>
+      <button
+        v-if="mostrarVolverPresente"
+        type="button"
+        class="boton-volver-presente"
+        @click="volverResumenAlPresente"
+      >
+        Volver al presente
+      </button>
     </div>
     <div class="acciones-sesion">
       <q-btn
@@ -182,6 +203,11 @@ const paginacionDiario = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const paginacionSesiones = reactive({ pagina: 1, tamanio: TAMANO_PAGINA })
 const paginacionMensual = reactive({ pagina: 1, tamanio: TAMANO_PAGINA_MENSUAL })
 const mesesExpandidos = ref(new Set())
+const indiceDiaResumen = ref(0)
+const indiceSesionResumen = ref(0)
+const indiceSemanaResumen = ref(0)
+const indiceMesResumen = ref(0)
+const toqueResumen = ref({ tipo: '', inicioX: 0, inicioY: 0 })
 let desuscribir = null
 const $q = useQuasar()
 
@@ -218,34 +244,101 @@ const NOMBRES_MESES = [
   'Diciembre',
 ]
 
-const etiquetaMesActual = computed(() => {
-  const ahora = new Date()
-  return `${NOMBRES_MESES[ahora.getMonth()]} ${ahora.getFullYear()}`
+const NOMBRES_DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+const UMBRAL_SWIPE_RESUMEN = 42
+
+const diasConPasos = computed(() => {
+  const mapa = new Map()
+  historialDiario.value.forEach((dia) => {
+    const totalPasos = Number(dia.totalPasos || 0)
+    if (dia.fecha && totalPasos > 0) mapa.set(dia.fecha, { fecha: dia.fecha, totalPasos })
+  })
+  if (estadoActual.pasosDia > 0) {
+    mapa.set(fechaHoyISO, { fecha: fechaHoyISO, totalPasos: estadoActual.pasosDia })
+  }
+  return [...mapa.values()].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
 })
 
-const resumenSemanaActual = computed(() => {
-  const ahora = new Date()
-  const inicioSemana = obtenerInicioSemanaLocal(ahora)
-  const finSemana = obtenerFinSemanaLocal(ahora)
-  return historialDiario.value
-    .filter((item) => {
-      const fechaItem = convertirFechaISOAFechaLocal(item.fecha)
-      return fechaItem >= inicioSemana && fechaItem <= finSemana
-    })
-    .reduce((acumulado, item) => acumulado + Number(item.totalPasos || 0), 0)
+const sesionesConPasos = computed(() => {
+  const sesiones = historialSesiones.value
+    .filter((sesion) => sesion.inicio && Number(sesion.pasosSesion || 0) > 0)
+    .map((sesion) => ({ ...sesion, pasosSesion: Number(sesion.pasosSesion || 0) }))
+  if (estadoActual.sesionActiva && estadoActual.pasosSesion > 0) {
+    const indiceActiva = sesiones.findIndex((sesion) => sesion.estado === 'activa')
+    if (indiceActiva >= 0) {
+      sesiones[indiceActiva] = {
+        ...sesiones[indiceActiva],
+        pasosSesion: estadoActual.pasosSesion,
+      }
+    } else {
+      sesiones.push({
+        id: 'sesion-activa-local',
+        inicio: new Date().toISOString(),
+        fin: null,
+        pasosSesion: estadoActual.pasosSesion,
+        estado: 'activa',
+      })
+    }
+  }
+  return sesiones.sort((a, b) => (a.inicio < b.inicio ? 1 : -1))
 })
 
-const resumenMesActual = computed(() => {
-  const ahora = new Date()
-  const anioActual = ahora.getFullYear()
-  const mesActual = ahora.getMonth()
-  return historialDiario.value
-    .filter((item) => {
-      const fechaItem = convertirFechaISOAFechaLocal(item.fecha)
-      return fechaItem.getFullYear() === anioActual && fechaItem.getMonth() === mesActual
-    })
-    .reduce((acumulado, item) => acumulado + Number(item.totalPasos || 0), 0)
+const semanasConPasos = computed(() => {
+  const mapa = new Map()
+  diasConPasos.value.forEach((dia) => {
+    const fecha = convertirFechaISOAFechaLocal(dia.fecha)
+    const inicioSemana = obtenerInicioSemanaLocal(fecha)
+    const finSemana = obtenerFinSemanaLocal(fecha)
+    const clave = obtenerFechaLocalISODesdeFecha(inicioSemana)
+    if (!mapa.has(clave)) {
+      mapa.set(clave, {
+        clave,
+        inicio: inicioSemana,
+        fin: finSemana,
+        totalPasos: 0,
+      })
+    }
+    mapa.get(clave).totalPasos += Number(dia.totalPasos || 0)
+  })
+  return [...mapa.values()]
+    .filter((semana) => semana.totalPasos > 0)
+    .sort((a, b) => (a.clave < b.clave ? 1 : -1))
 })
+
+const mesesConPasos = computed(() => {
+  const mapa = new Map()
+  diasConPasos.value.forEach((dia) => {
+    const fecha = convertirFechaISOAFechaLocal(dia.fecha)
+    const clave = dia.fecha.slice(0, 7)
+    if (!mapa.has(clave)) {
+      mapa.set(clave, {
+        clave,
+        anio: fecha.getFullYear(),
+        mes: fecha.getMonth(),
+        totalPasos: 0,
+      })
+    }
+    mapa.get(clave).totalPasos += Number(dia.totalPasos || 0)
+  })
+  return [...mapa.values()]
+    .filter((mes) => mes.totalPasos > 0)
+    .sort((a, b) => (a.clave < b.clave ? 1 : -1))
+})
+
+const tarjetasResumen = computed(() => [
+  crearTarjetaResumen('dia', diasConPasos.value, indiceDiaResumen.value),
+  crearTarjetaResumen('sesion', sesionesConPasos.value, indiceSesionResumen.value),
+  crearTarjetaResumen('semana', semanasConPasos.value, indiceSemanaResumen.value),
+  crearTarjetaResumen('mes', mesesConPasos.value, indiceMesResumen.value),
+])
+
+const mostrarVolverPresente = computed(
+  () =>
+    indiceDiaResumen.value > 0 ||
+    indiceSesionResumen.value > 0 ||
+    indiceSemanaResumen.value > 0 ||
+    indiceMesResumen.value > 0,
+)
 
 const diarioFiltrado = computed(() => {
   const base = [...historialDiario.value].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
@@ -314,6 +407,13 @@ watch([diarioFiltrado, sesionesFiltradas, mensualFiltrado], () => {
   paginacionMensual.pagina = Math.min(paginacionMensual.pagina, totalPaginasMensual.value)
 })
 
+watch([diasConPasos, sesionesConPasos, semanasConPasos, mesesConPasos], () => {
+  ajustarIndiceResumen(indiceDiaResumen, diasConPasos.value)
+  ajustarIndiceResumen(indiceSesionResumen, sesionesConPasos.value)
+  ajustarIndiceResumen(indiceSemanaResumen, semanasConPasos.value)
+  ajustarIndiceResumen(indiceMesResumen, mesesConPasos.value)
+})
+
 watch(
   () => ({ ...filtros.value }),
   () => {
@@ -351,6 +451,141 @@ function obtenerFinSemanaLocal(fechaBase) {
   finSemana.setDate(finSemana.getDate() + 6)
   finSemana.setHours(23, 59, 59, 999)
   return finSemana
+}
+
+function crearTarjetaResumen(tipo, lista, indice) {
+  if (!lista.length) {
+    return {
+      tipo,
+      titulo: obtenerTituloVacioResumen(tipo),
+      subtitulo: 'Sin datos',
+      valor: 0,
+      puedeAnterior: false,
+      puedeSiguiente: false,
+    }
+  }
+  const indiceSeguro = Math.min(indice, lista.length - 1)
+  const item = lista[indiceSeguro]
+  return {
+    tipo,
+    ...obtenerContenidoResumen(tipo, item),
+    puedeAnterior: indiceSeguro < lista.length - 1,
+    puedeSiguiente: indiceSeguro > 0,
+  }
+}
+
+function obtenerTituloVacioResumen(tipo) {
+  const titulos = {
+    dia: 'Pasos',
+    sesion: 'Sesiones',
+    semana: 'Semanas',
+    mes: 'Meses',
+  }
+  return titulos[tipo]
+}
+
+function obtenerContenidoResumen(tipo, item) {
+  if (tipo === 'dia') {
+    const fecha = convertirFechaISOAFechaLocal(item.fecha)
+    return {
+      titulo: `Pasos del ${NOMBRES_DIAS[fecha.getDay()]}`,
+      subtitulo: formatearFechaResumen(fecha),
+      valor: formatearPasosResumen(item.totalPasos),
+    }
+  }
+  if (tipo === 'sesion') {
+    const inicio = new Date(item.inicio)
+    return {
+      titulo: `Sesión del ${NOMBRES_DIAS[inicio.getDay()]}`,
+      subtitulo: `${formatearFechaResumen(inicio)} · ${formatearHoraResumen(inicio)}`,
+      valor: formatearPasosResumen(item.pasosSesion),
+    }
+  }
+  if (tipo === 'semana') {
+    return {
+      titulo: `Semana del ${item.inicio.getDate()} al ${item.fin.getDate()}`,
+      subtitulo: formatearRangoSemanaResumen(item.inicio, item.fin),
+      valor: formatearPasosResumen(item.totalPasos),
+    }
+  }
+  return {
+    titulo: `${NOMBRES_MESES[item.mes]} ${item.anio}`,
+    subtitulo: 'Mes',
+    valor: formatearPasosResumen(item.totalPasos),
+  }
+}
+
+function formatearPasosResumen(valor) {
+  return String(Number(valor || 0))
+}
+
+function formatearFechaResumen(fecha) {
+  return `${fecha.getDate()} de ${NOMBRES_MESES[fecha.getMonth()].toLowerCase()} ${fecha.getFullYear()}`
+}
+
+function formatearHoraResumen(fecha) {
+  return fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+function formatearRangoSemanaResumen(inicio, fin) {
+  const mismoMes = inicio.getMonth() === fin.getMonth() && inicio.getFullYear() === fin.getFullYear()
+  if (mismoMes) {
+    return `${NOMBRES_MESES[inicio.getMonth()]} ${inicio.getFullYear()}`
+  }
+  const mesInicio = NOMBRES_MESES[inicio.getMonth()].slice(0, 3)
+  const mesFin = NOMBRES_MESES[fin.getMonth()].slice(0, 3)
+  return `${inicio.getDate()} ${mesInicio} al ${fin.getDate()} ${mesFin} ${fin.getFullYear()}`
+}
+
+function obtenerListaResumen(tipo) {
+  if (tipo === 'dia') return diasConPasos.value
+  if (tipo === 'sesion') return sesionesConPasos.value
+  if (tipo === 'semana') return semanasConPasos.value
+  return mesesConPasos.value
+}
+
+function obtenerIndiceResumen(tipo) {
+  if (tipo === 'dia') return indiceDiaResumen
+  if (tipo === 'sesion') return indiceSesionResumen
+  if (tipo === 'semana') return indiceSemanaResumen
+  return indiceMesResumen
+}
+
+function ajustarIndiceResumen(indice, lista) {
+  indice.value = Math.min(indice.value, Math.max(0, lista.length - 1))
+}
+
+function moverResumen(tipo, direccion) {
+  const lista = obtenerListaResumen(tipo)
+  if (!lista.length) return
+  const indice = obtenerIndiceResumen(tipo)
+  indice.value = Math.min(Math.max(indice.value + direccion, 0), lista.length - 1)
+}
+
+function volverResumenAlPresente() {
+  indiceDiaResumen.value = 0
+  indiceSesionResumen.value = 0
+  indiceSemanaResumen.value = 0
+  indiceMesResumen.value = 0
+}
+
+function iniciarToqueResumen(evento, tipo) {
+  const toque = evento.changedTouches?.[0]
+  if (!toque) return
+  toqueResumen.value = { tipo, inicioX: toque.clientX, inicioY: toque.clientY }
+}
+
+function finalizarToqueResumen(evento, tipo) {
+  const toque = evento.changedTouches?.[0]
+  const inicio = toqueResumen.value
+  if (!toque || inicio.tipo !== tipo) return
+  const diferenciaX = toque.clientX - inicio.inicioX
+  const diferenciaY = toque.clientY - inicio.inicioY
+  toqueResumen.value = { tipo: '', inicioX: 0, inicioY: 0 }
+  if (Math.abs(diferenciaX) < UMBRAL_SWIPE_RESUMEN || Math.abs(diferenciaY) > Math.abs(diferenciaX)) {
+    return
+  }
+  moverResumen(tipo, diferenciaX > 0 ? 1 : -1)
 }
 
 function fechaCumpleFiltros(fechaISO, aplicarDiaExacto = true) {
@@ -553,21 +788,73 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 12px;
 }
+.tarjeta-resumen-carrusel {
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 2px;
+  touch-action: pan-y;
+  user-select: none;
+}
+.contenido-resumen {
+  min-width: 0;
+  text-align: center;
+}
+.flecha-resumen {
+  width: 24px;
+  height: 72px;
+  border: 0;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font-size: 1.45rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.55;
+  cursor: pointer;
+}
+.flecha-resumen:disabled {
+  opacity: 0.16;
+  cursor: default;
+}
+.flecha-resumen:not(:disabled):active {
+  color: var(--color-acento);
+  opacity: 1;
+}
+.boton-volver-presente {
+  display: block;
+  margin: 10px auto 0 auto;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  color: var(--color-texto-principal);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton-volver-presente:active {
+  border-color: var(--color-acento);
+  color: var(--color-acento);
+}
 .etiqueta {
   margin: 0;
   color: var(--color-texto-secundario);
   font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
 .subetiqueta {
   margin: 2px 0 0 0;
   color: var(--color-texto-secundario);
   font-size: 0.75rem;
+  min-height: 1rem;
+  overflow-wrap: anywhere;
 }
 .valor {
   margin: 4px 0 0 0;
   color: var(--color-acento);
   font-size: 1.35rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .acciones-sesion {
   margin: 0 0 16px 0;
@@ -700,6 +987,25 @@ onUnmounted(() => {
   }
   .acciones-sesion {
     gap: 8px;
+  }
+  .tarjetas-resumen {
+    grid-template-columns: 1fr;
+  }
+  .tarjeta-resumen-carrusel {
+    min-height: 76px;
+    grid-template-columns: 28px minmax(0, 1fr) 28px;
+    padding: 8px 6px;
+  }
+  .flecha-resumen {
+    width: 28px;
+    height: 56px;
+    font-size: 1.25rem;
+  }
+  .subetiqueta {
+    min-height: 0.9rem;
+  }
+  .valor {
+    font-size: 1.18rem;
   }
 }
 </style>
