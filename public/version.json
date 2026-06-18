@@ -1,14 +1,17 @@
 {
-  "versionDisponible": "4.2.29",
+  "versionDisponible": "4.2.30",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
-  "cambios": [
-    {
-      "apartado": "Pedidos",
-      "novedades": [
-        "La cámara vuelve a ocupar toda la pantalla al escanear pedidos.",
-        "El modal de nuevo pedido ahora se muestra completo al abrir el teclado."
-      ]
-    }
-  ]
+  "cambios": {
+    "es-AR": [
+      {
+        "apartado": "Actualizaciones",
+        "novedades": [
+          "Ahora podés corregir códigos y ubicaciones en el medio del texto sin que el cursor salte al final.",
+          "El resumen de pasos permite deslizar cada tarjeta para ver días, sesiones, semanas y meses anteriores con actividad.",
+          "Las tarjetas del contador de pasos ahora tienen una transición visual más clara al cambiar de período."
+        ]
+      }
+    ]
+  }
 }

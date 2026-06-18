@@ -348,3 +348,10 @@ src/
 
 - El modal de actualización limita su altura, permite desplazar las novedades con el dedo y mantiene sus acciones visibles.
 - Release vigente actualizada: 4.2.28.
+
+### Actualización de release 4.2.30
+
+- Los inputs de códigos y ubicaciones conservan el cursor al corregir texto en el medio.
+- El contador de pasos incorpora tarjetas navegables por día, sesión, semana y mes con períodos anteriores.
+- Las tarjetas del contador de pasos muestran una transición visual al cambiar de período.
+- Release vigente actualizada: 4.2.30.
