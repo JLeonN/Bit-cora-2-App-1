@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.30",
+  "versionDisponible": "4.2.31",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,9 +7,9 @@
       {
         "apartado": "Actualizaciones",
         "novedades": [
-          "Ahora podés corregir códigos y ubicaciones en el medio del texto sin que el cursor salte al final.",
-          "El resumen de pasos permite deslizar cada tarjeta para ver días, sesiones, semanas y meses anteriores con actividad.",
-          "Las tarjetas del contador de pasos ahora tienen una transición visual más clara al cambiar de período."
+          "Los códigos escaneados se reconocen mejor en Ubicaciones, Consulta, Stock, Etiquetas y Fotos.",
+          "Las tarjetas de artículos ahora muestran el stock del Excel como referencia rápida.",
+          "El resumen del contador de pasos muestra fechas más claras y títulos destacados."
         ]
       }
     ]

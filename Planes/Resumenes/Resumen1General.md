@@ -355,3 +355,10 @@ src/
 - El contador de pasos incorpora tarjetas navegables por día, sesión, semana y mes con períodos anteriores.
 - Las tarjetas del contador de pasos muestran una transición visual al cambiar de período.
 - Release vigente actualizada: 4.2.30.
+
+### Actualización de release 4.2.31
+
+- Los códigos escaneados con prefijo del lector se reconocen en Ubicaciones, Consulta De Ubicación, Stock, Etiquetas y Fotos.
+- Las tarjetas de artículos en Ubicaciones y Consulta De Ubicación muestran el stock del Excel como referencia.
+- El contador de pasos muestra títulos de período más claros y fechas completas al revisar registros anteriores.
+- Release vigente actualizada: 4.2.31.
