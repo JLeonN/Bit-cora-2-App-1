@@ -77,6 +77,10 @@
             {{ articuloSeleccionadoInfo.ubicacionOriginal || 'Sin ubicación' }}
           </span>
         </p>
+        <p class="linea-info-articulo">
+          <span class="etiqueta-info-articulo">Stock del Excel:</span>
+          {{ articuloSeleccionadoInfo.stockExcel || 'Sin stock' }}
+        </p>
       </div>
 
       <!-- input ubicacion -->
@@ -333,6 +337,7 @@ function construirInfoArticulo(articulo) {
     nombre: articulo.nombre,
     codigo: articulo.codigo,
     ubicacionOriginal: articulo.ubicacionAntigua || '',
+    stockExcel: articulo.stock || '',
     historialVisual:
       historial.length > 0 ? [...historial].reverse() : [articulo.ubicacionAntigua || 'SIN UBICACION'],
   }

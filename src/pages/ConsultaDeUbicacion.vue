@@ -67,6 +67,7 @@
           </p>
           <p class="valor-nombre">{{ articuloConsultado.nombre }}</p>
           <p class="valor-codigo">{{ articuloConsultado.codigo }}</p>
+          <p class="valor-stock-excel">Stock del Excel: {{ articuloConsultado.stock || 'Sin stock' }}</p>
         </div>
 
         <button type="button" class="boton-actualizar-ubicacion" @click="alternarEditorUbicacion">
@@ -655,6 +656,12 @@ onUnmounted(() => {
   margin: 0.3rem 0 0 0;
   color: var(--color-texto-secundario);
   font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+  font-weight: 600;
+}
+.valor-stock-excel {
+  margin: 0.3rem 0 0 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.95rem;
   font-weight: 600;
 }
 .boton-actualizar-ubicacion {
