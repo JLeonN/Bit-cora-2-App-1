@@ -272,6 +272,7 @@ import {
   registrarUbicacionArticulo,
 } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
+import { obtenerArticuloPorCodigoEscaneado } from '../components/Logica/Compartidos/CodigoEscaner.js'
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import { generarYGuardarExcelStock } from '../components/Logica/Stock/ExportarStockExcel.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
@@ -519,7 +520,9 @@ function manejarDobleEspacio(evento) {
 function buscarArticuloExacto() {
   if (!asegurarFuenteValida()) return
   const termino = busquedaArticulo.value.trim().toUpperCase()
-  const articulo = obtenerArticulosCargados().find(
+  const articulos = obtenerArticulosCargados()
+  const articuloEscaneado = obtenerArticuloPorCodigoEscaneado(articulos, termino)
+  const articulo = articuloEscaneado || articulos.find(
     (item) => item.codigo === termino || item.nombre === termino,
   )
   if (!articulo) {

@@ -129,6 +129,7 @@ import {
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
+import { obtenerArticuloPorCodigoEscaneado } from '../components/Logica/Compartidos/CodigoEscaner.js'
 
 const emit = defineEmits(['configurar-barra'])
 
@@ -263,6 +264,8 @@ const buscarEnBase = (textoBusqueda) => {
   if (!termino) return null
   const articulos = obtenerArticulosCargados()
   if (!Array.isArray(articulos) || articulos.length === 0) return null
+  const porCodigoEscaneado = obtenerArticuloPorCodigoEscaneado(articulos, termino)
+  if (porCodigoEscaneado) return porCodigoEscaneado
   const porCodigo = articulos.find((articulo) => articulo.codigo === termino)
   if (porCodigo) return porCodigo
   return articulos.find((articulo) => articulo.nombre === termino) || null

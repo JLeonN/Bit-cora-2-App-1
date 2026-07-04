@@ -33,7 +33,11 @@
         </div>
 
         <!-- Componente de búsqueda -->
-        <CodigoMasNombre :busqueda="busquedaCodigo" @articulo-seleccionado="seleccionarArticulo" />
+        <CodigoMasNombre
+          :busqueda="busquedaCodigo"
+          @articulo-seleccionado="seleccionarArticulo"
+          @estado-busqueda="manejarEstadoBuscador"
+        />
 
         <!-- Botones de acción -->
         <div class="contenedor-botones-accion">
@@ -314,6 +318,19 @@ function seleccionarArticulo(articulo) {
       busquedaCodigo.value = '' // ← AGREGAR ESTA LÍNEA
     }
   })
+}
+
+function manejarEstadoBuscador(estado) {
+  if (
+    !estado?.baseDatosCargada ||
+    !estado?.busquedaValida ||
+    estado.tipoCoincidenciaUnica !== 'codigo-escaneado' ||
+    !estado.articuloUnico
+  ) {
+    return
+  }
+  if (codigoSeleccionado.value === estado.articuloUnico.codigo) return
+  seleccionarArticulo(estado.articuloUnico)
 }
 
 // Confirmar y continuar

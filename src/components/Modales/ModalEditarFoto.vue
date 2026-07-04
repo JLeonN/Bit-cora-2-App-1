@@ -25,6 +25,7 @@
           v-if="mostrarBuscador"
           :busqueda="nuevoCodigo"
           @articulo-seleccionado="seleccionarArticulo"
+          @estado-busqueda="manejarEstadoBuscador"
         />
       </div>
 
@@ -105,6 +106,19 @@ function seleccionarArticulo(articulo) {
       inputCodigo.value.blur()
     }
   })
+}
+
+function manejarEstadoBuscador(estado) {
+  if (
+    !estado?.baseDatosCargada ||
+    !estado?.busquedaValida ||
+    estado.tipoCoincidenciaUnica !== 'codigo-escaneado' ||
+    !estado.articuloUnico
+  ) {
+    return
+  }
+  if (nuevoCodigo.value === estado.articuloUnico.codigo) return
+  seleccionarArticulo(estado.articuloUnico)
 }
 
 // Guardar

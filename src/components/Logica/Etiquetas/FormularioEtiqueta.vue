@@ -124,6 +124,7 @@ import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
+import { obtenerArticuloPorCodigoEscaneado } from '../Compartidos/CodigoEscaner.js'
 
 const emit = defineEmits(['agregar-etiqueta', 'modal-abierto', 'modal-cerrado'])
 
@@ -216,6 +217,10 @@ function normalizarUbicacionIngresada(valor) {
     .replace(/\s+/g, '-')
 }
 
+function buscarArticuloPorCodigo(codigo) {
+  return obtenerArticuloPorCodigoEscaneado(obtenerArticulosCargados(), codigo)
+}
+
 function manejarInputUbicacion(evento) {
   normalizarInputPreservandoCursor({
     evento,
@@ -247,9 +252,7 @@ function seleccionarArticulo(articulo, opciones = {}) {
   seleccionRecienteDesdeBuscador.value = true
 
   // Buscar ubicación del artículo en la base de datos
-  const articuloCompleto = obtenerArticulosCargados().find(
-    (a) => a.codigo.toLowerCase() === articulo.codigo.toLowerCase(),
-  )
+  const articuloCompleto = buscarArticuloPorCodigo(articulo.codigo)
 
   if (articuloCompleto?.ubicacionAntigua) {
     ubicacionIngresada.value = articuloCompleto.ubicacionAntigua
@@ -306,9 +309,7 @@ function procesarCodigosEscaneados(codigos) {
     codigoIngresado.value = codigoEscaneado
 
     // Buscar artículo en base de datos
-    const articuloEncontrado = obtenerArticulosCargados().find(
-      (a) => a.codigo.toLowerCase() === codigoEscaneado.toLowerCase(),
-    )
+    const articuloEncontrado = buscarArticuloPorCodigo(codigoEscaneado)
 
     if (articuloEncontrado) {
       descripcionIngresada.value = articuloEncontrado.nombre
