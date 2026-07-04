@@ -487,7 +487,7 @@ function crearTarjetaResumen(tipo, lista, indice) {
   const item = lista[indiceSeguro]
   return {
     tipo,
-    ...obtenerContenidoResumen(tipo, item),
+    ...obtenerContenidoResumen(tipo, item, indiceSeguro === 0),
     puedeAnterior: indiceSeguro < lista.length - 1,
     puedeSiguiente: indiceSeguro > 0,
     claveAnimacion: animacion.version,
@@ -506,26 +506,28 @@ function obtenerTituloVacioResumen(tipo) {
   return titulos[tipo]
 }
 
-function obtenerContenidoResumen(tipo, item) {
+function obtenerContenidoResumen(tipo, item, esResumenActual) {
   if (tipo === 'dia') {
     const fecha = convertirFechaISOAFechaLocal(item.fecha)
     return {
-      titulo: `Pasos del ${NOMBRES_DIAS[fecha.getDay()]}`,
-      subtitulo: formatearFechaResumen(fecha),
+      titulo: esResumenActual ? obtenerNombreDiaCapitalizado(fecha) : formatearFechaCompletaResumen(fecha),
+      subtitulo: esResumenActual ? formatearFechaResumen(fecha) : 'Día',
       valor: formatearPasosResumen(item.totalPasos),
     }
   }
   if (tipo === 'sesion') {
     const inicio = new Date(item.inicio)
     return {
-      titulo: `Sesión del ${NOMBRES_DIAS[inicio.getDay()]}`,
-      subtitulo: `${formatearFechaResumen(inicio)} · ${formatearHoraResumen(inicio)}`,
+      titulo: esResumenActual ? obtenerNombreDiaCapitalizado(inicio) : formatearFechaCompletaResumen(inicio),
+      subtitulo: `Sesión ${formatearHoraResumen(inicio)}`,
       valor: formatearPasosResumen(item.pasosSesion),
     }
   }
   if (tipo === 'semana') {
     return {
-      titulo: `Semana del ${item.inicio.getDate()} al ${item.fin.getDate()}`,
+      titulo: esResumenActual
+        ? 'Semana lun-dom'
+        : `${formatearFechaCompletaResumen(item.inicio)} - ${formatearFechaCompletaResumen(item.fin)}`,
       subtitulo: formatearRangoSemanaResumen(item.inicio, item.fin),
       valor: formatearPasosResumen(item.totalPasos),
     }
@@ -539,6 +541,19 @@ function obtenerContenidoResumen(tipo, item) {
 
 function formatearPasosResumen(valor) {
   return String(Number(valor || 0))
+}
+
+function capitalizarPrimeraLetra(texto) {
+  const valor = String(texto || '')
+  return valor ? valor.charAt(0).toUpperCase() + valor.slice(1) : ''
+}
+
+function obtenerNombreDiaCapitalizado(fecha) {
+  return capitalizarPrimeraLetra(NOMBRES_DIAS[fecha.getDay()])
+}
+
+function formatearFechaCompletaResumen(fecha) {
+  return `${obtenerNombreDiaCapitalizado(fecha)} ${formatearFechaResumen(fecha)}`
 }
 
 function formatearFechaResumen(fecha) {
@@ -891,6 +906,7 @@ onUnmounted(() => {
   margin: 0;
   color: var(--color-texto-secundario);
   font-size: 0.85rem;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 .subetiqueta {
