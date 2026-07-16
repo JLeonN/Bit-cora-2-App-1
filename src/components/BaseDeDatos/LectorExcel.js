@@ -133,6 +133,15 @@ function leerArchivoComoBuffer(archivo) {
   })
 }
 
+function convertirBase64EnBuffer(base64) {
+  const contenidoBinario = atob(base64)
+  const bytes = new Uint8Array(contenidoBinario.length)
+  for (let indice = 0; indice < contenidoBinario.length; indice += 1) {
+    bytes[indice] = contenidoBinario.charCodeAt(indice)
+  }
+  return bytes.buffer
+}
+
 function procesarDatosExcel(datosJson) {
   const articulosProcesados = []
   const filas = datosJson.slice(1)
@@ -230,6 +239,59 @@ export async function cargarArticulosDesdeExcel() {
       mensajeError = `Error al procesar: ${error.message}`
     }
     return { exito: false, mensaje: mensajeError }
+  }
+}
+
+export async function cargarArticulosDesdeExcelCompartido({ nombre, tipo, base64 }) {
+  if (estadoCarga === 'cargando') {
+    return { exito: false, mensaje: 'Ya está cargando...' }
+  }
+  if (!base64) {
+    estadoCarga = 'error'
+    return { exito: false, mensaje: 'No se pudo leer el Excel compartido.' }
+  }
+
+  estadoCarga = 'cargando'
+  try {
+    informacionArchivo = {
+      nombre: nombre || 'Excel compartido.xlsx',
+      tamano: Math.round((base64.length * 3) / 4),
+      tipo: tipo || '',
+      fechaModificacion: Date.now(),
+    }
+    const esExcel =
+      informacionArchivo.nombre.toLowerCase().endsWith('.xlsx') ||
+      informacionArchivo.nombre.toLowerCase().endsWith('.xls') ||
+      informacionArchivo.tipo.includes('spreadsheet')
+    if (!esExcel) {
+      throw new Error('El archivo compartido no es un Excel válido (.xlsx o .xls)')
+    }
+
+    const libroExcel = XLSX.read(convertirBase64EnBuffer(base64), { type: 'array' })
+    if (!libroExcel.SheetNames || libroExcel.SheetNames.length === 0) {
+      throw new Error('El archivo Excel no tiene hojas o está corrupto')
+    }
+    const hojaExcel = libroExcel.Sheets[libroExcel.SheetNames[0]]
+    const articulosProcesados = procesarDatosExcel(
+      XLSX.utils.sheet_to_json(hojaExcel, { header: 1 }),
+    )
+    if (articulosProcesados.length === 0) {
+      throw new Error('El archivo no contiene datos válidos')
+    }
+
+    articulosBaseOriginal = articulosProcesados.map((articulo) => ({ ...articulo }))
+    articulosDelExcel = articulosProcesados.map((articulo) => ({ ...articulo }))
+    estadoCarga = 'cargado'
+    await guardarBaseDatosEnPreferences()
+    return {
+      exito: true,
+      mensaje: `${articulosProcesados.length} artículos cargados desde "${informacionArchivo.nombre}"`,
+      cantidad: articulosProcesados.length,
+      archivo: informacionArchivo,
+    }
+  } catch (error) {
+    estadoCarga = 'error'
+    return { exito: false, mensaje: `Error al procesar el Excel compartido: ${error.message}` }
   }
 }
 

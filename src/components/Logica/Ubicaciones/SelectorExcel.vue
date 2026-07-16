@@ -147,6 +147,7 @@ import {
 } from '@tabler/icons-vue'
 import {
   cargarArticulosDesdeExcel,
+  cargarArticulosDesdeExcelCompartido,
   obtenerEstadoCarga,
   obtenerInformacionArchivo,
   obtenerArticulosCargados,
@@ -154,6 +155,12 @@ import {
   inicializarBaseDatos,
 } from '../../BaseDeDatos/LectorExcel.js'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
+import {
+  esArchivoExcel,
+  obtenerArchivoCompartidoPendiente,
+  limpiarArchivoCompartidoPendiente,
+  leerArchivoCompartidoComoBase64,
+} from '../Compartidos/ServicioArchivoCompartido.js'
 
 // --- PROPS ---
 defineProps({
@@ -282,12 +289,53 @@ function actualizarEstado() {
   })
 }
 
+async function cargarExcelCompartidoPendiente() {
+  const pendiente = await obtenerArchivoCompartidoPendiente()
+  if (!pendiente?.uri || !esArchivoExcel(pendiente.nombre, pendiente.tipo)) return false
+
+  try {
+    estaCargando.value = true
+    estadoCarga.value = 'cargando'
+    mensajeError.value = ''
+    mensajeCarga.value = 'Cargando Excel recibido...'
+    const base64 = await leerArchivoCompartidoComoBase64(pendiente.uri)
+    const resultado = await cargarArticulosDesdeExcelCompartido({
+      nombre: pendiente.nombre,
+      tipo: pendiente.tipo,
+      base64,
+    })
+    if (!resultado.exito) {
+      estadoCarga.value = 'error'
+      mensajeError.value = resultado.mensaje || 'No se pudo cargar el Excel recibido'
+      emit('error-carga', mensajeError.value)
+      return true
+    }
+
+    estadoCarga.value = 'cargado'
+    cantidadArticulos.value = resultado.cantidad || 0
+    informacionArchivo.value = resultado.archivo || null
+    emit('base-datos-cargada', {
+      cantidad: cantidadArticulos.value,
+      mensaje: resultado.mensaje,
+      archivo: informacionArchivo.value,
+    })
+    return true
+  } finally {
+    await limpiarArchivoCompartidoPendiente()
+    estaCargando.value = false
+    mensajeCarga.value = ''
+  }
+}
+
 // --- LIFECYCLE ---
 onMounted(async () => {
   console.log('[SelectorExcel] Componente montado')
 
   // ** INICIALIZAR BASE DE DATOS AL MONTAR **
   await inicializarBaseDatos()
+
+  const seCargoExcelCompartido = await cargarExcelCompartidoPendiente()
+  if (seCargoExcelCompartido) return
 
   // Actualizar estado después de la inicialización
   actualizarEstado()

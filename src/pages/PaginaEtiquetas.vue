@@ -91,7 +91,7 @@ import {
   obtenerArchivoCompartidoPendiente,
   limpiarArchivoCompartidoPendiente,
   leerTextoArchivoCompartido,
-} from '../components/Logica/Etiquetas/ServicioArchivoCompartido.js'
+} from '../components/Logica/Compartidos/ServicioArchivoCompartido.js'
 import {
   importarMemoriasDesdeTexto as importarMemoriasDesdeTextoServicio,
 } from '../components/Logica/Etiquetas/ServicioMemoriasEtiquetas.js'

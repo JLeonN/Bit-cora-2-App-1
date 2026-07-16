@@ -132,7 +132,7 @@
         class="fondo-app texto-principal contenedor-con-barra-inferior"
         :style="estiloContenedorConBarra"
       >
-        <router-view @configurar-barra="manejarConfiguracionBarra" />
+        <router-view :key="$route.fullPath" @configurar-barra="manejarConfiguracionBarra" />
       </q-page-container>
       <BarraBotonesInferior
         :mostrar-agregar="configuracionBarra.mostrarAgregar"
@@ -228,6 +228,10 @@ import {
   activarEnfoqueGlobalInputs,
   desactivarEnfoqueGlobalInputs,
 } from 'src/components/Logica/Compartidos/ServicioEnfoqueInput.js'
+import {
+  esArchivoExcel,
+  obtenerArchivoCompartidoPendiente,
+} from 'src/components/Logica/Compartidos/ServicioArchivoCompartido.js'
 
 const drawer = ref(false)
 const router = useRouter()
@@ -256,6 +260,7 @@ const configuracionBarra = reactive({
 })
 let paginaActivaRef = null
 let desuscribirPasos = null
+let intervaloArchivoCompartido = null
 const claseHeader = esModoPruebaPublicidad
   ? 'header-modo-prueba texto-principal'
   : 'bg-primario-oscuro texto-principal'
@@ -288,6 +293,8 @@ onMounted(async () => {
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', actualizarDimensionesPantalla)
   }
+  await redirigirExcelCompartidoPendiente()
+  intervaloArchivoCompartido = setInterval(redirigirExcelCompartidoPendiente, 1000)
 })
 
 onUnmounted(() => {
@@ -298,6 +305,9 @@ onUnmounted(() => {
   }
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', actualizarDimensionesPantalla)
+  }
+  if (intervaloArchivoCompartido) {
+    clearInterval(intervaloArchivoCompartido)
   }
 })
 
@@ -381,6 +391,18 @@ const actualizarDimensionesPantalla = () => {
     return
   }
   anchoPantalla.value = window.innerWidth
+}
+
+const redirigirExcelCompartidoPendiente = async () => {
+  const pendiente = await obtenerArchivoCompartidoPendiente()
+  if (!pendiente?.uri || !esArchivoExcel(pendiente.nombre, pendiente.tipo)) return
+
+  const rutaActual = router.currentRoute.value
+  if (rutaActual.path === '/AjustarUbicaciones' && rutaActual.query.archivoCompartido) return
+  await router.replace({
+    path: '/AjustarUbicaciones',
+    query: { archivoCompartido: Date.now().toString() },
+  })
 }
 
 const manejarConfiguracionBarra = (configuracion, refPagina) => {

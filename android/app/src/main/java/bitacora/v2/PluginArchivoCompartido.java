@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.database.Cursor;
 import android.provider.OpenableColumns;
+import android.util.Base64;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -15,6 +16,10 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +29,7 @@ public class PluginArchivoCompartido extends Plugin {
     private static final String NOMBRE_PREFS = "archivo_compartido_prefs";
     private static final String CLAVE_URI = "archivo_compartido_uri";
     private static final String CLAVE_NOMBRE = "archivo_compartido_nombre";
+    private static final String CLAVE_TIPO = "archivo_compartido_tipo";
 
     public static void procesarIntentCompartido(Context context, Intent intent) {
         if (context == null || intent == null) {
@@ -47,11 +53,50 @@ public class PluginArchivoCompartido extends Plugin {
         }
 
         String nombre = obtenerNombreArchivo(context, uri);
+        Uri uriLocal = copiarArchivoACache(context, uri, nombre);
         SharedPreferences prefs = context.getSharedPreferences(NOMBRE_PREFS, Context.MODE_PRIVATE);
         prefs.edit()
-            .putString(CLAVE_URI, uri.toString())
+            .putString(CLAVE_URI, (uriLocal == null ? uri : uriLocal).toString())
             .putString(CLAVE_NOMBRE, nombre == null ? "" : nombre)
+            .putString(CLAVE_TIPO, intent.getType() == null ? "" : intent.getType())
             .apply();
+    }
+
+    private static Uri copiarArchivoACache(Context context, Uri uri, String nombre) {
+        if (context == null || uri == null) {
+            return null;
+        }
+        String extension = "";
+        if (nombre != null) {
+            int ultimoPunto = nombre.lastIndexOf('.');
+            if (ultimoPunto >= 0) {
+                extension = nombre.substring(ultimoPunto);
+            }
+        }
+        File destino = new File(context.getCacheDir(), "archivoCompartido_" + System.currentTimeMillis() + extension);
+        try (InputStream origen = abrirArchivo(context, uri); FileOutputStream salida = new FileOutputStream(destino)) {
+            if (origen == null) {
+                return null;
+            }
+            byte[] buffer = new byte[8192];
+            int bytesLeidos;
+            while ((bytesLeidos = origen.read(buffer)) != -1) {
+                salida.write(buffer, 0, bytesLeidos);
+            }
+            return Uri.fromFile(destino);
+        } catch (Exception ex) {
+            if (destino.exists()) {
+                destino.delete();
+            }
+            return null;
+        }
+    }
+
+    private static InputStream abrirArchivo(Context context, Uri uri) throws Exception {
+        if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return new FileInputStream(new File(uri.getPath()));
+        }
+        return context.getContentResolver().openInputStream(uri);
     }
 
     private static String obtenerNombreArchivo(Context context, Uri uri) {
@@ -88,16 +133,25 @@ public class PluginArchivoCompartido extends Plugin {
         SharedPreferences prefs = getContext().getSharedPreferences(NOMBRE_PREFS, Context.MODE_PRIVATE);
         String uri = prefs.getString(CLAVE_URI, null);
         String nombre = prefs.getString(CLAVE_NOMBRE, "");
+        String tipo = prefs.getString(CLAVE_TIPO, "");
         JSObject datos = new JSObject();
         datos.put("uri", uri);
         datos.put("nombre", nombre);
+        datos.put("tipo", tipo);
         call.resolve(datos);
     }
 
     @PluginMethod
     public void limpiarArchivoCompartidoPendiente(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(NOMBRE_PREFS, Context.MODE_PRIVATE);
-        prefs.edit().remove(CLAVE_URI).remove(CLAVE_NOMBRE).apply();
+        String uriTexto = prefs.getString(CLAVE_URI, null);
+        if (uriTexto != null) {
+            Uri uri = Uri.parse(uriTexto);
+            if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null) {
+                new File(uri.getPath()).delete();
+            }
+        }
+        prefs.edit().remove(CLAVE_URI).remove(CLAVE_NOMBRE).remove(CLAVE_TIPO).apply();
         JSObject datos = new JSObject();
         datos.put("exito", true);
         call.resolve(datos);
@@ -119,7 +173,7 @@ public class PluginArchivoCompartido extends Plugin {
 
         try {
             Uri uri = Uri.parse(uriTexto);
-            InputStream inputStream = activity.getContentResolver().openInputStream(uri);
+            InputStream inputStream = abrirArchivo(activity, uri);
             if (inputStream == null) {
                 call.reject("No se pudo abrir el archivo compartido.");
                 return;
@@ -139,6 +193,33 @@ public class PluginArchivoCompartido extends Plugin {
             call.resolve(datos);
         } catch (Exception ex) {
             call.reject("No se pudo leer el contenido del archivo compartido.");
+        }
+    }
+
+    @PluginMethod
+    public void leerArchivoCompartidoComoBase64(PluginCall call) {
+        String uriTexto = call.getString("uri");
+        if (uriTexto == null || uriTexto.trim().isEmpty()) {
+            call.reject("URI inválida para leer archivo compartido.");
+            return;
+        }
+
+        try (InputStream inputStream = abrirArchivo(getContext(), Uri.parse(uriTexto));
+             ByteArrayOutputStream contenido = new ByteArrayOutputStream()) {
+            if (inputStream == null) {
+                call.reject("No se pudo abrir el archivo compartido.");
+                return;
+            }
+            byte[] buffer = new byte[8192];
+            int bytesLeidos;
+            while ((bytesLeidos = inputStream.read(buffer)) != -1) {
+                contenido.write(buffer, 0, bytesLeidos);
+            }
+            JSObject datos = new JSObject();
+            datos.put("base64", Base64.encodeToString(contenido.toByteArray(), Base64.NO_WRAP));
+            call.resolve(datos);
+        } catch (Exception ex) {
+            call.reject("No se pudo leer el archivo compartido.");
         }
     }
 }
