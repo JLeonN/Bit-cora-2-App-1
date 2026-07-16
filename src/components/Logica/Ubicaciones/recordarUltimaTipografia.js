@@ -2,6 +2,7 @@
 import { Preferences } from '@capacitor/preferences'
 
 const CLAVE_ULTIMA_UBICACION = 'ultima_ubicacion_ingresada'
+const CLAVE_AUTOSELECCION_ARTICULO = 'autoseleccion_articulo_ubicaciones'
 
 // Guardar la última ubicación utilizada
 export async function guardarUltimaUbicacion(ubicacion) {
@@ -44,5 +45,28 @@ export async function limpiarUltimaUbicacion() {
     console.log('[UltimaUbicacion] Limpiada')
   } catch (error) {
     console.error('[UltimaUbicacion] Error al limpiar:', error)
+  }
+}
+
+export async function guardarAutoseleccionArticulo(habilitada) {
+  try {
+    await Preferences.set({
+      key: CLAVE_AUTOSELECCION_ARTICULO,
+      value: String(Boolean(habilitada)),
+    })
+  } catch (error) {
+    console.error('[AutoseleccionArticulo] Error al guardar:', error)
+  }
+}
+
+export async function obtenerAutoseleccionArticulo() {
+  try {
+    const resultado = await Preferences.get({
+      key: CLAVE_AUTOSELECCION_ARTICULO,
+    })
+    return resultado.value === 'true'
+  } catch (error) {
+    console.error('[AutoseleccionArticulo] Error al obtener:', error)
+    return false
   }
 }

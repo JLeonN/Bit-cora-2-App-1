@@ -3,27 +3,67 @@
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
-        <input
-          ref="inputCodigo"
-          v-model="nuevoCodigo"
-          type="text"
-          :placeholder="placeholderCodigo"
-          :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
-          @animationend="animarErrorCodigo = false"
-          @input="manejarInputCodigo"
-          @focus="manejarEnfoqueCodigo"
-          @blur="manejarDesenfoqueCodigo"
-          @keydown="manejarDobleEspacio"
-        />
-        <button
-          v-if="nuevoCodigo"
-          type="button"
-          class="boton-copiar-codigo"
-          title="Copiar texto"
-          @click="copiarCodigoActual"
-        >
-          <IconCopy :size="16" />
-        </button>
+        <div class="control-autoseleccion-articulo">
+          <q-toggle
+            v-model="autoseleccionArticuloHabilitada"
+            color="primary"
+            dense
+            label="Autoselección al encontrar un único artículo"
+            @update:model-value="cambiarAutoseleccionArticulo"
+          />
+          <button
+            type="button"
+            class="boton-info-autoseleccion"
+            :title="mostrarAyudaAutoseleccion ? 'Ocultar explicación' : 'Ver cómo funciona la autoselección'"
+            :aria-label="mostrarAyudaAutoseleccion ? 'Ocultar explicación' : 'Ver cómo funciona la autoselección'"
+            :aria-expanded="mostrarAyudaAutoseleccion"
+            @click="mostrarAyudaAutoseleccion = !mostrarAyudaAutoseleccion"
+          >
+            <IconInfoCircle :size="18" :stroke="2" />
+          </button>
+        </div>
+        <div v-if="mostrarAyudaAutoseleccion" class="ayuda-autoseleccion" role="note">
+          <p class="texto-ayuda-autoseleccion">
+            Cuando está activada, si la búsqueda encuentra un solo artículo, se selecciona
+            automáticamente y muestra su información. Si está desactivada, podrás elegirlo
+            manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras
+            tipo pistola: suelen enviar Enter al terminar la lectura y dejan el artículo listo
+            para agregar.
+          </p>
+          <button
+            type="button"
+            class="boton-ocultar-ayuda-autoseleccion"
+            title="Ocultar explicación"
+            aria-label="Ocultar explicación"
+            @click="mostrarAyudaAutoseleccion = false"
+          >
+            <IconX :size="16" :stroke="2" />
+            <span>Ocultar</span>
+          </button>
+        </div>
+        <div class="contenedor-input-codigo">
+          <input
+            ref="inputCodigo"
+            v-model="nuevoCodigo"
+            type="text"
+            :placeholder="placeholderCodigo"
+            :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
+            @animationend="animarErrorCodigo = false"
+            @input="manejarInputCodigo"
+            @focus="manejarEnfoqueCodigo"
+            @blur="manejarDesenfoqueCodigo"
+            @keydown="manejarDobleEspacio"
+          />
+          <button
+            v-if="nuevoCodigo"
+            type="button"
+            class="boton-copiar-codigo"
+            title="Copiar texto"
+            @click="copiarCodigoActual"
+          >
+            <IconCopy :size="16" />
+          </button>
+        </div>
 
         <!-- Componente buscador -->
         <CodigoMasNombre
@@ -134,7 +174,7 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
-import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy, IconInfoCircle, IconX } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
@@ -142,6 +182,8 @@ import {
   guardarUltimaUbicacion,
   obtenerUltimaUbicacion,
   limpiarUltimaUbicacion,
+  guardarAutoseleccionArticulo,
+  obtenerAutoseleccionArticulo,
 } from './recordarUltimaTipografia.js'
 
 // --- REFS DEL TEMPLATE ---
@@ -173,6 +215,8 @@ const origenSeleccionActual = ref('ninguno')
 const mantenerBuscadorVisible = ref(false)
 const autoseleccionandoCodigo = ref(false)
 const textoCopiadoCodigo = ref('')
+const autoseleccionArticuloHabilitada = ref(false)
+const mostrarAyudaAutoseleccion = ref(false)
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -380,6 +424,18 @@ function cerrarTarjetaArticuloSeleccionado() {
   })
 }
 
+async function cambiarAutoseleccionArticulo(habilitada) {
+  autoseleccionArticuloHabilitada.value = Boolean(habilitada)
+  await guardarAutoseleccionArticulo(autoseleccionArticuloHabilitada.value)
+
+  if (!autoseleccionArticuloHabilitada.value && origenSeleccionActual.value === 'automatica') {
+    articuloSeleccionadoInfo.value = null
+    origenSeleccionActual.value = 'ninguno'
+    mantenerBuscadorVisible.value = false
+    mostrarBuscador.value = inputEnfocado.value && nuevoCodigo.value.length >= 3
+  }
+}
+
 function manejarEstadoBuscador(estado) {
   if (!estado) return
 
@@ -394,6 +450,15 @@ function manejarEstadoBuscador(estado) {
   }
 
   if (estado.cantidadResultados === 1 && estado.articuloUnico) {
+    if (!autoseleccionArticuloHabilitada.value) {
+      if (origenSeleccionActual.value === 'automatica') {
+        articuloSeleccionadoInfo.value = null
+        origenSeleccionActual.value = 'ninguno'
+      }
+      mantenerBuscadorVisible.value = false
+      return
+    }
+
     const codigoUnico = (estado.articuloUnico.codigo || '').toUpperCase()
     const seleccionadoActual = articuloSeleccionadoInfo.value?.codigo || ''
 
@@ -518,8 +583,13 @@ function procesarUbicacionesEscaneadas(ubicaciones) {
 
 // --- LIFECYCLE ---
 onMounted(async () => {
+  const [ultimaUbicacion, autoseleccionGuardada] = await Promise.all([
+    obtenerUltimaUbicacion(),
+    obtenerAutoseleccionArticulo(),
+  ])
+  autoseleccionArticuloHabilitada.value = autoseleccionGuardada
+
   // CARGAR ÚLTIMA UBICACIÓN AL INICIAR
-  const ultimaUbicacion = await obtenerUltimaUbicacion()
   if (ultimaUbicacion) {
     nuevaUbicacion.value = ultimaUbicacion
     console.log(`[FormularioUbicacion] Cargada última ubicación: ${ultimaUbicacion}`)
