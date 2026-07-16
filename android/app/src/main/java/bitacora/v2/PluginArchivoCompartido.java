@@ -30,36 +30,74 @@ public class PluginArchivoCompartido extends Plugin {
     private static final String CLAVE_URI = "archivo_compartido_uri";
     private static final String CLAVE_NOMBRE = "archivo_compartido_nombre";
     private static final String CLAVE_TIPO = "archivo_compartido_tipo";
+    private static final String CLAVE_IDENTIFICADOR = "archivo_compartido_identificador";
+    private static final String CLAVE_ACCION = "archivo_compartido_accion";
+    private static PluginArchivoCompartido instancia;
+
+    @Override
+    public void load() {
+        instancia = this;
+    }
 
     public static void procesarIntentCompartido(Context context, Intent intent) {
         if (context == null || intent == null) {
             return;
         }
 
-        String accion = intent.getAction();
-        Uri uri = null;
-
-        if (Intent.ACTION_SEND.equals(accion)) {
-            Object extra = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-            if (extra instanceof Uri) {
-                uri = (Uri) extra;
-            }
-        } else if (Intent.ACTION_VIEW.equals(accion)) {
-            uri = intent.getData();
-        }
+        String accion = intent.getAction() == null ? "" : intent.getAction();
+        Uri uri = obtenerUriArchivo(intent);
 
         if (uri == null) {
             return;
         }
 
         String nombre = obtenerNombreArchivo(context, uri);
+        String tipo = intent.getType() == null ? "" : intent.getType();
+        if (nombre.isEmpty() && tipo.contains("spreadsheetml")) {
+            nombre = "Excel compartido.xlsx";
+        } else if (nombre.isEmpty() && tipo.contains("ms-excel")) {
+            nombre = "Excel compartido.xls";
+        }
         Uri uriLocal = copiarArchivoACache(context, uri, nombre);
+        String identificador = String.valueOf(System.currentTimeMillis());
         SharedPreferences prefs = context.getSharedPreferences(NOMBRE_PREFS, Context.MODE_PRIVATE);
         prefs.edit()
             .putString(CLAVE_URI, (uriLocal == null ? uri : uriLocal).toString())
-            .putString(CLAVE_NOMBRE, nombre == null ? "" : nombre)
-            .putString(CLAVE_TIPO, intent.getType() == null ? "" : intent.getType())
+            .putString(CLAVE_NOMBRE, nombre)
+            .putString(CLAVE_TIPO, tipo)
+            .putString(CLAVE_IDENTIFICADOR, identificador)
+            .putString(CLAVE_ACCION, accion)
             .apply();
+        notificarArchivoRecibido(identificador, nombre, tipo, accion);
+    }
+
+    private static Uri obtenerUriArchivo(Intent intent) {
+        Object extra = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (extra instanceof Uri) {
+            return (Uri) extra;
+        }
+        if (intent.getClipData() != null && intent.getClipData().getItemCount() > 0) {
+            Uri uriClip = intent.getClipData().getItemAt(0).getUri();
+            if (uriClip != null) {
+                return uriClip;
+            }
+        }
+        return intent.getData();
+    }
+
+    private static void notificarArchivoRecibido(String identificador, String nombre, String tipo, String accion) {
+        PluginArchivoCompartido plugin = instancia;
+        if (plugin == null || plugin.getActivity() == null) {
+            return;
+        }
+        plugin.getActivity().runOnUiThread(() -> {
+            JSObject datos = new JSObject();
+            datos.put("identificador", identificador);
+            datos.put("nombre", nombre);
+            datos.put("tipo", tipo);
+            datos.put("accion", accion);
+            plugin.notifyListeners("archivoRecibido", datos);
+        });
     }
 
     private static Uri copiarArchivoACache(Context context, Uri uri, String nombre) {
@@ -134,16 +172,28 @@ public class PluginArchivoCompartido extends Plugin {
         String uri = prefs.getString(CLAVE_URI, null);
         String nombre = prefs.getString(CLAVE_NOMBRE, "");
         String tipo = prefs.getString(CLAVE_TIPO, "");
+        String identificador = prefs.getString(CLAVE_IDENTIFICADOR, "");
+        String accion = prefs.getString(CLAVE_ACCION, "");
         JSObject datos = new JSObject();
         datos.put("uri", uri);
         datos.put("nombre", nombre);
         datos.put("tipo", tipo);
+        datos.put("identificador", identificador);
+        datos.put("accion", accion);
         call.resolve(datos);
     }
 
     @PluginMethod
     public void limpiarArchivoCompartidoPendiente(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(NOMBRE_PREFS, Context.MODE_PRIVATE);
+        String identificadorSolicitado = call.getString("identificador", "");
+        String identificadorActual = prefs.getString(CLAVE_IDENTIFICADOR, "");
+        if (!identificadorSolicitado.isEmpty() && !identificadorSolicitado.equals(identificadorActual)) {
+            JSObject datos = new JSObject();
+            datos.put("exito", false);
+            call.resolve(datos);
+            return;
+        }
         String uriTexto = prefs.getString(CLAVE_URI, null);
         if (uriTexto != null) {
             Uri uri = Uri.parse(uriTexto);
@@ -151,7 +201,13 @@ public class PluginArchivoCompartido extends Plugin {
                 new File(uri.getPath()).delete();
             }
         }
-        prefs.edit().remove(CLAVE_URI).remove(CLAVE_NOMBRE).remove(CLAVE_TIPO).apply();
+        prefs.edit()
+            .remove(CLAVE_URI)
+            .remove(CLAVE_NOMBRE)
+            .remove(CLAVE_TIPO)
+            .remove(CLAVE_IDENTIFICADOR)
+            .remove(CLAVE_ACCION)
+            .apply();
         JSObject datos = new JSObject();
         datos.put("exito", true);
         call.resolve(datos);

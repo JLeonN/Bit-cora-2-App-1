@@ -230,6 +230,7 @@ import {
 } from 'src/components/Logica/Compartidos/ServicioEnfoqueInput.js'
 import {
   esArchivoExcel,
+  escucharArchivoCompartido,
   obtenerArchivoCompartidoPendiente,
 } from 'src/components/Logica/Compartidos/ServicioArchivoCompartido.js'
 
@@ -260,7 +261,7 @@ const configuracionBarra = reactive({
 })
 let paginaActivaRef = null
 let desuscribirPasos = null
-let intervaloArchivoCompartido = null
+let desuscribirArchivoCompartido = null
 const claseHeader = esModoPruebaPublicidad
   ? 'header-modo-prueba texto-principal'
   : 'bg-primario-oscuro texto-principal'
@@ -293,8 +294,8 @@ onMounted(async () => {
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', actualizarDimensionesPantalla)
   }
+  desuscribirArchivoCompartido = await escucharArchivoCompartido(redirigirExcelCompartidoPendiente)
   await redirigirExcelCompartidoPendiente()
-  intervaloArchivoCompartido = setInterval(redirigirExcelCompartidoPendiente, 1000)
 })
 
 onUnmounted(() => {
@@ -306,8 +307,8 @@ onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', actualizarDimensionesPantalla)
   }
-  if (intervaloArchivoCompartido) {
-    clearInterval(intervaloArchivoCompartido)
+  if (desuscribirArchivoCompartido) {
+    desuscribirArchivoCompartido()
   }
 })
 
@@ -398,10 +399,15 @@ const redirigirExcelCompartidoPendiente = async () => {
   if (!pendiente?.uri || !esArchivoExcel(pendiente.nombre, pendiente.tipo)) return
 
   const rutaActual = router.currentRoute.value
-  if (rutaActual.path === '/AjustarUbicaciones' && rutaActual.query.archivoCompartido) return
+  if (
+    rutaActual.path === '/AjustarUbicaciones' &&
+    rutaActual.query.archivoCompartido === pendiente.identificador
+  ) {
+    return
+  }
   await router.replace({
     path: '/AjustarUbicaciones',
-    query: { archivoCompartido: Date.now().toString() },
+    query: { archivoCompartido: pendiente.identificador || Date.now().toString() },
   })
 }
 

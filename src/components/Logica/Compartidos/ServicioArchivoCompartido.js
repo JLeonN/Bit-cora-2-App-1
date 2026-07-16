@@ -18,27 +18,40 @@ export function esArchivoExcel(nombre = '', tipo = '') {
 }
 
 export async function obtenerArchivoCompartidoPendiente() {
-  if (!esAndroidNativo()) return { uri: null, nombre: '', tipo: '' }
+  if (!esAndroidNativo()) return { uri: null, nombre: '', tipo: '', identificador: '', accion: '' }
   try {
     const resultado = await ArchivoCompartidoNativo.obtenerArchivoCompartidoPendiente()
     return {
       uri: resultado?.uri || null,
       nombre: resultado?.nombre || '',
       tipo: resultado?.tipo || '',
+      identificador: resultado?.identificador || '',
+      accion: resultado?.accion || '',
     }
   } catch (error) {
     console.error('[ServicioArchivoCompartido] Error obteniendo archivo pendiente:', error)
-    return { uri: null, nombre: '', tipo: '' }
+    return { uri: null, nombre: '', tipo: '', identificador: '', accion: '' }
   }
 }
 
-export async function limpiarArchivoCompartidoPendiente() {
+export async function limpiarArchivoCompartidoPendiente(identificador = '') {
   if (!esAndroidNativo()) return { exito: true }
   try {
-    return await ArchivoCompartidoNativo.limpiarArchivoCompartidoPendiente()
+    return await ArchivoCompartidoNativo.limpiarArchivoCompartidoPendiente({ identificador })
   } catch (error) {
     console.error('[ServicioArchivoCompartido] Error limpiando archivo pendiente:', error)
     return { exito: false }
+  }
+}
+
+export async function escucharArchivoCompartido(alRecibirArchivo) {
+  if (!esAndroidNativo()) return () => {}
+  try {
+    const escucha = await ArchivoCompartidoNativo.addListener('archivoRecibido', alRecibirArchivo)
+    return () => escucha.remove()
+  } catch (error) {
+    console.error('[ServicioArchivoCompartido] Error escuchando archivo compartido:', error)
+    return () => {}
   }
 }
 

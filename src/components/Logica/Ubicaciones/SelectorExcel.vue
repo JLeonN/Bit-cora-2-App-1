@@ -72,9 +72,26 @@
         </div>
       </div>
       <div class="botones-error">
+        <button
+          v-if="hayExcelCompartidoPendiente"
+          type="button"
+          class="boton-reintentar-selector"
+          @click="cargarExcelCompartidoPendiente"
+        >
+          <IconRefresh :size="16" />
+          Reintentar Excel recibido
+        </button>
         <button type="button" class="boton-reintentar-selector" @click="abrirSelectorArchivo">
           <IconRefresh :size="16" />
           Seleccionar otro archivo
+        </button>
+        <button
+          v-if="hayExcelCompartidoPendiente"
+          type="button"
+          class="boton-reintentar-selector"
+          @click="descartarExcelCompartido"
+        >
+          Descartar Excel recibido
         </button>
       </div>
     </div>
@@ -178,6 +195,7 @@ const cantidadArticulos = ref(0)
 const informacionArchivo = ref(null)
 const mensajeCarga = ref('')
 const mostrarModalEliminar = ref(false)
+const hayExcelCompartidoPendiente = ref(false)
 
 // --- EMITS ---
 const emit = defineEmits(['base-datos-cargada', 'error-carga', 'base-datos-limpia'])
@@ -293,6 +311,8 @@ async function cargarExcelCompartidoPendiente() {
   const pendiente = await obtenerArchivoCompartidoPendiente()
   if (!pendiente?.uri || !esArchivoExcel(pendiente.nombre, pendiente.tipo)) return false
 
+  hayExcelCompartidoPendiente.value = true
+  let cargaExitosa = false
   try {
     estaCargando.value = true
     estadoCarga.value = 'cargando'
@@ -319,12 +339,30 @@ async function cargarExcelCompartidoPendiente() {
       mensaje: resultado.mensaje,
       archivo: informacionArchivo.value,
     })
+    cargaExitosa = true
+    return true
+  } catch (error) {
+    console.error('[SelectorExcel] Error cargando Excel compartido:', error)
+    estadoCarga.value = 'error'
+    mensajeError.value = 'No se pudo leer el Excel recibido. Intentá nuevamente.'
+    emit('error-carga', mensajeError.value)
     return true
   } finally {
-    await limpiarArchivoCompartidoPendiente()
+    if (cargaExitosa) {
+      await limpiarArchivoCompartidoPendiente(pendiente.identificador)
+      hayExcelCompartidoPendiente.value = false
+    }
     estaCargando.value = false
     mensajeCarga.value = ''
   }
+}
+
+async function descartarExcelCompartido() {
+  const pendiente = await obtenerArchivoCompartidoPendiente()
+  await limpiarArchivoCompartidoPendiente(pendiente.identificador)
+  hayExcelCompartidoPendiente.value = false
+  mensajeError.value = ''
+  actualizarEstado()
 }
 
 // --- LIFECYCLE ---

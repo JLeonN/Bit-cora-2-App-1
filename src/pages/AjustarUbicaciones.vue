@@ -4,7 +4,7 @@
 
     <TarjetaSeccion
       titulo="Base de datos para búsqueda"
-      :expandida-por-defecto="false"
+      :expandida-por-defecto="baseDatosExpandida"
       descripcion-resumen="Cargá o recargá el Excel con artículos para habilitar búsqueda, validaciones y alertas."
       :ocultar-resumen-al-expandir="true"
     >
@@ -73,6 +73,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { IconDownload } from '@tabler/icons-vue'
@@ -98,10 +99,12 @@ import {
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
+const route = useRoute()
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
 const formularioUbicacionRef = ref(null)
+const baseDatosExpandida = ref(Boolean(route.query.archivoCompartido))
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
@@ -206,12 +209,14 @@ const manejarModalCerrado = () => {
 // --- MANEJO DE EVENTOS DEL SELECTOR DE EXCEL ---
 function manejarBaseDatosCargada(evento) {
   console.log('Base de datos cargada:', evento)
+  baseDatosExpandida.value = true
   mensajeExito.value = 'Base de datos cargada correctamente'
   setTimeout(() => (mensajeExito.value = ''), 3000)
 }
 
 function manejarErrorCarga(mensaje) {
   console.error('Error cargando base de datos:', mensaje)
+  baseDatosExpandida.value = true
   mensajeError.value = `Error al cargar archivo: ${mensaje}`
   setTimeout(() => (mensajeError.value = ''), 3000)
 }
