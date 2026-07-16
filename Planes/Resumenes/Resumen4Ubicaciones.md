@@ -1,45 +1,32 @@
 ### Módulo de Ubicaciones - Bitácora II
 
-Este módulo administra ajustes de ubicación de artículos a partir del Excel principal cargado por el usuario.
+Administra ajustes de ubicación de artículos usando el Excel principal cargado en el dispositivo.
 
----
+### Estado funcional actual (v4.2.32)
 
-### Estado funcional actual (v4.2.22)
+- Bitácora puede abrir directamente archivos Excel `.xlsx` y `.xls` recibidos desde WhatsApp y cargarlos como base local.
+- La pantalla muestra primero el estado de la base y un resumen más claro antes del formulario de trabajo.
+- El formulario conserva la preferencia de tamaño de letra y permite activar o desactivar la autoselección de artículos únicos.
+- La tarjeta del artículo muestra ubicación original, historial y stock como referencia.
+- Se permiten filas duplicadas para que el usuario vea conflictos reales; mientras existan, se bloquea la exportación.
 
-- Se permite que existan filas duplicadas por código en la tabla para que el usuario pueda ver conflictos reales en piso.
-- Los duplicados se marcan visualmente y se informan al usuario.
-- Con duplicados presentes, se bloquea enviar y descargar Excel para evitar exportaciones inconsistentes.
-- El botón de descarga aparece solo en navegador (web) para facilitar pruebas; en móvil se mantiene el flujo nativo de compartir.
-- En la mini tarjeta del artículo se muestra historial de movimientos y origen Excel cuando existe.
-- Se añadió estilo visual destacado para artículos con ubicación original `SL` (efecto neón en tarjeta y texto).
+### Flujo de datos Excel e historial
 
----
-
-### Flujo de datos Excel y historial
-
-- `ubicacionAntigua` conserva siempre el valor original del Excel base (columna C inicial).
-- El historial de cambios de ubicación se guarda internamente por artículo.
-- En el Excel base persistido, los movimientos se registran desde columna `L` en adelante (`Historial 1`, `Historial 2`, etc.).
-- En el Excel exportado de Ubicaciones:
-  - `G` mantiene la ubicación antigua original.
-  - `H` (Info) no se modifica de su lógica acordada.
-  - `I` queda libre.
-  - El historial sale desde `J` en adelante (`Historial 1`, `Historial 2`, etc.).
-
----
+- `ubicacionAntigua` conserva el valor original de la columna C del Excel.
+- El historial de cambios se guarda internamente por artículo.
+- Al recibir un Excel desde otra aplicación, Bitácora lo procesa localmente y persiste la base en el dispositivo.
+- En el Excel exportado de Ubicaciones, la columna G conserva la ubicación antigua y el historial se exporta desde la columna J.
 
 ### Componentes clave
 
-- `AjustarUbicaciones.vue`: Página principal, lógica de enviar/descargar y validaciones globales.
-- `FormularioUbicacion.vue`: Alta y edición con vista previa del artículo e historial.
-- `TablaUbicaciones.vue`: Tabla de trabajo, resaltado de duplicados y acciones.
-- `ExportarUbicacionesExcel.js`: Exportación final con columnas fijas y columnas dinámicas de historial.
-- `LectorExcel.js`: Carga y persistencia de Excel base, incluyendo ubicación antigua e historial.
-
----
+- `AjustarUbicaciones.vue`: pantalla principal y validaciones globales.
+- `SelectorExcel.vue`: selección manual e importación automática de Excel compartido.
+- `FormularioUbicacion.vue`: alta y edición con vista previa del artículo.
+- `TablaUbicaciones.vue`: tabla de trabajo, conflictos y acciones.
+- `LectorExcel.js`: lectura y persistencia local de la base Excel.
 
 ### Regla operativa de duplicados
 
-- Si hay más de una fila con el mismo código, el sistema lo considera conflicto.
-- El conflicto no borra filas ni decide automáticamente cuál conservar.
-- El usuario debe resolver manualmente (eliminar o editar) y recién entonces puede exportar/enviar.
+- Más de una fila con el mismo código se considera un conflicto.
+- El sistema no elimina ni decide automáticamente qué fila conservar.
+- El usuario debe resolverlo antes de enviar o exportar el Excel.

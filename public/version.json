@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.31",
+  "versionDisponible": "4.2.32",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,9 +7,9 @@
       {
         "apartado": "Actualizaciones",
         "novedades": [
-          "Los códigos escaneados se reconocen mejor en Ubicaciones, Consulta, Stock, Etiquetas y Fotos.",
-          "Las tarjetas de artículos ahora muestran el stock del Excel como referencia rápida.",
-          "El resumen del contador de pasos muestra fechas más claras y títulos destacados."
+          "Ahora podés abrir directamente en Bitácora los archivos Excel que recibís por WhatsApp.",
+          "La pantalla de Ubicaciones muestra la información de forma más clara y ordenada.",
+          "El formulario de Ubicaciones recuerda el tamaño de letra que elegís para trabajar más cómodo."
         ]
       }
     ]
