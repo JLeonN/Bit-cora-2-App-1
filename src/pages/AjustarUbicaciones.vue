@@ -14,6 +14,8 @@
       <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
     </TarjetaSeccion>
 
+    <InformacionUbicaciones :ubicaciones="ubicacionesArray" />
+
     <!-- Formulario de ubicación -->
     <FormularioUbicacion
       ref="formularioUbicacionRef"
@@ -77,6 +79,7 @@ import { IconDownload } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
+import InformacionUbicaciones from '../components/Logica/Ubicaciones/InformacionUbicaciones.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'

@@ -1,5 +1,5 @@
 ﻿<template>
-  <form class="formulario" @submit.prevent="gestionarEnvio">
+  <form class="formulario formulario-ubicacion" @submit.prevent="gestionarEnvio">
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
@@ -30,48 +30,43 @@
             tipo pistola: suelen enviar Enter al terminar la lectura y dejan el artículo listo
             para agregar.
           </p>
-          <button
-            type="button"
-            class="boton-ocultar-ayuda-autoseleccion"
-            title="Ocultar explicación"
-            aria-label="Ocultar explicación"
-            @click="mostrarAyudaAutoseleccion = false"
-          >
-            <IconX :size="16" :stroke="2" />
-            <span>Ocultar</span>
-          </button>
         </div>
-        <div class="contenedor-input-codigo">
-          <input
-            ref="inputCodigo"
-            v-model="nuevoCodigo"
-            type="text"
-            :placeholder="placeholderCodigo"
-            :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
-            @animationend="animarErrorCodigo = false"
-            @input="manejarInputCodigo"
-            @focus="manejarEnfoqueCodigo"
-            @blur="manejarDesenfoqueCodigo"
-            @keydown="manejarDobleEspacio"
-          />
-          <button
-            v-if="nuevoCodigo"
-            type="button"
-            class="boton-copiar-codigo"
-            title="Copiar texto"
-            @click="copiarCodigoActual"
-          >
-            <IconCopy :size="16" />
-          </button>
-        </div>
+        <div class="fila-codigo-camara">
+          <div class="contenedor-input-codigo">
+            <input
+              ref="inputCodigo"
+              v-model="nuevoCodigo"
+              type="text"
+              :placeholder="placeholderCodigo"
+              :class="{ 'input-error': errorCodigo, 'animar-error': animarErrorCodigo }"
+              @animationend="animarErrorCodigo = false"
+              @input="manejarInputCodigo"
+              @focus="manejarEnfoqueCodigo"
+              @blur="manejarDesenfoqueCodigo"
+              @keydown="manejarDobleEspacio"
+            />
+            <button
+              v-if="nuevoCodigo"
+              type="button"
+              class="boton-copiar-codigo"
+              title="Copiar texto"
+              @click="copiarCodigoActual"
+            >
+              <IconCopy :size="16" />
+            </button>
 
-        <!-- Componente buscador -->
-        <CodigoMasNombre
-          v-if="mostrarBuscador && nuevoCodigo.length >= 3"
-          :busqueda="nuevoCodigo"
-          @articulo-seleccionado="seleccionarArticuloDelBuscador"
-          @estado-busqueda="manejarEstadoBuscador"
-        />
+            <!-- Componente buscador -->
+            <CodigoMasNombre
+              v-if="mostrarBuscador && nuevoCodigo.length >= 3"
+              :busqueda="nuevoCodigo"
+              @articulo-seleccionado="seleccionarArticuloDelBuscador"
+              @estado-busqueda="manejarEstadoBuscador"
+            />
+          </div>
+          <button type="button" class="camara-ubicacion" title="Escanear ubicaciones" @click="abrirCamara">
+            <IconCamera :stroke="2" />
+          </button>
+        </div>
       </div>
       <div
         v-if="articuloSeleccionadoInfo"
@@ -89,13 +84,16 @@
             <span aria-hidden="true" class="texto-cerrar-info-articulo">×</span>
           </button>
         </div>
-        <p class="linea-info-articulo">
-          <span class="etiqueta-info-articulo">Nombre:</span>
-          {{ articuloSeleccionadoInfo.nombre }}
-        </p>
-        <p class="linea-info-articulo">
-          <span class="etiqueta-info-articulo">Código:</span>
-          {{ articuloSeleccionadoInfo.codigo }}
+        <p class="nombre-articulo-seleccionado">{{ articuloSeleccionadoInfo.nombre }}</p>
+        <p class="codigo-articulo-seleccionado">{{ articuloSeleccionadoInfo.codigo }}</p>
+        <p class="linea-info-articulo linea-origen-excel">
+          <span class="etiqueta-info-articulo">Original Excel:</span>
+          <span
+            class="valor-origen-excel"
+            :class="{ 'texto-sl-neon': articuloSeleccionadoInfo.ubicacionOriginal === 'SL' }"
+          >
+            {{ articuloSeleccionadoInfo.ubicacionOriginal || 'Sin ubicación' }}
+          </span>
         </p>
         <p class="linea-info-articulo linea-historial">
           <span class="etiqueta-info-articulo">Historial:</span>
@@ -109,12 +107,6 @@
             }"
           >
             {{ ubicacionHistorial }}
-          </span>
-        </p>
-        <p class="linea-info-articulo">
-          <span class="etiqueta-info-articulo">Original Excel:</span>
-          <span :class="{ 'texto-sl-neon': articuloSeleccionadoInfo.ubicacionOriginal === 'SL' }">
-            {{ articuloSeleccionadoInfo.ubicacionOriginal || 'Sin ubicación' }}
           </span>
         </p>
         <p class="linea-info-articulo">
@@ -154,10 +146,6 @@
         <div class="contenedor-boton-agregar">
           <TresBotones :textoAceptar="'Agregar'" />
         </div>
-        <!-- Botón de la cámara -->
-        <button type="button" class="camara-ubicacion" @click="abrirCamara">
-          <IconCamera :stroke="2" />
-        </button>
       </div>
     </div>
   </form>
@@ -174,7 +162,7 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
-import { IconCamera, IconTrash, IconCopy, IconInfoCircle, IconX } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy, IconInfoCircle } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
