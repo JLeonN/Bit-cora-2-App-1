@@ -2,9 +2,9 @@
 
 Administra ajustes de ubicación de artículos usando el Excel principal cargado en el dispositivo.
 
-### Estado funcional actual (v4.2.32)
+### Estado funcional actual (v4.2.33)
 
-- Bitácora puede abrir directamente archivos Excel `.xlsx` y `.xls` recibidos desde WhatsApp y cargarlos como base local.
+- Bitácora puede abrir directamente archivos Excel `.xlsx` y `.xls` recibidos desde WhatsApp y cargarlos como base local, incluso si ya estaba abierta.
 - La pantalla muestra primero el estado de la base y un resumen más claro antes del formulario de trabajo.
 - El formulario conserva la preferencia de tamaño de letra y permite activar o desactivar la autoselección de artículos únicos.
 - La tarjeta del artículo muestra ubicación original, historial y stock como referencia.
