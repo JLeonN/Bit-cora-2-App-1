@@ -25,9 +25,47 @@
         </button>
       </div>
     </TarjetaSeccion>
+    <TarjetaSeccion
+      v-if="etiquetas.length > 0"
+      titulo="Ordenar etiquetas"
+      :expandida-por-defecto="false"
+      descripcion-resumen="Elegí cómo ver las etiquetas. Recordamos tu última elección."
+      :ocultar-resumen-al-expandir="true"
+    >
+      <p class="texto-ordenar-completa">Elegí el orden visual de las etiquetas sin cambiar el orden guardado ni el PDF.</p>
+      <div class="grupo-orden-etiquetas" role="group" aria-label="Orden de las etiquetas">
+        <button
+          type="button"
+          class="pastilla-orden-etiquetas"
+          :class="{ 'pastilla-orden-activa': ordenSeleccionado === 'recientes' }"
+          :aria-pressed="ordenSeleccionado === 'recientes'"
+          @click="seleccionarOrden('recientes')"
+        >
+          Más recientes
+        </button>
+        <button
+          type="button"
+          class="pastilla-orden-etiquetas"
+          :class="{ 'pastilla-orden-activa': ordenSeleccionado === 'antiguas' }"
+          :aria-pressed="ordenSeleccionado === 'antiguas'"
+          @click="seleccionarOrden('antiguas')"
+        >
+          Más antiguas
+        </button>
+        <button
+          type="button"
+          class="pastilla-orden-etiquetas"
+          :class="{ 'pastilla-orden-activa': ordenSeleccionado === 'alfabetico' }"
+          :aria-pressed="ordenSeleccionado === 'alfabetico'"
+          @click="seleccionarOrden('alfabetico')"
+        >
+          A-Z
+        </button>
+      </div>
+    </TarjetaSeccion>
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
       <article
-        v-for="(etiqueta, indice) in etiquetas"
+        v-for="({ etiqueta, indiceOriginal }) in etiquetasOrdenadas"
         :key="etiqueta.id"
         class="tarjeta-etiqueta-item"
         :class="{
@@ -38,7 +76,7 @@
       >
         <TarjetaPreviewEtiquetaMovil
           :etiqueta="etiqueta"
-          :indice="indice"
+          :indice="indiceOriginal"
           :nombre-articulo="obtenerNombreArticulo(etiqueta)"
           :es-ubicacion-sl="esUbicacionSL"
           :codigo-barra-valido="codigoBarraValido"
@@ -52,22 +90,22 @@
           <ControlesFilaEtiqueta
             modo="cantidad"
             :etiqueta="etiqueta"
-            :indice="indice"
+            :indice="indiceOriginal"
             @incrementar="incrementarCantidad"
             @decrementar="decrementarCantidad"
             @actualizar="actualizarCantidad"
           />
           <div class="columna-confirmar">
             <div class="acciones-confirmar">
-              <button type="button" class="boton-confirmar boton-check" @click="confirmarEdicionInline(indice)" :disabled="!tieneBorrador(indice)" title="Guardar cambios">
+              <button type="button" class="boton-confirmar boton-check" @click="confirmarEdicionInline(indiceOriginal)" :disabled="!tieneBorrador(indiceOriginal)" title="Guardar cambios">
                 <IconCheck :size="16" :stroke="2.2" />
               </button>
-              <button type="button" class="boton-confirmar boton-restablecer" @click="restablecerEtiquetaDesdeMaestro(indice)" title="Restablecer valores de fábrica">
+              <button type="button" class="boton-confirmar boton-restablecer" @click="restablecerEtiquetaDesdeMaestro(indiceOriginal)" title="Restablecer valores de fábrica">
                 <IconRestore :size="16" :stroke="2.2" />
               </button>
             </div>
           </div>
-          <ControlesFilaEtiqueta modo="acciones" :etiqueta="etiqueta" :indice="indice" @eliminar="eliminarEtiqueta" />
+          <ControlesFilaEtiqueta modo="acciones" :etiqueta="etiqueta" :indice="indiceOriginal" @eliminar="eliminarEtiqueta" />
         </div>
       </article>
     </div>
@@ -88,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { IconTrash, IconTag, IconCheck, IconRestore } from '@tabler/icons-vue'
 import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
@@ -96,6 +134,10 @@ import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
 import TarjetaSeccion from '../../Configuracion/Tutoriales/TarjetaSeccion.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
+import {
+  guardarPreferenciaOrdenEtiquetas,
+  obtenerPreferenciaOrdenEtiquetas,
+} from '../../BaseDeDatos/usoAlmacenamientoEtiquetas.js'
 
 const props = defineProps({
   etiquetas: { type: Array, required: true },
@@ -114,11 +156,19 @@ const informacionExpandida = ref(false)
 const borradoresEdicion = ref({})
 const indiceAccionEdicion = ref(-1)
 const versionAccionEdicion = ref(0)
+const ordenSeleccionado = ref('recientes')
 const { codigoBarraValido } = usarCodigoBarraEtiqueta()
+const ORDENES_ETIQUETAS_VALIDOS = ['recientes', 'antiguas', 'alfabetico']
 
 const manejarModalAbierto = () => emit('modal-abierto')
 const manejarModalCerrado = () => emit('modal-cerrado')
 const totalCopias = computed(() => props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0))
+
+async function seleccionarOrden(orden) {
+  if (!ORDENES_ETIQUETAS_VALIDOS.includes(orden) || orden === ordenSeleccionado.value) return
+  ordenSeleccionado.value = orden
+  await guardarPreferenciaOrdenEtiquetas(orden)
+}
 
 function incrementarCantidad(indice) {
   const etiquetaActualizada = { ...props.etiquetas[indice] }
@@ -289,6 +339,26 @@ function obtenerNombreArticulo(etiqueta) {
   }
 }
 
+const etiquetasOrdenadas = computed(() => {
+  const registros = props.etiquetas.map((etiqueta, indiceOriginal) => ({
+    etiqueta,
+    indiceOriginal,
+    nombreOrdenamiento: obtenerNombreArticulo(etiqueta),
+  }))
+  if (ordenSeleccionado.value === 'recientes') {
+    return registros.reverse()
+  }
+  if (ordenSeleccionado.value === 'alfabetico') {
+    return registros.sort((registroA, registroB) => {
+      const comparacion = registroA.nombreOrdenamiento.localeCompare(registroB.nombreOrdenamiento, 'es', {
+        sensitivity: 'base',
+      })
+      return comparacion || registroA.indiceOriginal - registroB.indiceOriginal
+    })
+  }
+  return registros
+})
+
 function esArticuloInexistente(codigo) {
   if (!codigo || typeof codigo !== 'string') {
     return true
@@ -369,6 +439,13 @@ watch(
   { immediate: true },
 )
 
+onMounted(async () => {
+  const preferenciaGuardada = await obtenerPreferenciaOrdenEtiquetas()
+  if (ORDENES_ETIQUETAS_VALIDOS.includes(preferenciaGuardada)) {
+    ordenSeleccionado.value = preferenciaGuardada
+  }
+})
+
 defineExpose({
   cerrarPasoAtrasNativo,
 })
@@ -380,6 +457,37 @@ defineExpose({
   color: var(--color-texto-secundario);
   font-size: 0.92rem;
   line-height: 1.4;
+}
+.texto-ordenar-completa {
+  margin: 0 0 0.8rem 0;
+  color: var(--color-texto-secundario);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.grupo-orden-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.pastilla-orden-etiquetas {
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  min-height: 40px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.pastilla-orden-etiquetas:hover {
+  border-color: var(--color-primario);
+}
+.pastilla-orden-activa {
+  border-color: var(--color-primario);
+  background: var(--color-primario);
+  color: var(--color-superficie);
 }
 .tarjeta-resumen-etiquetas {
   margin: 0.35rem 0 0.65rem 0;
@@ -506,6 +614,13 @@ defineExpose({
 @media (max-width: 600px) {
   .tarjeta-resumen-etiquetas {
     padding: 0.65rem 0.72rem;
+  }
+  .grupo-orden-etiquetas {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .pastilla-orden-etiquetas {
+    width: 100%;
   }
 }
 @media (min-width: 601px) and (max-width: 1024px) {
