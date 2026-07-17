@@ -4,13 +4,15 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 ---
 
-### Estado funcional actual (v4.2.22)
+### Estado funcional actual (v4.2.35)
 
 - En web se muestra botón específico de descarga PDF y se oculta el botón enviar.
 - En móvil se mantiene compartir nativo del PDF generado.
 - Se corrigió el flujo para no intentar compartir cuando la salida es descarga web.
 - Se optimizó el render PDF para bajar picos de memoria en generación extensa.
 - Se corrigió la configuración de plugins Quasar para notificaciones y loading en runtime.
+- La lista de etiquetas puede ordenarse por las más recientes, las más antiguas o alfabéticamente por descripción.
+- La preferencia de orden se conserva entre sesiones sin alterar el orden guardado ni el PDF.
 
 ---
 
@@ -247,6 +249,8 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - `guardarEtiquetas(etiquetas)`
 - `obtenerEtiquetas()`
 - `eliminarEtiquetas()`
+- `guardarPreferenciaOrdenEtiquetas(orden)`
+- `obtenerPreferenciaOrdenEtiquetas()`
 
 **Persistencia automática**:
 - Se guarda al agregar nueva etiqueta

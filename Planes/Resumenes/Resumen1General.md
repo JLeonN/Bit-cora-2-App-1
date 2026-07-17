@@ -362,3 +362,9 @@ src/
 - Las tarjetas de artículos en Ubicaciones y Consulta De Ubicación muestran el stock del Excel como referencia.
 - El contador de pasos muestra títulos de período más claros y fechas completas al revisar registros anteriores.
 - Release vigente actualizada: 4.2.31.
+
+### Actualización de release 4.2.35
+
+- El módulo Etiquetas permite ordenar la lista por recientes, antiguas o alfabéticamente por descripción.
+- La aplicación recuerda la última forma de ordenar elegida sin cambiar el orden de impresión de los documentos.
+- Release vigente actualizada: 4.2.35.

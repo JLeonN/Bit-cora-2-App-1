@@ -1,14 +1,14 @@
 {
-  "versionDisponible": "4.2.34",
+  "versionDisponible": "4.2.35",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Actualizaciones",
+        "apartado": "Etiquetas",
         "novedades": [
-          "La publicidad de producción vuelve a utilizar los anuncios y colores normales de Bitácora.",
-          "Se reforzó el proceso de publicación para evitar que una compilación de prueba llegue a producción."
+          "Ahora podés ordenar las etiquetas por las más recientes, las más antiguas o de la A a la Z.",
+          "La app recuerda el orden que elegiste para que continúes trabajando como te resulte más cómodo."
         ]
       }
     ]
