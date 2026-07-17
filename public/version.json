@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.33",
+  "versionDisponible": "4.2.34",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,8 +7,8 @@
       {
         "apartado": "Actualizaciones",
         "novedades": [
-          "Los archivos Excel recibidos desde WhatsApp ahora se detectan y cargan de forma más confiable.",
-          "Si un archivo no se puede cargar, podés reintentar o descartarlo desde Ubicaciones."
+          "La publicidad de producción vuelve a utilizar los anuncios y colores normales de Bitácora.",
+          "Se reforzó el proceso de publicación para evitar que una compilación de prueba llegue a producción."
         ]
       }
     ]
