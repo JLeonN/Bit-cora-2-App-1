@@ -1227,7 +1227,51 @@ button {
     width: 100%;
   }
 }
-/* Botón borrar todo */
+/* Acciones generales de tablas */
+.acciones-generales-tabla {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+.boton-accion-general {
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  color: var(--color-texto-principal);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+.boton-eliminar-todos {
+  color: var(--color-error);
+}
+.boton-enviar-etiquetas {
+  color: var(--color-exito);
+}
+@media (max-width: 560px) {
+  .acciones-generales-tabla {
+    gap: 0.45rem;
+  }
+  .boton-accion-general {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.9rem;
+  }
+}
+@media (max-width: 400px) {
+  .boton-accion-general {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+  .texto-boton-accion {
+    display: none;
+  }
+}
 .contenedor-boton-borrar-todo {
   display: flex;
   justify-content: flex-end;

@@ -1,19 +1,24 @@
 <template>
   <div>
-    <!-- Botón borrar toda la tabla -->
-    <div class="contenedor-boton-borrar-todo" v-if="ubicacionesArray.length > 0">
-      <IconTag
-        class="icono-accion icono-etiqueta"
+    <div v-if="ubicacionesArray.length > 0" class="acciones-generales-tabla">
+      <button
+        type="button"
+        class="boton-accion-general boton-enviar-etiquetas"
+        title="Enviar todos a Etiquetas"
         @click="enviarTodasEtiquetas"
-        title="Enviar todas a etiquetas"
-        :stroke="2"
-        style="margin-right: 16px"
-      />
-      <IconTrash
-        class="icono-accion icono-borrar-todo"
+      >
+        <IconTag :size="20" />
+        <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
+      </button>
+      <button
+        type="button"
+        class="boton-accion-general boton-eliminar-todos"
+        title="Eliminar todos"
         @click="$emit('abrirModalEliminarTodas')"
-        title="Borrar todas las ubicaciones"
-      />
+      >
+        <IconTrash :size="20" />
+        <span class="texto-boton-accion">Eliminar todos</span>
+      </button>
     </div>
 
     <!-- Tabla de ubicaciones -->

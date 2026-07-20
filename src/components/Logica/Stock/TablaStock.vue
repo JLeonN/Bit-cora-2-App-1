@@ -1,17 +1,23 @@
 <template>
   <div class="contenedor-tabla-stock">
-    <div v-if="registros.length > 0" class="acciones-generales-stock">
-      <button type="button" class="boton-accion-general" @click="$emit('enviar-todos-etiquetas')">
+    <div v-if="registros.length > 0" class="acciones-generales-tabla">
+      <button
+        type="button"
+        class="boton-accion-general boton-enviar-etiquetas"
+        title="Enviar todos a Etiquetas"
+        @click="$emit('enviar-todos-etiquetas')"
+      >
         <IconTag :size="20" />
-        Enviar todos a Etiquetas
+        <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
       </button>
       <button
         type="button"
         class="boton-accion-general boton-eliminar-todos"
+        title="Eliminar todos"
         @click="$emit('eliminar-todos')"
       >
         <IconTrash :size="20" />
-        Eliminar todos
+        <span class="texto-boton-accion">Eliminar todos</span>
       </button>
     </div>
 
@@ -282,27 +288,6 @@ defineExpose({
 </script>
 
 <style scoped>
-.acciones-generales-stock {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
-  margin: 1rem 0;
-  flex-wrap: wrap;
-}
-.boton-accion-general {
-  border: 1px solid var(--color-borde);
-  background: var(--color-superficie);
-  color: var(--color-texto-principal);
-  border-radius: 8px;
-  padding: 0.65rem 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-}
-.boton-eliminar-todos {
-  color: var(--color-error);
-}
 .lista-stock {
   display: grid;
   gap: 0.8rem;
@@ -481,15 +466,6 @@ defineExpose({
   }
   .texto-pendiente-corto {
     display: inline;
-  }
-}
-@media (max-width: 560px) {
-  .acciones-generales-stock {
-    justify-content: stretch;
-  }
-  .boton-accion-general {
-    flex: 1;
-    justify-content: center;
   }
 }
 @media (max-width: 370px) {
