@@ -11,7 +11,11 @@
       <p class="texto-secundario texto-explicacion-base">
         Cargá el archivo Excel de artículos para actualizar la base de búsqueda y validar códigos en tiempo real.
       </p>
-      <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
+      <SelectorExcel
+        @base-datos-cargada="manejarBaseDatosCargada"
+        @base-datos-limpia="manejarBaseDatosLimpia"
+        @error-carga="manejarErrorCarga"
+      />
     </TarjetaSeccion>
 
     <InformacionUbicaciones :ubicaciones="ubicacionesArray" />
@@ -73,7 +77,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { IconDownload } from '@tabler/icons-vue'
@@ -93,18 +96,19 @@ import {
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import {
   obtenerArticuloPorCodigo,
+  inicializarBaseDatos,
+  obtenerEstadoCarga,
   reconstruirUbicacionesDesdeLista,
   validarCodigosDuplicadosEnUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
-const route = useRoute()
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
 const formularioUbicacionRef = ref(null)
-const baseDatosExpandida = ref(Boolean(route.query.archivoCompartido))
+const baseDatosExpandida = ref(false)
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
@@ -209,14 +213,18 @@ const manejarModalCerrado = () => {
 // --- MANEJO DE EVENTOS DEL SELECTOR DE EXCEL ---
 function manejarBaseDatosCargada(evento) {
   console.log('Base de datos cargada:', evento)
-  baseDatosExpandida.value = true
+  baseDatosExpandida.value = false
   mensajeExito.value = 'Base de datos cargada correctamente'
   setTimeout(() => (mensajeExito.value = ''), 3000)
 }
 
+function manejarBaseDatosLimpia() {
+  baseDatosExpandida.value = true
+}
+
 function manejarErrorCarga(mensaje) {
   console.error('Error cargando base de datos:', mensaje)
-  baseDatosExpandida.value = true
+  baseDatosExpandida.value = !obtenerEstadoCarga().cargado
   mensajeError.value = `Error al cargar archivo: ${mensaje}`
   setTimeout(() => (mensajeError.value = ''), 3000)
 }
@@ -586,6 +594,9 @@ async function descargarUbicacionesExcelWeb() {
 onMounted(async () => {
   try {
     console.log('[AjustarUbicaciones] Montando componente...')
+
+    await inicializarBaseDatos()
+    baseDatosExpandida.value = !obtenerEstadoCarga().cargado
 
     const ubicacionesCargadas = await obtenerUbicaciones()
 
