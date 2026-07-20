@@ -257,6 +257,7 @@ const anchoPantalla = ref(typeof window !== 'undefined' ? window.innerWidth : 0)
 const alturaBannerReportada = ref(0)
 const ESPACIO_BASE_BARRA = 8
 const SEPARACION_BARRA_BANNER = 4
+const MARGEN_SEGURIDAD_BANNER = 12
 const ESPACIO_EXTRA_CONTENIDO = 16
 const configuracionBarra = reactive({
   mostrarAgregar: false,
@@ -331,23 +332,22 @@ const valorPasosHeader = computed(() =>
   sesionActivaHeader.value ? pasosSesionHeader.value : pasosDiaHeader.value,
 )
 const alturaBannerActiva = computed(() => (hayBannerVisible.value ? alturaBannerReportada.value : 0))
-const posicionInferiorBarra = computed(() => {
+const espacioInferiorOcupado = computed(() => {
   if (!hayBannerVisible.value) {
-    return `calc(${ESPACIO_BASE_BARRA}px + env(safe-area-inset-bottom, 0px))`
+    return ESPACIO_BASE_BARRA
   }
-  return `${alturaBannerActiva.value + SEPARACION_BARRA_BANNER}px`
+  return alturaBannerActiva.value + SEPARACION_BARRA_BANNER + MARGEN_SEGURIDAD_BANNER
+})
+const posicionInferiorBarra = computed(() => {
+  return `calc(${espacioInferiorOcupado.value}px + env(safe-area-inset-bottom, 0px))`
 })
 const estiloBarraInferior = computed(() => ({
   '--posicion-inferior-barra': posicionInferiorBarra.value,
 }))
 const estiloContenedorConBarra = computed(() => {
   const altoBarra = anchoPantalla.value <= 480 ? 56 : 60
-  const espacioInferior = hayBannerVisible.value
-    ? alturaBannerActiva.value + SEPARACION_BARRA_BANNER
-    : ESPACIO_BASE_BARRA
-  const paddingCalculado = altoBarra + espacioInferior + ESPACIO_EXTRA_CONTENIDO
-  const safeAreaInferior = hayBannerVisible.value ? '0px' : 'env(safe-area-inset-bottom, 0px)'
-  const espacioInferiorContenido = `calc(${paddingCalculado}px + ${safeAreaInferior})`
+  const paddingCalculado = altoBarra + espacioInferiorOcupado.value + ESPACIO_EXTRA_CONTENIDO
+  const espacioInferiorContenido = `calc(${paddingCalculado}px + env(safe-area-inset-bottom, 0px))`
   return {
     '--espacio-inferior-contenido': espacioInferiorContenido,
     paddingBottom: esPaginaInicio.value ? '0px' : espacioInferiorContenido,

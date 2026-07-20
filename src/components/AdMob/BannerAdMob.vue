@@ -21,6 +21,8 @@ import {
 const bannerInicializado = ref(false)
 let escuchaTamanoBanner = null
 const ALTURA_MAXIMA_BANNER_CSS = 120
+const ALTURA_RESERVA_TELEFONO = 50
+const ALTURA_RESERVA_TABLET = 90
 
 // Emit para comunicar al padre si el banner está visible.
 const emit = defineEmits(['banner-visible', 'banner-altura'])
@@ -44,6 +46,7 @@ onMounted(async () => {
   }
 
   console.log('[AdMob] Usuario estándar - Mostrando banner')
+  emitirBannerVisible(obtenerAlturaReservaBanner())
 
   try {
     await inicializarAdMob()
@@ -78,14 +81,31 @@ const emitirBannerOculto = () => {
   emit('banner-altura', 0)
 }
 
+const obtenerAlturaReservaBanner = () => {
+  if (typeof window === 'undefined') {
+    return ALTURA_RESERVA_TELEFONO
+  }
+  return window.innerWidth >= 768 ? ALTURA_RESERVA_TABLET : ALTURA_RESERVA_TELEFONO
+}
+
+const emitirBannerVisible = (alturaBanner) => {
+  const alturaReserva = obtenerAlturaReservaBanner()
+  const alturaValida = Math.max(Number(alturaBanner) || 0, alturaReserva)
+  emit('banner-altura', alturaValida)
+  emit('banner-visible', true)
+}
+
 const registrarEscuchaTamanoBanner = async () => {
   if (escuchaTamanoBanner) {
     return
   }
   escuchaTamanoBanner = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (tamanoBanner) => {
     const alturaValida = normalizarAlturaBanner(tamanoBanner)
-    emit('banner-altura', alturaValida)
-    emit('banner-visible', alturaValida > 0)
+    if (alturaValida > 0) {
+      emitirBannerVisible(alturaValida)
+      return
+    }
+    emitirBannerOculto()
   })
 }
 
