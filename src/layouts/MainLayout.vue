@@ -265,6 +265,7 @@ let desuscribirArchivoCompartido = null
 const claseHeader = esModoPruebaPublicidad
   ? 'header-modo-prueba texto-principal'
   : 'bg-primario-oscuro texto-principal'
+const esPaginaInicio = computed(() => router.currentRoute.value.path === '/')
 
 onMounted(async () => {
   activarEnfoqueGlobalInputs()
@@ -338,7 +339,11 @@ const estiloContenedorConBarra = computed(() => {
     : ESPACIO_BASE_BARRA
   const paddingCalculado = altoBarra + espacioInferior + ESPACIO_EXTRA_CONTENIDO
   const safeAreaInferior = hayBannerVisible.value ? '0px' : 'env(safe-area-inset-bottom, 0px)'
-  return { paddingBottom: `calc(${paddingCalculado}px + ${safeAreaInferior})` }
+  const espacioInferiorContenido = `calc(${paddingCalculado}px + ${safeAreaInferior})`
+  return {
+    '--espacio-inferior-contenido': espacioInferiorContenido,
+    paddingBottom: esPaginaInicio.value ? '0px' : espacioInferiorContenido,
+  }
 })
 
 const cargarNombreUsuario = async () => {

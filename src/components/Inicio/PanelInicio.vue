@@ -1,90 +1,87 @@
 <template>
   <q-page class="pagina-inicio">
-    <div class="contenedor-botones">
-      <div class="tarjeta-inicio-modulo" @click="irA('/TablaPedidos')">
-        <div class="tarjeta-inicio-icono">
-          <IconTableRow :size="48" :stroke="1.5" />
-        </div>
-        <h3 class="tarjeta-inicio-titulo">Pedidos</h3>
-        <p class="tarjeta-inicio-descripcion">Gestiona tus pedidos diarios y consulta el historial</p>
-      </div>
-      <div class="tarjeta-inicio-modulo" @click="irA('/AjustarUbicaciones')">
-        <div class="tarjeta-inicio-icono">
-          <IconMapRoute :size="48" :stroke="1.5" />
-        </div>
-        <h3 class="tarjeta-inicio-titulo">Ubicaciones</h3>
-        <p class="tarjeta-inicio-descripcion">Ajusta y actualiza las ubicaciones de tus artículos</p>
-      </div>
-      <div class="tarjeta-inicio-modulo" @click="irA('/ConsultaDeUbicacion')">
-        <div class="tarjeta-inicio-icono">
-          <IconSearch :size="48" :stroke="1.5" />
-        </div>
-        <h3 class="tarjeta-inicio-titulo">Consulta de ubicación</h3>
-        <p class="tarjeta-inicio-descripcion">Busca un artículo y consulta o actualiza su ubicación</p>
-      </div>
-      <div class="tarjeta-inicio-modulo" @click="irA('/stock')">
-        <div class="tarjeta-inicio-icono">
-          <IconPackages :size="48" :stroke="1.5" />
-        </div>
-        <h3 class="tarjeta-inicio-titulo">Stock</h3>
-        <p class="tarjeta-inicio-descripcion">Cuenta artículos y compara el resultado con el Excel</p>
-      </div>
-      <div class="tarjeta-inicio-modulo" @click="irA('/etiquetas')">
-        <div class="tarjeta-inicio-icono">
-          <IconTag :size="48" :stroke="1.5" />
-        </div>
-        <h3 class="tarjeta-inicio-titulo">Etiquetas</h3>
-        <p class="tarjeta-inicio-descripcion">Genera etiquetas con códigos de barras para tus artículos</p>
-      </div>
-      <TarjetaContadorPasos />
+    <div class="grilla-modulos-inicio">
+      <TarjetaModuloInicio
+        v-for="modulo in modulosInicio"
+        :key="modulo.ruta"
+        v-bind="modulo"
+      />
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { IconTableRow, IconMapRoute, IconSearch, IconPackages, IconTag } from '@tabler/icons-vue'
-import TarjetaContadorPasos from 'src/components/Logica/Pasos/TarjetaContadorPasos.vue'
+import { IconMapRoute, IconPackages, IconPaw, IconSearch, IconTableRow, IconTag } from '@tabler/icons-vue'
+import TarjetaModuloInicio from 'src/components/Inicio/TarjetaModuloInicio.vue'
 
-const router = useRouter()
-
-const irA = (ruta) => {
-  router.push(ruta)
-}
+const modulosInicio = [
+  {
+    titulo: 'Pedidos',
+    descripcion: 'Gestiona tus pedidos diarios y consulta el historial',
+    icono: IconTableRow,
+    ruta: '/TablaPedidos',
+  },
+  {
+    titulo: 'Ubicaciones',
+    descripcion: 'Ajusta y actualiza las ubicaciones de tus artículos',
+    icono: IconMapRoute,
+    ruta: '/AjustarUbicaciones',
+  },
+  {
+    titulo: 'Consulta de ubicación',
+    descripcion: 'Busca un artículo y consulta o actualiza su ubicación',
+    icono: IconSearch,
+    ruta: '/ConsultaDeUbicacion',
+  },
+  {
+    titulo: 'Stock',
+    descripcion: 'Cuenta artículos y compara el resultado con el Excel',
+    icono: IconPackages,
+    ruta: '/stock',
+  },
+  {
+    titulo: 'Etiquetas',
+    descripcion: 'Genera etiquetas con códigos de barras para tus artículos',
+    icono: IconTag,
+    ruta: '/etiquetas',
+  },
+  {
+    titulo: 'Contador de pasos',
+    descripcion: 'Monitorea pasos diarios',
+    icono: IconPaw,
+    ruta: '/ContadorPasos',
+  },
+]
 </script>
 
 <style scoped>
 .pagina-inicio {
-  padding: 2rem 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 12px 16px var(--espacio-inferior-contenido, calc(84px + env(safe-area-inset-bottom, 0px)));
   background: var(--color-fondo);
 }
-.contenedor-botones {
+.grilla-modulos-inicio {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 284px;
   gap: 1.5rem;
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
 }
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
+  .grilla-modulos-inicio {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
   .pagina-inicio {
-    padding: 1rem;
+    padding: 1rem 1rem var(--espacio-inferior-contenido, calc(80px + env(safe-area-inset-bottom, 0px)));
   }
-  .contenedor-botones {
+  .grilla-modulos-inicio {
     grid-template-columns: 1fr;
+    grid-auto-rows: 240px;
     gap: 1rem;
-  }
-  .tarjeta-inicio-modulo {
-    padding: 1.5rem;
-  }
-  .tarjeta-inicio-titulo {
-    font-size: 1.3rem;
-  }
-  .tarjeta-inicio-descripcion {
-    font-size: 0.9rem;
   }
 }
 </style>
