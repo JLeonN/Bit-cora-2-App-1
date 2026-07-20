@@ -95,7 +95,11 @@
       </transition>
     </div>
 
-    <div class="acordeon-tutorial" @click="alternarTutorial('contador-pasos')">
+    <div
+      v-if="mostrarContadorPasos"
+      class="acordeon-tutorial"
+      @click="alternarTutorial('contador-pasos')"
+    >
       <div class="acordeon-header">
         <div class="header-izquierda">
           <IconActivity :stroke="2" class="icono-tutorial" />
@@ -133,8 +137,10 @@ import TutorialConsultaDeUbicacion from './LosTutoriales/TutorialConsultaDeUbica
 import TutorialStock from './LosTutoriales/TutorialStock.vue'
 import TutorialEtiquetas from './LosTutoriales/TutorialEtiquetas.vue'
 import TutorialContadorPasos from './LosTutoriales/TutorialContadorPasos.vue'
+import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
 
 const tutorialExpandido = ref(null)
+const mostrarContadorPasos = servicioPasos.estaDisponible()
 
 const alternarTutorial = (tutorial) => {
   if (tutorialExpandido.value === tutorial) {

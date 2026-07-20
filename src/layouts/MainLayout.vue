@@ -15,7 +15,12 @@
               {{ nombreUsuario }}
             </span>
           </q-toolbar-title>
-          <div class="pasos-header" :class="{ 'sesion-activa': sesionActivaHeader }" :title="textoPasosHeader">
+          <div
+            v-if="mostrarContadorPasos"
+            class="pasos-header"
+            :class="{ 'sesion-activa': sesionActivaHeader }"
+            :title="textoPasosHeader"
+          >
             <IconPaw :size="16" :stroke="2" />
             <span>{{ valorPasosHeader }}</span>
           </div>
@@ -64,7 +69,7 @@
               </q-item-section>
               <q-item-section>Etiquetas</q-item-section>
             </q-item>
-            <q-item clickable v-ripple to="/ContadorPasos">
+            <q-item v-if="mostrarContadorPasos" clickable v-ripple to="/ContadorPasos">
               <q-item-section avatar>
                 <IconPaw :stroke="2" />
               </q-item-section>
@@ -105,7 +110,7 @@
                 @{{ nombreUsuario }}
               </div>
             </div>
-            <div class="resumen-pasos-drawer">
+            <div v-if="mostrarContadorPasos" class="resumen-pasos-drawer">
               <div class="linea-pasos-drawer">
                 <IconPaw :size="14" :stroke="2" />
                 <span>{{ pasosDiaHeader }}</span>
@@ -266,6 +271,7 @@ const claseHeader = esModoPruebaPublicidad
   ? 'header-modo-prueba texto-principal'
   : 'bg-primario-oscuro texto-principal'
 const esPaginaInicio = computed(() => router.currentRoute.value.path === '/')
+const mostrarContadorPasos = servicioPasos.estaDisponible()
 
 onMounted(async () => {
   activarEnfoqueGlobalInputs()
@@ -279,19 +285,21 @@ onMounted(async () => {
   })
   await Promise.all([cargarNombreUsuario(), verificarActualizacion()])
   setInterval(cargarNombreUsuario, 5000)
-  const monitoreoHabilitado = await servicioPasos.obtenerPreferenciaMonitoreo()
-  if (monitoreoHabilitado) {
-    await servicioPasos.iniciarMonitoreo()
-  } else if (servicioPasos.esAndroidNativo()) {
-    // Refuerzo: si la preferencia está apagada, cortamos cualquier reactivación residual.
-    await servicioPasos.detenerMonitoreo()
+  if (mostrarContadorPasos) {
+    const monitoreoHabilitado = await servicioPasos.obtenerPreferenciaMonitoreo()
+    if (monitoreoHabilitado) {
+      await servicioPasos.iniciarMonitoreo()
+    } else if (servicioPasos.esAndroidNativo()) {
+      // Refuerzo: si la preferencia está apagada, cortamos cualquier reactivación residual.
+      await servicioPasos.detenerMonitoreo()
+    }
+    await servicioPasos.refrescarEstadoDesdeNativo()
+    desuscribirPasos = servicioPasos.suscribir((estado) => {
+      pasosDiaHeader.value = estado.pasosDia
+      pasosSesionHeader.value = estado.pasosSesion
+      sesionActivaHeader.value = estado.sesionActiva
+    })
   }
-  await servicioPasos.refrescarEstadoDesdeNativo()
-  desuscribirPasos = servicioPasos.suscribir((estado) => {
-    pasosDiaHeader.value = estado.pasosDia
-    pasosSesionHeader.value = estado.pasosSesion
-    sesionActivaHeader.value = estado.sesionActiva
-  })
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', actualizarDimensionesPantalla)
   }

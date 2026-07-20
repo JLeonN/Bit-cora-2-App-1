@@ -11,10 +11,19 @@
 </template>
 
 <script setup>
-import { IconMapRoute, IconPackages, IconPaw, IconSearch, IconTableRow, IconTag } from '@tabler/icons-vue'
+import { computed } from 'vue'
+import {
+  IconMapRoute,
+  IconPackages,
+  IconPaw,
+  IconSearch,
+  IconTableRow,
+  IconTag,
+} from '@tabler/icons-vue'
 import TarjetaModuloInicio from 'src/components/Inicio/TarjetaModuloInicio.vue'
+import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
 
-const modulosInicio = [
+const modulosDisponibles = [
   {
     titulo: 'Pedidos',
     descripcion: 'Gestiona tus pedidos diarios y consulta el historial',
@@ -52,6 +61,12 @@ const modulosInicio = [
     ruta: '/ContadorPasos',
   },
 ]
+
+const modulosInicio = computed(() =>
+  modulosDisponibles.filter(
+    (modulo) => modulo.ruta !== '/ContadorPasos' || servicioPasos.estaDisponible(),
+  ),
+)
 </script>
 
 <style scoped>

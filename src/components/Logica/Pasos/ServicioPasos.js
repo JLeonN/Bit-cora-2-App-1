@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { registerPlugin } from '@capacitor/core'
+import { habilitarContadorPasosEnNavegador } from 'src/components/Configuracion/ConfiguracionContadorPasos.js'
 import {
   actualizarTotalPasosDelDia,
   guardarCheckpointPasos,
@@ -39,6 +40,10 @@ class ServicioPasos {
 
   esAndroidNativo() {
     return Capacitor.getPlatform() === 'android' && Capacitor.isNativePlatform()
+  }
+
+  estaDisponible() {
+    return this.esAndroidNativo() || habilitarContadorPasosEnNavegador
   }
 
   async iniciarMonitoreo() {

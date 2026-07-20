@@ -1,3 +1,5 @@
+import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
+
 const routes = [
   {
     path: '/',
@@ -72,6 +74,7 @@ const routes = [
         path: '/ContadorPasos',
         name: 'ContadorPasos',
         component: () => import('pages/PaginaContadorPasos.vue'),
+        beforeEnter: () => servicioPasos.estaDisponible() || '/',
       },
     ],
   },
