@@ -17,6 +17,7 @@ import {
   IconPackages,
   IconPaw,
   IconSearch,
+  IconSettings,
   IconTableRow,
   IconTag,
 } from '@tabler/icons-vue'
@@ -59,6 +60,12 @@ const modulosDisponibles = [
     descripcion: 'Monitorea pasos diarios',
     icono: IconPaw,
     ruta: '/ContadorPasos',
+  },
+  {
+    titulo: 'Tutoriales y configuración',
+    descripcion: 'Accede a tutoriales y ajusta la configuración de la app',
+    icono: IconSettings,
+    ruta: '/configuracion',
   },
 ]
 
