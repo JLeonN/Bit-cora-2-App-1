@@ -1,5 +1,5 @@
 <template>
-  <div class="tarjeta-seccion">
+  <div :class="['tarjeta-seccion', { 'resaltado-atencion': estaResaltada }]">
     <div class="tarjeta-header" @click="alternarExpansion">
       <div class="header-contenido">
         <component v-if="icono" :is="icono" :stroke="2" class="icono-seccion" />
@@ -37,8 +37,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { IconChevronDown } from '@tabler/icons-vue'
+import { usarResaltadoAtencion } from '../../Logica/Compartidos/UsoResaltadoAtencion.js'
 
 const emit = defineEmits(['cambio-expansion'])
 
@@ -63,9 +64,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  solicitudResaltado: {
+    type: String,
+    default: '',
+  },
 })
 
 const estaExpandida = ref(props.expandidaPorDefecto)
+const { estaResaltado: estaResaltada, activarResaltado } = usarResaltadoAtencion()
 
 const alternarExpansion = () => {
   estaExpandida.value = !estaExpandida.value
@@ -78,6 +84,17 @@ watch(
   (nuevoValor) => {
     estaExpandida.value = nuevoValor
     emit('cambio-expansion', estaExpandida.value)
+  },
+)
+
+onMounted(() => {
+  if (props.solicitudResaltado) activarResaltado()
+})
+
+watch(
+  () => props.solicitudResaltado,
+  (solicitudResaltado) => {
+    if (solicitudResaltado) activarResaltado()
   },
 )
 </script>

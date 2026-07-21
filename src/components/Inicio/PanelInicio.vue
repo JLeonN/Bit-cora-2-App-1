@@ -65,7 +65,7 @@ const modulosDisponibles = [
     titulo: 'Tutoriales y configuración',
     descripcion: 'Accede a tutoriales y ajusta la configuración de la app',
     icono: IconSettings,
-    ruta: '/configuracion',
+    ruta: '/configuracion?tutoriales=1',
   },
 ]
 

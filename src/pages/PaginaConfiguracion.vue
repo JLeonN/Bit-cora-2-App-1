@@ -15,7 +15,12 @@
       </TarjetaSeccion>
 
       <!-- SECCIÓN: Tutoriales y Ayuda -->
-      <TarjetaSeccion titulo="Tutoriales y Ayuda" :icono="IconBook" :expandida-por-defecto="false">
+      <TarjetaSeccion
+        titulo="Tutoriales y Ayuda"
+        :icono="IconBook"
+        :expandida-por-defecto="tutorialesExpandidos"
+        :solicitud-resaltado="solicitudResaltadoTutoriales"
+      >
         <SeccionTutoriales />
       </TarjetaSeccion>
     </div>
@@ -36,6 +41,8 @@ const route = useRoute()
 const debeEditarNombre = computed(() => route.query.editarNombre === '1')
 const informacionPersonalExpandida = computed(() => debeEditarNombre.value)
 const solicitudEnfoqueNombre = computed(() => String(route.query.enfocarNombre || ''))
+const tutorialesExpandidos = computed(() => route.query.tutoriales === '1')
+const solicitudResaltadoTutoriales = computed(() => String(route.query.tutoriales || ''))
 const configuracionUsuarioRef = ref(null)
 
 // Configurar barra de botones al montar el componente
