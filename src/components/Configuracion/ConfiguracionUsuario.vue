@@ -1,38 +1,40 @@
 <template>
   <div class="configuracion-usuario">
     <form @submit.prevent="guardarNombre" class="formulario-config">
-      <div class="modal-campo">
-        <label for="nombreUsuario">Tu nombre</label>
-        <input
-          ref="inputNombreUsuarioRef"
-          id="nombreUsuario"
-          type="text"
-          v-model="nombreEditado"
-          :placeholder="nombreActual === 'Usua desconocido' ? 'Ingresa tu nombre' : nombreActual"
-          :maxlength="50"
-          @focus="mostrarMensajeAyuda = true"
-          @blur="mostrarMensajeAyuda = false"
-        />
+      <div :class="['tarjeta-edicion-nombre', { 'resaltado-atencion': estaResaltado }]">
+        <div class="modal-campo">
+          <label for="nombreUsuario">Tu nombre</label>
+          <input
+            ref="inputNombreUsuarioRef"
+            id="nombreUsuario"
+            type="text"
+            v-model="nombreEditado"
+            :placeholder="nombreActual === 'Usua desconocido' ? 'Ingresa tu nombre' : nombreActual"
+            :maxlength="50"
+            @focus="mostrarMensajeAyuda = true"
+            @blur="mostrarMensajeAyuda = false"
+          />
 
-        <div v-if="mostrarMensajeAyuda" class="mensaje-ayuda">
-          Este nombre aparecerá en los archivos Excel que generes
+          <div v-if="mostrarMensajeAyuda" class="mensaje-ayuda">
+            Este nombre aparecerá en los archivos Excel que generes
+          </div>
         </div>
-      </div>
 
-      <!-- Botones -->
-      <div class="contenedor-botones-config">
-        <button type="submit" class="boton-guardar" :disabled="!puedeGuardar">
-          {{ nombreActual === 'Usua desconocido' ? 'Guardar' : 'Actualizar' }}
-        </button>
+        <!-- Botones -->
+        <div class="contenedor-botones-config">
+          <button type="submit" class="boton-guardar" :disabled="!puedeGuardar">
+            {{ nombreActual === 'Usua desconocido' ? 'Guardar' : 'Actualizar' }}
+          </button>
 
-        <button
-          v-if="nombreActual !== 'Usua desconocido'"
-          type="button"
-          class="boton-limpiar"
-          @click="mostrarModalConfirmacion"
-        >
-          Resetear
-        </button>
+          <button
+            v-if="nombreActual !== 'Usua desconocido'"
+            type="button"
+            class="boton-limpiar"
+            @click="mostrarModalConfirmacion"
+          >
+            Resetear
+          </button>
+        </div>
       </div>
     </form>
 
@@ -161,6 +163,7 @@ import {
   eliminarClaveVIP,
 } from '../BaseDeDatos/usoAlmacenamientoVIP'
 import ModalEliminar from '../Modales/ModalEliminar.vue'
+import { usarResaltadoAtencion } from '../Logica/Compartidos/UsoResaltadoAtencion.js'
 import {
   IconInfoCircle,
   IconFileSpreadsheet,
@@ -186,11 +189,12 @@ const claveIngresada = ref('')
 const errorClaveVIP = ref('')
 const esUsuarioVIP = ref(false)
 const inputNombreUsuarioRef = ref(null)
+const { estaResaltado, activarResaltado } = usarResaltadoAtencion()
 
 const props = defineProps({
-  enfocarInputNombre: {
-    type: Boolean,
-    default: false,
+  solicitudEnfoqueNombre: {
+    type: String,
+    default: '',
   },
 })
 
@@ -254,6 +258,7 @@ const mostrarMensaje = (tipo, texto) => {
 const enfocarCampoNombre = async () => {
   await nextTick()
   inputNombreUsuarioRef.value?.focus()
+  await activarResaltado()
 }
 
 // Métodos VIP
@@ -329,15 +334,15 @@ const emit = defineEmits(['nombre-actualizado'])
 onMounted(() => {
   cargarNombreActual()
   verificarEstadoVIP()
-  if (props.enfocarInputNombre) {
+  if (props.solicitudEnfoqueNombre) {
     enfocarCampoNombre()
   }
 })
 
 watch(
-  () => props.enfocarInputNombre,
-  (debeEnfocar) => {
-    if (debeEnfocar) {
+  () => props.solicitudEnfoqueNombre,
+  (solicitudEnfoque) => {
+    if (solicitudEnfoque) {
       enfocarCampoNombre()
     }
   },
@@ -353,10 +358,13 @@ defineExpose({
   width: 100%;
 }
 .formulario-config {
-  background: var(--color-superficie);
-  padding: 20px;
-  border-radius: 12px;
   margin-bottom: 20px;
+}
+.tarjeta-edicion-nombre {
+  padding: 20px;
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
 }
 .mensaje-ayuda {
   color: var(--color-texto-secundario);

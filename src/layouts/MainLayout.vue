@@ -243,6 +243,7 @@ import {
 
 const drawer = ref(false)
 const router = useRouter()
+let contadorSolicitudEnfoqueNombre = 0
 const nombreUsuario = ref('Usuario desconocido')
 const hayBannerVisible = ref(false)
 const modalActivo = ref(false)
@@ -386,7 +387,14 @@ const irAPlayStore = () => {
 
 const irAConfiguracionParaEditarNombre = async () => {
   drawer.value = false
-  await router.push({ name: 'Configuracion', query: { editarNombre: '1' } })
+  contadorSolicitudEnfoqueNombre += 1
+  await router.push({
+    name: 'Configuracion',
+    query: {
+      editarNombre: '1',
+      enfocarNombre: `${Date.now()}${contadorSolicitudEnfoqueNombre}`,
+    },
+  })
 }
 
 const actualizarEstadoBanner = (estaVisible) => {

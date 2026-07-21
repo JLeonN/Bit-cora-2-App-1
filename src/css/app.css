@@ -36,6 +36,27 @@ body {
   background-color: var(--color-fondo);
   color: var(--color-texto-principal);
 }
+.resaltado-atencion {
+  animation: resaltar-atencion 800ms ease-in-out 3;
+}
+@keyframes resaltar-atencion {
+  0%,
+  100% {
+    border-color: var(--color-borde);
+    box-shadow: none;
+  }
+  50% {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-acento) 35%, transparent), 0 0 18px color-mix(in srgb, var(--color-acento) 55%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .resaltado-atencion {
+    animation: none;
+    border-color: var(--color-acento);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-acento) 30%, transparent);
+  }
+}
 button {
   background-color: var(--color-acento);
   color: var(--color-texto-principal);

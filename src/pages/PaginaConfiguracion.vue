@@ -9,7 +9,7 @@
       >
         <ConfiguracionUsuario
           ref="configuracionUsuarioRef"
-          :enfocar-input-nombre="debeEnfocarInputNombre"
+          :solicitud-enfoque-nombre="solicitudEnfoqueNombre"
           @nombre-actualizado="manejarNombreActualizado"
         />
       </TarjetaSeccion>
@@ -35,7 +35,7 @@ const route = useRoute()
 
 const debeEditarNombre = computed(() => route.query.editarNombre === '1')
 const informacionPersonalExpandida = computed(() => debeEditarNombre.value)
-const debeEnfocarInputNombre = computed(() => debeEditarNombre.value)
+const solicitudEnfoqueNombre = computed(() => String(route.query.enfocarNombre || ''))
 const configuracionUsuarioRef = ref(null)
 
 // Configurar barra de botones al montar el componente
