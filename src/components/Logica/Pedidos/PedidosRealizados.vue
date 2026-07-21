@@ -94,10 +94,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { IconPencil, IconTrash } from '@tabler/icons-vue'
+import { Capacitor } from '@capacitor/core'
+import { IconDownload, IconPencil, IconTrash } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../../BaseDeDatos/almacenamiento.js'
-import { generarYGuardarExcelParaDescarga } from './ExportarPedidosExcel.js'
-import { generarYGuardarExcelTemporal } from './GeneraExcel.js'
+import { descargarExcelPedidosEnNavegador, generarYGuardarExcelTemporal } from './GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Pedidos/CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
@@ -128,6 +128,7 @@ const indiceEliminar = ref(null)
 // Estados de notificaciones
 const mensajeExito = ref('')
 const mensajeError = ref('')
+const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 
 // Métodos para manejar el estado del modal
 const manejarModalAbierto = () => {
@@ -302,6 +303,8 @@ const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: pedidosRealizados.value.length > 0,
   puedeEnviar: pedidosRealizados.value.length > 0,
+  iconoEnviar: esNavegadorWeb.value ? IconDownload : null,
+  tituloEnviar: esNavegadorWeb.value ? 'Descargar Excel' : 'Enviar datos',
   botonesPersonalizados: [],
   modalActivo: modalActivo.value,
 }))
@@ -312,11 +315,7 @@ const metodosParaBarra = {
   onEnviar: () => {
     enviarPedidos()
   },
-  onAccionPersonalizada: (accion) => {
-    if (accion === 'descargar') {
-      descargarPedidos()
-    }
-  },
+  onAccionPersonalizada: () => {},
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
 
@@ -408,20 +407,15 @@ function cerrarPasoAtrasNativo() {
   return false
 }
 
-// Métodos para descargar y enviar
-async function descargarPedidos() {
-  try {
-    await generarYGuardarExcelParaDescarga(pedidosRealizados.value)
-    mensajeExito.value = 'Archivo descargado correctamente'
-    setTimeout(() => (mensajeExito.value = ''), 3000)
-  } catch {
-    mensajeError.value = 'Ocurrió un error al descargar'
-    setTimeout(() => (mensajeError.value = ''), 3000)
-  }
-}
-
 async function enviarPedidos() {
   try {
+    if (esNavegadorWeb.value) {
+      await descargarExcelPedidosEnNavegador(pedidosRealizados.value)
+      mensajeExito.value = 'Excel descargado correctamente'
+      setTimeout(() => (mensajeExito.value = ''), 3000)
+      return
+    }
+
     const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosRealizados.value)
     if (!uri) throw new Error('No se generó el archivo correctamente.')
     await compartirArchivo(uri, nombreArchivo)

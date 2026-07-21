@@ -113,7 +113,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import {
+  IconDownload,
   IconPencil,
   IconTrash,
   IconCalendarEvent,
@@ -125,7 +127,7 @@ import {
   IconCalendarMinus,
 } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
-import { generarYGuardarExcelTemporal } from '../GeneraExcel.js'
+import { descargarExcelPedidosEnNavegador, generarYGuardarExcelTemporal } from '../GeneraExcel.js'
 import { compartirArchivo } from '../CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEditarFalta from 'src/components/Modales/ModalEditarFalta.vue'
@@ -152,6 +154,7 @@ const pedidoEditar = ref({ numero: '', fecha: '', tipo: '' })
 const pedidoEliminar = ref({ numero: '', fecha: '' })
 const indiceEditar = ref(null)
 const indiceEliminar = ref(null)
+const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 
 // Estados de notificaciones
 const mensajeExito = ref('')
@@ -269,6 +272,8 @@ const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: pedidosDelDia.value.some((p) => p.tipo !== 'falta'),
   puedeEnviar: pedidosDelDia.value.some((p) => p.tipo !== 'falta'),
+  iconoEnviar: esNavegadorWeb.value ? IconDownload : null,
+  tituloEnviar: esNavegadorWeb.value ? 'Descargar Excel' : 'Enviar datos',
   botonesPersonalizados: [],
   modalActivo: modalActivo.value,
 }))
@@ -464,6 +469,13 @@ function cerrarPasoAtrasNativo() {
 async function enviarPedidosDelDia() {
   try {
     const pedidosNormales = pedidosDelDia.value.filter((p) => p.tipo !== 'falta')
+    if (esNavegadorWeb.value) {
+      await descargarExcelPedidosEnNavegador(pedidosNormales)
+      mensajeExito.value = 'Excel descargado correctamente'
+      setTimeout(() => (mensajeExito.value = ''), 3000)
+      return
+    }
+
     const { uri, nombreArchivo } = await generarYGuardarExcelTemporal(pedidosNormales)
     if (!uri) throw new Error('No se generó el archivo correctamente.')
     await compartirArchivo(uri, nombreArchivo)

@@ -28,49 +28,56 @@ function formatearFechaParaNombreArchivo(fecha) {
   return `${dia}-${mes}-${anio}`
 }
 
-export async function generarYGuardarExcelTemporal(pedidos) {
+async function prepararExcelPedidos(pedidos) {
   if (!pedidos || pedidos.length === 0) {
-    console.error('No se proporcionaron pedidos para generar el archivo.')
-    return null
+    throw new Error('No se proporcionaron pedidos para generar el archivo.')
   }
 
+  const nombreUsuario = await obtenerNombreUsuario()
+
+  // Parsear fechas
+  const fechas = pedidos
+    .map((pedido) => parsearFechaDDMMYYYY(pedido.fecha))
+    .filter((fecha) => fecha !== null)
+
+  if (fechas.length === 0) {
+    throw new Error('No hay fechas válidas en los pedidos.')
+  }
+
+  // Calcular fecha mínima y máxima
+  const fechaMin = new Date(Math.min(...fechas))
+  const fechaMax = new Date(Math.max(...fechas))
+
+  // Nombre archivo
+  const fechaMinNombre = formatearFechaParaNombreArchivo(fechaMin)
+  const fechaMaxNombre = formatearFechaParaNombreArchivo(fechaMax)
+
+  const nombreArchivo = `Pedi ${nombreUsuario} ${fechaMinNombre} - ${fechaMaxNombre}.xlsx`
+
+  const datosParaHoja = pedidos.map((pedido) => ({
+    Fechas: pedido.fecha || 'Sin fecha',
+    Pedidos: pedido.numero || 'Sin número',
+    Items: pedido.items || 1,
+  }))
+  const hojaDeTrabajo = XLSX.utils.json_to_sheet(datosParaHoja)
+
+  // --- APLICAR ANCHOS DE COLUMNAS ---
+  hojaDeTrabajo['!cols'] = ANCHOS_COLUMNAS
+
+  const libroDeTrabajo = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
+  return { libroDeTrabajo, nombreArchivo, nombreUsuario }
+}
+
+export async function descargarExcelPedidosEnNavegador(pedidos) {
+  const { libroDeTrabajo, nombreArchivo } = await prepararExcelPedidos(pedidos)
+  XLSX.writeFile(libroDeTrabajo, nombreArchivo)
+  return { nombreArchivo }
+}
+
+export async function generarYGuardarExcelTemporal(pedidos) {
   try {
-    const nombreUsuario = await obtenerNombreUsuario()
-
-    // Parsear fechas
-    const fechas = pedidos
-      .map((pedido) => parsearFechaDDMMYYYY(pedido.fecha))
-      .filter((fecha) => fecha !== null)
-
-    if (fechas.length === 0) {
-      console.error('No hay fechas válidas en los pedidos.')
-      return null
-    }
-
-    // Calcular fecha mínima y máxima
-    const fechaMin = new Date(Math.min(...fechas))
-    const fechaMax = new Date(Math.max(...fechas))
-
-    // Nombre archivo
-    const fechaMinNombre = formatearFechaParaNombreArchivo(fechaMin)
-    const fechaMaxNombre = formatearFechaParaNombreArchivo(fechaMax)
-
-    const nombreArchivo = `Pedi ${nombreUsuario} ${fechaMinNombre} - ${fechaMaxNombre}.xlsx`
-
-    const datosParaHoja = pedidos.map((pedido) => {
-      return {
-        Fechas: pedido.fecha || 'Sin fecha',
-        Pedidos: pedido.numero || 'Sin número',
-        Items: pedido.items || 1,
-      }
-    })
-    const hojaDeTrabajo = XLSX.utils.json_to_sheet(datosParaHoja)
-
-    // --- APLICAR ANCHOS DE COLUMNAS ---
-    hojaDeTrabajo['!cols'] = ANCHOS_COLUMNAS
-
-    const libroDeTrabajo = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
+    const { libroDeTrabajo, nombreArchivo, nombreUsuario } = await prepararExcelPedidos(pedidos)
 
     const datosEnBase64 = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'base64' })
 

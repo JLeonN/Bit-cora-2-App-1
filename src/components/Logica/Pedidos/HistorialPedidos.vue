@@ -14,9 +14,12 @@
           <!-- Solo el mes y año -->
           {{ obtenerNombreMes(rango.mes) }} {{ rango.anio }}
         </p>
-        <!-- Botón de enviar -->
-        <span v-if="!rango.enviado" @click.stop="enviarRango(rango)" class="boton-enviar">
-          <IconoEnviar size="20" /> Enviar
+        <span
+          v-if="esNavegadorWeb || !rango.enviado"
+          class="boton-enviar"
+          @click.stop="manejarAccionRango(rango)"
+        >
+          <component :is="iconoAccionRango" size="20" /> {{ textoAccionRango }}
         </span>
       </div>
     </div>
@@ -29,16 +32,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { IconSend } from '@tabler/icons-vue'
+import { Capacitor } from '@capacitor/core'
+import { IconDownload, IconSend } from '@tabler/icons-vue'
 import { obtenerPedidos, guardarFechaUltimoEnvio } from '../../BaseDeDatos/almacenamiento.js'
-import { generarYGuardarExcelTemporal } from './GeneraExcel.js'
+import { descargarExcelPedidosEnNavegador, generarYGuardarExcelTemporal } from './GeneraExcel.js'
 import { compartirArchivo } from 'src/components/Logica/Pedidos/CompartirExcel.js'
+import { Notify } from 'quasar'
 
 const router = useRouter()
-const IconoEnviar = IconSend
 const historialDeRangos = ref([])
+const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
+const iconoAccionRango = computed(() => (esNavegadorWeb.value ? IconDownload : IconSend))
+const textoAccionRango = computed(() => (esNavegadorWeb.value ? 'Descargar' : 'Enviar'))
 
 /* Convierte "DD/MM/YYYY" en un objeto Date válido */
 function parsearFechaDDMMYYYY(fechaStr) {
@@ -128,6 +135,35 @@ async function cargarHistorial() {
 }
 
 /* Enviar pedidos del mes/año seleccionado */
+async function manejarAccionRango(rango) {
+  if (esNavegadorWeb.value) {
+    await descargarRango(rango)
+    return
+  }
+
+  await enviarRango(rango)
+}
+
+async function descargarRango(rango) {
+  try {
+    await descargarExcelPedidosEnNavegador(rango.pedidos)
+    Notify.create({
+      type: 'positive',
+      message: 'Excel descargado correctamente',
+      position: 'top',
+      timeout: 3000,
+    })
+  } catch (error) {
+    console.error('Error al descargar el archivo:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'Ocurrió un error al descargar el Excel',
+      position: 'top',
+      timeout: 3000,
+    })
+  }
+}
+
 async function enviarRango(rango) {
   try {
     rango.enviado = true

@@ -48,7 +48,7 @@
         <div class="contenido-paso">
           <strong>Exportar:</strong> Presioná el botón
           <IconSend :stroke="2" class="icono-inline" /> para generar un archivo Excel con todos tus
-          pedidos o seleccioná un rango de fechas en "Historial".
+          pedidos o descargá un rango de fechas desde "Historial".
         </div>
       </div>
     </div>
@@ -80,6 +80,14 @@
         <span
           ><strong>Edición rápida:</strong> Podés editar o eliminar cualquier pedido desde la
           lista.</span
+        >
+      </div>
+
+      <div class="tip">
+        <IconSend :stroke="2" class="icono-tip" />
+        <span
+          ><strong>Enviar o descargar Excel:</strong> En Android se abre el menú del sistema para
+          compartir el archivo. En web, el botón pasa a descargar el Excel directamente.</span
         >
       </div>
     </div>
