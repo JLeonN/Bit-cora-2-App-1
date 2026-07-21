@@ -143,6 +143,8 @@
         :mostrar-agregar="configuracionBarra.mostrarAgregar"
         :mostrar-enviar="configuracionBarra.mostrarEnviar"
         :puede-enviar="configuracionBarra.puedeEnviar"
+        :icono-enviar="configuracionBarra.iconoEnviar"
+        :titulo-enviar="configuracionBarra.tituloEnviar"
         :botones-personalizados="configuracionBarra.botonesPersonalizados"
         :hay-banner-visible="hayBannerVisible"
         :modal-activo="modalActivo"
@@ -263,6 +265,8 @@ const configuracionBarra = reactive({
   mostrarAgregar: false,
   mostrarEnviar: false,
   puedeEnviar: true,
+  iconoEnviar: null,
+  tituloEnviar: 'Enviar datos',
   botonesPersonalizados: [],
 })
 let paginaActivaRef = null
@@ -425,7 +429,14 @@ const redirigirExcelCompartidoPendiente = async () => {
 }
 
 const manejarConfiguracionBarra = (configuracion, refPagina) => {
-  Object.assign(configuracionBarra, configuracion)
+  Object.assign(
+    configuracionBarra,
+    {
+      iconoEnviar: null,
+      tituloEnviar: 'Enviar datos',
+    },
+    configuracion,
+  )
   paginaActivaRef = refPagina
   if (configuracion.modalActivo !== undefined) {
     modalActivo.value = configuracion.modalActivo

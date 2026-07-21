@@ -1,5 +1,17 @@
 import { Share } from '@capacitor/share'
 
+export function abrirWhatsAppConMensaje(mensaje) {
+  const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`
+  const ventanaWhatsApp = window.open(urlWhatsApp, '_blank')
+
+  if (!ventanaWhatsApp) {
+    window.location.assign(urlWhatsApp)
+    return
+  }
+
+  ventanaWhatsApp.opener = null
+}
+
 export async function compartirArchivo(rutaArchivo, nombreArchivo, metadatos = {}) {
   try {
     if (!rutaArchivo) {

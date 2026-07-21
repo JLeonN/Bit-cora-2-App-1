@@ -79,7 +79,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
-import { IconDownload } from '@tabler/icons-vue'
+import { IconClock, IconDownload, IconSend } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
@@ -88,7 +88,17 @@ import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
-import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import {
+  descargarArchivoExcelEnNavegador,
+  invalidarExcelCompartible,
+  obtenerArchivoExcelListo,
+  obtenerDatosExcelListo,
+  obtenerExcelCompartible,
+} from '../components/Logica/Ubicaciones/CacheExcelUbicacionesWeb.js'
+import {
+  abrirWhatsAppConMensaje,
+  compartirArchivo,
+} from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,
@@ -109,6 +119,10 @@ const emit = defineEmits(['configurar-barra'])
 const ubicaciones = ref([])
 const formularioUbicacionRef = ref(null)
 const baseDatosExpandida = ref(false)
+const estadoPreparacionExcel = ref('pendiente')
+let temporizadorPreparacionExcel = null
+let versionPreparacionExcel = 0
+let componenteUbicacionesActivo = true
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
@@ -145,19 +159,31 @@ const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const hayCodigosDuplicados = computed(
   () => !validarCodigosDuplicadosEnUbicaciones(ubicacionesArray.value).exito,
 )
+const puedeExportarUbicaciones = computed(
+  () => ubicacionesArray.value.length > 0 && !hayCodigosDuplicados.value,
+)
+const excelCompartibleListo = computed(
+  () => !esNavegadorWeb.value || estadoPreparacionExcel.value === 'listo',
+)
 
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: ubicacionesArray.value.length > 0,
-  puedeEnviar: ubicacionesArray.value.length > 0 && !hayCodigosDuplicados.value,
+  puedeEnviar: puedeExportarUbicaciones.value && excelCompartibleListo.value,
+  iconoEnviar:
+    esNavegadorWeb.value && !excelCompartibleListo.value ? IconClock : IconSend,
+  tituloEnviar:
+    esNavegadorWeb.value && !excelCompartibleListo.value
+      ? 'Preparando Excel...'
+      : 'Enviar Excel',
   botonesPersonalizados: esNavegadorWeb.value
     ? [
         {
           accion: 'descargar-excel-ubicaciones',
           icono: IconDownload,
           titulo: 'Descargar Excel',
-          desactivado: ubicacionesArray.value.length === 0 || hayCodigosDuplicados.value,
+          desactivado: !puedeExportarUbicaciones.value || !excelCompartibleListo.value,
           claseCSS: '',
         },
       ]
@@ -201,6 +227,10 @@ watch(
   },
 )
 
+watch(estadoPreparacionExcel, () => {
+  actualizarConfiguracionBarra()
+})
+
 // Métodos para manejar el estado del modal
 const manejarModalAbierto = () => {
   modalActivo.value = true
@@ -216,10 +246,12 @@ function manejarBaseDatosCargada(evento) {
   baseDatosExpandida.value = false
   mensajeExito.value = 'Base de datos cargada correctamente'
   setTimeout(() => (mensajeExito.value = ''), 3000)
+  programarPreparacionExcelCompartible({ debeInvalidar: false })
 }
 
 function manejarBaseDatosLimpia() {
   baseDatosExpandida.value = true
+  programarPreparacionExcelCompartible()
 }
 
 function manejarErrorCarga(mensaje) {
@@ -227,6 +259,52 @@ function manejarErrorCarga(mensaje) {
   baseDatosExpandida.value = !obtenerEstadoCarga().cargado
   mensajeError.value = `Error al cargar archivo: ${mensaje}`
   setTimeout(() => (mensajeError.value = ''), 3000)
+}
+
+function programarPreparacionExcelCompartible({ debeInvalidar = true, esperar = true } = {}) {
+  if (!esNavegadorWeb.value) return
+
+  if (debeInvalidar) {
+    invalidarExcelCompartible()
+  }
+
+  if (temporizadorPreparacionExcel) {
+    clearTimeout(temporizadorPreparacionExcel)
+    temporizadorPreparacionExcel = null
+  }
+
+  if (!puedeExportarUbicaciones.value) {
+    estadoPreparacionExcel.value = 'pendiente'
+    return
+  }
+
+  estadoPreparacionExcel.value = 'preparando'
+  const versionActual = ++versionPreparacionExcel
+  const prepararExcel = async () => {
+    try {
+      const archivoExcel = await obtenerExcelCompartible(ubicacionesArray.value)
+      if (!componenteUbicacionesActivo || versionActual !== versionPreparacionExcel) return
+
+      estadoPreparacionExcel.value = archivoExcel ? 'listo' : 'preparando'
+    } catch (error) {
+      if (!componenteUbicacionesActivo || versionActual !== versionPreparacionExcel) return
+
+      console.error('Error al preparar Excel de ubicaciones:', error)
+      estadoPreparacionExcel.value = 'error'
+      mensajeError.value = 'No se pudo preparar el Excel para compartir'
+      setTimeout(() => (mensajeError.value = ''), 3500)
+    }
+  }
+
+  if (esperar) {
+    temporizadorPreparacionExcel = setTimeout(() => {
+      temporizadorPreparacionExcel = null
+      prepararExcel()
+    }, 400)
+    return
+  }
+
+  prepararExcel()
 }
 
 async function sincronizarBaseConListaActual() {
@@ -280,6 +358,7 @@ async function agregarUbicacion(datosNuevos) {
       setTimeout(() => (mensajeError.value = ''), 3500)
     }
     actualizarConfiguracionBarra()
+    programarPreparacionExcelCompartible()
 
     console.log('[agregarUbicacion] Ubicación agregada:', nuevaUbicacion)
   } catch (error) {
@@ -399,6 +478,7 @@ async function guardarEdicion(datos) {
       setTimeout(() => (mensajeError.value = ''), 3500)
     }
     actualizarConfiguracionBarra()
+    programarPreparacionExcelCompartible()
 
     mostrarModalEditar.value = false
     indiceEditar = null
@@ -454,6 +534,7 @@ async function confirmarEliminacion() {
         setTimeout(() => (mensajeError.value = ''), 3500)
       }
       actualizarConfiguracionBarra()
+      programarPreparacionExcelCompartible()
     }
 
     mostrarModalEliminar.value = false
@@ -486,6 +567,7 @@ async function confirmarEliminacionTodas() {
     }
     mostrarModalEliminarTodas.value = false
     actualizarConfiguracionBarra()
+    programarPreparacionExcelCompartible()
 
     mensajeExito.value = 'Todas las ubicaciones eliminadas'
     setTimeout(() => (mensajeExito.value = ''), 3000)
@@ -540,16 +622,30 @@ async function enviarUbicacionesExcel() {
       )
     }
 
+    if (esNavegadorWeb.value) {
+      const { archivoExcel: archivo, nombreUsuario } = obtenerDatosExcelListo()
+      if (!archivo) {
+        mensajeError.value = 'El Excel todavía se está preparando'
+        setTimeout(() => (mensajeError.value = ''), 3000)
+        return
+      }
+      abrirWhatsAppConMensaje(
+        construirMensajeWhatsAppUbicaciones(
+          nombreUsuario,
+          ubicacionesArray.value.length,
+          archivo.name,
+        ),
+      )
+      descargarArchivoExcelEnNavegador(archivo)
+      mensajeExito.value = 'Excel descargado y WhatsApp abierto'
+      setTimeout(() => (mensajeExito.value = ''), 3000)
+      return
+    }
+
     const resultado = await generarYGuardarExcelUbicaciones(ubicacionesArray.value)
 
     if (!resultado) {
       throw new Error('No se pudo generar el archivo Excel')
-    }
-
-    if (esNavegadorWeb.value) {
-      mensajeExito.value = 'Archivo de ubicaciones descargado correctamente'
-      setTimeout(() => (mensajeExito.value = ''), 3000)
-      return
     }
 
     if (!resultado.uri) {
@@ -564,6 +660,24 @@ async function enviarUbicacionesExcel() {
     mensajeError.value = 'Error al enviar el archivo: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3000)
   }
+}
+
+function construirMensajeWhatsAppUbicaciones(nombreUsuario, cantidadUbicaciones, nombreArchivo) {
+  const usuario = nombreUsuario || 'Sin usuario'
+  const cantidad = cantidadUbicaciones === 1 ? '1 ubicación' : `${cantidadUbicaciones} ubicaciones`
+  const nombreArchivoSeguro = String(nombreArchivo || '').replaceAll('`', "'")
+
+  return [
+    '*Excel de ubicaciones listo*',
+    '',
+    `*Usuario:* ${usuario}`,
+    `*Ubicaciones incluidas:* ${cantidad}`,
+    '',
+    'El archivo se descargó automáticamente con este nombre:',
+    `\`\`\`${nombreArchivoSeguro}\`\`\``,
+    '',
+    'Adjuntalo desde *Descargas* para enviarlo.',
+  ].join('\n')
 }
 
 async function descargarUbicacionesExcelWeb() {
@@ -581,7 +695,13 @@ async function descargarUbicacionesExcelWeb() {
       return
     }
 
-    await generarYGuardarExcelUbicaciones(ubicacionesArray.value)
+    const archivoExcel = obtenerArchivoExcelListo()
+    if (!archivoExcel) {
+      mensajeError.value = 'El Excel todavía se está preparando'
+      setTimeout(() => (mensajeError.value = ''), 3000)
+      return
+    }
+    descargarArchivoExcelEnNavegador(archivoExcel)
     mensajeExito.value = 'Excel descargado correctamente'
     setTimeout(() => (mensajeExito.value = ''), 2500)
   } catch (error) {
@@ -612,6 +732,7 @@ onMounted(async () => {
     }
 
     actualizarConfiguracionBarra()
+    programarPreparacionExcelCompartible({ debeInvalidar: false, esperar: false })
   } catch (error) {
     console.error('[AjustarUbicaciones] Error en onMounted:', error)
     ubicaciones.value = []
@@ -621,6 +742,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  componenteUbicacionesActivo = false
+  if (temporizadorPreparacionExcel) {
+    clearTimeout(temporizadorPreparacionExcel)
+  }
   emit(
     'configurar-barra',
     {

@@ -36,9 +36,9 @@
       :class="{ 'boton-desactivado': !puedeEnviar }"
       :disabled="!puedeEnviar"
       @click="enviarDatos"
-      title="Enviar datos"
+      :title="tituloEnviar"
     >
-      <IconSend size="20" stroke="2" />
+      <component :is="iconoEnviarCalculado" size="20" stroke="2" />
     </button>
 
     <!-- Botones personalizados dinámicos -->
@@ -87,6 +87,14 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  iconoEnviar: {
+    type: Object,
+    default: () => IconSend,
+  },
+  tituloEnviar: {
+    type: String,
+    default: 'Enviar datos',
+  },
   botonesPersonalizados: {
     type: Array,
     default: () => [],
@@ -114,6 +122,8 @@ const esPaginaInicio = computed(() => {
 const mostrarAtrasCalculado = computed(() => {
   return props.mostrarAtras && !esPaginaInicio.value
 })
+
+const iconoEnviarCalculado = computed(() => props.iconoEnviar || IconSend)
 
 // Métodos de navegación
 const volverAtras = () => {

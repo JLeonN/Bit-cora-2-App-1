@@ -18,6 +18,7 @@ const ANCHOS_BASE_COLUMNAS = [
   { wch: 12 }, // G - ubic antigua
   { wch: 7 }, // H - info
 ]
+const TIPO_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 function esNavegadorWeb() {
   return !window.Capacitor || window.Capacitor.getPlatform() === 'web'
@@ -117,7 +118,7 @@ function descargarExcelEnNavegador(libroDeTrabajo, nombreArchivo) {
   return { uri: null, nombreArchivo }
 }
 
-export async function generarYGuardarExcelUbicaciones(ubicaciones) {
+async function prepararExcelUbicaciones(ubicaciones, nombreUsuario = '') {
   if (!Array.isArray(ubicaciones) || ubicaciones.length === 0) {
     throw new Error('No hay ubicaciones para generar el archivo.')
   }
@@ -129,13 +130,31 @@ export async function generarYGuardarExcelUbicaciones(ubicaciones) {
     )
   }
 
-  const nombreUsuario = await obtenerNombreUsuario()
-  const libroDeTrabajo = construirLibroUbicaciones(ubicaciones, nombreUsuario)
-
+  const nombreUsuarioFinal = nombreUsuario || (await obtenerNombreUsuario())
+  const libroDeTrabajo = construirLibroUbicaciones(ubicaciones, nombreUsuarioFinal)
   const ahora = new Date()
   const fecha = ahora.toISOString().split('T')[0]
   const hora = ahora.toTimeString().slice(0, 5).replace(':', '-')
-  const nombreArchivo = `Ubic ${nombreUsuario} ${fecha} # ${hora}.xlsx`
+  const nombreArchivo = `Ubic ${nombreUsuarioFinal} ${fecha} # ${hora}.xlsx`
+
+  return { libroDeTrabajo, nombreArchivo }
+}
+
+export async function generarArchivoExcelUbicacionesParaCompartir(ubicaciones, nombreUsuario = '') {
+  if (!esNavegadorWeb()) {
+    throw new Error('La generación de archivos para compartir solo está disponible en navegador')
+  }
+
+  const { libroDeTrabajo, nombreArchivo } = await prepararExcelUbicaciones(
+    ubicaciones,
+    nombreUsuario,
+  )
+  const datosExcel = XLSX.write(libroDeTrabajo, { bookType: 'xlsx', type: 'array' })
+  return new File([datosExcel], nombreArchivo, { type: TIPO_EXCEL })
+}
+
+export async function generarYGuardarExcelUbicaciones(ubicaciones) {
+  const { libroDeTrabajo, nombreArchivo } = await prepararExcelUbicaciones(ubicaciones)
 
   if (esNavegadorWeb()) {
     return descargarExcelEnNavegador(libroDeTrabajo, nombreArchivo)
