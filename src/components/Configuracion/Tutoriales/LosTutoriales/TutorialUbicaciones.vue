@@ -59,10 +59,10 @@
       <div class="paso">
         <div class="numero-paso">5</div>
         <div class="contenido-paso">
-          <strong>Exportar Excel:</strong> Presioná el botón
-          <IconSend :stroke="2" class="icono-inline" /> para generar un Excel con todas las
-          ubicaciones. El flujo mantiene consistencia entre ubicación original, ubicación actual e
-          historial operativo.
+          <strong>Enviar o descargar Excel:</strong> Presioná el botón
+          <IconSend :stroke="2" class="icono-inline" /> para preparar el Excel con todas las
+          ubicaciones. Si aparece un reloj, esperá unos segundos: el archivo se está actualizando
+          con los últimos cambios.
         </div>
       </div>
     </div>
@@ -101,8 +101,9 @@
       <div class="tip">
         <IconFileSpreadsheet :stroke="2" class="icono-tip" />
         <span
-          ><strong>Web y móvil:</strong> En web podés descargar Excel directo. En Android/iOS se
-          usa compartir archivo desde el sistema.</span
+          ><strong>Enviar Excel:</strong> En Android se abre el menú del sistema con el Excel ya
+          adjunto. En web se descarga el Excel y se abre WhatsApp con un mensaje listo; adjuntá el
+          archivo indicado desde Descargas. El botón de descarga permite bajar solo el Excel.</span
         >
       </div>
     </div>
