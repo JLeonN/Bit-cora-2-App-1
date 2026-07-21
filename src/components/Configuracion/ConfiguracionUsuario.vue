@@ -19,13 +19,6 @@
         </div>
       </div>
 
-      <!-- Información actual -->
-      <div v-if="nombreActual !== 'Usua desconocido'" class="info-actual">
-        <small class="texto-info">
-          Nombre actual: <strong>{{ nombreActual }}</strong>
-        </small>
-      </div>
-
       <!-- Botones -->
       <div class="contenedor-botones-config">
         <button type="submit" class="boton-guardar" :disabled="!puedeGuardar">
@@ -370,15 +363,6 @@ defineExpose({
   font-size: 12px;
   margin-top: 5px;
   opacity: 0.8;
-}
-.info-actual {
-  margin: 15px 0;
-  padding: 10px;
-  background: var(--color-fondo);
-  border-radius: 8px;
-}
-.texto-info {
-  color: var(--color-texto-secundario);
 }
 .contenedor-botones-config {
   display: flex;
