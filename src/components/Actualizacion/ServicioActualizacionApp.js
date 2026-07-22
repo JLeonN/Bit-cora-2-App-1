@@ -59,6 +59,23 @@ const normalizarCambios = (cambios) => {
     .filter(Boolean)
 }
 
+const obtenerCambiosPorIdioma = (cambios) => {
+  if (Array.isArray(cambios)) {
+    return cambios
+  }
+  if (!cambios || typeof cambios !== 'object') {
+    return []
+  }
+  const idiomaNavegador = `${navigator.language || ''}`.trim()
+  const idiomaBase = idiomaNavegador.split('-')[0]
+  const cambiosPorIdioma =
+    cambios[idiomaNavegador] ||
+    cambios['es-AR'] ||
+    Object.entries(cambios).find(([idioma]) => idioma.split('-')[0] === idiomaBase)?.[1] ||
+    Object.values(cambios)[0]
+  return Array.isArray(cambiosPorIdioma) ? cambiosPorIdioma : []
+}
+
 export const obtenerEstadoActualizacion = async () => {
   if (!URL_VERSION_REMOTA) {
     return crearEstadoSinActualizacion()
@@ -79,7 +96,7 @@ export const obtenerEstadoActualizacion = async () => {
     const versionDisponible = `${versionRemota?.versionDisponible || ''}`.trim()
     const mostrarActualizacion = versionRemota?.mostrarActualizacion === true
     const urlPlayStore = `${versionRemota?.urlPlayStore || URL_PLAY_STORE_POR_DEFECTO}`.trim()
-    const cambios = normalizarCambios(versionRemota?.cambios)
+    const cambios = normalizarCambios(obtenerCambiosPorIdioma(versionRemota?.cambios))
     if (!versionDisponible || !mostrarActualizacion) {
       return crearEstadoSinActualizacion()
     }

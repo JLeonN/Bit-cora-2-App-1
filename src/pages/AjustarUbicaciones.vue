@@ -188,7 +188,9 @@ const configuracionBarra = computed(() => ({
   tituloEnviar:
     esNavegadorWeb.value && !excelCompartibleListo.value
       ? 'Preparando Excel...'
-      : 'Enviar Excel',
+      : esNavegadorWeb.value
+        ? 'Enviar Excel por WhatsApp'
+        : 'Enviar Excel',
   botonesPersonalizados: esNavegadorWeb.value
     ? [
         {
