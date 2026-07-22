@@ -7,6 +7,11 @@
 
 # Reglas del Proyecto
 
+## Comunicación con Leo
+
+- Dar indicaciones directas, específicas y accionables, sin rodeos ni explicaciones que no ayuden a ejecutar la tarea.
+- Cuando Leo pida valores o datos para cargar en un formulario, indicar exactamente qué escribir en cada campo y en qué orden.
+
 ## Script Móvil (Android)
 
 Script estándar para compilar y abrir en Android Studio:
