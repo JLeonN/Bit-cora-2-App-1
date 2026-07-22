@@ -88,7 +88,7 @@ const props = defineProps({
     default: true,
   },
   iconoEnviar: {
-    type: Object,
+    type: [Object, Function],
     default: () => IconSend,
   },
   tituloEnviar: {
@@ -209,6 +209,14 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   transform: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
   filter: none !important;
+}
+.boton-compartiendo-enlace svg {
+  animation: girar-icono-compartir 1s linear infinite;
+}
+@keyframes girar-icono-compartir {
+  to {
+    transform: rotate(360deg);
+  }
 }
 @media (max-width: 480px) {
   .barra-botones-inferior {

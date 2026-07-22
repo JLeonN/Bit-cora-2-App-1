@@ -99,9 +99,9 @@ Los botones web actuales de Enviar y Descargar se mantienen sin cambios. Android
 
 ## Progreso
 
-- [ ] FASE 1: Firebase configurado y reglas verificadas.
-- [ ] FASE 2: Servicio Firestore creado y validado.
-- [ ] FASE 3: Botón web de compartir por enlace implementado.
-- [ ] FASE 4: Pantalla receptora y descarga implementadas.
-- [ ] FASE 5: Tutorial y documentación actualizados.
-- [ ] FASE TESTING: Validaciones completadas.
+- [~] FASE 1: Firebase creado, Firestore y reglas configurados; faltan variables de GitHub Pages.
+- [x] FASE 2: Servicio Firestore creado.
+- [x] FASE 3: Botón web de compartir por enlace implementado.
+- [x] FASE 4: Pantalla receptora y descarga implementadas.
+- [x] FASE 5: Tutorial y documentación actualizados.
+- [~] FASE TESTING: ESLint, compilación y reglas verificados; falta prueba web extremo a extremo tras configurar GitHub Pages.

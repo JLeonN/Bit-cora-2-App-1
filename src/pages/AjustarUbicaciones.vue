@@ -79,7 +79,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
-import { IconClock, IconDownload, IconSend } from '@tabler/icons-vue'
+import { IconClock, IconDownload, IconLink, IconLoader2, IconSend } from '@tabler/icons-vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
@@ -97,6 +97,7 @@ import {
 } from '../components/Logica/Ubicaciones/CacheExcelUbicacionesWeb.js'
 import {
   abrirWhatsAppConMensaje,
+  prepararVentanaWhatsApp,
   compartirArchivo,
 } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
@@ -111,6 +112,11 @@ import {
   reconstruirUbicacionesDesdeLista,
   validarCodigosDuplicadosEnUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
+import {
+  MAXIMO_UBICACIONES_COMPARTIDAS,
+  publicarUbicacionesCompartidas,
+} from '../components/Logica/Ubicaciones/ServicioCompartirUbicacionesFirestore.js'
+import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
@@ -120,6 +126,7 @@ const ubicaciones = ref([])
 const formularioUbicacionRef = ref(null)
 const baseDatosExpandida = ref(false)
 const estadoPreparacionExcel = ref('pendiente')
+const compartiendoEnlace = ref(false)
 let temporizadorPreparacionExcel = null
 let versionPreparacionExcel = 0
 let componenteUbicacionesActivo = true
@@ -162,6 +169,11 @@ const hayCodigosDuplicados = computed(
 const puedeExportarUbicaciones = computed(
   () => ubicacionesArray.value.length > 0 && !hayCodigosDuplicados.value,
 )
+const puedeCompartirEnlace = computed(
+  () =>
+    puedeExportarUbicaciones.value &&
+    ubicacionesArray.value.length <= MAXIMO_UBICACIONES_COMPARTIDAS,
+)
 const excelCompartibleListo = computed(
   () => !esNavegadorWeb.value || estadoPreparacionExcel.value === 'listo',
 )
@@ -186,6 +198,13 @@ const configuracionBarra = computed(() => ({
           desactivado: !puedeExportarUbicaciones.value || !excelCompartibleListo.value,
           claseCSS: '',
         },
+        {
+          accion: 'compartir-enlace-ubicaciones',
+          icono: compartiendoEnlace.value ? IconLoader2 : IconLink,
+          titulo: compartiendoEnlace.value ? 'Creando enlace...' : 'Compartir por enlace',
+          desactivado: !puedeCompartirEnlace.value || compartiendoEnlace.value,
+          claseCSS: compartiendoEnlace.value ? 'boton-compartiendo-enlace' : '',
+        },
       ]
     : [],
   modalActivo: modalActivo.value,
@@ -200,6 +219,9 @@ const metodosParaBarra = {
   onAccionPersonalizada: (accion) => {
     if (accion === 'descargar-excel-ubicaciones') {
       descargarUbicacionesExcelWeb()
+    }
+    if (accion === 'compartir-enlace-ubicaciones') {
+      compartirUbicacionesPorEnlace()
     }
   },
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
@@ -228,6 +250,10 @@ watch(
 )
 
 watch(estadoPreparacionExcel, () => {
+  actualizarConfiguracionBarra()
+})
+
+watch(compartiendoEnlace, () => {
   actualizarConfiguracionBarra()
 })
 
@@ -707,6 +733,61 @@ async function descargarUbicacionesExcelWeb() {
   } catch (error) {
     mensajeError.value = 'Error al descargar el archivo: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3500)
+  }
+}
+
+function construirEnlaceUbicacionesCompartidas(idDocumento) {
+  const urlPublicaApp = String(process.env.URL_PUBLICA_APP || window.location.origin).replace(/\/$/, '')
+  return `${urlPublicaApp}/?ubicacionesCompartidas=${encodeURIComponent(idDocumento)}`
+}
+
+function construirMensajeWhatsAppEnlaceUbicaciones(nombreUsuario, cantidadUbicaciones, enlace) {
+  const usuario = nombreUsuario || 'Sin usuario'
+  const cantidad = cantidadUbicaciones === 1 ? '1 ubicación' : `${cantidadUbicaciones} ubicaciones`
+  return [
+    '*Ubicaciones compartidas*',
+    '',
+    `*Usuario:* ${usuario}`,
+    `*Ubicaciones incluidas:* ${cantidad}`,
+    '',
+    'Abrí este enlace en Bitácora II y cargá tu Excel base para descargar el archivo final:',
+    enlace,
+  ].join('\n')
+}
+
+async function compartirUbicacionesPorEnlace() {
+  if (!esNavegadorWeb.value || compartiendoEnlace.value) return
+
+  const ventanaWhatsApp = prepararVentanaWhatsApp()
+  try {
+    const validacionDuplicados = validarCodigosDuplicadosEnUbicaciones(ubicacionesArray.value)
+    if (!validacionDuplicados.exito) {
+      throw new Error(`Hay códigos duplicados: ${validacionDuplicados.codigosDuplicados.join(', ')}`)
+    }
+    if (ubicacionesArray.value.length > MAXIMO_UBICACIONES_COMPARTIDAS) {
+      throw new Error(
+        `Podés compartir hasta ${MAXIMO_UBICACIONES_COMPARTIDAS} ubicaciones por enlace.`,
+      )
+    }
+
+    compartiendoEnlace.value = true
+    const nombreUsuario = await obtenerNombreUsuario()
+    const resultado = await publicarUbicacionesCompartidas(ubicacionesArray.value, nombreUsuario)
+    const enlace = construirEnlaceUbicacionesCompartidas(resultado.id)
+    abrirWhatsAppConMensaje(
+      construirMensajeWhatsAppEnlaceUbicaciones(nombreUsuario, resultado.cantidadUbicaciones, enlace),
+      ventanaWhatsApp,
+    )
+    mensajeExito.value = 'Enlace creado y WhatsApp abierto'
+    setTimeout(() => (mensajeExito.value = ''), 3000)
+  } catch (error) {
+    if (ventanaWhatsApp && !ventanaWhatsApp.closed) {
+      ventanaWhatsApp.close()
+    }
+    mensajeError.value = `No se pudo crear el enlace: ${error.message}`
+    setTimeout(() => (mensajeError.value = ''), 4000)
+  } finally {
+    compartiendoEnlace.value = false
   }
 }
 

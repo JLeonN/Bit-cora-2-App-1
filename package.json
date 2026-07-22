@@ -38,6 +38,7 @@
         "@tabler/icons-vue": "^3.34.1",
         "@zxing/library": "^0.21.3",
         "docx": "^9.5.1",
+        "firebase": "^12.16.0",
         "jsbarcode": "^3.12.1",
         "jspdf": "^3.0.3",
         "jszip": "^3.10.1",

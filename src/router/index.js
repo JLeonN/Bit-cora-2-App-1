@@ -7,6 +7,18 @@ import {
 } from 'vue-router'
 import routes from './routes'
 
+function redirigirEnlaceUbicacionesCompartidas() {
+  if (typeof window === 'undefined') return
+
+  const urlActual = new URL(window.location.href)
+  const idDocumento = urlActual.searchParams.get('ubicacionesCompartidas')
+  if (!idDocumento) return
+
+  urlActual.search = ''
+  urlActual.hash = `/recibir-ubicaciones?id=${encodeURIComponent(idDocumento)}`
+  window.history.replaceState({}, '', urlActual)
+}
+
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -17,6 +29,7 @@ import routes from './routes'
  */
 
 export default defineRouter(function (/* { store, ssrContext } */) {
+  redirigirEnlaceUbicacionesCompartidas()
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'

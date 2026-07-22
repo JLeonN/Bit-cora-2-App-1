@@ -9,6 +9,19 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig((ctx) => {
   const rutaArchivoActual = fileURLToPath(import.meta.url)
   const rutaDirectorioActual = path.dirname(rutaArchivoActual)
+  const rutaVariablesLocales = path.join(rutaDirectorioActual, '.env.local')
+  if (!process.env.GITHUB_ACTIONS && fs.existsSync(rutaVariablesLocales)) {
+    const lineasVariables = fs.readFileSync(rutaVariablesLocales, 'utf8').split(/\r?\n/)
+    for (const linea of lineasVariables) {
+      const separador = linea.indexOf('=')
+      if (separador <= 0) continue
+      const nombre = linea.slice(0, separador).trim()
+      const valor = linea.slice(separador + 1).trim()
+      if (nombre && !process.env[nombre]) {
+        process.env[nombre] = valor
+      }
+    }
+  }
   const rutaPackageJson = path.join(rutaDirectorioActual, 'package.json')
   const versionPaquete = JSON.parse(fs.readFileSync(rutaPackageJson, 'utf8')).version
   const nombreRepo = process.env.GITHUB_REPOSITORY?.split('/')?.[1] || 'Bit-cora-2-App-1'
@@ -17,6 +30,7 @@ export default defineConfig((ctx) => {
     process.env.URL_VERSION_REMOTA || `https://jleonn.github.io/${nombreRepo}/version.json`
   const urlPlayStore =
     process.env.URL_PLAY_STORE || 'https://play.google.com/store/apps/details?id=bitacora.v2'
+  const urlPublicaApp = process.env.URL_PUBLICA_APP || `https://jleonn.github.io/${nombreRepo}/`
 
   return {
     htmlVariables: {
@@ -67,6 +81,13 @@ export default defineConfig((ctx) => {
         VERSION_APP: versionPaquete,
         URL_VERSION_REMOTA: urlVersionRemota,
         URL_PLAY_STORE: urlPlayStore,
+        URL_PUBLICA_APP: urlPublicaApp,
+        FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
+        FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN || '',
+        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
+        FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET || '',
+        FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+        FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || '',
       },
       // analyze: true,
       // env: {},

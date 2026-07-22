@@ -1,14 +1,25 @@
 import { Share } from '@capacitor/share'
 
-export function abrirWhatsAppConMensaje(mensaje) {
+export function prepararVentanaWhatsApp() {
+  const ventanaWhatsApp = window.open('', '_blank')
+  if (ventanaWhatsApp) {
+    ventanaWhatsApp.opener = null
+  }
+  return ventanaWhatsApp
+}
+
+export function abrirWhatsAppConMensaje(mensaje, ventanaPreparada = null) {
   const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`
-  const ventanaWhatsApp = window.open(urlWhatsApp, '_blank')
+  const ventanaWhatsApp = ventanaPreparada || window.open(urlWhatsApp, '_blank')
 
   if (!ventanaWhatsApp) {
     window.location.assign(urlWhatsApp)
     return
   }
 
+  if (ventanaPreparada) {
+    ventanaWhatsApp.location.assign(urlWhatsApp)
+  }
   ventanaWhatsApp.opener = null
 }
 

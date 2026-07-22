@@ -106,6 +106,15 @@
           archivo indicado desde Descargas. El botón de descarga permite bajar solo el Excel.</span
         >
       </div>
+
+      <div class="tip">
+        <IconLink :stroke="2" class="icono-tip" />
+        <span
+          ><strong>Compartir por enlace (web):</strong> El botón de enlace crea una lista para
+          enviar por WhatsApp. Quien la recibe abre el enlace en Bitácora II, carga su propio Excel
+          base y descarga el Excel final. Android mantiene su flujo actual.</span
+        >
+      </div>
     </div>
   </div>
 </template>
@@ -122,6 +131,7 @@ import {
   IconTrash,
   IconAlertCircle,
   IconFileSpreadsheet,
+  IconLink,
 } from '@tabler/icons-vue'
 </script>
 
