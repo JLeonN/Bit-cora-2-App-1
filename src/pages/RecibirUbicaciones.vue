@@ -1,6 +1,6 @@
 <template>
-  <div class="contenedor-recibir-ubicaciones">
-    <h2 class="titulo-recibir-ubicaciones">Ubicaciones compartidas</h2>
+  <div class="contenedor-tabla contenedor-recibir-ubicaciones">
+    <h2 class="titulo-tabla">Ubicaciones compartidas</h2>
 
     <div v-if="cargando" class="tarjeta-recibir-ubicaciones">
       <IconLoader2 class="icono-cargando" :size="28" />
@@ -38,23 +38,62 @@
         <p v-if="mensajeErrorBase" class="texto-error-base">{{ mensajeErrorBase }}</p>
       </TarjetaSeccion>
 
-      <section v-else class="tarjeta-recibir-ubicaciones tarjeta-descarga-recibir">
-        <IconFileSpreadsheet :size="28" class="icono-recibir-ubicaciones" />
-        <div>
-          <h3>Excel base listo</h3>
-          <p>Podés descargar el Excel final con las ubicaciones recibidas.</p>
+      <template v-else>
+        <InformacionUbicaciones :ubicaciones="ubicacionesEditables" />
+
+        <div class="bloque-buscador-recibidas">
+          <IconSearch :size="20" class="icono-buscador-recibidas" />
+          <input
+            v-model="textoBusqueda"
+            type="search"
+            class="input-buscador-recibidas"
+            placeholder="Buscar por código o nombre"
+            aria-label="Buscar artículo recibido"
+          />
         </div>
-        <button
-          type="button"
-          class="boton-descargar-recibidas"
-          :disabled="descargando"
-          @click="descargarExcelRecibido"
-        >
-          <IconLoader2 v-if="descargando" class="icono-cargando" :size="18" />
-          <IconDownload v-else :size="18" />
-          {{ descargando ? 'Generando...' : 'Descargar Excel' }}
-        </button>
-      </section>
+
+        <TablaUbicaciones
+          :ubicaciones="ubicacionesEditables"
+          :texto-busqueda="textoBusqueda"
+          :mostrar-etiquetas="false"
+          :mostrar-eliminar-todas="false"
+          @abrirModalEditar="abrirModalEditar"
+          @abrirModalEliminar="abrirModalEliminar"
+        />
+
+        <section class="tarjeta-recibir-ubicaciones tarjeta-descarga-recibir">
+          <IconFileSpreadsheet :size="28" class="icono-recibir-ubicaciones" />
+          <div>
+            <h3>Excel final</h3>
+            <p>Los cambios de esta tabla se incluirán en la descarga.</p>
+          </div>
+          <button
+            type="button"
+            class="boton-descargar-recibidas"
+            :disabled="descargando || ubicacionesEditables.length === 0"
+            @click="descargarExcelRecibido"
+          >
+            <IconLoader2 v-if="descargando" class="icono-cargando" :size="18" />
+            <IconDownload v-else :size="18" />
+            {{ descargando ? 'Generando...' : 'Descargar Excel' }}
+          </button>
+        </section>
+      </template>
+
+      <ModalEditarUbicacion
+        v-if="indiceUbicacionEditar !== null"
+        :codigo="ubicacionEditar?.codigo"
+        :ubicacion="ubicacionEditar?.ubicacion"
+        @guardar="guardarEdicion"
+        @cerrar="cerrarModalEditar"
+      />
+
+      <ModalEliminar
+        v-if="indiceUbicacionEliminar !== null"
+        :texto="ubicacionEliminar?.codigo"
+        @confirmar="confirmarEliminacion"
+        @cerrar="cerrarModalEliminar"
+      />
     </template>
   </div>
 </template>
@@ -62,9 +101,20 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { IconAlertCircle, IconDownload, IconFileSpreadsheet, IconLink, IconLoader2 } from '@tabler/icons-vue'
+import {
+  IconAlertCircle,
+  IconDownload,
+  IconFileSpreadsheet,
+  IconLink,
+  IconLoader2,
+  IconSearch,
+} from '@tabler/icons-vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
+import InformacionUbicaciones from '../components/Logica/Ubicaciones/InformacionUbicaciones.vue'
+import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
+import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
+import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel.js'
 import { obtenerEstadoCarga, inicializarBaseDatos } from '../components/BaseDeDatos/LectorExcel.js'
 import { obtenerUbicacionesCompartidas } from '../components/Logica/Ubicaciones/ServicioCompartirUbicacionesFirestore.js'
@@ -77,6 +127,15 @@ const mensajeError = ref('')
 const mensajeErrorBase = ref('')
 const ubicacionesCompartidas = ref(null)
 const baseDatosLista = ref(false)
+const ubicacionesEditables = ref([])
+const textoBusqueda = ref('')
+const indiceUbicacionEditar = ref(null)
+const indiceUbicacionEliminar = ref(null)
+
+const ubicacionEditar = computed(() => ubicacionesEditables.value[indiceUbicacionEditar.value] || null)
+const ubicacionEliminar = computed(
+  () => ubicacionesEditables.value[indiceUbicacionEliminar.value] || null,
+)
 
 const fechaFormateada = computed(() => {
   if (!ubicacionesCompartidas.value?.fechaCreacion) return ''
@@ -112,12 +171,45 @@ function manejarErrorCarga(mensaje) {
   mensajeErrorBase.value = mensaje || 'No se pudo cargar el Excel base.'
 }
 
+function abrirModalEditar(indice) {
+  indiceUbicacionEditar.value = indice
+}
+
+function cerrarModalEditar() {
+  indiceUbicacionEditar.value = null
+}
+
+function guardarEdicion({ codigo, ubicacion }) {
+  const indice = indiceUbicacionEditar.value
+  if (indice === null || !ubicacionesEditables.value[indice]) return
+  ubicacionesEditables.value[indice] = {
+    ...ubicacionesEditables.value[indice],
+    codigo: String(codigo || '').trim(),
+    ubicacion: String(ubicacion || '').trim(),
+  }
+  cerrarModalEditar()
+}
+
+function abrirModalEliminar(indice) {
+  indiceUbicacionEliminar.value = indice
+}
+
+function cerrarModalEliminar() {
+  indiceUbicacionEliminar.value = null
+}
+
+function confirmarEliminacion() {
+  const indice = indiceUbicacionEliminar.value
+  if (indice !== null) ubicacionesEditables.value.splice(indice, 1)
+  cerrarModalEliminar()
+}
+
 async function descargarExcelRecibido() {
   if (!ubicacionesCompartidas.value || descargando.value) return
 
   try {
     descargando.value = true
-    await generarYGuardarExcelUbicaciones(ubicacionesCompartidas.value.ubicaciones)
+    await generarYGuardarExcelUbicaciones(ubicacionesEditables.value)
   } catch (error) {
     mensajeError.value = `No se pudo generar el Excel: ${error.message}`
   } finally {
@@ -131,6 +223,9 @@ onMounted(async () => {
     await inicializarBaseDatos()
     actualizarBaseDatosLista()
     ubicacionesCompartidas.value = await obtenerUbicacionesCompartidas(route.query.id)
+    ubicacionesEditables.value = Array.isArray(ubicacionesCompartidas.value?.ubicaciones)
+      ? ubicacionesCompartidas.value.ubicaciones.map((ubicacion) => ({ ...ubicacion }))
+      : []
   } catch (error) {
     mensajeError.value = error.message || 'No se pudieron cargar las ubicaciones compartidas.'
   } finally {
@@ -143,13 +238,7 @@ onUnmounted(configurarBarra)
 
 <style scoped>
 .contenedor-recibir-ubicaciones {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 1rem 1rem 6rem;
-}
-.titulo-recibir-ubicaciones {
-  margin: 0 0 1rem;
-  color: var(--color-texto-principal);
+  margin-bottom: 6rem;
 }
 .tarjeta-recibir-ubicaciones {
   display: flex;
@@ -187,6 +276,32 @@ onUnmounted(configurarBarra)
 .tarjeta-descarga-recibir {
   flex-wrap: wrap;
 }
+.bloque-buscador-recibidas {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background-color: var(--color-fondo);
+}
+.icono-buscador-recibidas {
+  color: var(--color-acento);
+  flex-shrink: 0;
+}
+.input-buscador-recibidas {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-texto-principal);
+  font: inherit;
+}
+.input-buscador-recibidas::placeholder {
+  color: var(--color-texto-secundario);
+}
 .boton-descargar-recibidas {
   display: inline-flex;
   align-items: center;
@@ -214,10 +329,6 @@ onUnmounted(configurarBarra)
   }
 }
 @media (max-width: 480px) {
-  .contenedor-recibir-ubicaciones {
-    padding-right: 0.75rem;
-    padding-left: 0.75rem;
-  }
   .tarjeta-descarga-recibir {
     align-items: flex-start;
   }

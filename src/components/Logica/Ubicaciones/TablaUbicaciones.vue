@@ -1,7 +1,11 @@
 <template>
   <div>
-    <div v-if="ubicacionesArray.length > 0" class="acciones-generales-tabla">
+    <div
+      v-if="ubicacionesArray.length > 0 && (mostrarEtiquetas || mostrarEliminarTodas)"
+      class="acciones-generales-tabla"
+    >
       <button
+        v-if="mostrarEtiquetas"
         type="button"
         class="boton-accion-general boton-enviar-etiquetas"
         title="Enviar todos a Etiquetas"
@@ -11,6 +15,7 @@
         <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
       </button>
       <button
+        v-if="mostrarEliminarTodas"
         type="button"
         class="boton-accion-general boton-eliminar-todos"
         title="Eliminar todos"
@@ -32,13 +37,13 @@
       </thead>
       <tbody>
         <tr
-          v-for="(item, index) in ubicacionesArray"
-          :key="`ubicacion-${index}-${item.codigo || 'sin-codigo'}`"
+          v-for="fila in ubicacionesFiltradas"
+          :key="`ubicacion-${fila.indice}-${fila.ubicacion.codigo || 'sin-codigo'}`"
           class="fila-ubicacion"
           :class="{
-            'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(item.codigo)),
-            'fila-articulo-inexistente': esArticuloInexistente(item.codigo),
-            'animacion-envio-individual': filaAnimandose === index,
+            'fila-ubicacion-duplicada': codigosDuplicados.has(normalizarCodigo(fila.ubicacion.codigo)),
+            'fila-articulo-inexistente': esArticuloInexistente(fila.ubicacion.codigo),
+            'animacion-envio-individual': filaAnimandose === fila.indice,
             'animacion-envio-todas': todasAnimandose,
           }"
         >
@@ -46,46 +51,50 @@
             <span
               class="globito-ubicacion"
               :class="{
-                'texto-duplicado': codigosDuplicados.has(normalizarCodigo(item.codigo)),
-                'texto-articulo-inexistente': esArticuloInexistente(item.codigo),
+                'texto-duplicado': codigosDuplicados.has(normalizarCodigo(fila.ubicacion.codigo)),
+                'texto-articulo-inexistente': esArticuloInexistente(fila.ubicacion.codigo),
               }"
-              :title="`${obtenerNombreArticulo(item.codigo)} - ${item.codigo || 'Sin código'}`"
+              :title="`${obtenerNombreArticulo(fila.ubicacion.codigo)} - ${fila.ubicacion.codigo || 'Sin código'}`"
             >
               <div class="contenedor-nombre-codigo">
                 <div class="nombre-articulo">
-                  {{ obtenerNombreArticulo(item.codigo) }}
+                  {{ obtenerNombreArticulo(fila.ubicacion.codigo) }}
                 </div>
                 <div class="codigo-articulo">
-                  {{ mostrarCodigoCompleto(item.codigo) }}
+                  {{ mostrarCodigoCompleto(fila.ubicacion.codigo) }}
                 </div>
               </div>
             </span>
           </td>
           <td class="celda-ubicacion">
-            <span class="globito-ubicacion" :title="item.ubicacion || 'Sin ubicación'">
-              {{ item.ubicacion || 'Sin ubicación' }}
+            <span class="globito-ubicacion" :title="fila.ubicacion.ubicacion || 'Sin ubicación'">
+              {{ fila.ubicacion.ubicacion || 'Sin ubicación' }}
             </span>
           </td>
           <td class="celda-acciones">
             <div class="acciones-ubicacion">
               <IconTag
+                v-if="mostrarEtiquetas"
                 class="icono-ubicacion icono-etiqueta"
-                @click="enviarEtiquetaIndividual(item, index)"
+                @click="enviarEtiquetaIndividual(fila.ubicacion, fila.indice)"
                 title="Enviar a etiquetas"
                 :stroke="2"
               />
               <IconPencil
                 class="icono-ubicacion icono-editar"
-                @click="$emit('abrirModalEditar', index)"
+                @click="$emit('abrirModalEditar', fila.indice)"
                 title="Editar ubicación"
               />
               <IconTrash
                 class="icono-ubicacion icono-borrar"
-                @click="$emit('abrirModalEliminar', index)"
+                @click="$emit('abrirModalEliminar', fila.indice)"
                 title="Eliminar ubicación"
               />
             </div>
           </td>
+        </tr>
+        <tr v-if="ubicacionesFiltradas.length === 0">
+          <td colspan="3" class="texto-secundario">No se encontraron artículos.</td>
         </tr>
       </tbody>
     </table>
@@ -107,6 +116,18 @@ const props = defineProps({
     type: Array,
     required: true,
     default: () => [],
+  },
+  textoBusqueda: {
+    type: String,
+    default: '',
+  },
+  mostrarEtiquetas: {
+    type: Boolean,
+    default: true,
+  },
+  mostrarEliminarTodas: {
+    type: Boolean,
+    default: true,
   },
 })
 
@@ -130,6 +151,18 @@ const ubicacionesArray = computed(() => {
     (ubicacion) =>
       ubicacion && typeof ubicacion === 'object' && (ubicacion.codigo || ubicacion.ubicacion),
   )
+})
+
+const ubicacionesFiltradas = computed(() => {
+  const textoBusquedaNormalizado = String(props.textoBusqueda || '').trim().toLowerCase()
+  return ubicacionesArray.value
+    .map((ubicacion, indice) => ({ ubicacion, indice }))
+    .filter(({ ubicacion }) => {
+      if (!textoBusquedaNormalizado) return true
+      const codigo = String(ubicacion.codigo || '').toLowerCase()
+      const nombre = obtenerNombreArticulo(ubicacion.codigo).toLowerCase()
+      return codigo.includes(textoBusquedaNormalizado) || nombre.includes(textoBusquedaNormalizado)
+    })
 })
 
 // --- Función para normalizar solo el código ---
