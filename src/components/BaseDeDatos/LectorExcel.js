@@ -19,6 +19,19 @@ function normalizarHistorial(historial) {
   return historial.map(normalizarTexto).filter(Boolean)
 }
 
+function normalizarEncabezado(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase()
+}
+
+function obtenerIndiceEncabezado(encabezados, nombres, indicePredeterminado) {
+  const indiceEncontrado = encabezados.findIndex((encabezado) => nombres.includes(encabezado))
+  return indiceEncontrado === -1 ? indicePredeterminado : indiceEncontrado
+}
+
 function normalizarArticulo(articulo) {
   return {
     codigo: normalizarTexto(articulo?.codigo),
@@ -144,14 +157,22 @@ function convertirBase64EnBuffer(base64) {
 
 function procesarDatosExcel(datosJson) {
   const articulosProcesados = []
+  const encabezados = Array.isArray(datosJson[0]) ? datosJson[0].map(normalizarEncabezado) : []
+  const indiceCodigo = obtenerIndiceEncabezado(encabezados, ['ARTICULO', 'CODIGO'], 0)
+  const indiceNombre = obtenerIndiceEncabezado(encabezados, ['DESCRIPCION', 'NOMBRE'], 1)
+  const indiceUbicacionAntigua = obtenerIndiceEncabezado(encabezados, ['UBIC ANTIGUA', 'UBICACION'], 2)
+  const indiceStock = obtenerIndiceEncabezado(encabezados, ['STOCK'], 3)
+  const indicesHistorial = encabezados
+    .map((encabezado, indice) => (encabezado.startsWith('HISTORIAL') ? indice : -1))
+    .filter((indice) => indice !== -1)
   const filas = datosJson.slice(1)
 
   for (const fila of filas) {
     if (!fila || fila.length < 2) continue
-    const codigo = normalizarTexto(fila[0])
-    const nombre = normalizarTexto(fila[1])
-    const ubicacionAntigua = normalizarTexto(fila[2])
-    const stock = fila[3]?.toString()?.trim() || ''
+    const codigo = normalizarTexto(fila[indiceCodigo])
+    const nombre = normalizarTexto(fila[indiceNombre])
+    const ubicacionAntigua = normalizarTexto(fila[indiceUbicacionAntigua])
+    const stock = fila[indiceStock]?.toString()?.trim() || ''
     if (!codigo || !nombre) continue
 
     articulosProcesados.push({
@@ -159,7 +180,7 @@ function procesarDatosExcel(datosJson) {
       nombre,
       ubicacionAntigua,
       stock,
-      historialUbicaciones: [],
+      historialUbicaciones: normalizarHistorial(indicesHistorial.map((indice) => fila[indice])),
     })
   }
 
