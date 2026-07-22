@@ -2,13 +2,15 @@
 
 Administra ajustes de ubicación de artículos usando el Excel principal cargado en el dispositivo.
 
-### Estado funcional actual (v4.2.33)
+### Estado funcional actual (v4.2.36)
 
 - Bitácora puede abrir directamente archivos Excel `.xlsx` y `.xls` recibidos desde WhatsApp y cargarlos como base local, incluso si ya estaba abierta.
 - La pantalla muestra primero el estado de la base y un resumen más claro antes del formulario de trabajo.
 - El formulario conserva la preferencia de tamaño de letra y permite activar o desactivar la autoselección de artículos únicos.
 - La tarjeta del artículo muestra ubicación original, historial y stock como referencia.
 - Se permiten filas duplicadas para que el usuario vea conflictos reales; mientras existan, se bloquea la exportación.
+- En navegador, el Excel se prepara una vez y puede enviarse por WhatsApp o descargarse sin regenerarlo innecesariamente.
+- Las ubicaciones pueden compartirse mediante enlace: quien lo recibe carga su Excel base, revisa la lista y descarga el archivo final.
 
 ### Flujo de datos Excel e historial
 
@@ -16,6 +18,7 @@ Administra ajustes de ubicación de artículos usando el Excel principal cargado
 - El historial de cambios se guarda internamente por artículo.
 - Al recibir un Excel desde otra aplicación, Bitácora lo procesa localmente y persiste la base en el dispositivo.
 - En el Excel exportado de Ubicaciones, la columna G conserva la ubicación antigua y el historial se exporta desde la columna J.
+- Al importar Excel, la lectura detecta encabezados y conserva el historial aun cuando el archivo incluya columnas adicionales.
 
 ### Componentes clave
 

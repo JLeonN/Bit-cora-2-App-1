@@ -2,6 +2,8 @@
 
 Sistema completo para gestión de pedidos diarios con historial, exportación, estadísticas avanzadas y sistema gamificado de recompensas.
 
+En navegador, las exportaciones de Pedidos se descargan directamente; en Android se conserva el envío nativo de archivos.
+
 ---
 
 ### 🔢 **Sistema de Conteo de Items**

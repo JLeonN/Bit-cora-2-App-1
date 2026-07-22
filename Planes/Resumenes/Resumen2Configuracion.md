@@ -10,6 +10,7 @@ Sistema completo para gestionar configuración personalizada del usuario, nombre
 - Página principal de configuración en `/configuracion`
 - Accesible desde botón en footer del drawer
 - Secciones colapsables: Información Personal (expandida) y Tutoriales (colapsada)
+- El Inicio puede abrir y resaltar directamente Información Personal o Tutoriales según la acción elegida.
 - Diseño responsive
 
 #### **ConfiguracionUsuario.vue**

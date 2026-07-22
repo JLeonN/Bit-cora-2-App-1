@@ -15,6 +15,8 @@ La aplicación se divide en 7 módulos principales:
 - **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
 - **Inicio**: Pantalla principal de navegación
 
+El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incluye acceso directo a Tutoriales y configuración personal.
+
 ---
 
 ### 🏠 **Componente Principal de Inicio**
@@ -54,6 +56,7 @@ La aplicación se divide en 7 módulos principales:
 - **Botones dinámicos**: atrás, inicio, agregar, enviar
 - **Configuración por props**: cada página define qué botones mostrar
 - **Botones personalizados**: sistema extensible para acciones específicas
+- **Acciones web**: Ubicaciones puede preparar el Excel, abrir WhatsApp y ofrecer enlaces compartidos desde la barra inferior
 - **Estados dinámicos**: habilitar/deshabilitar según contexto
 - **Responsive design** con ajustes para pantallas pequeñas
 - **Auto-ocultamiento**: botón "atrás" se oculta automáticamente en página inicial

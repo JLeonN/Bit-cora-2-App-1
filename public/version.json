@@ -1,14 +1,28 @@
 {
-  "versionDisponible": "4.2.35",
+  "versionDisponible": "4.2.36",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Etiquetas",
+        "apartado": "Ubicaciones",
         "novedades": [
-          "Ahora podés ordenar las etiquetas por las más recientes, las más antiguas o de la A a la Z.",
-          "La app recuerda el orden que elegiste para que continúes trabajando como te resulte más cómodo."
+          "Ahora podés compartir una lista de ubicaciones mediante un enlace para que otra persona la revise, ajuste y descargue con su propio Excel base.",
+          "En la versión web, el envío de ubicaciones prepara el Excel y abre WhatsApp con las indicaciones para adjuntarlo.",
+          "Al cargar un Excel con ubicaciones, se conserva mejor el historial y la ubicación anterior de cada artículo."
+        ]
+      },
+      {
+        "apartado": "Inicio y configuración",
+        "novedades": [
+          "El Inicio ofrece un acceso más claro a Tutoriales y configuración personal, con guía visual para encontrar cada opción.",
+          "Mejoramos la adaptación de las acciones y pantallas para trabajar con mayor comodidad en celular y navegador."
+        ]
+      },
+      {
+        "apartado": "Actualizaciones",
+        "novedades": [
+          "Las novedades de cada versión ahora se muestran correctamente en este aviso de actualización."
         ]
       }
     ]
