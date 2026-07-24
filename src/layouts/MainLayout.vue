@@ -43,7 +43,7 @@
               <q-item-section avatar>
                 <IconTableRow :stroke="2" />
               </q-item-section>
-              <q-item-section>Pedidos</q-item-section>
+              <q-item-section>Preparadores</q-item-section>
             </q-item>
             <q-item clickable v-ripple to="/AjustarUbicaciones">
               <q-item-section avatar>
@@ -259,8 +259,7 @@ const sesionActivaHeader = ref(false)
 const anchoPantalla = ref(typeof window !== 'undefined' ? window.innerWidth : 0)
 const alturaBannerReportada = ref(0)
 const ESPACIO_BASE_BARRA = 8
-const SEPARACION_BARRA_BANNER = 4
-const MARGEN_SEGURIDAD_BANNER = 12
+const SEPARACION_BARRA_BANNER = 1
 const ESPACIO_EXTRA_CONTENIDO = 16
 const configuracionBarra = reactive({
   mostrarAgregar: false,
@@ -341,9 +340,12 @@ const espacioInferiorOcupado = computed(() => {
   if (!hayBannerVisible.value) {
     return ESPACIO_BASE_BARRA
   }
-  return alturaBannerActiva.value + SEPARACION_BARRA_BANNER + MARGEN_SEGURIDAD_BANNER
+  return alturaBannerActiva.value + SEPARACION_BARRA_BANNER
 })
 const posicionInferiorBarra = computed(() => {
+  if (hayBannerVisible.value) {
+    return `${espacioInferiorOcupado.value}px`
+  }
   return `calc(${espacioInferiorOcupado.value}px + env(safe-area-inset-bottom, 0px))`
 })
 const estiloBarraInferior = computed(() => ({
@@ -352,7 +354,9 @@ const estiloBarraInferior = computed(() => ({
 const estiloContenedorConBarra = computed(() => {
   const altoBarra = anchoPantalla.value <= 480 ? 56 : 60
   const paddingCalculado = altoBarra + espacioInferiorOcupado.value + ESPACIO_EXTRA_CONTENIDO
-  const espacioInferiorContenido = `calc(${paddingCalculado}px + env(safe-area-inset-bottom, 0px))`
+  const espacioInferiorContenido = hayBannerVisible.value
+    ? `${paddingCalculado}px`
+    : `calc(${paddingCalculado}px + env(safe-area-inset-bottom, 0px))`
   return {
     '--espacio-inferior-contenido': espacioInferiorContenido,
     paddingBottom: esPaginaInicio.value ? '0px' : espacioInferiorContenido,

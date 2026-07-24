@@ -2,7 +2,7 @@
   <div class="contenedor-tabla">
     <!-- Header con título y botón de estadísticas -->
     <div class="encabezado-pedidos">
-      <h2 class="titulo-tabla">Pedidos</h2>
+      <h2 class="titulo-tabla">Preparadores</h2>
       <button class="boton-estadisticas-anuales" @click="irAResumenAnual" title="Ver resumen anual">
         <IconCalendarStats :size="24" />
       </button>

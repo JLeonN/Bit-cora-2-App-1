@@ -89,8 +89,11 @@ const obtenerAlturaReservaBanner = () => {
 }
 
 const emitirBannerVisible = (alturaBanner) => {
-  const alturaReserva = obtenerAlturaReservaBanner()
-  const alturaValida = Math.max(Number(alturaBanner) || 0, alturaReserva)
+  const alturaValida = Number(alturaBanner)
+  if (!Number.isFinite(alturaValida) || alturaValida <= 0) {
+    emitirBannerOculto()
+    return
+  }
   emit('banner-altura', alturaValida)
   emit('banner-visible', true)
 }

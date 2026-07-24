@@ -4,7 +4,7 @@
       <div class="acordeon-header">
         <div class="header-izquierda">
           <IconTableRow :stroke="2" class="icono-tutorial" />
-          <span class="titulo-tutorial">Cómo usar Pedidos</span>
+          <span class="titulo-tutorial">Cómo usar Preparadores</span>
         </div>
         <IconChevronDown
           :stroke="2"

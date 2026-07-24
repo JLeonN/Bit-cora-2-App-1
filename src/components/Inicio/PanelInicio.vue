@@ -26,8 +26,8 @@ import { servicioPasos } from 'src/components/Logica/Pasos/ServicioPasos.js'
 
 const modulosDisponibles = [
   {
-    titulo: 'Pedidos',
-    descripcion: 'Gestiona tus pedidos diarios y consulta el historial',
+    titulo: 'Preparadores',
+    descripcion: 'Registra los pedidos preparados y consulta el historial',
     icono: IconTableRow,
     ruta: '/TablaPedidos',
   },

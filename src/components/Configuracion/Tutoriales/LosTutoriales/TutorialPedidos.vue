@@ -1,7 +1,7 @@
 <template>
   <div class="tutorial-pedidos">
     <p class="tutorial-descripcion">
-      El módulo de <strong>Pedidos</strong> te permite registrar códigos de artículos de forma
+      El módulo de <strong>Preparadores</strong> te permite registrar códigos de artículos de forma
       rápida usando tu cámara o ingresándolos manualmente.
     </p>
 
@@ -14,7 +14,7 @@
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Agregar pedidos:</strong> Presioná el botón
+          <strong>Registrar pedidos:</strong> Presioná el botón
           <IconPlus :stroke="2" class="icono-inline" /> en la barra inferior.
         </div>
       </div>
@@ -38,7 +38,7 @@
       <div class="paso">
         <div class="numero-paso">3</div>
         <div class="contenido-paso">
-          <strong>Ver tus pedidos:</strong> Los últimos 3 pedidos aparecen en la pantalla principal.
+          <strong>Consultar pedidos:</strong> Los últimos 3 pedidos aparecen en la pantalla principal.
           Para ver todos, accedé a "Pedidos Realizados".
         </div>
       </div>
@@ -48,7 +48,7 @@
         <div class="contenido-paso">
           <strong>Exportar:</strong> Presioná el botón
           <IconSend :stroke="2" class="icono-inline" /> para generar un archivo Excel con todos tus
-          pedidos o descargá un rango de fechas desde "Historial".
+          pedidos registrados o descargá un rango de fechas desde "Historial".
         </div>
       </div>
     </div>
