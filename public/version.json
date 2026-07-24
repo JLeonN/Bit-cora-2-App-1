@@ -1,28 +1,15 @@
 {
-  "versionDisponible": "4.2.36",
+  "versionDisponible": "4.2.37",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Ubicaciones",
+        "apartado": "Preparadores",
         "novedades": [
-          "Ahora podés compartir una lista de ubicaciones mediante un enlace para que otra persona la revise, ajuste y descargue con su propio Excel base.",
-          "En la versión web, el envío de ubicaciones prepara el Excel y abre WhatsApp con las indicaciones para adjuntarlo.",
-          "Al cargar un Excel con ubicaciones, se conserva mejor el historial y la ubicación anterior de cada artículo."
-        ]
-      },
-      {
-        "apartado": "Inicio y configuración",
-        "novedades": [
-          "El Inicio ofrece un acceso más claro a Tutoriales y configuración personal, con guía visual para encontrar cada opción.",
-          "Mejoramos la adaptación de las acciones y pantallas para trabajar con mayor comodidad en celular y navegador."
-        ]
-      },
-      {
-        "apartado": "Actualizaciones",
-        "novedades": [
-          "Las novedades de cada versión ahora se muestran correctamente en este aviso de actualización."
+          "El módulo Pedidos ahora se llama Preparadores para representar mejor el trabajo diario.",
+          "La guía explica cómo registrar pedidos, indicar sus ítems y usar la cámara o un lector Bluetooth.",
+          "La barra de acciones se ubica más cerca de la publicidad para aprovechar mejor la pantalla."
         ]
       }
     ]

@@ -7,7 +7,7 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 ### 📦 **Estructura General**
 
 La aplicación se divide en 7 módulos principales:
-- **Pedidos**: Gestión de pedidos diarios con sistema de estadísticas completo (ver `Resumen3Pedidos.md`)
+- **Preparadores**: Registro diario de pedidos preparados, cantidades de ítems y estadísticas completas (ver `Resumen3Pedidos.md`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `Resumen4Ubicaciones.md`)
 - **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.md`)
 - **Stock**: Conteo de artículos, comparación con Excel e integración con Ubicaciones y Etiquetas (ver `Resumen7Stock.md`)
@@ -23,7 +23,7 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 
 #### **Inicio.vue (PanelInicio.vue)**
 - Pantalla principal de navegación
-- **Tarjeta Pedidos**: Acceso a `/TablaPedidos`
+- **Tarjeta Preparadores**: Acceso a `/TablaPedidos`
 - **Tarjeta Ubicaciones**: Acceso a `/AjustarUbicaciones`
 - **Tarjeta Consulta De Ubicación**: Acceso a `/ConsultaDeUbicacion`
 - **Tarjeta Etiquetas**: Acceso a `/etiquetas`
@@ -371,3 +371,10 @@ src/
 - El módulo Etiquetas permite ordenar la lista por recientes, antiguas o alfabéticamente por descripción.
 - La aplicación recuerda la última forma de ordenar elegida sin cambiar el orden de impresión de los documentos.
 - Release vigente actualizada: 4.2.35.
+
+### Actualización de release 4.2.37
+
+- El módulo Pedidos pasó a llamarse Preparadores en Inicio, navegación y tutoriales.
+- El tutorial explica la carga de números de pedido, cantidades de ítems, cámara y lector Bluetooth.
+- La barra flotante se ubica a un píxel del banner publicitario usando su altura real.
+- Release vigente actualizada: 4.2.37.
