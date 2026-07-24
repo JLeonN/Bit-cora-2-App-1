@@ -1,8 +1,8 @@
 <template>
   <div class="tutorial-pedidos">
     <p class="tutorial-descripcion">
-      El módulo de <strong>Preparadores</strong> te permite registrar códigos de artículos de forma
-      rápida usando tu cámara o ingresándolos manualmente.
+      El módulo de <strong>Preparadores</strong> te permite registrar los pedidos que preparás y
+      llevar el conteo diario de pedidos e ítems.
     </p>
 
     <div class="seccion-pasos">
@@ -14,22 +14,29 @@
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Registrar pedidos:</strong> Presioná el botón
-          <IconPlus :stroke="2" class="icono-inline" /> en la barra inferior.
+          <strong>Registrar un pedido:</strong> Presioná el botón
+          <IconPlus :stroke="2" class="icono-inline" />, ingresá el número de pedido y su cantidad
+          de ítems. Por ejemplo: para un pedido de 14 ítems, cargá su número y 14 en "Cantidad de
+          items".
         </div>
       </div>
 
       <div class="paso">
         <div class="numero-paso">2</div>
         <div class="contenido-paso">
-          <strong>Elegí tu método:</strong>
+          <strong>Elegí cómo cargarlo:</strong>
           <ul class="lista-metodos">
             <li>
-              <IconKeyboard :stroke="2" class="icono-inline" /> Escribir el código manualmente
+              <IconKeyboard :stroke="2" class="icono-inline" /> Escribir el número de pedido y la
+              cantidad de ítems manualmente.
             </li>
             <li>
-              <IconCamera :stroke="2" class="icono-inline" /> Escanear con la cámara (múltiples
-              códigos)
+              <IconCamera :stroke="2" class="icono-inline" /> Escanear el código de barras con la
+              cámara y ajustar los ítems de cada pedido.
+            </li>
+            <li>
+              <IconBarcode :stroke="2" class="icono-inline" /> Usar un lector láser Bluetooth:
+              conectalo al celular y escaneá con el campo "Número de pedido" seleccionado.
             </li>
           </ul>
         </div>
@@ -38,8 +45,9 @@
       <div class="paso">
         <div class="numero-paso">3</div>
         <div class="contenido-paso">
-          <strong>Consultar pedidos:</strong> Los últimos 3 pedidos aparecen en la pantalla principal.
-          Para ver todos, accedé a "Pedidos Realizados".
+          <strong>Consultar tu jornada:</strong> Los últimos 3 pedidos aparecen en la pantalla
+          principal y el contador muestra los pedidos e ítems registrados. Para ver todos, accedé a
+          "Pedidos Realizados".
         </div>
       </div>
 
@@ -99,6 +107,7 @@ import {
   IconList,
   IconPlus,
   IconKeyboard,
+  IconBarcode,
   IconCamera,
   IconSend,
   IconBulb,
