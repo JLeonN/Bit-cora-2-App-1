@@ -68,15 +68,6 @@
         @update:model-value="actualizarOrden"
       />
 
-      <ResumenCambiosListado
-        :cantidad-stock="cambiosStockPendientes.length"
-        :cantidad-ubicaciones="cambiosUbicacionPendientes.length"
-        :enviando-stock="enviandoStock"
-        :enviando-ubicaciones="enviandoUbicaciones"
-        @enviar-stock="enviarCambiosStock"
-        @enviar-ubicaciones="enviarCambiosUbicaciones"
-      />
-
       <div v-if="articulosOrdenados.length" class="acciones-generales-tabla">
         <button
           type="button"
@@ -86,6 +77,30 @@
         >
           <IconTag :size="20" />
           <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
+        </button>
+        <button
+          type="button"
+          class="boton-accion-general"
+          :disabled="ocupado"
+          title="Enviar todos a Ubicaciones"
+          @click="enviarTodosAUbicaciones"
+        >
+          <IconMapRoute class="icono-accion-listado" :size="20" :stroke="2" />
+          <span class="texto-boton-accion">
+            {{ enviandoUbicaciones ? 'Enviando…' : 'Enviar a Ubicaciones' }}
+          </span>
+        </button>
+        <button
+          type="button"
+          class="boton-accion-general"
+          :disabled="!baseDatosCargada || ocupado"
+          title="Enviar todos a Stock"
+          @click="enviarTodosAStock"
+        >
+          <IconPackages class="icono-accion-listado" :size="20" :stroke="2" />
+          <span class="texto-boton-accion">
+            {{ enviandoStock ? 'Enviando…' : 'Enviar a Stock' }}
+          </span>
         </button>
         <button
           type="button"
@@ -135,11 +150,17 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { Notify } from 'quasar'
-import { IconDownload, IconShare, IconTag, IconTrash } from '@tabler/icons-vue'
+import {
+  IconDownload,
+  IconMapRoute,
+  IconPackages,
+  IconShare,
+  IconTag,
+  IconTrash,
+} from '@tabler/icons-vue'
 import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
-import ResumenCambiosListado from '../components/Logica/Listados/ResumenCambiosListado.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import SelectorOrdenVisual from '../components/Logica/Compartidos/SelectorOrdenVisual.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
@@ -163,11 +184,9 @@ import { usarResaltadoAtencion } from '../components/Logica/Compartidos/UsoResal
 import { ordenarArticulosListado } from '../components/Logica/Listados/OrdenarArticulosListado.js'
 import {
   enviarArticuloAEtiquetas as enviarArticuloAEtiquetasServicio,
-  enviarCambiosAStock,
-  enviarCambiosAUbicaciones,
   enviarTodosAEtiquetas as enviarTodosAEtiquetasServicio,
-  obtenerCambiosStockPendientes,
-  obtenerCambiosUbicacionPendientes,
+  enviarTodosAStock as enviarTodosAStockServicio,
+  enviarTodosAUbicaciones as enviarTodosAUbicacionesServicio,
 } from '../components/Logica/Listados/ServicioIntegracionListados.js'
 import { generarYGuardarExcelListado } from '../components/Logica/Listados/ExportarListadosExcel.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
@@ -198,12 +217,6 @@ const ocupado = computed(
 )
 const articulosOrdenados = computed(() =>
   ordenarArticulosListado(listadoActivo.value?.articulos || [], listadoActivo.value?.orden),
-)
-const cambiosStockPendientes = computed(() =>
-  obtenerCambiosStockPendientes(listadoActivo.value),
-)
-const cambiosUbicacionPendientes = computed(() =>
-  obtenerCambiosUbicacionPendientes(listadoActivo.value),
 )
 const codigoResaltadoVisible = computed(() =>
   estaResaltado.value ? codigoResaltado.value : '',
@@ -360,11 +373,6 @@ async function agregarArticulo(articulo) {
     ubicacionOriginal,
     ubicacionListado: ubicacionOriginal,
     fechaIngreso: Math.max(Date.now(), fechaMayor + 1),
-    stockProcesado: null,
-    stockProcesadoEn: null,
-    resultadoStock: null,
-    ubicacionEnviada: null,
-    ubicacionEnviadaEn: null,
   })
   await persistirActivo()
 }
@@ -425,58 +433,38 @@ async function actualizarOrden(ordenSeleccionado) {
   await persistirActivo()
 }
 
-async function enviarCambiosStock() {
+async function enviarTodosAStock() {
   if (enviandoStock.value || !listadoActivo.value) return
   enviandoStock.value = true
   try {
-    const resultado = await enviarCambiosAStock({
+    const resultado = await enviarTodosAStockServicio({
       ...listadoActivo.value,
       articulos: articulosOrdenados.value,
     })
-    const ahora = Date.now()
-    listadoActivo.value.articulos.forEach((articulo) => {
-      if (resultado.enviados.includes(articulo.codigo)) {
-        articulo.stockProcesado = articulo.stockListado
-        articulo.stockProcesadoEn = ahora
-        articulo.resultadoStock = 'enviado'
-      } else if (resultado.omitidosConfirmados.includes(articulo.codigo)) {
-        articulo.stockProcesado = articulo.stockListado
-        articulo.stockProcesadoEn = ahora
-        articulo.resultadoStock = 'omitidoConfirmado'
-      }
-    })
-    await persistirActivo()
-    if (resultado.enviados.length) notificar('positive', `${resultado.enviados.length} cambios enviados a Stock`)
+    if (resultado.enviados.length) notificar('positive', `${resultado.enviados.length} artículos enviados a Stock`)
     if (resultado.omitidosConfirmados.length) {
-      notificar('warning', `${resultado.omitidosConfirmados.length} cambios omitidos por estar confirmados`)
+      notificar('warning', `${resultado.omitidosConfirmados.length} artículos omitidos por estar confirmados`)
     }
     if (resultado.invalidos.length) notificar('warning', `${resultado.invalidos.length} valores de stock inválidos no se enviaron`)
   } catch (error) {
-    notificar('negative', error.message || 'No se pudieron enviar los cambios a Stock')
+    notificar('negative', error.message || 'No se pudieron enviar los artículos a Stock')
   } finally {
     enviandoStock.value = false
   }
 }
 
-async function enviarCambiosUbicaciones() {
+async function enviarTodosAUbicaciones() {
   if (enviandoUbicaciones.value || !listadoActivo.value) return
   enviandoUbicaciones.value = true
   try {
-    const resultado = await enviarCambiosAUbicaciones({
+    const resultado = await enviarTodosAUbicacionesServicio({
       ...listadoActivo.value,
       articulos: articulosOrdenados.value,
     })
-    const ahora = Date.now()
-    listadoActivo.value.articulos.forEach((articulo) => {
-      if (!resultado.enviados.includes(articulo.codigo)) return
-      articulo.ubicacionEnviada = articulo.ubicacionListado
-      articulo.ubicacionEnviadaEn = ahora
-    })
-    await persistirActivo()
-    if (resultado.enviados.length) notificar('positive', `${resultado.enviados.length} cambios enviados a Ubicaciones`)
+    if (resultado.enviados.length) notificar('positive', `${resultado.enviados.length} artículos enviados a Ubicaciones`)
     if (resultado.invalidos.length) notificar('warning', `${resultado.invalidos.length} ubicaciones inválidas no se enviaron`)
   } catch (error) {
-    notificar('negative', error.message || 'No se pudieron enviar los cambios a Ubicaciones')
+    notificar('negative', error.message || 'No se pudieron enviar los artículos a Ubicaciones')
   } finally {
     enviandoUbicaciones.value = false
   }
@@ -613,6 +601,9 @@ onUnmounted(() => {
 .acciones-generales-tabla button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+.icono-accion-listado {
+  color: var(--color-primario);
 }
 @media (max-width: 600px) {
   .columnas-visibles-listado {

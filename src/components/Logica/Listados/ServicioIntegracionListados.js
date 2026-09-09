@@ -21,34 +21,8 @@ function normalizarUbicacion(valor) {
   return normalizarTexto(valor).replace(/\s+/g, '-')
 }
 
-function normalizarStockComparable(valor) {
-  if (valor === '' || valor === null || valor === undefined) return null
-  const numero = Number(valor)
-  return Number.isFinite(numero) ? numero : null
-}
-
-export function obtenerCambiosStockPendientes(listado) {
-  return (listado?.articulos || []).filter((articulo) => {
-    const actual = normalizarStockComparable(articulo.stockListado)
-    const original = normalizarStockComparable(articulo.stockOriginal)
-    const procesado = normalizarStockComparable(articulo.stockProcesado)
-    const nuncaProcesado = articulo.stockProcesado === null || articulo.stockProcesado === undefined
-    return actual !== original && (nuncaProcesado || actual !== procesado)
-  })
-}
-
-export function obtenerCambiosUbicacionPendientes(listado) {
-  return (listado?.articulos || []).filter((articulo) => {
-    const actual = normalizarUbicacion(articulo.ubicacionListado)
-    const original = normalizarUbicacion(articulo.ubicacionOriginal)
-    const enviada = normalizarUbicacion(articulo.ubicacionEnviada)
-    const nuncaEnviada = articulo.ubicacionEnviada === null || articulo.ubicacionEnviada === undefined
-    return actual !== original && (nuncaEnviada || actual !== enviada)
-  })
-}
-
-export async function enviarCambiosAStock(listado) {
-  const cambios = obtenerCambiosStockPendientes(listado)
+export async function enviarTodosAStock(listado) {
+  const articulos = Array.isArray(listado?.articulos) ? listado.articulos : []
   const sesion = await obtenerSesionStock()
   const confirmados = new Set(
     sesion.registros.filter((registro) => registro.confirmado).map((registro) => registro.codigo),
@@ -57,7 +31,7 @@ export async function enviarCambiosAStock(listado) {
   const omitidosConfirmados = []
   const invalidos = []
   const registros = []
-  cambios.forEach((articulo) => {
+  articulos.forEach((articulo) => {
     const codigo = normalizarTexto(articulo.codigo)
     const stockContado = normalizarCantidadStock(articulo.stockListado)
     if (!codigo || articulo.stockListado === '' || stockContado.valor === null) {
@@ -88,19 +62,19 @@ export async function enviarCambiosAStock(listado) {
   if (registros.length > 0) {
     const informacionArchivo = obtenerInformacionArchivo()
     if (!informacionArchivo) {
-      throw new Error('Cargá el Excel maestro antes de enviar cambios a Stock')
+      throw new Error('Cargá el Excel maestro antes de enviar artículos a Stock')
     }
     await guardarRegistrosStock(registros, informacionArchivo)
   }
   return { enviados, omitidosConfirmados, invalidos }
 }
 
-export async function enviarCambiosAUbicaciones(listado) {
-  const cambios = obtenerCambiosUbicacionPendientes(listado)
+export async function enviarTodosAUbicaciones(listado) {
+  const articulos = Array.isArray(listado?.articulos) ? listado.articulos : []
   const enviados = []
   const invalidos = []
   const movimientos = []
-  cambios.forEach((articulo) => {
+  articulos.forEach((articulo) => {
     const codigo = normalizarTexto(articulo.codigo)
     const ubicacion = normalizarUbicacion(articulo.ubicacionListado)
     if (!codigo || !ubicacion) {
@@ -112,11 +86,15 @@ export async function enviarCambiosAUbicaciones(listado) {
   })
   if (movimientos.length > 0) {
     const ubicaciones = await obtenerUbicaciones()
+    const codigosEnviados = new Set(enviados)
+    const ubicacionesConservadas = (Array.isArray(ubicaciones) ? ubicaciones : []).filter(
+      (item) => !codigosEnviados.has(normalizarTexto(item?.codigo)),
+    )
     const guardado = await guardarUbicaciones([
       ...movimientos,
-      ...(Array.isArray(ubicaciones) ? ubicaciones : []),
+      ...ubicacionesConservadas,
     ])
-    if (!guardado) throw new Error('No se pudieron guardar los cambios en Ubicaciones')
+    if (!guardado) throw new Error('No se pudieron guardar los artículos en Ubicaciones')
   }
   return { enviados, invalidos }
 }

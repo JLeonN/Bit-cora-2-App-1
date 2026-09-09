@@ -3,7 +3,7 @@ import { normalizarCodigoBusqueda } from '../Logica/Compartidos/CodigoEscaner.js
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
-export const VERSION_LISTADOS = '1.2'
+export const VERSION_LISTADOS = '1.3'
 
 const CONFIGURACION_INICIAL = Object.freeze({
   mostrarNumeracion: false,
@@ -56,20 +56,6 @@ function normalizarArticulo(articulo) {
     ubicacionOriginal,
     ubicacionListado: normalizarUbicacion(articulo?.ubicacionListado ?? ubicacionOriginal),
     fechaIngreso: normalizarFecha(articulo?.fechaIngreso),
-    stockProcesado: articulo?.stockProcesado ?? null,
-    stockProcesadoEn: articulo?.stockProcesadoEn
-      ? normalizarFecha(articulo.stockProcesadoEn)
-      : null,
-    resultadoStock: ['enviado', 'omitidoConfirmado'].includes(articulo?.resultadoStock)
-      ? articulo.resultadoStock
-      : null,
-    ubicacionEnviada:
-      articulo?.ubicacionEnviada === null || articulo?.ubicacionEnviada === undefined
-        ? null
-        : normalizarUbicacion(articulo.ubicacionEnviada),
-    ubicacionEnviadaEn: articulo?.ubicacionEnviadaEn
-      ? normalizarFecha(articulo.ubicacionEnviadaEn)
-      : null,
   }
 }
 
@@ -192,14 +178,7 @@ export async function duplicarListado(id) {
       : 'Copia',
     creadoEn: ahora,
     actualizadoEn: ahora,
-    articulos: original.articulos.map((articulo) => ({
-      ...articulo,
-      stockProcesado: null,
-      stockProcesadoEn: null,
-      resultadoStock: null,
-      ubicacionEnviada: null,
-      ubicacionEnviadaEn: null,
-    })),
+    articulos: original.articulos.map((articulo) => ({ ...articulo })),
   }
   const guardada = await guardarListado(copia)
   await guardarListadoActivo(guardada.id)
