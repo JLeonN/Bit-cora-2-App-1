@@ -9,8 +9,8 @@
       :aria-label="etiquetaFecha"
       @click="seleccionarCriterio('fechaIngreso')"
     >
-      <IconCalendarTime class="icono-criterio" :size="21" :stroke="2" aria-hidden="true" />
-      <span class="texto-criterio">Fecha</span>
+      <IconInbox class="icono-criterio" :size="21" :stroke="2" aria-hidden="true" />
+      <span class="texto-criterio">Llegada</span>
       <span class="direcciones-orden" aria-hidden="true">
         <IconArrowDown
           class="icono-direccion"
@@ -35,8 +35,8 @@
       :aria-label="etiquetaAlfabetica"
       @click="seleccionarCriterio('alfabetico')"
     >
-      <IconSortAZ class="icono-criterio" :size="21" :stroke="2" aria-hidden="true" />
-      <span class="texto-criterio">A/Z</span>
+      <IconSortAscending2 class="icono-criterio" :size="21" :stroke="2" aria-hidden="true" />
+      <span class="texto-criterio">{{ textoOrdenAlfabetico }}</span>
       <span class="direcciones-orden" aria-hidden="true">
         <IconArrowUp
           class="icono-direccion"
@@ -60,8 +60,8 @@ import { computed } from 'vue'
 import {
   IconArrowDown,
   IconArrowUp,
-  IconCalendarTime,
-  IconSortAZ,
+  IconInbox,
+  IconSortAscending2,
 } from '@tabler/icons-vue'
 import { normalizarOrden } from './OrdenarColeccion.js'
 
@@ -75,14 +75,20 @@ const ordenNormalizado = computed(() => normalizarOrden(props.modelValue))
 const etiquetaFecha = computed(() =>
   ordenNormalizado.value.criterio === 'fechaIngreso' &&
   ordenNormalizado.value.direccion === 'ascendente'
-    ? 'Ordenar por fecha: antiguas primero'
-    : 'Ordenar por fecha: recientes primero',
+    ? 'Orden de llegada: antiguas primero'
+    : 'Orden de llegada: recientes primero',
 )
 const etiquetaAlfabetica = computed(() =>
   ordenNormalizado.value.criterio === 'alfabetico' &&
   ordenNormalizado.value.direccion === 'descendente'
     ? 'Ordenar alfabéticamente: Z a A'
     : 'Ordenar alfabéticamente: A a Z',
+)
+const textoOrdenAlfabetico = computed(() =>
+  ordenNormalizado.value.criterio === 'alfabetico' &&
+  ordenNormalizado.value.direccion === 'descendente'
+    ? 'Z/A'
+    : 'A/Z',
 )
 
 function esDireccionActiva(criterio, direccion) {
