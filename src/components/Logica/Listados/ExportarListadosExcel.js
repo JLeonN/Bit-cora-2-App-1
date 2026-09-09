@@ -16,10 +16,12 @@ function sanitizarNombreHoja(nombre) {
 
 export function construirLibroListado(articulosOrdenados, configuracion, nombreListado) {
   const encabezados = ['Código', 'Descripción']
+  if (configuracion?.mostrarNumeracion) encabezados.unshift('N.º')
   if (configuracion?.mostrarStock) encabezados.push('Stock')
   if (configuracion?.mostrarUbicacion) encabezados.push('Ubicación')
-  const filas = articulosOrdenados.map((articulo) => {
+  const filas = articulosOrdenados.map((articulo, indice) => {
     const fila = [articulo.codigo, articulo.descripcion]
+    if (configuracion?.mostrarNumeracion) fila.unshift(indice + 1)
     if (configuracion?.mostrarStock) fila.push(articulo.stockListado)
     if (configuracion?.mostrarUbicacion) fila.push(articulo.ubicacionListado)
     return fila
@@ -30,6 +32,7 @@ export function construirLibroListado(articulosOrdenados, configuracion, nombreL
     [14, 24],
     [30, 80],
   ]
+  if (configuracion?.mostrarNumeracion) limites.unshift([6, 10])
   if (configuracion?.mostrarStock) limites.push([10, 18])
   if (configuracion?.mostrarUbicacion) limites.push([12, 30])
   hoja['!cols'] = limites.map(([minimo, maximo], indice) => ({

@@ -3,9 +3,13 @@ import { normalizarCodigoBusqueda } from '../Logica/Compartidos/CodigoEscaner.js
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
-export const VERSION_LISTADOS = '1.1'
+export const VERSION_LISTADOS = '1.2'
 
-const CONFIGURACION_INICIAL = Object.freeze({ mostrarStock: false, mostrarUbicacion: false })
+const CONFIGURACION_INICIAL = Object.freeze({
+  mostrarNumeracion: false,
+  mostrarStock: false,
+  mostrarUbicacion: false,
+})
 const ORDEN_INICIAL = Object.freeze({ criterio: 'fechaIngreso', direccion: 'descendente' })
 
 function clonar(valor) {
@@ -92,6 +96,7 @@ function normalizarListado(listado, { actualizar = false } = {}) {
     creadoEn,
     actualizadoEn: actualizar ? ahora : normalizarFecha(listado?.actualizadoEn, ahora),
     configuracion: {
+      mostrarNumeracion: Boolean(listado?.configuracion?.mostrarNumeracion),
       mostrarStock: Boolean(listado?.configuracion?.mostrarStock),
       mostrarUbicacion: Boolean(listado?.configuracion?.mostrarUbicacion),
     },

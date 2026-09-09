@@ -36,6 +36,12 @@
           <span class="titulo-columnas-listado">Columnas visibles</span>
           <div class="interruptores-listado">
             <q-toggle
+              :model-value="listadoActivo.configuracion.mostrarNumeracion"
+              label="Numeración"
+              color="primary"
+              @update:model-value="actualizarConfiguracion('mostrarNumeracion', $event)"
+            />
+            <q-toggle
               :model-value="listadoActivo.configuracion.mostrarStock"
               label="Stock"
               color="primary"
@@ -95,6 +101,7 @@
       <TablaListados
         ref="tablaListadosRef"
         :articulos="articulosOrdenados"
+        :mostrar-numeracion="listadoActivo.configuracion.mostrarNumeracion"
         :mostrar-stock="listadoActivo.configuracion.mostrarStock"
         :mostrar-ubicacion="listadoActivo.configuracion.mostrarUbicacion"
         :codigo-resaltado="codigoResaltadoVisible"

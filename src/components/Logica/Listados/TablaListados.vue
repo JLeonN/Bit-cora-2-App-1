@@ -5,12 +5,18 @@
       <strong>Este listado está vacío</strong>
       <span>Buscá o escaneá un artículo para agregarlo.</span>
     </div>
-    <div v-else class="tabla-listados" role="table" aria-label="Artículos del listado">
+    <div
+      v-else
+      class="tabla-listados"
+      role="table"
+      aria-label="Artículos del listado"
+      :style="{ '--columnas-listado': columnasListado }"
+    >
       <div
         class="fila-listado encabezado-listado"
-        :class="{ 'con-stock': mostrarStock, 'con-ubicacion': mostrarUbicacion }"
         role="row"
       >
+        <strong v-if="mostrarNumeracion" class="encabezado-numeracion">N.º</strong>
         <strong>Código</strong>
         <strong>Descripción</strong>
         <strong v-if="mostrarStock">Stock</strong>
@@ -18,17 +24,18 @@
         <strong>Acciones</strong>
       </div>
       <article
-        v-for="articulo in articulos"
+        v-for="(articulo, indice) in articulos"
         :key="articulo.codigo"
         class="fila-listado"
         :class="{
-          'con-stock': mostrarStock,
-          'con-ubicacion': mostrarUbicacion,
           'resaltado-atencion': codigoResaltado === articulo.codigo,
         }"
         :data-codigo="articulo.codigo"
         role="row"
       >
+        <div v-if="mostrarNumeracion" class="celda-listado celda-numeracion" data-etiqueta="Número">
+          {{ indice + 1 }}
+        </div>
         <div class="celda-listado celda-codigo" data-etiqueta="Código">{{ articulo.codigo }}</div>
         <div class="celda-listado celda-descripcion" data-etiqueta="Descripción">
           {{ articulo.descripcion }}
@@ -86,17 +93,27 @@
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { IconListDetails, IconTag, IconTrash } from '@tabler/icons-vue'
 
 const props = defineProps({
   articulos: { type: Array, default: () => [] },
+  mostrarNumeracion: { type: Boolean, required: true },
   mostrarStock: { type: Boolean, required: true },
   mostrarUbicacion: { type: Boolean, required: true },
   codigoResaltado: { type: String, default: '' },
 })
 const emit = defineEmits(['editar-stock', 'editar-ubicacion', 'eliminar', 'enviar-etiqueta'])
 const borradores = reactive({})
+const columnasListado = computed(() => {
+  const columnas = []
+  if (props.mostrarNumeracion) columnas.push('54px')
+  columnas.push('minmax(120px, 0.8fr)', 'minmax(200px, 2fr)')
+  if (props.mostrarStock) columnas.push('minmax(90px, 0.6fr)')
+  if (props.mostrarUbicacion) columnas.push('minmax(120px, 0.8fr)')
+  columnas.push('92px')
+  return columnas.join(' ')
+})
 
 watch(
   () => props.articulos,
@@ -174,22 +191,13 @@ defineExpose({ enfocarArticulo })
 }
 .fila-listado {
   display: grid;
-  grid-template-columns: minmax(120px, 0.8fr) minmax(240px, 2fr) 92px;
+  grid-template-columns: var(--columnas-listado);
   gap: 12px;
   align-items: center;
   padding: 12px 14px;
   color: var(--color-texto-principal);
   border-bottom: 1px solid var(--color-borde);
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-.fila-listado.con-stock {
-  grid-template-columns: minmax(120px, 0.8fr) minmax(220px, 2fr) minmax(90px, 0.6fr) 92px;
-}
-.fila-listado.con-ubicacion {
-  grid-template-columns: minmax(120px, 0.8fr) minmax(220px, 2fr) minmax(120px, 0.8fr) 92px;
-}
-.fila-listado.con-stock.con-ubicacion {
-  grid-template-columns: minmax(120px, 0.8fr) minmax(200px, 2fr) minmax(90px, 0.6fr) minmax(120px, 0.8fr) 92px;
 }
 .fila-listado:last-child {
   border-bottom: 0;
@@ -201,6 +209,13 @@ defineExpose({ enfocarArticulo })
 }
 .encabezado-listado strong {
   color: var(--color-primario-claro);
+}
+.encabezado-numeracion,.celda-numeracion {
+  text-align: center;
+}
+.celda-numeracion {
+  color: var(--color-texto-secundario);
+  font-weight: 700;
 }
 .celda-codigo {
   overflow-wrap: anywhere;
@@ -255,7 +270,7 @@ defineExpose({ enfocarArticulo })
   .encabezado-listado {
     display: none;
   }
-  .fila-listado,.fila-listado.con-stock,.fila-listado.con-ubicacion,.fila-listado.con-stock.con-ubicacion {
+  .fila-listado {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     padding: 14px;
@@ -265,6 +280,10 @@ defineExpose({ enfocarArticulo })
   }
   .celda-codigo,.celda-descripcion {
     grid-column: 1 / -1;
+  }
+  .celda-numeracion {
+    grid-column: 1 / -1;
+    text-align: left;
   }
   .celda-editable {
     display: flex;
@@ -282,10 +301,10 @@ defineExpose({ enfocarArticulo })
   }
 }
 @media (max-width: 380px) {
-  .fila-listado,.fila-listado.con-stock,.fila-listado.con-ubicacion,.fila-listado.con-stock.con-ubicacion {
+  .fila-listado {
     grid-template-columns: 1fr;
   }
-  .celda-codigo,.celda-descripcion,.acciones-fila-listado {
+  .celda-numeracion,.celda-codigo,.celda-descripcion,.acciones-fila-listado {
     grid-column: auto;
   }
 }
