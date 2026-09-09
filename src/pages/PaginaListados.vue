@@ -61,6 +61,8 @@
         v-if="articulosOrdenados.length > 0"
         :model-value="listadoActivo.orden"
         :deshabilitado="ocupado"
+        :criterios-disponibles="CRITERIOS_ORDEN"
+        etiqueta-cantidad="Stock"
         @update:model-value="actualizarOrden"
       />
 
@@ -177,7 +179,11 @@ import {
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { normalizarCodigoBusqueda } from '../components/Logica/Compartidos/CodigoEscaner.js'
 import { usarResaltadoAtencion } from '../components/Logica/Compartidos/UsoResaltadoAtencion.js'
-import { normalizarOrden, ordenarColeccion } from '../components/Logica/Compartidos/OrdenarColeccion.js'
+import {
+  CRITERIOS_ORDEN,
+  normalizarOrden,
+  ordenarColeccion,
+} from '../components/Logica/Compartidos/OrdenarColeccion.js'
 import {
   enviarArticuloAEtiquetas as enviarArticuloAEtiquetasServicio,
   enviarTodosAEtiquetas as enviarTodosAEtiquetasServicio,
@@ -209,6 +215,8 @@ const articulosOrdenados = computed(() =>
   ordenarColeccion(listadoActivo.value?.articulos || [], listadoActivo.value?.orden, {
     obtenerFecha: (articulo) => articulo.fechaIngreso,
     obtenerTexto: (articulo) => articulo.descripcion,
+    obtenerUbicacion: (articulo) => articulo.ubicacionListado,
+    obtenerCantidad: (articulo) => articulo.stockListado,
     obtenerClave: (articulo) => articulo.codigo,
   }),
 )

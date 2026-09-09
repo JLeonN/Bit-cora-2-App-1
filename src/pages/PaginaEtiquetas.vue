@@ -377,8 +377,10 @@ async function generarPDF() {
     })
 
     const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
-    await Promise.all(listaEtiquetas.value.map((etiqueta) => guardarMemoriaDesdeEtiqueta(etiqueta)))
-    const resultado = await generarDocumentoEtiquetas(listaEtiquetas.value, configuracion)
+    const etiquetasParaPDF =
+      tablaEtiquetasRef.value?.obtenerEtiquetasOrdenadas?.() || [...listaEtiquetas.value]
+    await Promise.all(etiquetasParaPDF.map((etiqueta) => guardarMemoriaDesdeEtiqueta(etiqueta)))
+    const resultado = await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion)
 
     Loading.hide()
     if (!resultado.exito) {

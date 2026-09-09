@@ -1,52 +1,31 @@
 <template>
   <div class="selector-ordenamiento" role="group" aria-label="Ordenar elementos">
     <button
+      v-for="criterio in criteriosVisibles"
+      :key="criterio.valor"
       type="button"
       class="boton-criterio"
-      :class="{ 'boton-criterio-activo': ordenNormalizado.criterio === 'fechaIngreso' }"
+      :class="{ 'boton-criterio-activo': ordenNormalizado.criterio === criterio.valor }"
       :disabled="deshabilitado"
-      :aria-pressed="ordenNormalizado.criterio === 'fechaIngreso'"
-      :aria-label="etiquetaFecha"
-      @click="seleccionarCriterio('fechaIngreso')"
+      :aria-pressed="ordenNormalizado.criterio === criterio.valor"
+      :aria-label="obtenerEtiquetaAccesible(criterio.valor)"
+      @click="seleccionarCriterio(criterio.valor)"
     >
-      <IconInbox class="icono-criterio" :size="21" :stroke="2" aria-hidden="true" />
-      <span class="texto-criterio">Llegada</span>
+      <component
+        :is="criterio.icono"
+        class="icono-criterio"
+        :size="21"
+        :stroke="2"
+        aria-hidden="true"
+      />
+      <span class="texto-criterio">{{ obtenerTextoCriterio(criterio.valor) }}</span>
       <span class="direcciones-orden" aria-hidden="true">
-        <IconArrowDown
+        <component
+          :is="direccion === 'ascendente' ? IconArrowUp : IconArrowDown"
+          v-for="direccion in criterio.direcciones"
+          :key="direccion"
           class="icono-direccion"
-          :class="{ 'icono-direccion-activo': esDireccionActiva('fechaIngreso', 'descendente') }"
-          :size="18"
-          :stroke="2.4"
-        />
-        <IconArrowUp
-          class="icono-direccion"
-          :class="{ 'icono-direccion-activo': esDireccionActiva('fechaIngreso', 'ascendente') }"
-          :size="18"
-          :stroke="2.4"
-        />
-      </span>
-    </button>
-    <button
-      type="button"
-      class="boton-criterio"
-      :class="{ 'boton-criterio-activo': ordenNormalizado.criterio === 'alfabetico' }"
-      :disabled="deshabilitado"
-      :aria-pressed="ordenNormalizado.criterio === 'alfabetico'"
-      :aria-label="etiquetaAlfabetica"
-      @click="seleccionarCriterio('alfabetico')"
-    >
-      <IconSortAscending2 class="icono-criterio" :size="21" :stroke="2" aria-hidden="true" />
-      <span class="texto-criterio">{{ textoOrdenAlfabetico }}</span>
-      <span class="direcciones-orden" aria-hidden="true">
-        <IconArrowUp
-          class="icono-direccion"
-          :class="{ 'icono-direccion-activo': esDireccionActiva('alfabetico', 'ascendente') }"
-          :size="18"
-          :stroke="2.4"
-        />
-        <IconArrowDown
-          class="icono-direccion"
-          :class="{ 'icono-direccion-activo': esDireccionActiva('alfabetico', 'descendente') }"
+          :class="{ 'icono-direccion-activo': esDireccionActiva(criterio.valor, direccion) }"
           :size="18"
           :stroke="2.4"
         />
@@ -61,35 +40,97 @@ import {
   IconArrowDown,
   IconArrowUp,
   IconInbox,
+  IconMapPin,
+  IconScale,
   IconSortAscending2,
 } from '@tabler/icons-vue'
-import { normalizarOrden } from './OrdenarColeccion.js'
+import { CRITERIOS_ORDEN, normalizarOrden } from './OrdenarColeccion.js'
+
+const DIRECCIONES_NATURALES = Object.freeze({
+  fechaIngreso: 'descendente',
+  alfabetico: 'ascendente',
+  ubicacion: 'ascendente',
+  cantidad: 'descendente',
+})
+const CONFIGURACION_CRITERIOS = Object.freeze({
+  fechaIngreso: {
+    valor: 'fechaIngreso',
+    icono: IconInbox,
+    direcciones: ['descendente', 'ascendente'],
+  },
+  alfabetico: {
+    valor: 'alfabetico',
+    icono: IconSortAscending2,
+    direcciones: ['ascendente', 'descendente'],
+  },
+  ubicacion: {
+    valor: 'ubicacion',
+    icono: IconMapPin,
+    direcciones: ['ascendente', 'descendente'],
+  },
+  cantidad: {
+    valor: 'cantidad',
+    icono: IconScale,
+    direcciones: ['descendente', 'ascendente'],
+  },
+})
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
   deshabilitado: { type: Boolean, default: false },
+  criteriosDisponibles: {
+    type: Array,
+    default: () => ['fechaIngreso', 'alfabetico'],
+  },
+  etiquetaCantidad: { type: String, default: 'Cantidad' },
 })
 const emit = defineEmits(['update:model-value'])
 
 const ordenNormalizado = computed(() => normalizarOrden(props.modelValue))
-const etiquetaFecha = computed(() =>
-  ordenNormalizado.value.criterio === 'fechaIngreso' &&
-  ordenNormalizado.value.direccion === 'ascendente'
-    ? 'Orden de llegada: antiguas primero'
-    : 'Orden de llegada: recientes primero',
+const criteriosVisibles = computed(() =>
+  props.criteriosDisponibles
+    .filter((criterio, indice, criterios) =>
+      CRITERIOS_ORDEN.includes(criterio) && criterios.indexOf(criterio) === indice,
+    )
+    .map((criterio) => CONFIGURACION_CRITERIOS[criterio]),
 )
-const etiquetaAlfabetica = computed(() =>
-  ordenNormalizado.value.criterio === 'alfabetico' &&
-  ordenNormalizado.value.direccion === 'descendente'
-    ? 'Ordenar alfabéticamente: Z a A'
-    : 'Ordenar alfabéticamente: A a Z',
-)
-const textoOrdenAlfabetico = computed(() =>
-  ordenNormalizado.value.criterio === 'alfabetico' &&
-  ordenNormalizado.value.direccion === 'descendente'
-    ? 'Z/A'
-    : 'A/Z',
-)
+
+function obtenerDireccionMostrada(criterio) {
+  return ordenNormalizado.value.criterio === criterio
+    ? ordenNormalizado.value.direccion
+    : DIRECCIONES_NATURALES[criterio]
+}
+
+function obtenerTextoCriterio(criterio) {
+  if (criterio === 'fechaIngreso') return 'Llegada'
+  if (criterio === 'alfabetico') {
+    return obtenerDireccionMostrada(criterio) === 'descendente' ? 'Z/A' : 'A/Z'
+  }
+  if (criterio === 'ubicacion') return 'Ubicación'
+  return props.etiquetaCantidad
+}
+
+function obtenerEtiquetaAccesible(criterio) {
+  const direccion = obtenerDireccionMostrada(criterio)
+  if (criterio === 'fechaIngreso') {
+    return direccion === 'ascendente'
+      ? 'Orden de llegada: antiguas primero'
+      : 'Orden de llegada: recientes primero'
+  }
+  if (criterio === 'alfabetico') {
+    return direccion === 'descendente'
+      ? 'Ordenar alfabéticamente: Z a A'
+      : 'Ordenar alfabéticamente: A a Z'
+  }
+  if (criterio === 'ubicacion') {
+    return direccion === 'descendente'
+      ? 'Ordenar por ubicación: mayores primero'
+      : 'Ordenar por ubicación: menores primero'
+  }
+  return direccion === 'descendente'
+    ? `Ordenar por ${props.etiquetaCantidad.toLowerCase()}: mayor a menor`
+    : `Ordenar por ${props.etiquetaCantidad.toLowerCase()}: menor a mayor`
+}
 
 function esDireccionActiva(criterio, direccion) {
   return (
@@ -99,11 +140,13 @@ function esDireccionActiva(criterio, direccion) {
 }
 
 function seleccionarCriterio(criterio) {
-  if (props.deshabilitado) return
+  if (props.deshabilitado || !criteriosVisibles.value.some((item) => item.valor === criterio)) {
+    return
+  }
   if (ordenNormalizado.value.criterio !== criterio) {
     emit('update:model-value', {
       criterio,
-      direccion: criterio === 'fechaIngreso' ? 'descendente' : 'ascendente',
+      direccion: DIRECCIONES_NATURALES[criterio],
     })
     return
   }
@@ -188,6 +231,11 @@ function seleccionarCriterio(criterio) {
   .icono-direccion {
     width: 16px;
     height: 16px;
+  }
+}
+@media (min-width: 760px) {
+  .selector-ordenamiento {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 @media (prefers-reduced-motion: reduce) {

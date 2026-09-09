@@ -1,6 +1,8 @@
 import { Preferences } from '@capacitor/preferences'
+import { normalizarOrden } from '../Logica/Compartidos/OrdenarColeccion.js'
 
 const CLAVE_STOCK = 'sesion_stock'
+const CLAVE_PREFERENCIA_ORDEN_STOCK = 'preferencia_orden_stock'
 const VERSION_STOCK = '1.0'
 
 function normalizarTexto(valor) {
@@ -129,6 +131,29 @@ export async function obtenerSesionStock() {
   } catch (error) {
     console.error('[UsoAlmacenamientoStock] Error al leer la sesión:', error)
     return crearSesionVacia()
+  }
+}
+
+export async function guardarPreferenciaOrdenStock(orden) {
+  const ordenNormalizado = normalizarOrden(orden)
+  try {
+    await Preferences.set({
+      key: CLAVE_PREFERENCIA_ORDEN_STOCK,
+      value: JSON.stringify(ordenNormalizado),
+    })
+  } catch (error) {
+    console.error('[UsoAlmacenamientoStock] Error al guardar la preferencia de orden:', error)
+  }
+  return ordenNormalizado
+}
+
+export async function obtenerPreferenciaOrdenStock() {
+  try {
+    const { value } = await Preferences.get({ key: CLAVE_PREFERENCIA_ORDEN_STOCK })
+    return value ? normalizarOrden(JSON.parse(value)) : normalizarOrden()
+  } catch (error) {
+    console.error('[UsoAlmacenamientoStock] Error al leer la preferencia de orden:', error)
+    return normalizarOrden()
   }
 }
 

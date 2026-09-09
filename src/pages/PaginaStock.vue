@@ -185,6 +185,14 @@
       </p>
     </TarjetaSeccion>
 
+    <SelectorOrdenamiento
+      v-if="registrosVisuales.length > 0"
+      :model-value="ordenSeleccionado"
+      :criterios-disponibles="CRITERIOS_ORDEN"
+      etiqueta-cantidad="Stock"
+      @update:model-value="actualizarOrden"
+    />
+
     <TablaStock
       ref="tablaStockRef"
       :registros="registrosVisuales"
@@ -247,6 +255,7 @@ import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../components/Logica/Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
+import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import TablaStock from '../components/Logica/Stock/TablaStock.vue'
 import {
@@ -254,12 +263,13 @@ import {
   coincidenFuentesExcel,
   eliminarRegistroStock,
   eliminarSesionStock,
+  guardarPreferenciaOrdenStock,
   guardarRegistroStock,
   guardarRegistrosStock,
   iniciarSesionStock,
   normalizarCantidadStock,
+  obtenerPreferenciaOrdenStock,
   obtenerSesionStock,
-  ordenarRegistrosStock,
 } from '../components/BaseDeDatos/UsoAlmacenamientoStock.js'
 import {
   obtenerArticuloPorCodigo,
@@ -273,6 +283,11 @@ import {
 } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
 import { obtenerArticuloPorCodigoEscaneado } from '../components/Logica/Compartidos/CodigoEscaner.js'
+import {
+  CRITERIOS_ORDEN,
+  normalizarOrden,
+  ordenarColeccion,
+} from '../components/Logica/Compartidos/OrdenarColeccion.js'
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import { generarYGuardarExcelStock } from '../components/Logica/Stock/ExportarStockExcel.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
@@ -300,6 +315,7 @@ const inputBusquedaRef = ref(null)
 const inputConteoRef = ref(null)
 const tablaStockRef = ref(null)
 const ultimoEspacioTiempo = ref(0)
+const ordenSeleccionado = ref(normalizarOrden())
 
 let intervaloBase = null
 
@@ -339,41 +355,45 @@ const ultimaUbicacionSeleccionada = computed(() =>
       )
     : '',
 )
-const registrosVisuales = computed(() =>
-  ordenarRegistrosStock(
-    (sesion.value.registros || []).map((registro) => {
-      const articulo = obtenerArticuloPorCodigo(registro.codigo)
-      const stockExcelOriginal = normalizarCantidadStock(articulo?.stock, {
-        permitirDecimal: true,
-      })
-      const recuperarNegativoAnterior =
-        registro.stockExcelAjustado &&
-        Number.isInteger(Number(articulo?.stock)) &&
-        Number(articulo?.stock) < 0
-      const ubicacionOriginalExcel =
-        articulo?.ubicacionAntigua || registro.ubicacionOriginalExcel || ''
-      const ubicacionRegistrada = obtenerUltimaUbicacionRegistrada(
-        registro.codigo,
-        ubicaciones.value,
-        articulo,
-        registro.ubicacionActual,
-      )
-      return {
-        ...registro,
-        stockExcel: recuperarNegativoAnterior ? stockExcelOriginal.valor : registro.stockExcel,
-        stockExcelAjustado: recuperarNegativoAnterior ? false : registro.stockExcelAjustado,
-        ubicacionActual: ubicacionRegistrada || ubicacionOriginalExcel,
-        ubicacionOrigen:
-          registro.ubicacionOrigen === 'usuario' ||
-          (ubicacionRegistrada &&
-            formatearUbicacion(ubicacionRegistrada) !==
-              formatearUbicacion(ubicacionOriginalExcel))
-            ? 'usuario'
-            : 'excel',
-      }
-    }),
-  ),
-)
+const registrosVisuales = computed(() => {
+  const registrosEnriquecidos = (sesion.value.registros || []).map((registro) => {
+    const articulo = obtenerArticuloPorCodigo(registro.codigo)
+    const stockExcelOriginal = normalizarCantidadStock(articulo?.stock, {
+      permitirDecimal: true,
+    })
+    const recuperarNegativoAnterior =
+      registro.stockExcelAjustado &&
+      Number.isInteger(Number(articulo?.stock)) &&
+      Number(articulo?.stock) < 0
+    const ubicacionOriginalExcel =
+      articulo?.ubicacionAntigua || registro.ubicacionOriginalExcel || ''
+    const ubicacionRegistrada = obtenerUltimaUbicacionRegistrada(
+      registro.codigo,
+      ubicaciones.value,
+      articulo,
+      registro.ubicacionActual,
+    )
+    return {
+      ...registro,
+      stockExcel: recuperarNegativoAnterior ? stockExcelOriginal.valor : registro.stockExcel,
+      stockExcelAjustado: recuperarNegativoAnterior ? false : registro.stockExcelAjustado,
+      ubicacionActual: ubicacionRegistrada || ubicacionOriginalExcel,
+      ubicacionOrigen:
+        registro.ubicacionOrigen === 'usuario' ||
+        (ubicacionRegistrada &&
+          formatearUbicacion(ubicacionRegistrada) !== formatearUbicacion(ubicacionOriginalExcel))
+          ? 'usuario'
+          : 'excel',
+    }
+  })
+  const confirmadosOrdenados = ordenarGrupoStock(
+    registrosEnriquecidos.filter((registro) => registro.confirmado),
+  )
+  const pendientesOrdenados = ordenarGrupoStock(
+    registrosEnriquecidos.filter((registro) => !registro.confirmado),
+  )
+  return [...confirmadosOrdenados, ...pendientesOrdenados]
+})
 const informe = computed(() => {
   const confirmados = registrosVisuales.value.filter((registro) => registro.confirmado)
   const conteoCodigosExcel = new Map()
@@ -449,9 +469,30 @@ function actualizarEstadoBase() {
 }
 
 async function recargarDatos() {
-  sesion.value = await obtenerSesionStock()
-  ubicaciones.value = await obtenerUbicaciones()
+  const [sesionGuardada, ubicacionesGuardadas, ordenGuardado] = await Promise.all([
+    obtenerSesionStock(),
+    obtenerUbicaciones(),
+    obtenerPreferenciaOrdenStock(),
+  ])
+  sesion.value = sesionGuardada
+  ubicaciones.value = ubicacionesGuardadas
+  ordenSeleccionado.value = ordenGuardado
   actualizarEstadoBase()
+}
+
+function ordenarGrupoStock(registros) {
+  return ordenarColeccion(registros, ordenSeleccionado.value, {
+    obtenerFecha: (registro) => registro.fechaIngreso,
+    obtenerTexto: (registro) => registro.nombre,
+    obtenerUbicacion: (registro) => registro.ubicacionActual,
+    obtenerCantidad: (registro) => registro.stockContado,
+    obtenerClave: (registro) => registro.codigo,
+  })
+}
+
+async function actualizarOrden(nuevoOrden) {
+  ordenSeleccionado.value = normalizarOrden(nuevoOrden)
+  await guardarPreferenciaOrdenStock(ordenSeleccionado.value)
 }
 
 function asegurarFuenteValida() {

@@ -28,6 +28,7 @@
     <SelectorOrdenamiento
       v-if="etiquetas.length > 0"
       :model-value="ordenSeleccionado"
+      :criterios-disponibles="CRITERIOS_ORDEN"
       @update:model-value="actualizarOrden"
     />
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
@@ -100,7 +101,11 @@ import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
 import TarjetaSeccion from '../../Configuracion/Tutoriales/TarjetaSeccion.vue'
 import SelectorOrdenamiento from '../Compartidos/SelectorOrdenamiento.vue'
-import { normalizarOrden, ordenarColeccion } from '../Compartidos/OrdenarColeccion.js'
+import {
+  CRITERIOS_ORDEN,
+  normalizarOrden,
+  ordenarColeccion,
+} from '../Compartidos/OrdenarColeccion.js'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 import {
@@ -314,9 +319,15 @@ const etiquetasOrdenadas = computed(() => {
   return ordenarColeccion(registros, ordenSeleccionado.value, {
     obtenerFecha: (registro) => registro.indiceOriginal,
     obtenerTexto: (registro) => obtenerNombreArticulo(registro.etiqueta),
+    obtenerUbicacion: (registro) => registro.etiqueta.ubicacion,
+    obtenerCantidad: (registro) => registro.etiqueta.cantidad,
     obtenerClave: (registro) => normalizarCodigo(registro.etiqueta.codigo),
   })
 })
+
+function obtenerEtiquetasOrdenadas() {
+  return etiquetasOrdenadas.value.map(({ etiqueta }) => ({ ...etiqueta }))
+}
 
 function esArticuloInexistente(codigo) {
   if (!codigo || typeof codigo !== 'string') {
@@ -404,6 +415,7 @@ onMounted(async () => {
 
 defineExpose({
   cerrarPasoAtrasNativo,
+  obtenerEtiquetasOrdenadas,
 })
 </script>
 
