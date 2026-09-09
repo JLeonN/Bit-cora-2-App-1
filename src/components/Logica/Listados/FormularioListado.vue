@@ -6,35 +6,41 @@
       @error-carga="emit('error-carga', $event)"
       @base-datos-limpia="manejarBaseLimpia"
     />
-    <div v-else class="fila-buscador-listado">
-      <div class="campo-buscador-listado">
-        <input
-          ref="inputBusquedaRef"
-          v-model="busquedaArticulo"
-          type="text"
-          placeholder="Código o descripción del artículo"
-          :disabled="deshabilitado"
-          @focus="mostrarBuscador = true"
-          @blur="ocultarBuscadorConDemora"
-          @input="normalizarBusqueda"
-          @keyup.enter="resolverBusqueda"
-        />
-        <CodigoMasNombre
-          v-if="mostrarBuscador && busquedaArticulo.length >= 3"
-          :busqueda="busquedaArticulo"
-          @articulo-seleccionado="seleccionarArticulo"
-          @estado-busqueda="estadoBusqueda = $event"
-        />
+    <div v-else class="formulario formulario-ubicacion">
+      <div class="contenedor-principal-formulario">
+        <div class="ubicacion-campo ubicacion-campo-con-buscador">
+          <div class="fila-codigo-camara">
+            <div class="contenedor-input-codigo">
+              <input
+                ref="inputBusquedaRef"
+                v-model="busquedaArticulo"
+                type="text"
+                placeholder="Código o descripción del artículo"
+                :disabled="deshabilitado"
+                @focus="mostrarBuscador = true"
+                @blur="ocultarBuscadorConDemora"
+                @input="normalizarBusqueda"
+                @keyup.enter="resolverBusqueda"
+              />
+              <CodigoMasNombre
+                v-if="mostrarBuscador && busquedaArticulo.length >= 3"
+                :busqueda="busquedaArticulo"
+                @articulo-seleccionado="seleccionarArticulo"
+                @estado-busqueda="estadoBusqueda = $event"
+              />
+            </div>
+            <button
+              type="button"
+              class="camara-ubicacion"
+              title="Escanear con cámara"
+              :disabled="deshabilitado"
+              @click="abrirCamara"
+            >
+              <IconCamera :size="22" :stroke="2" />
+            </button>
+          </div>
+        </div>
       </div>
-      <button
-        type="button"
-        class="boton-camara-listado"
-        title="Escanear con cámara"
-        :disabled="deshabilitado"
-        @click="abrirCamara"
-      >
-        <IconCamera :size="22" />
-      </button>
     </div>
     <CamaraEscaneo
       v-if="mostrarCamara"
@@ -164,37 +170,7 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada })
 .formulario-listado {
   position: relative;
 }
-.fila-buscador-listado {
-  display: flex;
-  gap: 10px;
-}
-.campo-buscador-listado {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-}
-.campo-buscador-listado input {
-  width: 100%;
-  min-height: 48px;
-  padding: 10px 14px;
-  color: var(--color-texto-principal);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 10px;
-  font-size: 1rem;
-}
-.boton-camara-listado {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  min-width: 48px;
-  color: var(--color-superficie);
-  background: var(--color-primario);
-  border: 0;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.boton-camara-listado:disabled {
-  opacity: 0.55;
+.formulario-listado :deep(.formulario-ubicacion) {
+  padding-bottom: 0;
 }
 </style>

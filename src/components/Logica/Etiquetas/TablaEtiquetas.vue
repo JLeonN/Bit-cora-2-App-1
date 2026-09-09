@@ -25,44 +25,16 @@
         </button>
       </div>
     </TarjetaSeccion>
-    <TarjetaSeccion
+    <SelectorOrdenVisual
       v-if="etiquetas.length > 0"
       titulo="Ordenar etiquetas"
-      :expandida-por-defecto="false"
       descripcion-resumen="Elegí cómo ver las etiquetas. Recordamos tu última elección."
-      :ocultar-resumen-al-expandir="true"
-    >
-      <p class="texto-ordenar-completa">Elegí el orden visual de las etiquetas sin cambiar el orden guardado ni el PDF.</p>
-      <div class="grupo-orden-etiquetas" role="group" aria-label="Orden de las etiquetas">
-        <button
-          type="button"
-          class="pastilla-orden-etiquetas"
-          :class="{ 'pastilla-orden-activa': ordenSeleccionado === 'recientes' }"
-          :aria-pressed="ordenSeleccionado === 'recientes'"
-          @click="seleccionarOrden('recientes')"
-        >
-          Más recientes
-        </button>
-        <button
-          type="button"
-          class="pastilla-orden-etiquetas"
-          :class="{ 'pastilla-orden-activa': ordenSeleccionado === 'antiguas' }"
-          :aria-pressed="ordenSeleccionado === 'antiguas'"
-          @click="seleccionarOrden('antiguas')"
-        >
-          Más antiguas
-        </button>
-        <button
-          type="button"
-          class="pastilla-orden-etiquetas"
-          :class="{ 'pastilla-orden-activa': ordenSeleccionado === 'alfabetico' }"
-          :aria-pressed="ordenSeleccionado === 'alfabetico'"
-          @click="seleccionarOrden('alfabetico')"
-        >
-          A-Z
-        </button>
-      </div>
-    </TarjetaSeccion>
+      texto-detalle="Elegí el orden visual de las etiquetas sin cambiar el orden guardado ni el PDF."
+      etiqueta-accesible="Orden de las etiquetas"
+      :opciones="OPCIONES_ORDEN_VISUAL"
+      :model-value="ordenSeleccionado"
+      @update:model-value="seleccionarOrden"
+    />
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
       <article
         v-for="({ etiqueta, indiceOriginal }) in etiquetasOrdenadas"
@@ -132,6 +104,7 @@ import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
 import TarjetaSeccion from '../../Configuracion/Tutoriales/TarjetaSeccion.vue'
+import SelectorOrdenVisual from '../Compartidos/SelectorOrdenVisual.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 import {
@@ -159,6 +132,11 @@ const versionAccionEdicion = ref(0)
 const ordenSeleccionado = ref('recientes')
 const { codigoBarraValido } = usarCodigoBarraEtiqueta()
 const ORDENES_ETIQUETAS_VALIDOS = ['recientes', 'antiguas', 'alfabetico']
+const OPCIONES_ORDEN_VISUAL = [
+  { valor: 'recientes', etiqueta: 'Más recientes' },
+  { valor: 'antiguas', etiqueta: 'Más antiguas' },
+  { valor: 'alfabetico', etiqueta: 'A-Z' },
+]
 
 const manejarModalAbierto = () => emit('modal-abierto')
 const manejarModalCerrado = () => emit('modal-cerrado')
@@ -458,37 +436,6 @@ defineExpose({
   font-size: 0.92rem;
   line-height: 1.4;
 }
-.texto-ordenar-completa {
-  margin: 0 0 0.8rem 0;
-  color: var(--color-texto-secundario);
-  font-size: 0.92rem;
-  line-height: 1.4;
-}
-.grupo-orden-etiquetas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-.pastilla-orden-etiquetas {
-  border: 1px solid var(--color-borde);
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-  border-radius: 999px;
-  padding: 0.55rem 0.9rem;
-  min-height: 40px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-.pastilla-orden-etiquetas:hover {
-  border-color: var(--color-primario);
-}
-.pastilla-orden-activa {
-  border-color: var(--color-primario);
-  background: var(--color-primario);
-  color: var(--color-superficie);
-}
 .tarjeta-resumen-etiquetas {
   margin: 0.35rem 0 0.65rem 0;
   border: 1px solid var(--color-borde);
@@ -614,13 +561,6 @@ defineExpose({
 @media (max-width: 600px) {
   .tarjeta-resumen-etiquetas {
     padding: 0.65rem 0.72rem;
-  }
-  .grupo-orden-etiquetas {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-  .pastilla-orden-etiquetas {
-    width: 100%;
   }
 }
 @media (min-width: 601px) and (max-width: 1024px) {

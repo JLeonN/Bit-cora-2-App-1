@@ -1,14 +1,32 @@
 <template>
   <div class="contenedor-botones" :class="{ 'layout-completo': layoutCompleto }">
-    <button v-if="textoAceptar" class="boton boton-confirmar" @click="$emit('aceptar')">
+    <button
+      v-if="textoAceptar"
+      :type="tipoAceptar"
+      class="boton boton-confirmar"
+      :disabled="aceptarDeshabilitado"
+      @click="$emit('aceptar')"
+    >
       {{ textoAceptar }}
     </button>
 
-    <button v-if="textoCancelar" class="boton boton-cancelar" @click="$emit('cancelar')">
+    <button
+      v-if="textoCancelar"
+      type="button"
+      class="boton boton-cancelar"
+      :disabled="cancelarDeshabilitado"
+      @click="$emit('cancelar')"
+    >
       {{ textoCancelar }}
     </button>
 
-    <button v-if="textoEliminar" class="boton boton-eliminar" @click="$emit('eliminar')">
+    <button
+      v-if="textoEliminar"
+      type="button"
+      class="boton boton-eliminar"
+      :disabled="eliminarDeshabilitado"
+      @click="$emit('eliminar')"
+    >
       {{ textoEliminar }}
     </button>
   </div>
@@ -20,6 +38,23 @@ defineProps({
   textoCancelar: String,
   textoEliminar: String,
   layoutCompleto: {
+    type: Boolean,
+    default: false,
+  },
+  tipoAceptar: {
+    type: String,
+    default: 'submit',
+    validator: (valor) => ['button', 'submit'].includes(valor),
+  },
+  aceptarDeshabilitado: {
+    type: Boolean,
+    default: false,
+  },
+  cancelarDeshabilitado: {
+    type: Boolean,
+    default: false,
+  },
+  eliminarDeshabilitado: {
     type: Boolean,
     default: false,
   },
@@ -57,7 +92,7 @@ defineEmits(['aceptar', 'cancelar', 'eliminar'])
   color: var(--color-texto-principal);
 }
 .boton-confirmar:hover {
-  background-color: #388e3c;
+  filter: brightness(0.9);
 }
 .boton-cancelar {
   background-color: transparent;
@@ -69,9 +104,13 @@ defineEmits(['aceptar', 'cancelar', 'eliminar'])
 }
 .boton-eliminar {
   background-color: var(--color-error);
-  color: white;
+  color: var(--color-texto-principal);
 }
 .boton-eliminar:hover {
-  background-color: #c62828;
+  filter: brightness(0.9);
+}
+.boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 </style>

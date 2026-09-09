@@ -25,27 +25,25 @@
       />
     </div>
     <div class="acciones-gestor-listados">
-      <button type="button" :disabled="ocupado" @click="emit('crear')">
-        <IconPlus :size="18" /> Nuevo
-      </button>
-      <button type="button" :disabled="ocupado || !listadoActivo" @click="emit('duplicar', listadoActivo.id)">
-        <IconCopy :size="18" /> Duplicar
-      </button>
-      <button
-        type="button"
-        class="accion-peligrosa"
-        :disabled="ocupado || !listadoActivo"
-        @click="emit('solicitar-eliminar', listadoActivo)"
-      >
-        <IconTrash :size="18" /> Eliminar
-      </button>
+      <TresBotones
+        texto-aceptar="Nuevo"
+        texto-cancelar="Duplicar"
+        texto-eliminar="Eliminar"
+        tipo-aceptar="button"
+        :aceptar-deshabilitado="ocupado"
+        :cancelar-deshabilitado="ocupado || !listadoActivo"
+        :eliminar-deshabilitado="ocupado || !listadoActivo"
+        @aceptar="emit('crear')"
+        @cancelar="emit('duplicar', listadoActivo.id)"
+        @eliminar="emit('solicitar-eliminar', listadoActivo)"
+      />
     </div>
   </section>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
-import { IconCopy, IconPlus, IconTrash } from '@tabler/icons-vue'
+import TresBotones from '../../Botones/TresBotones.vue'
 
 const props = defineProps({
   listados: { type: Array, default: () => [] },
@@ -80,10 +78,6 @@ function confirmarNombre() {
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) auto;
   gap: 12px;
   align-items: end;
-  padding: 16px;
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 12px;
 }
 .selector-listado,.edicion-nombre-listado {
   display: flex;
@@ -105,30 +99,10 @@ select,input {
   border-radius: 8px;
 }
 .acciones-gestor-listados {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  min-width: 280px;
 }
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 42px;
-  padding: 8px 12px;
-  color: var(--color-primario);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-primario);
-  border-radius: 8px;
-  cursor: pointer;
-}
-button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-.accion-peligrosa {
-  color: var(--color-texto-principal);
-  border-color: var(--color-borde);
+.acciones-gestor-listados :deep(.contenedor-botones) {
+  gap: 0.5rem;
 }
 @media (max-width: 850px) {
   .gestor-listados {
@@ -144,9 +118,14 @@ button:disabled {
   }
   .acciones-gestor-listados {
     grid-column: auto;
+    min-width: 0;
   }
-  .acciones-gestor-listados button {
-    flex: 1;
+  .acciones-gestor-listados :deep(.contenedor-botones) {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .acciones-gestor-listados :deep(.boton) {
+    padding: 0.5rem;
   }
 }
 </style>

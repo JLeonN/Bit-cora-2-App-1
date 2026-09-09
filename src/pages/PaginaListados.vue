@@ -1,41 +1,51 @@
 <template>
-  <main class="pagina-listados">
-    <header class="encabezado-listados">
-      <div>
-        <h2>Listados</h2>
-        <p>Creá, guardá y compartí listas de artículos.</p>
-      </div>
-      <span v-if="listadoActivo" class="contador-listado">
-        {{ listadoActivo.articulos.length }} artículos
-      </span>
-    </header>
+  <div class="contenedor-tabla pagina-listados">
+    <h2 class="titulo-tabla">Listados</h2>
 
-    <GestorListados
-      :listados="listados"
-      :listado-activo="listadoActivo"
-      :ocupado="ocupado"
-      @crear="crearNuevoListado"
-      @abrir="abrirListado"
-      @renombrar="renombrarListadoActivo"
-      @duplicar="duplicarListadoActivo"
-      @solicitar-eliminar="solicitarEliminarListado"
-    />
+    <TarjetaSeccion
+      titulo="Administrar listados"
+      :expandida-por-defecto="true"
+      descripcion-resumen="Creá, abrí, renombrá, duplicá o eliminá tus listados guardados."
+      :ocultar-resumen-al-expandir="true"
+    >
+      <GestorListados
+        :listados="listados"
+        :listado-activo="listadoActivo"
+        :ocupado="ocupado"
+        @crear="crearNuevoListado"
+        @abrir="abrirListado"
+        @renombrar="renombrarListadoActivo"
+        @duplicar="duplicarListadoActivo"
+        @solicitar-eliminar="solicitarEliminarListado"
+      />
+    </TarjetaSeccion>
 
     <template v-if="listadoActivo">
-      <FormularioListado
-        ref="formularioListadoRef"
-        :deshabilitado="ocupado"
-        @articulo-seleccionado="agregarArticulo"
-        @base-datos-cargada="manejarBaseCargada"
-        @base-datos-limpia="baseDatosCargada = false"
-        @error-carga="manejarErrorCarga"
-        @modal-abierto="modalActivo = true"
-        @modal-cerrado="modalActivo = false"
-      />
+      <TarjetaSeccion
+        titulo="Agregar artículos"
+        :expandida-por-defecto="true"
+        descripcion-resumen="Buscá por código o descripción, o usá la cámara para escanear."
+        :ocultar-resumen-al-expandir="true"
+      >
+        <FormularioListado
+          ref="formularioListadoRef"
+          :deshabilitado="ocupado"
+          @articulo-seleccionado="agregarArticulo"
+          @base-datos-cargada="manejarBaseCargada"
+          @base-datos-limpia="baseDatosCargada = false"
+          @error-carga="manejarErrorCarga"
+          @modal-abierto="modalActivo = true"
+          @modal-cerrado="modalActivo = false"
+        />
+      </TarjetaSeccion>
 
-      <section class="configuracion-listado">
+      <TarjetaSeccion
+        titulo="Columnas del listado"
+        :expandida-por-defecto="false"
+        descripcion-resumen="Código y descripción siempre se muestran. Elegí si querés ver stock y ubicación."
+        :ocultar-resumen-al-expandir="true"
+      >
         <div class="interruptores-listado">
-          <span>Columnas visibles</span>
           <q-toggle
             :model-value="listadoActivo.configuracion.mostrarStock"
             label="Stock"
@@ -49,41 +59,18 @@
             @update:model-value="actualizarConfiguracion('mostrarUbicacion', $event)"
           />
         </div>
-      </section>
-
-      <TarjetaSeccion
-        titulo="Ordenar listado"
-        :icono="IconCalendarTime"
-        :expandida-por-defecto="false"
-        descripcion-resumen="Elegí cómo ver y exportar los artículos."
-      >
-        <div class="opciones-orden-listado">
-          <button
-            type="button"
-            :aria-pressed="esOrdenActivo('fechaIngreso', 'descendente')"
-            :class="{ 'orden-activo': esOrdenActivo('fechaIngreso', 'descendente') }"
-            @click="actualizarOrden('fechaIngreso', 'descendente')"
-          >
-            <IconArrowDown :size="18" /> Más recientes
-          </button>
-          <button
-            type="button"
-            :aria-pressed="esOrdenActivo('fechaIngreso', 'ascendente')"
-            :class="{ 'orden-activo': esOrdenActivo('fechaIngreso', 'ascendente') }"
-            @click="actualizarOrden('fechaIngreso', 'ascendente')"
-          >
-            <IconArrowUp :size="18" /> Más antiguas
-          </button>
-          <button
-            type="button"
-            :aria-pressed="esOrdenActivo('alfabetico', 'ascendente')"
-            :class="{ 'orden-activo': esOrdenActivo('alfabetico', 'ascendente') }"
-            @click="actualizarOrden('alfabetico', 'ascendente')"
-          >
-            <IconSortAZ :size="18" /> A–Z
-          </button>
-        </div>
       </TarjetaSeccion>
+
+      <SelectorOrdenVisual
+        v-if="articulosOrdenados.length > 0"
+        titulo="Ordenar listado"
+        descripcion-resumen="Elegí cómo ver y exportar los artículos."
+        texto-detalle="Elegí el orden visual del listado. El Excel se exportará respetando este orden."
+        etiqueta-accesible="Orden de los artículos del listado"
+        :opciones="OPCIONES_ORDEN_VISUAL"
+        :model-value="ordenSeleccionadoListado"
+        @update:model-value="actualizarOrden"
+      />
 
       <ResumenCambiosListado
         :cantidad-stock="cambiosStockPendientes.length"
@@ -94,12 +81,24 @@
         @enviar-ubicaciones="enviarCambiosUbicaciones"
       />
 
-      <div v-if="articulosOrdenados.length" class="acciones-generales-listado">
-        <button type="button" :disabled="!baseDatosCargada || ocupado" @click="enviarTodosAEtiquetas">
-          <IconTag :size="19" /> Enviar todos a Etiquetas
+      <div v-if="articulosOrdenados.length" class="acciones-generales-tabla">
+        <button
+          type="button"
+          class="boton-accion-general boton-enviar-etiquetas"
+          :disabled="!baseDatosCargada || ocupado"
+          @click="enviarTodosAEtiquetas"
+        >
+          <IconTag :size="20" />
+          <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
         </button>
-        <button type="button" class="accion-peligrosa" :disabled="ocupado" @click="solicitarEliminarTodos">
-          <IconTrash :size="19" /> Eliminar todos los artículos
+        <button
+          type="button"
+          class="boton-accion-general boton-eliminar-todos"
+          :disabled="ocupado"
+          @click="solicitarEliminarTodos"
+        >
+          <IconTrash :size="20" />
+          <span class="texto-boton-accion">Eliminar todos</span>
         </button>
       </div>
 
@@ -132,28 +131,20 @@
       @modal-abierto="modalActivo = true"
       @modal-cerrado="modalActivo = false"
     />
-  </main>
+  </div>
 </template>
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { Notify } from 'quasar'
-import {
-  IconArrowDown,
-  IconArrowUp,
-  IconCalendarTime,
-  IconDownload,
-  IconShare,
-  IconSortAZ,
-  IconTag,
-  IconTrash,
-} from '@tabler/icons-vue'
+import { IconDownload, IconShare, IconTag, IconTrash } from '@tabler/icons-vue'
 import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
 import ResumenCambiosListado from '../components/Logica/Listados/ResumenCambiosListado.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
+import SelectorOrdenVisual from '../components/Logica/Compartidos/SelectorOrdenVisual.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import {
   crearListado,
@@ -199,6 +190,11 @@ const codigoResaltado = ref('')
 const formularioListadoRef = ref(null)
 const tablaListadosRef = ref(null)
 const { estaResaltado, activarResaltado } = usarResaltadoAtencion(2400)
+const OPCIONES_ORDEN_VISUAL = [
+  { valor: 'recientes', etiqueta: 'Más recientes' },
+  { valor: 'antiguas', etiqueta: 'Más antiguas' },
+  { valor: 'alfabetico', etiqueta: 'A-Z' },
+]
 
 const ocupado = computed(
   () => administrando.value || exportando.value || enviandoStock.value || enviandoUbicaciones.value,
@@ -215,6 +211,10 @@ const cambiosUbicacionPendientes = computed(() =>
 const codigoResaltadoVisible = computed(() =>
   estaResaltado.value ? codigoResaltado.value : '',
 )
+const ordenSeleccionadoListado = computed(() => {
+  if (listadoActivo.value?.orden.criterio === 'alfabetico') return 'alfabetico'
+  return listadoActivo.value?.orden.direccion === 'ascendente' ? 'antiguas' : 'recientes'
+})
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
@@ -417,15 +417,14 @@ async function actualizarConfiguracion(campo, valor) {
   await persistirActivo()
 }
 
-function esOrdenActivo(criterio, direccion) {
-  return (
-    listadoActivo.value?.orden.criterio === criterio &&
-    listadoActivo.value?.orden.direccion === direccion
-  )
-}
-
-async function actualizarOrden(criterio, direccion) {
-  listadoActivo.value.orden = { criterio, direccion }
+async function actualizarOrden(ordenSeleccionado) {
+  const ordenes = {
+    recientes: { criterio: 'fechaIngreso', direccion: 'descendente' },
+    antiguas: { criterio: 'fechaIngreso', direccion: 'ascendente' },
+    alfabetico: { criterio: 'alfabetico', direccion: 'ascendente' },
+  }
+  if (!ordenes[ordenSeleccionado]) return
+  listadoActivo.value.orden = ordenes[ordenSeleccionado]
   await persistirActivo()
 }
 
@@ -585,99 +584,24 @@ onUnmounted(() => {
 
 <style scoped>
 .pagina-listados {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: min(1180px, calc(100% - 24px));
-  margin: 0 auto;
-  padding: 20px 0 var(--espacio-inferior-contenido, calc(84px + env(safe-area-inset-bottom, 0px)));
-}
-.encabezado-listados {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.encabezado-listados h2 {
-  margin: 0;
-  color: var(--color-texto-principal);
-}
-.encabezado-listados p {
-  margin: 4px 0 0;
-  color: var(--color-texto-secundario);
-}
-.contador-listado {
-  flex-shrink: 0;
-  padding: 7px 10px;
-  color: var(--color-primario);
-  background: var(--color-primario-claro);
-  border-radius: 999px;
-  font-weight: 600;
-}
-.configuracion-listado {
-  padding: 12px 16px;
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 12px;
+  padding-bottom: var(--espacio-inferior-contenido, 120px);
 }
 .interruptores-listado {
   display: flex;
   align-items: center;
-  gap: 14px;
-  color: var(--color-texto-principal);
-}
-.interruptores-listado > span {
-  margin-right: auto;
-  font-weight: 600;
-}
-.opciones-orden-listado,.acciones-generales-listado {
-  display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-.opciones-orden-listado button,.acciones-generales-listado button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 42px;
-  padding: 8px 13px;
-  color: var(--color-primario);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
-  cursor: pointer;
-}
-.opciones-orden-listado button.orden-activo {
-  color: var(--color-superficie);
-  background: var(--color-primario);
-  border-color: var(--color-primario);
-}
-.acciones-generales-listado {
-  justify-content: flex-end;
-}
-.acciones-generales-listado button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-.acciones-generales-listado .accion-peligrosa {
+  gap: 1rem;
   color: var(--color-texto-principal);
+}
+.acciones-generales-tabla button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 @media (max-width: 600px) {
-  .pagina-listados {
-    width: min(100% - 16px, 1180px);
-    padding-top: 12px;
-  }
-  .encabezado-listados {
-    align-items: flex-start;
-  }
   .interruptores-listado {
     align-items: flex-start;
     flex-direction: column;
-    gap: 4px;
-  }
-  .opciones-orden-listado button,.acciones-generales-listado button {
-    flex: 1 1 150px;
+    gap: 0.25rem;
   }
 }
 </style>

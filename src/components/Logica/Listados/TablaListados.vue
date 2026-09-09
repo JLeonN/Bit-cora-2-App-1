@@ -60,22 +60,24 @@
             @keyup.enter="$event.target.blur()"
           />
         </label>
-        <div class="acciones-fila-listado">
+        <div class="acciones-fila-listado acciones-ubicacion">
           <button
             type="button"
+            class="boton-icono-listado"
             title="Enviar a Etiquetas"
             aria-label="Enviar a Etiquetas"
             @click="emit('enviar-etiqueta', articulo)"
           >
-            <IconTag :size="19" />
+            <IconTag class="icono-ubicacion icono-etiqueta" :size="20" :stroke="2" />
           </button>
           <button
             type="button"
+            class="boton-icono-listado"
             title="Eliminar artículo"
             aria-label="Eliminar artículo"
             @click="emit('eliminar', articulo)"
           >
-            <IconTrash :size="19" />
+            <IconTrash class="icono-ubicacion icono-borrar" :size="20" :stroke="2" />
           </button>
         </div>
       </article>
@@ -193,9 +195,12 @@ defineExpose({ enfocarArticulo })
   border-bottom: 0;
 }
 .encabezado-listado {
-  color: var(--color-texto-secundario);
-  background: var(--color-primario-claro);
+  color: var(--color-primario-claro);
+  background: transparent;
   font-size: 0.82rem;
+}
+.encabezado-listado strong {
+  color: var(--color-primario-claro);
 }
 .celda-codigo {
   overflow-wrap: anywhere;
@@ -224,20 +229,15 @@ defineExpose({ enfocarArticulo })
   display: none;
 }
 .acciones-fila-listado {
-  display: flex;
   justify-content: flex-end;
-  gap: 6px;
 }
-.acciones-fila-listado button {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
+.boton-icono-listado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
-  color: var(--color-primario);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
+  background: transparent;
+  border: 0;
   cursor: pointer;
 }
 .resaltado-atencion {
