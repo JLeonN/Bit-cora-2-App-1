@@ -9,6 +9,11 @@
     <div v-else class="formulario formulario-ubicacion">
       <div class="contenedor-principal-formulario">
         <div class="ubicacion-campo ubicacion-campo-con-buscador">
+          <ControlAutoseleccionArticulo
+            :model-value="autoseleccionArticuloHabilitada"
+            texto-ayuda="Cuando está activada, si la búsqueda encuentra un solo artículo, se agrega automáticamente al listado. Si está desactivada, podrás elegirlo manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras tipo pistola."
+            @update:model-value="cambiarAutoseleccionArticulo"
+          />
           <div class="fila-codigo-camara">
             <div class="contenedor-input-codigo">
               <input
@@ -21,13 +26,14 @@
                 @focus="mostrarBuscador = true"
                 @blur="ocultarBuscadorConDemora"
                 @input="normalizarBusqueda"
+                @keydown="manejarDobleEspacio"
                 @keyup.enter="resolverBusqueda"
               />
               <CodigoMasNombre
                 v-if="mostrarBuscador && busquedaArticulo.length >= 3"
                 :busqueda="busquedaArticulo"
                 @articulo-seleccionado="seleccionarArticulo"
-                @estado-busqueda="estadoBusqueda = $event"
+                @estado-busqueda="manejarEstadoBuscador"
               />
             </div>
             <button
@@ -55,17 +61,23 @@
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { IconCamera } from '@tabler/icons-vue'
 import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
+import ControlAutoseleccionArticulo from '../Compartidos/ControlAutoseleccionArticulo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import {
-  normalizarCodigoBusqueda,
-  obtenerArticuloPorCodigoEscaneado,
-} from '../Compartidos/CodigoEscaner.js'
+  guardarAutoseleccionArticulo,
+  obtenerAutoseleccionArticulo,
+} from '../Ubicaciones/recordarUltimaTipografia.js'
+import { obtenerArticuloPorCodigoEscaneado } from '../Compartidos/CodigoEscaner.js'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
+import {
+  manejarDobleEspacioInput,
+  normalizarInputArticulo,
+} from '../Compartidos/InputArticuloInteligente.js'
 
 defineProps({ deshabilitado: { type: Boolean, default: false } })
 const emit = defineEmits([
@@ -82,6 +94,8 @@ const mostrarCamara = ref(false)
 const estadoBusqueda = ref({ articuloUnico: null })
 const baseDatosCargada = ref(false)
 const inputBusquedaRef = ref(null)
+const autoseleccionArticuloHabilitada = ref(false)
+const ultimoEspacioTiempo = ref(0)
 
 function manejarBaseCargada(datos) {
   baseDatosCargada.value = true
@@ -101,13 +115,38 @@ function establecerBaseCargada(cargada) {
 function normalizarBusqueda(evento) {
   normalizarInputPreservandoCursor({
     evento,
-    normalizarValor: normalizarCodigoBusqueda,
+    normalizarValor: normalizarInputArticulo,
     asignarValor: (valor) => {
       busquedaArticulo.value = valor
     },
     referenciaInput: inputBusquedaRef,
   })
   mostrarBuscador.value = true
+}
+
+function manejarDobleEspacio(evento) {
+  ultimoEspacioTiempo.value = manejarDobleEspacioInput({
+    evento,
+    valorActual: busquedaArticulo.value,
+    asignarValor: (valor) => {
+      busquedaArticulo.value = valor
+    },
+    referenciaInput: inputBusquedaRef,
+    ultimoEspacioTiempo: ultimoEspacioTiempo.value,
+  })
+}
+
+function manejarEstadoBuscador(estado) {
+  estadoBusqueda.value = estado || { articuloUnico: null }
+  if (autoseleccionArticuloHabilitada.value && estado?.articuloUnico) {
+    seleccionarArticulo(estado.articuloUnico)
+  }
+}
+
+async function cambiarAutoseleccionArticulo(habilitada) {
+  autoseleccionArticuloHabilitada.value = Boolean(habilitada)
+  await guardarAutoseleccionArticulo(autoseleccionArticuloHabilitada.value)
+  if (autoseleccionArticuloHabilitada.value) manejarEstadoBuscador(estadoBusqueda.value)
 }
 
 function resolverBusqueda(valor = busquedaArticulo.value) {
@@ -163,6 +202,10 @@ function cerrarInteraccion() {
   }
   return false
 }
+
+onMounted(async () => {
+  autoseleccionArticuloHabilitada.value = await obtenerAutoseleccionArticulo()
+})
 
 defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada })
 </script>

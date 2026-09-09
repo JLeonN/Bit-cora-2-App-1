@@ -3,34 +3,11 @@
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
-        <div class="control-autoseleccion-articulo">
-          <q-toggle
-            v-model="autoseleccionArticuloHabilitada"
-            color="primary"
-            dense
-            label="Autoselección al encontrar un único artículo"
-            @update:model-value="cambiarAutoseleccionArticulo"
-          />
-          <button
-            type="button"
-            class="boton-info-autoseleccion"
-            :title="mostrarAyudaAutoseleccion ? 'Ocultar explicación' : 'Ver cómo funciona la autoselección'"
-            :aria-label="mostrarAyudaAutoseleccion ? 'Ocultar explicación' : 'Ver cómo funciona la autoselección'"
-            :aria-expanded="mostrarAyudaAutoseleccion"
-            @click="mostrarAyudaAutoseleccion = !mostrarAyudaAutoseleccion"
-          >
-            <IconInfoCircle :size="18" :stroke="2" />
-          </button>
-        </div>
-        <div v-if="mostrarAyudaAutoseleccion" class="ayuda-autoseleccion" role="note">
-          <p class="texto-ayuda-autoseleccion">
-            Cuando está activada, si la búsqueda encuentra un solo artículo, se selecciona
-            automáticamente y muestra su información. Si está desactivada, podrás elegirlo
-            manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras
-            tipo pistola: suelen enviar Enter al terminar la lectura y dejan el artículo listo
-            para agregar.
-          </p>
-        </div>
+        <ControlAutoseleccionArticulo
+          :model-value="autoseleccionArticuloHabilitada"
+          texto-ayuda="Cuando está activada, si la búsqueda encuentra un solo artículo, se selecciona automáticamente y muestra su información. Si está desactivada, podrás elegirlo manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras tipo pistola: suelen enviar Enter al terminar la lectura y dejan el artículo listo para agregar."
+          @update:model-value="cambiarAutoseleccionArticulo"
+        />
         <div class="fila-codigo-camara">
           <div class="contenedor-input-codigo">
             <input
@@ -63,7 +40,12 @@
               @estado-busqueda="manejarEstadoBuscador"
             />
           </div>
-          <button type="button" class="camara-ubicacion" title="Escanear ubicaciones" @click="abrirCamara">
+          <button
+            type="button"
+            class="camara-ubicacion"
+            title="Escanear ubicaciones"
+            @click="abrirCamara"
+          >
             <IconCamera :stroke="2" />
           </button>
         </div>
@@ -98,7 +80,9 @@
         <p class="linea-info-articulo linea-historial">
           <span class="etiqueta-info-articulo">Historial:</span>
           <span
-            v-for="(ubicacionHistorial, indiceHistorial) in articuloSeleccionadoInfo.historialVisual"
+            v-for="(
+              ubicacionHistorial, indiceHistorial
+            ) in articuloSeleccionadoInfo.historialVisual"
             :key="'historial-' + indiceHistorial"
             class="chip-historial-ubicacion"
             :class="{
@@ -162,10 +146,15 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
-import { IconCamera, IconTrash, IconCopy, IconInfoCircle } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import CodigoMasNombre from './CodigoMasNombre.vue'
+import ControlAutoseleccionArticulo from '../Compartidos/ControlAutoseleccionArticulo.vue'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
+import {
+  manejarDobleEspacioInput,
+  normalizarInputArticulo,
+} from '../Compartidos/InputArticuloInteligente.js'
 import {
   guardarUltimaUbicacion,
   obtenerUltimaUbicacion,
@@ -204,7 +193,6 @@ const mantenerBuscadorVisible = ref(false)
 const autoseleccionandoCodigo = ref(false)
 const textoCopiadoCodigo = ref('')
 const autoseleccionArticuloHabilitada = ref(false)
-const mostrarAyudaAutoseleccion = ref(false)
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -224,60 +212,17 @@ function restablecerPlaceholderUbicacion() {
 }
 
 // --- FUNCIÓN PARA NORMALIZAR CÓDIGO ---
-function normalizarCodigo(codigo) {
-  if (!codigo) return ''
-
-  // 1. Convertir a mayúsculas
-  let codigoLimpio = codigo.toUpperCase()
-
-  // 2. Reemplazar cualquier carácter que NO sea letra, número, Ñ, espacio o guión por un guión
-  codigoLimpio = codigoLimpio.replace(/[^A-Z0-9Ñ -]/g, '-')
-
-  // 3. Evitar guiones múltiples seguidos
-  codigoLimpio = codigoLimpio.replace(/-+/g, '-')
-
-  // 4. Evitar espacios múltiples seguidos
-  codigoLimpio = codigoLimpio.replace(/\s+/g, ' ')
-
-  return codigoLimpio
-}
-
 // --- FUNCIÓN PARA MANEJAR DOBLE ESPACIO ---
 function manejarDobleEspacio(evento) {
-  // Solo actuar si es la tecla espacio
-  if (evento.key !== ' ') return
-
-  const tiempoActual = Date.now()
-  const diferenciaTiempo = tiempoActual - ultimoEspacioTiempo.value
-
-  // Si presionó espacio hace menos de 300ms (doble espacio)
-  if (diferenciaTiempo < 300 && diferenciaTiempo > 0) {
-    evento.preventDefault()
-
-    // Obtener posición actual del cursor
-    const posicionCursor = evento.target.selectionStart
-
-    // Obtener el texto actual
-    const textoActual = nuevoCodigo.value
-
-    // Remover el último espacio y agregar guión
-    const textoAntes = textoActual.substring(0, posicionCursor - 1)
-    const textoDespues = textoActual.substring(posicionCursor)
-    nuevoCodigo.value = textoAntes + '-' + textoDespues
-
-    // Mantener cursor en posición correcta
-    nextTick(() => {
-      if (inputCodigo.value) {
-        inputCodigo.value.setSelectionRange(posicionCursor, posicionCursor)
-      }
-    })
-
-    // Resetear el tiempo
-    ultimoEspacioTiempo.value = 0
-  } else {
-    // Guardar el tiempo del espacio actual
-    ultimoEspacioTiempo.value = tiempoActual
-  }
+  ultimoEspacioTiempo.value = manejarDobleEspacioInput({
+    evento,
+    valorActual: nuevoCodigo.value,
+    asignarValor: (valor) => {
+      nuevoCodigo.value = valor
+    },
+    referenciaInput: inputCodigo,
+    ultimoEspacioTiempo: ultimoEspacioTiempo.value,
+  })
 }
 
 // --- FUNCIÓN PARA LIMPIAR UBICACIÓN RECORDADA ---
@@ -291,7 +236,7 @@ async function limpiarUbicacionRecordada() {
 function manejarInputCodigo(evento) {
   normalizarInputPreservandoCursor({
     evento,
-    normalizarValor: normalizarCodigo,
+    normalizarValor: normalizarInputArticulo,
     asignarValor: (valor) => {
       nuevoCodigo.value = valor
     },
@@ -364,14 +309,18 @@ function manejarDesenfoqueUbicacion() {
 }
 
 function construirInfoArticulo(articulo) {
-  const historial = Array.isArray(articulo.historialUbicaciones) ? articulo.historialUbicaciones : []
+  const historial = Array.isArray(articulo.historialUbicaciones)
+    ? articulo.historialUbicaciones
+    : []
   return {
     nombre: articulo.nombre,
     codigo: articulo.codigo,
     ubicacionOriginal: articulo.ubicacionAntigua || '',
     stockExcel: articulo.stock || '',
     historialVisual:
-      historial.length > 0 ? [...historial].reverse() : [articulo.ubicacionAntigua || 'SIN UBICACION'],
+      historial.length > 0
+        ? [...historial].reverse()
+        : [articulo.ubicacionAntigua || 'SIN UBICACION'],
   }
 }
 
@@ -596,4 +545,3 @@ defineExpose({
   cerrarPasoAtrasNativo,
 })
 </script>
-
