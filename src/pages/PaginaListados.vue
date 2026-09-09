@@ -57,14 +57,10 @@
         </div>
       </section>
 
-      <SelectorOrdenVisual
+      <SelectorOrdenamiento
         v-if="articulosOrdenados.length > 0"
-        titulo="Ordenar listado"
-        descripcion-resumen="Elegí cómo ver y exportar los artículos."
-        texto-detalle="Elegí el orden visual del listado. El Excel se exportará respetando este orden."
-        etiqueta-accesible="Orden de los artículos del listado"
-        :opciones="OPCIONES_ORDEN_VISUAL"
-        :model-value="ordenSeleccionadoListado"
+        :model-value="listadoActivo.orden"
+        :deshabilitado="ocupado"
         @update:model-value="actualizarOrden"
       />
 
@@ -162,7 +158,7 @@ import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
-import SelectorOrdenVisual from '../components/Logica/Compartidos/SelectorOrdenVisual.vue'
+import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import {
   crearListado,
@@ -181,7 +177,7 @@ import {
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { normalizarCodigoBusqueda } from '../components/Logica/Compartidos/CodigoEscaner.js'
 import { usarResaltadoAtencion } from '../components/Logica/Compartidos/UsoResaltadoAtencion.js'
-import { ordenarArticulosListado } from '../components/Logica/Listados/OrdenarArticulosListado.js'
+import { normalizarOrden, ordenarColeccion } from '../components/Logica/Compartidos/OrdenarColeccion.js'
 import {
   enviarArticuloAEtiquetas as enviarArticuloAEtiquetasServicio,
   enviarTodosAEtiquetas as enviarTodosAEtiquetasServicio,
@@ -206,25 +202,19 @@ const codigoResaltado = ref('')
 const formularioListadoRef = ref(null)
 const tablaListadosRef = ref(null)
 const { estaResaltado, activarResaltado } = usarResaltadoAtencion(2400)
-const OPCIONES_ORDEN_VISUAL = [
-  { valor: 'recientes', etiqueta: 'Más recientes' },
-  { valor: 'antiguas', etiqueta: 'Más antiguas' },
-  { valor: 'alfabetico', etiqueta: 'A-Z' },
-]
-
 const ocupado = computed(
   () => administrando.value || exportando.value || enviandoStock.value || enviandoUbicaciones.value,
 )
 const articulosOrdenados = computed(() =>
-  ordenarArticulosListado(listadoActivo.value?.articulos || [], listadoActivo.value?.orden),
+  ordenarColeccion(listadoActivo.value?.articulos || [], listadoActivo.value?.orden, {
+    obtenerFecha: (articulo) => articulo.fechaIngreso,
+    obtenerTexto: (articulo) => articulo.descripcion,
+    obtenerClave: (articulo) => articulo.codigo,
+  }),
 )
 const codigoResaltadoVisible = computed(() =>
   estaResaltado.value ? codigoResaltado.value : '',
 )
-const ordenSeleccionadoListado = computed(() => {
-  if (listadoActivo.value?.orden.criterio === 'alfabetico') return 'alfabetico'
-  return listadoActivo.value?.orden.direccion === 'ascendente' ? 'antiguas' : 'recientes'
-})
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
@@ -422,14 +412,9 @@ async function actualizarConfiguracion(campo, valor) {
   await persistirActivo()
 }
 
-async function actualizarOrden(ordenSeleccionado) {
-  const ordenes = {
-    recientes: { criterio: 'fechaIngreso', direccion: 'descendente' },
-    antiguas: { criterio: 'fechaIngreso', direccion: 'ascendente' },
-    alfabetico: { criterio: 'alfabetico', direccion: 'ascendente' },
-  }
-  if (!ordenes[ordenSeleccionado]) return
-  listadoActivo.value.orden = ordenes[ordenSeleccionado]
+async function actualizarOrden(nuevoOrden) {
+  if (!listadoActivo.value) return
+  listadoActivo.value.orden = normalizarOrden(nuevoOrden)
   await persistirActivo()
 }
 

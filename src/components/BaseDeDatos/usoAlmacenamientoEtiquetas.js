@@ -1,5 +1,6 @@
 // usoAlmacenamientoEtiquetas.js
 import { Preferences } from '@capacitor/preferences'
+import { normalizarOrden } from '../Logica/Compartidos/OrdenarColeccion.js'
 
 const CLAVE_ETIQUETAS = 'historial_etiquetas'
 const CLAVE_PREFERENCIA_ORDEN_ETIQUETAS = 'preferencia_orden_etiquetas'
@@ -39,7 +40,7 @@ export async function guardarPreferenciaOrdenEtiquetas(orden) {
   try {
     await Preferences.set({
       key: CLAVE_PREFERENCIA_ORDEN_ETIQUETAS,
-      value: orden,
+      value: JSON.stringify(normalizarOrden(orden)),
     })
   } catch (error) {
     console.error('Error al guardar la preferencia de orden de etiquetas:', error)
@@ -49,9 +50,19 @@ export async function guardarPreferenciaOrdenEtiquetas(orden) {
 export async function obtenerPreferenciaOrdenEtiquetas() {
   try {
     const { value } = await Preferences.get({ key: CLAVE_PREFERENCIA_ORDEN_ETIQUETAS })
-    return value || null
+    if (!value) return normalizarOrden()
+    try {
+      return normalizarOrden(JSON.parse(value))
+    } catch {
+      const ordenesHistoricos = {
+        recientes: { criterio: 'fechaIngreso', direccion: 'descendente' },
+        antiguas: { criterio: 'fechaIngreso', direccion: 'ascendente' },
+        alfabetico: { criterio: 'alfabetico', direccion: 'ascendente' },
+      }
+      return normalizarOrden(ordenesHistoricos[value])
+    }
   } catch (error) {
     console.error('Error al leer la preferencia de orden de etiquetas:', error)
-    return null
+    return normalizarOrden()
   }
 }

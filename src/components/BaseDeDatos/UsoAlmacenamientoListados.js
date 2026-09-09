@@ -1,5 +1,6 @@
 import { Preferences } from '@capacitor/preferences'
 import { normalizarCodigoBusqueda } from '../Logica/Compartidos/CodigoEscaner.js'
+import { normalizarOrden } from '../Logica/Compartidos/OrdenarColeccion.js'
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
@@ -73,8 +74,6 @@ function normalizarListado(listado, { actualizar = false } = {}) {
   const ahora = Date.now()
   const creadoEn = normalizarFecha(listado?.creadoEn, ahora)
   const nombrePersonalizado = extraerNombrePersonalizado(listado)
-  const criterio = listado?.orden?.criterio === 'alfabetico' ? 'alfabetico' : 'fechaIngreso'
-  const direccion = listado?.orden?.direccion === 'ascendente' ? 'ascendente' : 'descendente'
   return {
     id: normalizarTexto(listado?.id) || crypto.randomUUID(),
     nombre: nombrePersonalizado || 'Listado sin nombre',
@@ -86,7 +85,7 @@ function normalizarListado(listado, { actualizar = false } = {}) {
       mostrarStock: Boolean(listado?.configuracion?.mostrarStock),
       mostrarUbicacion: Boolean(listado?.configuracion?.mostrarUbicacion),
     },
-    orden: { criterio, direccion },
+    orden: normalizarOrden(listado?.orden),
     articulos: normalizarArticulos(listado?.articulos),
   }
 }

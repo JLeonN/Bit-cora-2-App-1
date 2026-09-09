@@ -25,15 +25,10 @@
         </button>
       </div>
     </TarjetaSeccion>
-    <SelectorOrdenVisual
+    <SelectorOrdenamiento
       v-if="etiquetas.length > 0"
-      titulo="Ordenar etiquetas"
-      descripcion-resumen="Elegí cómo ver las etiquetas. Recordamos tu última elección."
-      texto-detalle="Elegí el orden visual de las etiquetas sin cambiar el orden guardado ni el PDF."
-      etiqueta-accesible="Orden de las etiquetas"
-      :opciones="OPCIONES_ORDEN_VISUAL"
       :model-value="ordenSeleccionado"
-      @update:model-value="seleccionarOrden"
+      @update:model-value="actualizarOrden"
     />
     <div v-if="etiquetas.length > 0" class="grilla-tarjetas-etiquetas">
       <article
@@ -104,7 +99,8 @@ import ModalEliminar from '../../Modales/ModalEliminar.vue'
 import TarjetaPreviewEtiquetaMovil from './TarjetaPreviewEtiquetaMovil.vue'
 import ControlesFilaEtiqueta from './ControlesFilaEtiqueta.vue'
 import TarjetaSeccion from '../../Configuracion/Tutoriales/TarjetaSeccion.vue'
-import SelectorOrdenVisual from '../Compartidos/SelectorOrdenVisual.vue'
+import SelectorOrdenamiento from '../Compartidos/SelectorOrdenamiento.vue'
+import { normalizarOrden, ordenarColeccion } from '../Compartidos/OrdenarColeccion.js'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
 import {
@@ -129,23 +125,16 @@ const informacionExpandida = ref(false)
 const borradoresEdicion = ref({})
 const indiceAccionEdicion = ref(-1)
 const versionAccionEdicion = ref(0)
-const ordenSeleccionado = ref('recientes')
+const ordenSeleccionado = ref(normalizarOrden())
 const { codigoBarraValido } = usarCodigoBarraEtiqueta()
-const ORDENES_ETIQUETAS_VALIDOS = ['recientes', 'antiguas', 'alfabetico']
-const OPCIONES_ORDEN_VISUAL = [
-  { valor: 'recientes', etiqueta: 'Más recientes' },
-  { valor: 'antiguas', etiqueta: 'Más antiguas' },
-  { valor: 'alfabetico', etiqueta: 'A-Z' },
-]
 
 const manejarModalAbierto = () => emit('modal-abierto')
 const manejarModalCerrado = () => emit('modal-cerrado')
 const totalCopias = computed(() => props.etiquetas.reduce((total, etiqueta) => total + (etiqueta.cantidad || 1), 0))
 
-async function seleccionarOrden(orden) {
-  if (!ORDENES_ETIQUETAS_VALIDOS.includes(orden) || orden === ordenSeleccionado.value) return
-  ordenSeleccionado.value = orden
-  await guardarPreferenciaOrdenEtiquetas(orden)
+async function actualizarOrden(nuevoOrden) {
+  ordenSeleccionado.value = normalizarOrden(nuevoOrden)
+  await guardarPreferenciaOrdenEtiquetas(ordenSeleccionado.value)
 }
 
 function incrementarCantidad(indice) {
@@ -321,20 +310,12 @@ const etiquetasOrdenadas = computed(() => {
   const registros = props.etiquetas.map((etiqueta, indiceOriginal) => ({
     etiqueta,
     indiceOriginal,
-    nombreOrdenamiento: obtenerNombreArticulo(etiqueta),
   }))
-  if (ordenSeleccionado.value === 'recientes') {
-    return registros.reverse()
-  }
-  if (ordenSeleccionado.value === 'alfabetico') {
-    return registros.sort((registroA, registroB) => {
-      const comparacion = registroA.nombreOrdenamiento.localeCompare(registroB.nombreOrdenamiento, 'es', {
-        sensitivity: 'base',
-      })
-      return comparacion || registroA.indiceOriginal - registroB.indiceOriginal
-    })
-  }
-  return registros
+  return ordenarColeccion(registros, ordenSeleccionado.value, {
+    obtenerFecha: (registro) => registro.indiceOriginal,
+    obtenerTexto: (registro) => obtenerNombreArticulo(registro.etiqueta),
+    obtenerClave: (registro) => normalizarCodigo(registro.etiqueta.codigo),
+  })
 })
 
 function esArticuloInexistente(codigo) {
@@ -418,10 +399,7 @@ watch(
 )
 
 onMounted(async () => {
-  const preferenciaGuardada = await obtenerPreferenciaOrdenEtiquetas()
-  if (ORDENES_ETIQUETAS_VALIDOS.includes(preferenciaGuardada)) {
-    ordenSeleccionado.value = preferenciaGuardada
-  }
+  ordenSeleccionado.value = await obtenerPreferenciaOrdenEtiquetas()
 })
 
 defineExpose({

@@ -118,10 +118,10 @@ Centralizar la semántica de orden sin acoplarla a Etiquetas, Listados ni a una 
 
 ### Pasos de ejecución
 
-- [ ] Crear `CRITERIOS_ORDEN = ['fechaIngreso', 'alfabetico']` y `DIRECCIONES_ORDEN = ['ascendente', 'descendente']`.
+- [x] Crear `CRITERIOS_ORDEN = ['fechaIngreso', 'alfabetico']` y `DIRECCIONES_ORDEN = ['ascendente', 'descendente']`.
   - Ante valores inválidos, usar fecha descendente.
   - Mantener nombres camelCase en español y constantes en mayúsculas con guiones bajos.
-- [ ] Implementar `ordenarColeccion(elementos, orden, selectores)`.
+- [x] Implementar `ordenarColeccion(elementos, orden, selectores)`.
   - Exigir `selectores.obtenerFecha(elemento, indice)`, `selectores.obtenerTexto(elemento, indice)` y `selectores.obtenerClave(elemento, indice)`.
   - `normalizarOrden(orden)` retorna siempre un objeto nuevo y usa `{ criterio: 'fechaIngreso', direccion: 'descendente' }` ante cualquier valor no admitido.
   - Clonar antes de ordenar para no mutar props ni persistencia.
@@ -129,7 +129,7 @@ Centralizar la semántica de orden sin acoplarla a Etiquetas, Listados ni a una 
   - Para fecha comparar valores numéricos y aplicar la dirección solicitada.
   - Si el criterio principal empata, comparar `obtenerClave()` con `localeCompare('es', { sensitivity: 'base' })`; si vuelve a empatar, conservar el índice original.
   - Soportar las cuatro combinaciones del contrato.
-- [ ] Eliminar `OrdenarArticulosListado.js` y actualizar sus consumidores para importar `ordenarColeccion()`.
+- [x] Eliminar `OrdenarArticulosListado.js` y actualizar sus consumidores para importar `ordenarColeccion()`.
   - `OrdenarColeccion.js` será la única fuente de verdad.
   - Mantener el resultado de Listados idéntico antes de cambiar su interfaz.
 
@@ -146,21 +146,21 @@ Crear el selector visual con dos botones, dos direcciones por criterio y una se�
 
 ### Pasos de ejecución
 
-- [ ] Crear `SelectorOrdenamiento.vue` con `v-model`.
+- [x] Crear `SelectorOrdenamiento.vue` con `v-model`.
   - Prop `modelValue`: objeto de orden requerido y normalizado defensivamente.
   - Prop `deshabilitado`: booleano opcional con valor inicial `false`.
   - Emit `update:modelValue` con un objeto nuevo.
   - No incorporar conocimiento sobre etiquetas, listados, PDF o Excel.
-- [ ] Construir dos botones visibles: Fecha y Alfabético.
+- [x] Construir dos botones visibles: Fecha y Alfabético.
   - Usar `IconCalendarTime` para Fecha, `IconSortAZ` para Alfabético y `IconArrowUp`/`IconArrowDown` como indicadores de dirección.
   - Cada botón contiene indicadores ascendente y descendente.
   - La flecha correspondiente se ilumina únicamente cuando su criterio y dirección están activos.
   - Al cambiar de criterio se usa su dirección natural; al repetirlo se alterna.
   - Añadir `aria-pressed` y `aria-label` dinámicos con estos cuatro textos exactos: `Ordenar por fecha: recientes primero`, `Ordenar por fecha: antiguas primero`, `Ordenar alfabéticamente: A a Z` y `Ordenar alfabéticamente: Z a A`.
-- [ ] Evitar el acordeón, encabezado “Ordenar etiquetas” y texto descriptivo.
+- [x] Evitar el acordeón, encabezado “Ordenar etiquetas” y texto descriptivo.
   - El selector debe aparecer directamente encima de la colección cuando haya elementos.
   - Usar texto mínimo visible —Fecha y A/Z— más iconos, sin depender solo del color.
-- [ ] Aplicar estilos scoped y compactos.
+- [x] Aplicar estilos scoped y compactos.
   - Usar `--color-fondo`, `--color-superficie`, `--color-borde`, `--color-texto-*`, `--color-primario`, `--color-acento` y sombras existentes.
   - Representar el botón activo con `border-color: var(--color-acento)` y la flecha activa con `color: var(--color-acento)` más `filter: drop-shadow(0 0 4px var(--color-acento))`; las flechas inactivas usan `var(--color-texto-secundario)` sin sombra.
   - Usar una altura mínima de 44 px por botón y una separación de 8 px entre botones.
@@ -181,7 +181,7 @@ Adoptar el control compartido sin perder preferencias, edición de filas ni el o
 
 ### Pasos de ejecución
 
-- [ ] Actualizar la persistencia para guardar el objeto `{ criterio, direccion }` serializado.
+- [x] Actualizar la persistencia para guardar el objeto `{ criterio, direccion }` serializado.
   - Mantener la clave existente para no crear preferencias divergentes.
   - `guardarPreferenciaOrdenEtiquetas(orden)` debe guardar `JSON.stringify(normalizarOrden(orden))`.
   - `obtenerPreferenciaOrdenEtiquetas()` debe intentar `JSON.parse(value)` y normalizar el objeto; si no es JSON válido, tratarlo como valor histórico.
@@ -189,17 +189,17 @@ Adoptar el control compartido sin perder preferencias, edición de filas ni el o
   - Migrar `antiguas` a fecha ascendente.
   - Migrar `alfabetico` a alfabético ascendente.
   - Si el dato está corrupto, retornar fecha descendente sin lanzar errores a la UI.
-- [ ] Sustituir en `TablaEtiquetas.vue` el `TarjetaSeccion` completo de orden por `SelectorOrdenamiento`.
+- [x] Sustituir en `TablaEtiquetas.vue` el `TarjetaSeccion` completo de orden por `SelectorOrdenamiento`.
   - Eliminar título, descripción, explicación, pastillas y CSS que ya no tenga consumidores.
   - Cambiar `ordenSeleccionado` de texto a objeto.
   - Crear `actualizarOrden(nuevoOrden)`: asigna el objeto normalizado a `ordenSeleccionado` y espera `guardarPreferenciaOrdenEtiquetas(ordenSeleccionado.value)`.
   - Conectar `@update:model-value="actualizarOrden"`; no usar un `watch` profundo adicional.
-- [ ] Rehacer `etiquetasOrdenadas` mediante `ordenarColeccion()`.
+- [x] Rehacer `etiquetasOrdenadas` mediante `ordenarColeccion()`.
   - Para fecha usar el índice original porque la colección actual no guarda fecha por etiqueta: índice mayor equivale a incorporación más reciente.
   - Para texto usar `obtenerNombreArticulo(etiqueta)`.
   - Para clave usar `normalizarCodigo(etiqueta.codigo)`.
   - Conservar `indiceOriginal` para que editar, confirmar, restablecer y eliminar sigan afectando el elemento persistido correcto.
-- [ ] Verificar explícitamente que `PaginaEtiquetas.vue` continúe enviando el arreglo guardado original a `generarDocumentoEtiquetas()`.
+- [x] Verificar explícitamente que `PaginaEtiquetas.vue` continúe enviando el arreglo guardado original a `generarDocumentoEtiquetas()`.
   - No exponer `etiquetasOrdenadas` al generador.
   - El nuevo orden debe ser solamente visual para Etiquetas.
 
@@ -217,15 +217,15 @@ Reemplazar el selector temporal de Listados y mantener pantalla, persistencia y 
 
 ### Pasos de ejecución
 
-- [ ] Sustituir las tres opciones temporales por `SelectorOrdenamiento v-model="listadoActivo.orden"`.
-- [ ] Guardar automáticamente el listado al cambiar criterio o dirección.
-- [ ] Exponer las cuatro combinaciones, incluida descripción Z–A.
-- [ ] Mantener `articulosOrdenados` como única colección de presentación.
+- [x] Sustituir las tres opciones temporales por `SelectorOrdenamiento v-model="listadoActivo.orden"`.
+- [x] Guardar automáticamente el listado al cambiar criterio o dirección.
+- [x] Exponer las cuatro combinaciones, incluida descripción Z–A.
+- [x] Mantener `articulosOrdenados` como única colección de presentación.
   - Invocar `ordenarColeccion(listadoActivo.articulos, listadoActivo.orden, { obtenerFecha: articulo => articulo.fechaIngreso, obtenerTexto: articulo => articulo.descripcion, obtenerClave: articulo => articulo.codigo })`.
   - La posición mostrada en avisos de duplicado debe provenir de esta colección.
   - La tabla/tarjetas deben recibir esta colección.
   - El exportador debe recibir esta misma colección ya ordenada y no reordenarla.
-- [ ] Comprobar que duplicar, cerrar y volver a abrir un listado conserve exactamente su selección.
+- [x] Comprobar que duplicar, cerrar y volver a abrir un listado conserve exactamente su selección.
 
 ## FASE 5: Responsive, accesibilidad y limpieza
 
@@ -235,17 +235,17 @@ Garantizar que el control sea claro en todos los consumidores y retirar código 
 
 ### Pasos de ejecución
 
-- [ ] Ajustar el componente compartido a teléfonos angostos, tabletas y escritorio.
+- [x] Ajustar el componente compartido a teléfonos angostos, tabletas y escritorio.
   - Evitar desbordamiento horizontal.
   - Usar siempre `display: grid`, `grid-template-columns: repeat(2, minmax(0, 1fr))` y `gap: 8px`; los dos criterios permanecen en una fila incluso a 320 px.
   - No reducir objetivos táctiles ni ocultar la dirección activa.
-- [ ] Validar navegación completa por teclado.
+- [x] Validar navegación completa por teclado.
   - Tab enfoca cada criterio.
   - Enter y Espacio ejecutan la misma alternancia que un toque.
   - El foco no salta al reordenar la colección.
-- [ ] Validar lectores de pantalla mediante etiquetas dinámicas completas.
-- [ ] Eliminar imports, funciones y estilos sin uso del acordeón y las pastillas antiguas.
-- [ ] Mantener CSS sin líneas vacías entre reglas y utilizar solo los tokens existentes.
+- [x] Validar lectores de pantalla mediante etiquetas dinámicas completas.
+- [x] Eliminar imports, funciones y estilos sin uso del acordeón y las pastillas antiguas.
+- [x] Mantener CSS sin líneas vacías entre reglas y utilizar solo los tokens existentes.
 
 ## FASE TESTING
 
@@ -255,8 +255,8 @@ Validar los cuatro órdenes, la migración, las reglas distintas de salida y la 
 
 ### Pruebas automatizadas
 
-- [ ] Ejecutar `npm run lint` y corregir todos los errores o imports sin uso.
-- [ ] Ejecutar `npm run build` y comprobar que ambos consumidores compilen.
+- [x] Ejecutar `npm run lint` y corregir todos los errores o imports sin uso.
+- [x] Ejecutar `npm run build` y comprobar que ambos consumidores compilen.
 
 ### Pruebas manuales
 
@@ -278,13 +278,13 @@ Validar los cuatro órdenes, la migración, las reglas distintas de salida y la 
 
 ## Progreso del plan
 
-- [ ] Fase 1: Utilidad y contrato compartidos
-- [ ] Fase 2: Control compacto accesible
-- [ ] Fase 3: Migración de Etiquetas
-- [ ] Fase 4: Integración con Listados
-- [ ] Fase 5: Responsive, accesibilidad y limpieza
+- [x] Fase 1: Utilidad y contrato compartidos
+- [x] Fase 2: Control compacto accesible
+- [x] Fase 3: Migración de Etiquetas
+- [x] Fase 4: Integración con Listados
+- [x] Fase 5: Responsive, accesibilidad y limpieza
 - [ ] Fase Testing
 
 Fecha de creación: 8 de Septiembre 2026
-Fecha de última actualización: 8 de Septiembre 2026
-Estado: BORRADOR
+Fecha de última actualización: 9 de Septiembre 2026
+Estado: IMPLEMENTADO - VALIDACIÓN MANUAL EN DISPOSITIVO PENDIENTE
