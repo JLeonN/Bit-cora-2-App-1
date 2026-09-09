@@ -14,11 +14,13 @@
       </select>
     </div>
     <div class="edicion-nombre-listado">
-      <label for="nombre-listado">Nombre</label>
+      <label for="nombre-listado">Nombre de la lista</label>
       <input
         id="nombre-listado"
         v-model="nombreBorrador"
         type="text"
+        maxlength="80"
+        placeholder="Nombre opcional"
         :disabled="ocupado || !listadoActivo"
         @blur="confirmarNombre"
         @keyup.enter="$event.target.blur()"
@@ -56,19 +58,16 @@ const nombreBorrador = ref('')
 watch(
   () => props.listadoActivo,
   (listado) => {
-    nombreBorrador.value = listado?.nombre || ''
+    nombreBorrador.value = listado?.nombrePersonalizado || ''
   },
   { immediate: true },
 )
 
 function confirmarNombre() {
   const nombre = nombreBorrador.value.trim()
-  if (!props.listadoActivo || nombre === props.listadoActivo.nombre) return
-  if (!nombre) {
-    nombreBorrador.value = props.listadoActivo.nombre
-    return
-  }
-  emit('renombrar', { id: props.listadoActivo.id, nombre })
+  if (!props.listadoActivo || nombre === props.listadoActivo.nombrePersonalizado) return
+  nombreBorrador.value = nombre
+  emit('renombrar', { id: props.listadoActivo.id, nombrePersonalizado: nombre })
 }
 </script>
 

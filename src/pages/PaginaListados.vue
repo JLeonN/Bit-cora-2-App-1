@@ -282,9 +282,9 @@ function abrirListado(id) {
   })
 }
 
-function renombrarListadoActivo({ id, nombre }) {
+function renombrarListadoActivo({ id, nombrePersonalizado }) {
   ejecutarAdministracion(async () => {
-    reemplazarListadoLocal(await renombrarListado(id, nombre))
+    reemplazarListadoLocal(await renombrarListado(id, nombrePersonalizado))
   })
 }
 

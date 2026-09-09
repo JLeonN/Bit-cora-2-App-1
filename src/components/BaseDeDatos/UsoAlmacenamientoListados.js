@@ -3,7 +3,7 @@ import { normalizarCodigoBusqueda } from '../Logica/Compartidos/CodigoEscaner.js
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
-export const VERSION_LISTADOS = '1.0'
+export const VERSION_LISTADOS = '1.1'
 
 const CONFIGURACION_INICIAL = Object.freeze({ mostrarStock: false, mostrarUbicacion: false })
 const ORDEN_INICIAL = Object.freeze({ criterio: 'fechaIngreso', direccion: 'descendente' })
@@ -23,6 +23,20 @@ function normalizarUbicacion(valor) {
 function normalizarFecha(valor, alternativa = Date.now()) {
   const fecha = Number(valor)
   return Number.isFinite(fecha) && fecha > 0 ? fecha : alternativa
+}
+
+function extraerNombrePersonalizado(listado) {
+  if (Object.prototype.hasOwnProperty.call(listado || {}, 'nombrePersonalizado')) {
+    return normalizarTexto(listado.nombrePersonalizado)
+  }
+  const nombreAnterior = normalizarTexto(listado?.nombre)
+  if (!nombreAnterior || nombreAnterior === 'Listado sin nombre') return ''
+  const compuesto = nombreAnterior.match(
+    /^Listado _ (.+) _ \d{2}-\d{2}-\d{4} \d{2}-\d{2}$/u,
+  )
+  if (compuesto) return normalizarTexto(compuesto[1])
+  if (/^Listado \d{2}-\d{2}-\d{4} \d{2}-\d{2}(?: \d+)?$/u.test(nombreAnterior)) return ''
+  return nombreAnterior
 }
 
 function normalizarArticulo(articulo) {
@@ -67,12 +81,15 @@ function normalizarArticulos(articulos) {
 
 function normalizarListado(listado, { actualizar = false } = {}) {
   const ahora = Date.now()
+  const creadoEn = normalizarFecha(listado?.creadoEn, ahora)
+  const nombrePersonalizado = extraerNombrePersonalizado(listado)
   const criterio = listado?.orden?.criterio === 'alfabetico' ? 'alfabetico' : 'fechaIngreso'
   const direccion = listado?.orden?.direccion === 'ascendente' ? 'ascendente' : 'descendente'
   return {
     id: normalizarTexto(listado?.id) || crypto.randomUUID(),
-    nombre: normalizarTexto(listado?.nombre) || 'Listado sin nombre',
-    creadoEn: normalizarFecha(listado?.creadoEn, ahora),
+    nombre: nombrePersonalizado || 'Listado sin nombre',
+    nombrePersonalizado,
+    creadoEn,
     actualizadoEn: actualizar ? ahora : normalizarFecha(listado?.actualizadoEn, ahora),
     configuracion: {
       mostrarStock: Boolean(listado?.configuracion?.mostrarStock),
@@ -101,21 +118,6 @@ async function persistirColeccion(coleccion) {
   const normalizada = normalizarColeccion(coleccion)
   await Preferences.set({ key: CLAVE_LISTADOS, value: JSON.stringify(normalizada) })
   return normalizada
-}
-
-function crearNombreDisponible(nombreBase, listados) {
-  const nombres = new Set(listados.map((listado) => listado.nombre.toLocaleLowerCase('es')))
-  if (!nombres.has(nombreBase.toLocaleLowerCase('es'))) return nombreBase
-  let sufijo = 2
-  while (nombres.has(`${nombreBase} ${sufijo}`.toLocaleLowerCase('es'))) sufijo += 1
-  return `${nombreBase} ${sufijo}`
-}
-
-function crearNombreAutomatico(listados) {
-  const ahora = new Date()
-  const rellenar = (valor) => String(valor).padStart(2, '0')
-  const nombreBase = `Listado ${rellenar(ahora.getDate())}-${rellenar(ahora.getMonth() + 1)}-${ahora.getFullYear()} ${rellenar(ahora.getHours())}-${rellenar(ahora.getMinutes())}`
-  return crearNombreDisponible(nombreBase, listados)
 }
 
 export async function obtenerColeccionListados() {
@@ -153,7 +155,7 @@ export async function crearListado() {
   const ahora = Date.now()
   const listado = normalizarListado({
     id: crypto.randomUUID(),
-    nombre: crearNombreAutomatico(coleccion.listados),
+    nombrePersonalizado: '',
     creadoEn: ahora,
     actualizadoEn: ahora,
     configuracion: CONFIGURACION_INICIAL,
@@ -166,23 +168,23 @@ export async function crearListado() {
   return clonar(listado)
 }
 
-export async function renombrarListado(id, nombre) {
-  const nombreNormalizado = normalizarTexto(nombre)
-  if (!nombreNormalizado) throw new Error('El nombre del listado no puede quedar vacío')
+export async function renombrarListado(id, nombrePersonalizado) {
+  const nombreNormalizado = normalizarTexto(nombrePersonalizado)
   const listado = await obtenerListado(id)
   if (!listado) throw new Error('No se encontró el listado')
-  return guardarListado({ ...listado, nombre: nombreNormalizado })
+  return guardarListado({ ...listado, nombrePersonalizado: nombreNormalizado })
 }
 
 export async function duplicarListado(id) {
   const original = await obtenerListado(id)
   if (!original) throw new Error('No se encontró el listado para duplicar')
-  const listados = await obtenerListados()
   const ahora = Date.now()
   const copia = {
     ...original,
     id: crypto.randomUUID(),
-    nombre: crearNombreDisponible(`Copia de ${original.nombre}`, listados),
+    nombrePersonalizado: original.nombrePersonalizado
+      ? `Copia de ${original.nombrePersonalizado}`
+      : 'Copia',
     creadoEn: ahora,
     actualizadoEn: ahora,
     articulos: original.articulos.map((articulo) => ({

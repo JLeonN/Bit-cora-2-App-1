@@ -1,7 +1,6 @@
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core'
 import * as XLSX from 'xlsx'
-import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 export function calcularAnchoColumna(valores, minimo, maximo) {
   const mayorLongitud = valores.reduce(
@@ -45,20 +44,27 @@ function sanitizarNombreArchivo(nombre) {
   return String(nombre || '').replace(/[<>:"/\\|?*]/g, '').trim()
 }
 
+function crearNombreArchivoListado(nombrePersonalizado) {
+  const ahora = new Date()
+  const rellenar = (valor) => String(valor).padStart(2, '0')
+  const fecha = `${rellenar(ahora.getDate())}-${rellenar(ahora.getMonth() + 1)}-${ahora.getFullYear()}`
+  const hora = `${rellenar(ahora.getHours())}-${rellenar(ahora.getMinutes())}`
+  const nombre = sanitizarNombreArchivo(nombrePersonalizado)
+  return nombre
+    ? `Listado _ ${nombre} _ ${fecha} ${hora}.xlsx`
+    : `Listado ${fecha} ${hora}.xlsx`
+}
+
 export async function generarYGuardarExcelListado(listado, articulosOrdenados) {
   if (!Array.isArray(articulosOrdenados) || articulosOrdenados.length === 0) {
     throw new Error('No hay artículos para generar el archivo')
   }
-  const nombreUsuario = sanitizarNombreArchivo(await obtenerNombreUsuario()) || 'Usuario'
   const libro = construirLibroListado(
     articulosOrdenados,
     listado.configuracion,
     listado.nombre,
   )
-  const ahora = new Date()
-  const fecha = ahora.toISOString().split('T')[0]
-  const hora = ahora.toTimeString().slice(0, 5).replace(':', '-')
-  const nombreArchivo = `Listados ${nombreUsuario} ${fecha} # ${hora}.xlsx`
+  const nombreArchivo = crearNombreArchivoListado(listado.nombrePersonalizado)
   if (Capacitor.getPlatform() === 'web') {
     XLSX.writeFile(libro, nombreArchivo)
     return { uri: null, nombreArchivo }
