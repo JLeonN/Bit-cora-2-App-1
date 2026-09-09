@@ -13,7 +13,7 @@ Este plan debe ejecutarse antes de `Planes/PlanOrdenamientoReutilizable.md`. La 
 - Incorporar Listados entre Consulta de ubicación y Stock en Inicio, menú lateral y rutas.
 - Permitir crear múltiples listados persistentes, abrirlos, renombrarlos, duplicarlos y eliminarlos.
 - Reutilizar la base Excel, el buscador inteligente, la cámara, el manejo del lector, la barra inferior, los modales y los servicios de integración existentes.
-- Exportar y compartir un Excel responsive al contenido, con las columnas visibles y el mismo orden mostrado en pantalla.
+- Exportar y compartir un Excel con anchos de columna calculados, únicamente con las columnas visibles y en el mismo orden mostrado en pantalla.
 - Detectar cambios de stock y ubicación y enviarlos masivamente a sus módulos sin alterar las pantallas existentes de Stock o Ubicaciones.
 - Enviar un artículo o todos los artículos válidos a Etiquetas con una copia por artículo.
 
@@ -22,9 +22,10 @@ Este plan debe ejecutarse antes de `Planes/PlanOrdenamientoReutilizable.md`. La 
 - El proyecto usa Vue 3, Quasar 2, JavaScript, Vue Router, Capacitor 7, `@capacitor/preferences`, `@capacitor/filesystem`, `@capacitor/share` y `xlsx`.
 - `src/components/Logica/Ubicaciones/CodigoMasNombre.vue` ya busca por código, descripción parcial y códigos normalizados provenientes de lectores; emite `articulo-seleccionado` y `estado-busqueda`.
 - `src/components/Logica/Ubicaciones/CamaraEscaneo.vue` ya permite obtener códigos con la cámara.
-- `src/components/BaseDeDatos/LectorExcel.js` expone los artículos con `codigo`, `nombre`, `stock`, `ubicacionAntigua` e identidad del archivo cargado mediante `obtenerInformacionArchivo()`.
-- `src/components/Logica/Compartidos/CodigoEscaner.js` y `src/components/Logica/Compartidos/NormalizarInputCursor.js` contienen la normalización compartida que debe conservarse en el campo principal.
-- `src/components/Logica/Compartidos/UsoResaltadoAtencion.js` ofrece el patrón visual para destacar un elemento que requiere atención.
+- `src/components/BaseDeDatos/LectorExcel.js` mantiene una única base maestra y expone `inicializarBaseDatos()`, `obtenerArticulosCargados()`, `obtenerEstadoCarga()`, `obtenerInformacionArchivo()` y `obtenerArticuloPorCodigo()`.
+- Bitácora trabaja con un solo Excel maestro como fuente de verdad. Listados no debe almacenar identidades de Excel, comparar archivos ni introducir flujos para múltiples fuentes.
+- `src/components/Logica/Compartidos/CodigoEscaner.js` expone `normalizarCodigoBusqueda()` y `obtenerArticuloPorCodigoEscaneado()`; `src/components/Logica/Compartidos/NormalizarInputCursor.js` expone `normalizarInputPreservandoCursor()`.
+- `src/components/Logica/Compartidos/UsoResaltadoAtencion.js` expone `usarResaltadoAtencion(duracion)` y devuelve `estaResaltado` y `activarResaltado()`.
 - `src/components/Botones/BarraBotonesInferior.vue` y el evento `configurar-barra` de `src/layouts/MainLayout.vue` coordinan las acciones inferiores de las páginas.
 - `src/components/Logica/Pedidos/CompartirExcel.js` abre el selector nativo de Android con Capacitor Share.
 - `src/components/Logica/Stock/ExportarStockExcel.js` verifica el patrón actual de descarga web y escritura temporal en `Directory.Cache` para Android.
@@ -32,6 +33,7 @@ Este plan debe ejecutarse antes de `Planes/PlanOrdenamientoReutilizable.md`. La 
 - `src/components/BaseDeDatos/usoAlmacenamientoUbicaciones.js` guarda la lista de ubicaciones. El envío desde Listados debe agregar movimientos directamente a esa lista, incluso si repite códigos, sin llamar a `registrarUbicacionArticulo()` y sin modificar la pantalla de Ubicaciones.
 - `src/components/Logica/Etiquetas/ServicioEnvioEtiquetas.js` agrega artículos a Etiquetas con cantidad fija `1` y tamaño `10x15cm`.
 - `src/components/Logica/Etiquetas/TablaEtiquetas.vue` contiene actualmente las opciones Más recientes, Más antiguas y A–Z dentro de `TarjetaSeccion`. Esta lógica sirve como referencia temporal, pero su rediseño pertenece al segundo plan.
+- `IconListDetails`, `IconCalendarTime`, `IconSortAZ`, `IconArrowUp` e `IconArrowDown` están exportados por la versión instalada de `@tabler/icons-vue`; no se deben sustituir por iconos inventados.
 - `src/css/app.css` contiene todos los colores permitidos. Los estilos nuevos deben usar esas variables y no dejar líneas vacías entre reglas CSS.
 - No hay pruebas automatizadas reales: `npm test` es un placeholder. Los controles ejecutables disponibles son `npm run lint` y `npm run build`.
 
@@ -64,6 +66,27 @@ Este plan debe ejecutarse antes de `Planes/PlanOrdenamientoReutilizable.md`. La 
 - Rediseñar el selector de orden de Etiquetas o retirar su acordeón; eso corresponde a `Planes/PlanOrdenamientoReutilizable.md`.
 - Crear tutoriales o publicar una nueva versión.
 
+## Anclas verificadas en archivos existentes
+
+Los números de línea son referencias auxiliares del estado actual; durante la ejecución se debe localizar siempre el símbolo indicado.
+
+| Archivo existente | Línea actual | Símbolo o bloque | Cambio cerrado |
+| --- | ---: | --- | --- |
+| `src/router/routes.js` | 44–54 | rutas `ConsultaDeUbicacion` y `Stock` | Insertar exactamente entre ambas la ruta `Listados` |
+| `src/components/Inicio/PanelInicio.vue` | 41–51 | objetos de Consulta y Stock en `modulosDisponibles` | Insertar entre ambos el objeto de Listados con `IconListDetails` |
+| `src/layouts/MainLayout.vue` | 52–64 | `q-item` de Consulta y Stock | Insertar entre ambos el `q-item` hacia `/listados` |
+| `src/layouts/MainLayout.vue` | 207–218 | importaciones Tabler de navegación | Agregar `IconListDetails` al mismo import |
+| `src/layouts/MainLayout.vue` | 443–452 | `manejarConfiguracionBarra` | Conservar el contrato de configuración y referencia de métodos |
+| `src/pages/PaginaStock.vue` | 415–438 | `configuracionBarra` y `metodosParaBarra` | Replicar en Listados el patrón web/Android y `onAtrasNativo` |
+| `src/pages/PaginaStock.vue` | 520–573 | `buscarArticuloExacto` y `seleccionarArticulo` | Reutilizar el flujo de Enter y selección sin copiar lógica de Stock |
+| `src/pages/PaginaStock.vue` | 831–862 | `procesarEscaneo` y `cerrarPasoAtrasNativo` | Reutilizar cámara de escaneo único y prioridad del botón Atrás |
+| `src/components/Logica/Ubicaciones/CodigoMasNombre.vue` | 83–91 | prop `busqueda` y emits | Consumir exactamente `articulo-seleccionado` y `estado-busqueda` |
+| `src/components/Logica/Ubicaciones/CamaraEscaneo.vue` | 40–47 | prop `escaneoUnico` y emits | Usar `escaneo-unico="true"` y consumir `finalizar`, `cancelar`, `modal-abierto`, `modal-cerrado` |
+| `src/components/Logica/Ubicaciones/SelectorExcel.vue` | 183–201 | props y emits | Consumir `base-datos-cargada`, `error-carga` y `base-datos-limpia` |
+| `src/components/BaseDeDatos/UsoAlmacenamientoStock.js` | 125–197 | `obtenerSesionStock()` y `guardarRegistrosStock()` | Filtrar confirmados antes de fusionar registros pendientes |
+| `src/components/BaseDeDatos/usoAlmacenamientoUbicaciones.js` | 7–25 | `guardarUbicaciones()` y `obtenerUbicaciones()` | Anteponer movimientos en una sola escritura sin deduplicarlos |
+| `src/components/Logica/Etiquetas/ServicioEnvioEtiquetas.js` | 10–34 | `crearEtiquetaDesdeArticulo()` y `agregarEtiquetasDesdeArticulos()` | Reutilizar envíos individual y masivo con una copia |
+
 ## Modelo de datos propuesto
 
 ### Colección persistida
@@ -91,7 +114,6 @@ Contrato de la colección:
   nombre: string,
   creadoEn: number,
   actualizadoEn: number,
-  fuenteExcel: { nombre: string, tamano: number, fechaModificacion: number } | null,
   configuracion: {
     mostrarStock: boolean,
     mostrarUbicacion: boolean
@@ -122,8 +144,9 @@ Valores iniciales:
   ubicacionOriginal: string,
   ubicacionListado: string,
   fechaIngreso: number,
-  stockEnviado: string | number | null,
-  stockEnviadoEn: number | null,
+  stockProcesado: string | number | null,
+  stockProcesadoEn: number | null,
+  resultadoStock: 'enviado' | 'omitidoConfirmado' | null,
   ubicacionEnviada: string | null,
   ubicacionEnviadaEn: number | null
 }
@@ -132,9 +155,9 @@ Valores iniciales:
 - `codigo` es la identidad única del artículo dentro del listado y se normaliza como el resto del proyecto.
 - `descripcion`, `stockOriginal` y `ubicacionOriginal` son la fotografía del artículo al incorporarlo.
 - `stockListado` y `ubicacionListado` comienzan con los valores del Excel y son los únicos valores editables.
-- Un cambio de stock está pendiente si difiere de `stockOriginal` y de `stockEnviado`.
+- Un cambio de stock está pendiente si difiere de `stockOriginal` y de `stockProcesado`.
 - Un cambio de ubicación está pendiente si difiere de `ubicacionOriginal` y de `ubicacionEnviada`.
-- Tras un envío exitoso se registra el valor enviado y su fecha. Si el usuario vuelve a editarlo, reaparece como pendiente.
+- Después de procesar Stock se guardan `stockProcesado`, `stockProcesadoEn` y `resultadoStock`; un registro confirmado existente queda `omitidoConfirmado` y nunca se sobrescribe. Después de enviar Ubicación se guardan el valor y la fecha. Si el usuario vuelve a editar cualquier valor, reaparece como pendiente.
 
 ## Mapa de cambios
 
@@ -169,12 +192,21 @@ Disponer de múltiples listados seguros, normalizados y guardados automáticamen
 - [ ] Crear `UsoAlmacenamientoListados.js` con claves y versión exclusivas.
   - Normalizar datos inválidos al leer y devolver siempre una colección utilizable.
   - Clonar estructuras antes de retornarlas para que ningún consumidor modifique la caché accidentalmente.
-  - Generar identificadores estables sin depender del nombre visible.
+  - Generar cada `id` con `crypto.randomUUID()`; el target Chrome 115 configurado por Quasar dispone de esta API.
   - Guardar fechas en milisegundos y ordenar el selector de listados por `actualizadoEn` descendente.
   - Manejar errores de Preferences con mensajes de consola identificables y retornos seguros.
-- [ ] Implementar `crearListado(fuenteExcel)` con el contrato y valores iniciales verificados.
+- [ ] Fijar las firmas y retornos del almacenamiento.
+  - `obtenerListados(): Promise<ListadoGuardado[]>` devuelve clones ordenados por `actualizadoEn` descendente.
+  - `obtenerListado(id): Promise<ListadoGuardado | null>` busca por identificador.
+  - `crearListado(): Promise<ListadoGuardado>` crea, persiste y activa el nuevo listado.
+  - `guardarListado(listado): Promise<ListadoGuardado>` reemplaza por `id` y devuelve la versión normalizada guardada.
+  - `renombrarListado(id, nombre): Promise<ListadoGuardado>` rechaza nombres vacíos y normaliza espacios exteriores.
+  - `duplicarListado(id): Promise<ListadoGuardado>` crea y activa la copia.
+  - `eliminarListado(id): Promise<{ eliminado: boolean, listadoActivo: ListadoGuardado }>` garantiza que siempre quede uno activo.
+  - `obtenerListadoActivo(): Promise<ListadoGuardado | null>` resuelve `CLAVE_LISTADO_ACTIVO` contra la colección.
+  - `guardarListadoActivo(id): Promise<void>` guarda únicamente un identificador existente.
+- [ ] Implementar `crearListado()` con el contrato y valores iniciales verificados.
   - Crear un nombre automático local y garantizar que no colisione con nombres existentes.
-  - Guardar como fuente la misma forma usada por `crearIdentidadExcel()` de Stock.
 - [ ] Implementar `guardarListado(listado)` como actualización por `id`.
   - Normalizar códigos, descripción, ubicación, fechas, configuración y orden.
   - Eliminar artículos inválidos y resolver accidentalmente repetidos conservando la entrada más reciente.
@@ -182,16 +214,16 @@ Disponer de múltiples listados seguros, normalizados y guardados automáticamen
 - [ ] Implementar `duplicarListado(id)`.
   - Crear un nuevo `id`, `creadoEn` y `actualizadoEn`.
   - Proponer `Copia de [Nombre original]`, agregando sufijo si fuera necesario.
-  - Copiar artículos, configuración, fuente y orden.
-  - Reiniciar `stockEnviado`, `stockEnviadoEn`, `ubicacionEnviada` y `ubicacionEnviadaEn` para que la copia sea un trabajo independiente.
+  - Copiar artículos, configuración y orden.
+  - Reiniciar `stockProcesado`, `stockProcesadoEn`, `resultadoStock`, `ubicacionEnviada` y `ubicacionEnviadaEn` para que la copia sea un trabajo independiente.
   - Convertir la copia en listado activo.
 - [ ] Crear `GestorListados.vue` con un panel compacto y responsive.
   - Props: `listados`, `listadoActivo`, `ocupado`.
-  - Eventos: `crear`, `abrir`, `renombrar`, `duplicar`, `solicitar-eliminar`.
+  - Emits y payloads exactos: `crear` sin payload, `abrir` con `id`, `renombrar` con `{ id, nombre }`, `duplicar` con `id` y `solicitar-eliminar` con el listado completo.
   - Ofrecer nuevo listado, selector de guardados, renombrar, duplicar y eliminar.
   - Reutilizar `ModalEliminar.vue` desde la página para confirmar la eliminación, sin usar `confirm()` nativo.
   - No exigir un botón Guardar: toda edición debe persistirse automáticamente.
-- [ ] Al eliminar el listado activo, activar el listado restante actualizado más recientemente; si no queda ninguno, crear uno vacío ligado al Excel actualmente cargado o con fuente `null`.
+- [ ] Al eliminar el listado activo, activar el listado restante actualizado más recientemente; si no queda ninguno, crear un listado vacío.
 
 ## FASE 2: Página, buscador inteligente y altas únicas
 
@@ -209,30 +241,35 @@ Crear el flujo principal para agregar artículos rápidamente y evitar duplicado
 
 - [ ] Crear `PaginaListados.vue` como coordinador del listado activo.
   - Inicializar `LectorExcel`, cargar la colección, resolver el listado activo y crear uno si falta.
-  - Mantener separados el estado persistido, la búsqueda, la cámara, los modales y los indicadores de operación.
+  - Declarar `listados`, `listadoActivo`, `baseDatosCargada`, `modalActivo`, `listadoAEliminar`, `exportando`, `enviandoStock`, `enviandoUbicaciones` y `codigoResaltado` como estados explícitos.
+  - Declarar `articulosOrdenados`, `cambiosStockPendientes`, `cambiosUbicacionPendientes` y `configuracionBarra` como `computed`.
+  - Implementar `cargarListados`, `crearNuevoListado`, `abrirListado`, `renombrarListadoActivo`, `duplicarListadoActivo`, `solicitarEliminarListado`, `confirmarEliminarListado`, `agregarArticulo`, `guardarCambioStock`, `guardarCambioUbicacion`, `eliminarArticulo`, `enviarCambiosStock`, `enviarCambiosUbicaciones`, `enviarArticuloAEtiquetas`, `enviarTodosAEtiquetas`, `exportarListado`, `actualizarBarra` y `cerrarPasoAtrasNativo`.
   - Configurar y limpiar la barra inferior mediante `configurar-barra`, siguiendo el patrón de `PaginaStock.vue`.
   - Implementar `onAtrasNativo` para cerrar cámara, buscador o modal antes de navegar.
 - [ ] Crear `FormularioListado.vue` alrededor del patrón de búsqueda de `PaginaStock.vue`.
   - Mostrar `SelectorExcel.vue` cuando no exista base cargada.
   - Usar un único input con placeholder “Código o descripción del artículo”.
   - Reutilizar `CodigoMasNombre.vue` para sugerencias y selección.
-  - Resolver Enter, lector y cámara mediante los normalizadores compartidos.
-  - Props: `deshabilitado`, `fuenteCompatible`.
+  - Mantener internamente `busquedaArticulo`, `mostrarBuscador`, `mostrarCamara` y `estadoBusqueda`.
+  - Resolver Enter con `obtenerArticuloPorCodigoEscaneado(obtenerArticulosCargados(), busquedaArticulo)` y, si no hay coincidencia exacta, seleccionar solamente cuando `estadoBusqueda.articuloUnico` exista.
+  - Normalizar el input mediante `normalizarInputPreservandoCursor()` y el código mediante `normalizarCodigoBusqueda()`.
+  - Renderizar `CamaraEscaneo` con `:escaneo-unico="true"`; tomar `codigos[0]` de `finalizar` y pasarlo por el mismo flujo exacto de análisis de Enter.
+  - Prop: `deshabilitado`.
   - Eventos: `articulo-seleccionado`, `base-datos-cargada`, `error-carga`, `modal-abierto`, `modal-cerrado`.
+  - Exponer `cerrarInteraccion(): boolean`, que cierre primero cámara y después sugerencias, para que `PaginaListados.vue` lo use desde `onAtrasNativo`.
 - [ ] Al agregar un artículo nuevo, crear el registro con datos originales y editables tomados del Excel.
   - Insertarlo con una `fechaIngreso` monotónica para resolver escaneos realizados en el mismo milisegundo.
   - Guardar automáticamente, limpiar la búsqueda y devolver foco al input.
 - [ ] Rechazar duplicados por código normalizado.
   - No crear otra fila ni incrementar cantidades.
   - Calcular el índice sobre `articulosOrdenados`, no sobre el arreglo persistido.
-  - Mostrar una notificación equivalente a `El artículo ya está en el listado, posición N`.
-  - Desplazar y resaltar temporalmente la fila existente usando el patrón de `UsoResaltadoAtencion.js`.
-  - Recalcular la posición según el orden activo; con A–Z puede ser, por ejemplo, la posición 1 aunque haya ingresado al final.
-- [ ] Comparar la identidad del Excel cargado contra `fuenteExcel`.
-  - Permitir abrir, leer y exportar un listado aunque la fuente no coincida.
-  - Bloquear únicamente nuevas altas y el envío a Stock cuando la fuente sea distinta.
-  - Mostrar un aviso claro para cargar el Excel original o crear/duplicar un listado ligado al actual.
-  - Adoptar automáticamente la fuente actual si el listado está vacío y su fuente es `null`.
+  - Mostrar exactamente `El artículo ya está en el listado, posición N` mediante `Notify.create({ type: 'warning', position: 'top', timeout: 2400 })`.
+  - Asignar el código a `codigoResaltado`, llamar `tablaListadosRef.enfocarArticulo(codigo)` y aplicar `resaltado-atencion` solamente a esa fila durante los 2400 ms administrados por `usarResaltadoAtencion()`.
+  - Recalcular `N` como `articulosOrdenados.findIndex(...) + 1` cada vez; nunca reutilizar el índice del arreglo persistido.
+- [ ] Tratar la base cargada por `LectorExcel.js` como la única fuente maestra.
+  - No guardar identidad de archivo en los listados.
+  - No comparar nombre, tamaño ni fecha de modificación.
+  - Si no hay base cargada, conservar y exportar los listados guardados, pero exigir cargar el Excel maestro antes de agregar artículos o enviarlos a Etiquetas.
 
 ## FASE 3: Presentación, configuración y orden actual
 
@@ -256,20 +293,23 @@ Mostrar y editar los valores propios del listado con una interfaz legible en cua
   - No mutar el arreglo persistido.
 - [ ] Añadir una sección de configuración compacta.
   - Código y descripción quedan siempre activos y no muestran interruptor.
-  - Interruptores `Stock` y `Ubicación` actualizan `configuracion` y se guardan automáticamente.
+  - Renderizar dos `q-toggle` etiquetados exactamente `Stock` y `Ubicación`; actualizan `configuracion.mostrarStock` y `configuracion.mostrarUbicacion` y guardan automáticamente.
   - Ocultar un campo no borra sus valores ni sus marcas de sincronización.
 - [ ] Incorporar temporalmente las tres opciones actuales: Más recientes, Más antiguas y A–Z.
+  - Renderizarlas dentro de `TarjetaSeccion` con título `Ordenar listado`, `:expandida-por-defecto="false"`, descripción `Elegí cómo ver y exportar los artículos.` y tres botones: `Más recientes`, `Más antiguas`, `A–Z`.
+  - Cada botón usa `type="button"`, `aria-pressed` según el objeto `orden` y una clase activa; no copiar nombres CSS scoped de Etiquetas.
   - Mapearlas al objeto `orden` en lugar de guardar textos heredados.
   - Persistir el orden por listado.
   - Mantener el bloque aislado para que `PlanOrdenamientoReutilizable.md` lo reemplace por el componente compartido.
 - [ ] Crear `TablaListados.vue`.
   - Props: `articulos`, `mostrarStock`, `mostrarUbicacion`, `codigoResaltado`.
-  - Eventos: `editar-stock`, `editar-ubicacion`, `eliminar`, `enviar-etiqueta`.
+  - Emits y payloads exactos: `editar-stock` con `{ codigo, stockListado }`, `editar-ubicacion` con `{ codigo, ubicacionListado }`, `eliminar` con el artículo completo y `enviar-etiqueta` con el artículo completo.
   - En escritorio mostrar encabezados y columnas alineadas.
   - En teléfono transformar cada fila en tarjeta, preservar código y descripción completos y evitar desplazamiento horizontal obligatorio.
   - Incluir acciones discretas para eliminar y enviar individualmente a Etiquetas.
   - Permitir editar únicamente `stockListado` y `ubicacionListado`; validar stock como valor numérico coherente con el patrón de Stock y normalizar ubicación en mayúsculas con espacios convertidos a guiones.
-  - Guardar al confirmar o abandonar el campo, evitando escrituras por cada pulsación si degrada el rendimiento.
+  - Mantener un borrador local durante la escritura y emitir el valor únicamente con Enter o `blur`; no persistir por cada pulsación.
+  - Exponer `enfocarArticulo(codigo): void`, que localice la tarjeta/fila por un atributo `data-codigo` y ejecute `scrollIntoView({ behavior: 'smooth', block: 'center' })`.
 - [ ] Agregar estado vacío, contadores y acción “Eliminar todos los artículos” con `ModalEliminar.vue`.
   - Vaciar artículos no debe eliminar el listado ni su nombre/configuración.
 
@@ -292,24 +332,34 @@ Informar los cambios realizados en Listados y enviarlos de manera masiva a los m
   - Comparar valores normalizados.
   - Excluir stock vacío o inválido y ubicaciones vacías de los envíos, informándolo al usuario.
 - [ ] Crear `ResumenCambiosListado.vue`.
+  - Props exactas: `cantidadStock`, `cantidadUbicaciones`, `enviandoStock`, `enviandoUbicaciones`.
+  - Emits sin payload: `enviar-stock` y `enviar-ubicaciones`.
   - Permanecer oculto si no hay diferencias pendientes.
   - Mostrar únicamente cantidades y mensajes informativos; no contener campos editables ni selectores individuales.
   - Ofrecer `Enviar cambios a Stock` y `Enviar cambios a Ubicaciones` por separado.
   - Deshabilitar cada botón durante su operación y emitir `enviar-stock` o `enviar-ubicaciones`.
   - Ocultar la categoría enviada cuando ya no queden cambios pendientes.
 - [ ] Implementar `enviarCambiosAStock(listado)` en `ServicioIntegracionListados.js`.
-  - Exigir una fuente Excel guardada y compatible con la sesión de Stock.
-  - Convertir cada diferencia a un registro con `codigo`, `nombre`, `stockExcel`, `stockContado`, ubicación, origen y `confirmado: false`.
+  - Obtener la fuente maestra actual con `obtenerInformacionArchivo()` porque `guardarRegistrosStock()` exige ese argumento por su contrato existente; no guardar esa identidad dentro del listado.
+  - Si Stock rechaza la escritura por el control interno de sesión, mostrar literalmente el mensaje del servicio y no marcar ningún cambio como procesado.
+  - Convertir cada diferencia a `{ codigo, nombre: descripcion, stockExcel, stockContado, stockExcelAjustado, ubicacionActual, ubicacionOriginalExcel, ubicacionOrigen, confirmado: false, fechaActualizacion }`.
+  - Obtener `stockExcel` con `normalizarCantidadStock(stockOriginal, { permitirDecimal: true })` y `stockContado` con `normalizarCantidadStock(stockListado)`; omitir un `stockContado` cuyo resultado sea `null`.
+  - Usar `ubicacionListado`, `ubicacionOriginal` y la comparación entre ambas para resolver `ubicacionActual`, `ubicacionOriginalExcel` y `ubicacionOrigen`.
   - Usar `guardarRegistrosStock()` para fusionar por código, sin modificar `PaginaStock.vue` ni `TablaStock.vue`.
-  - No sobrescribir silenciosamente registros confirmados de Stock; omitirlos e informar cuántos quedaron para revisión, siguiendo la protección aplicada al importar desde Ubicaciones.
-  - Retornar códigos enviados, omitidos y errores para actualizar marcas solamente después de un resultado exitoso.
+  - Leer primero `obtenerSesionStock()` y separar los códigos que ya estén confirmados.
+  - No sobrescribir registros confirmados: marcarlos como `omitidoConfirmado`, informar la cantidad y dejar que el usuario los edite dentro de Stock.
+  - Fusionar los demás como pendientes y retornar códigos enviados, omitidos y errores.
+  - Retorno exacto: `{ enviados: string[], omitidosConfirmados: string[], invalidos: string[] }`.
 - [ ] Implementar `enviarCambiosAUbicaciones(listado)`.
   - Leer la lista actual mediante `obtenerUbicaciones()`.
   - Anteponer todos los movimientos válidos conservando el orden visual del listado.
   - Permitir que el mismo código ya exista en Ubicaciones: no deduplicar, reemplazar ni modificar su interfaz.
   - Guardar una sola vez mediante `guardarUbicaciones()`.
   - No llamar a `registrarUbicacionArticulo()` ni actualizar `LectorExcel.js`; el alcance termina al cargar los movimientos en la lista de Ubicaciones.
-- [ ] Actualizar las marcas `stockEnviado*` o `ubicacionEnviada*` únicamente para códigos realmente enviados y persistir el listado.
+  - Retorno exacto: `{ enviados: string[], invalidos: string[] }`.
+- [ ] Actualizar las marcas de procesamiento únicamente después de terminar la operación y persistir el listado una sola vez.
+  - Para Stock registrar como procesados tanto los enviados como los omitidos por estar confirmados, diferenciándolos con `resultadoStock`.
+  - Para Ubicaciones actualizar solo `ubicacionEnviada` y `ubicacionEnviadaEn` de códigos guardados correctamente.
   - Notificar cantidad enviada y omitida.
   - Si falla la operación, conservar todos los cambios como pendientes.
 - [ ] Implementar los envíos a Etiquetas mediante `agregarEtiquetasDesdeArticulos()`.
@@ -318,6 +368,7 @@ Informar los cambios realizados en Listados y enviarlos de manera masiva a los m
   - Enviar código, descripción y `ubicacionListado` actual.
   - Mantener `cantidad: 1` mediante el contrato existente.
   - Omitir artículos que ya no existan en la base cargada e informar la cantidad.
+  - `enviarArticuloAEtiquetas(articulo)` retorna el resultado del servicio; `enviarTodosAEtiquetas(articulosOrdenados)` filtra primero con `obtenerArticuloPorCodigo()` y conserva el orden visual.
 
 ## FASE 5: Exportación Excel y compartir
 
@@ -340,7 +391,8 @@ Generar un Excel legible con el contenido visible y compartirlo por cualquier ap
   - Crear las filas directamente desde `articulosOrdenados`; no volver a ordenar dentro del exportador.
   - Sanitizar y limitar el nombre de la hoja a las restricciones de Excel.
 - [ ] Calcular anchos con una utilidad interna basada en encabezado y contenido.
-  - Definir mínimos y máximos por tipo de columna.
+  - Implementar `calcularAnchoColumna(valores, minimo, maximo)` como `Math.min(maximo, Math.max(minimo, mayorLongitud + 2))`.
+  - Usar estos límites exactos: Código 14–24, Descripción 30–80, Stock 10–18 y Ubicación 12–30 caracteres.
   - Evitar que una descripción excepcionalmente larga vuelva inutilizable el archivo.
   - Asignar el resultado mediante `hoja['!cols']`.
 - [ ] Crear el nombre exacto `Listados [Usuario] AAAA-MM-DD # HH-MM.xlsx` usando `obtenerNombreUsuario()`.
@@ -349,6 +401,7 @@ Generar un Excel legible con el contenido visible y compartirlo por cualquier ap
   - Rechazar listas vacías con mensaje claro.
   - En web usar `XLSX.writeFile()` y retornar `{ uri: null, nombreArchivo }`.
   - En Android escribir Base64 en `Directory.Cache` y retornar la URI temporal.
+  - Usar como hoja el `nombre` del listado, quitar `\\ / ? * [ ] :`, recortar a 31 caracteres y usar `Listado` si queda vacío.
 - [ ] Configurar la barra inferior.
   - Mostrar Enviar únicamente cuando haya artículos.
   - En Android generar y llamar `compartirArchivo()` para abrir el selector nativo: WhatsApp, correo, Bluetooth, Drive u otras aplicaciones instaladas.
@@ -373,8 +426,8 @@ Integrar Listados en la navegación y garantizar una experiencia consistente en 
 - [ ] Agregar ruta con `path: '/listados'`, `name: 'Listados'` y carga diferida de `pages/PaginaListados.vue` inmediatamente después de Consulta de ubicación y antes de Stock.
 - [ ] Agregar una tarjeta a `modulosDisponibles` de `PanelInicio.vue` en la misma posición.
   - Título `Listados`.
-  - Descripción breve orientada a crear y compartir listas de artículos.
-  - Usar un icono de lista disponible en `@tabler/icons-vue`, por ejemplo `IconListDetails`, sin introducir otra librería.
+  - Descripción exacta `Crea, guarda y comparte listados de artículos`.
+  - Usar exactamente `IconListDetails` desde `@tabler/icons-vue`.
 - [ ] Agregar el `q-item` correspondiente en `MainLayout.vue` entre Consulta de Ubicación y Stock, reutilizando el mismo icono.
 - [ ] Mantener todos los colores en variables de `src/css/app.css` y respetar el CSS compacto exigido por `AGENTS.md`.
 - [ ] Diseñar los puntos de quiebre desde los patrones ya usados por Inicio, Stock y Etiquetas.
@@ -394,7 +447,6 @@ Validar el módulo completo, sus integraciones y la ausencia de regresiones en l
 
 - [ ] Ejecutar `npm run lint` y corregir todos los errores ESLint en archivos nuevos o modificados.
 - [ ] Ejecutar `npm run build` y comprobar que Quasar genere el SPA sin imports, iconos o rutas inválidas.
-- [ ] Ejecutar `npm test` dejando documentado que actualmente es un placeholder y no sustituye las pruebas manuales.
 
 ### Pruebas manuales funcionales
 
@@ -404,8 +456,9 @@ Validar el módulo completo, sus integraciones y la ausencia de regresiones en l
 - [ ] Activar y desactivar Stock y Ubicación verificando que los valores sobrevivan.
 - [ ] Editar stock y ubicación, recargar la app y comprobar el guardado automático.
 - [ ] Crear, abrir, renombrar, duplicar y eliminar listados; verificar que la copia sea independiente y reinicie sus marcas de envío.
-- [ ] Abrir un listado bajo un Excel distinto y comprobar que pueda verse/exportarse, pero no mezcle altas ni Stock.
+- [ ] Cargar una versión actualizada del único Excel maestro y comprobar que los listados continúen utilizándolo sin crear identidades ni conflictos entre fuentes.
 - [ ] Enviar cambios a Stock y confirmar que aparezcan pendientes sin modificar registros confirmados.
+  - Repetir con un código ya confirmado y comprobar que se informe como omitido, quede marcado `omitidoConfirmado` y no reaparezca hasta que cambie nuevamente `stockListado`.
 - [ ] Enviar ubicaciones y comprobar que se antepongan en la lista persistida, incluidos códigos repetidos, sin otros efectos automáticos.
 - [ ] Enviar una fila y todas las filas a Etiquetas, verificando una copia por artículo y avisos de omitidos.
 - [ ] Exportar con ninguna, una y ambas columnas opcionales; comparar orden y valores con la pantalla.

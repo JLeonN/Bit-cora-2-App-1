@@ -24,6 +24,7 @@ Este plan presupone que `Planes/PlanModuloListados.md` ya fue ejecutado y que Li
 - El PDF se genera desde el arreglo guardado en `PaginaEtiquetas.vue`, no desde `etiquetasOrdenadas`; este comportamiento debe conservarse.
 - El plan de Listados define desde el inicio `orden: { criterio: 'fechaIngreso' | 'alfabetico', direccion: 'ascendente' | 'descendente' }` y exporta su colección visual.
 - `@tabler/icons-vue` ya es la librería de iconos del proyecto.
+- La versión instalada exporta `IconCalendarTime`, `IconSortAZ`, `IconArrowUp` e `IconArrowDown`; estos son los iconos cerrados para el componente.
 - Los colores deben provenir exclusivamente de `src/css/app.css`.
 - No hay pruebas automatizadas reales; `npm run lint` y `npm run build` son los controles ejecutables principales.
 
@@ -48,6 +49,21 @@ Este plan presupone que `Planes/PlanModuloListados.md` ya fue ejecutado y que Li
 - Rediseñar otras secciones desplegables de Etiquetas.
 - Implementar Listados si su plan previo aún no fue ejecutado.
 
+## Anclas verificadas en archivos existentes
+
+Los números de línea son referencias auxiliares del estado actual; los símbolos siguen siendo la referencia obligatoria si el archivo cambia.
+
+| Archivo existente | Línea actual | Símbolo o bloque | Cambio cerrado |
+| --- | ---: | --- | --- |
+| `src/components/Logica/Etiquetas/TablaEtiquetas.vue` | 28–65 | `TarjetaSeccion` “Ordenar etiquetas” | Eliminar el bloque completo y colocar `SelectorOrdenamiento` en su lugar |
+| `src/components/Logica/Etiquetas/TablaEtiquetas.vue` | 159–170 | `ordenSeleccionado`, `ORDENES_ETIQUETAS_VALIDOS`, `seleccionarOrden()` | Sustituir el texto y la función por el objeto usado con `v-model` |
+| `src/components/Logica/Etiquetas/TablaEtiquetas.vue` | 342–359 | `etiquetasOrdenadas` | Delegar el orden en `ordenarColeccion()` conservando `indiceOriginal` |
+| `src/components/Logica/Etiquetas/TablaEtiquetas.vue` | 441–447 | `onMounted()` | Leer la preferencia ya normalizada como objeto |
+| `src/components/BaseDeDatos/usoAlmacenamientoEtiquetas.js` | 5 | `CLAVE_PREFERENCIA_ORDEN_ETIQUETAS` | Conservar exactamente la clave existente |
+| `src/components/BaseDeDatos/usoAlmacenamientoEtiquetas.js` | 38–56 | funciones guardar/obtener preferencia | Serializar objeto y migrar los tres textos históricos |
+| `src/pages/PaginaEtiquetas.vue` | 369–398 | `generarPDF()` | Mantener `listaEtiquetas.value` como entrada del PDF |
+| `src/pages/PaginaListados.vue` | creado por el plan anterior | `articulosOrdenados` y estado `orden` | Sustituir solo la interfaz temporal y conservar la colección exportada |
+
 ## Contrato compartido
 
 Usar este objeto en ambos consumidores:
@@ -61,7 +77,7 @@ Usar este objeto en ambos consumidores:
 
 Reglas de interacción:
 
-- Estado inicial recomendado: `{ criterio: 'fechaIngreso', direccion: 'descendente' }`.
+- Estado inicial obligatorio: `{ criterio: 'fechaIngreso', direccion: 'descendente' }`.
 - Al pulsar Fecha cuando otro criterio está activo, activar Fecha con dirección descendente.
 - Al volver a pulsar Fecha mientras está activa, alternar descendente/ascendente.
 - Al pulsar Alfabético cuando otro criterio está activo, activar Alfabético con dirección ascendente.
@@ -87,7 +103,7 @@ Correspondencias visibles:
 | `src/components/Logica/Etiquetas/TablaEtiquetas.vue` | Modificar | bloque de orden y `etiquetasOrdenadas` | Retirar acordeón e integrar control compartido |
 | `src/components/BaseDeDatos/usoAlmacenamientoEtiquetas.js` | Modificar | guardar/obtener preferencia | Persistir objeto y migrar valores históricos |
 | `src/pages/PaginaListados.vue` | Modificar | estado `orden` | Integrar el selector compacto |
-| `src/components/Logica/Listados/OrdenarArticulosListado.js` | Modificar o eliminar | `ordenarArticulosListado` | Delegar en la utilidad compartida sin duplicar lógica |
+| `src/components/Logica/Listados/OrdenarArticulosListado.js` | Eliminar | `ordenarArticulosListado` | Reemplazarlo por la utilidad compartida y actualizar todos sus imports |
 
 ## FASE 1: Utilidad y contrato compartidos
 
@@ -98,22 +114,23 @@ Centralizar la semántica de orden sin acoplarla a Etiquetas, Listados ni a una 
 ### Archivos y símbolos involucrados
 
 - Nuevo `src/components/Logica/Compartidos/OrdenarColeccion.js`: `normalizarOrden`, `ordenarColeccion`.
-- Existente `src/components/Logica/Listados/OrdenarArticulosListado.js` después del primer plan.
+- `src/pages/PaginaListados.vue`: consumidor que reemplazará el import de `OrdenarArticulosListado.js`.
 
 ### Pasos de ejecución
 
-- [ ] Crear constantes o validadores para criterios y direcciones admitidos.
+- [ ] Crear `CRITERIOS_ORDEN = ['fechaIngreso', 'alfabetico']` y `DIRECCIONES_ORDEN = ['ascendente', 'descendente']`.
   - Ante valores inválidos, usar fecha descendente.
   - Mantener nombres camelCase en español y constantes en mayúsculas con guiones bajos.
 - [ ] Implementar `ordenarColeccion(elementos, orden, selectores)`.
-  - `selectores.obtenerFecha(elemento, indice)` proporciona el número de orden temporal.
-  - `selectores.obtenerTexto(elemento, indice)` proporciona el texto alfabético.
+  - Exigir `selectores.obtenerFecha(elemento, indice)`, `selectores.obtenerTexto(elemento, indice)` y `selectores.obtenerClave(elemento, indice)`.
+  - `normalizarOrden(orden)` retorna siempre un objeto nuevo y usa `{ criterio: 'fechaIngreso', direccion: 'descendente' }` ante cualquier valor no admitido.
   - Clonar antes de ordenar para no mutar props ni persistencia.
-  - Usar comparación española sin distinguir acentos o mayúsculas como criterio principal.
-  - Aplicar desempate estable con el índice original y, cuando el consumidor lo proporcione, código.
+  - Para texto usar `localeCompare(textoB, 'es', { sensitivity: 'base' })` y multiplicar por `-1` en dirección descendente.
+  - Para fecha comparar valores numéricos y aplicar la dirección solicitada.
+  - Si el criterio principal empata, comparar `obtenerClave()` con `localeCompare('es', { sensitivity: 'base' })`; si vuelve a empatar, conservar el índice original.
   - Soportar las cuatro combinaciones del contrato.
-- [ ] Modificar `OrdenarArticulosListado.js` para delegar en `ordenarColeccion()` o eliminarlo actualizando todos sus imports.
-  - Elegir una sola fuente de verdad.
+- [ ] Eliminar `OrdenarArticulosListado.js` y actualizar sus consumidores para importar `ordenarColeccion()`.
+  - `OrdenarColeccion.js` será la única fuente de verdad.
   - Mantener el resultado de Listados idéntico antes de cambiar su interfaz.
 
 ## FASE 2: Control compacto accesible
@@ -131,21 +148,22 @@ Crear el selector visual con dos botones, dos direcciones por criterio y una se�
 
 - [ ] Crear `SelectorOrdenamiento.vue` con `v-model`.
   - Prop `modelValue`: objeto de orden requerido y normalizado defensivamente.
-  - Prop opcional `deshabilitado`: booleano con valor inicial `false`.
+  - Prop `deshabilitado`: booleano opcional con valor inicial `false`.
   - Emit `update:modelValue` con un objeto nuevo.
   - No incorporar conocimiento sobre etiquetas, listados, PDF o Excel.
 - [ ] Construir dos botones visibles: Fecha y Alfabético.
-  - Fecha puede usar un icono temporal de `@tabler/icons-vue` y Alfabético una referencia A/Z.
+  - Usar `IconCalendarTime` para Fecha, `IconSortAZ` para Alfabético y `IconArrowUp`/`IconArrowDown` como indicadores de dirección.
   - Cada botón contiene indicadores ascendente y descendente.
   - La flecha correspondiente se ilumina únicamente cuando su criterio y dirección están activos.
   - Al cambiar de criterio se usa su dirección natural; al repetirlo se alterna.
-  - Añadir `aria-pressed`, título y etiqueta dinámica, por ejemplo `Ordenar por fecha: recientes primero`.
+  - Añadir `aria-pressed` y `aria-label` dinámicos con estos cuatro textos exactos: `Ordenar por fecha: recientes primero`, `Ordenar por fecha: antiguas primero`, `Ordenar alfabéticamente: A a Z` y `Ordenar alfabéticamente: Z a A`.
 - [ ] Evitar el acordeón, encabezado “Ordenar etiquetas” y texto descriptivo.
   - El selector debe aparecer directamente encima de la colección cuando haya elementos.
   - Usar texto mínimo visible —Fecha y A/Z— más iconos, sin depender solo del color.
 - [ ] Aplicar estilos scoped y compactos.
   - Usar `--color-fondo`, `--color-superficie`, `--color-borde`, `--color-texto-*`, `--color-primario`, `--color-acento` y sombras existentes.
-  - Representar el estado activo mediante color, borde o resplandor moderado.
+  - Representar el botón activo con `border-color: var(--color-acento)` y la flecha activa con `color: var(--color-acento)` más `filter: drop-shadow(0 0 4px var(--color-acento))`; las flechas inactivas usan `var(--color-texto-secundario)` sin sombra.
+  - Usar una altura mínima de 44 px por botón y una separación de 8 px entre botones.
   - Respetar `prefers-reduced-motion`.
   - Mantener objetivos táctiles suficientes y foco visible.
 
@@ -165,7 +183,8 @@ Adoptar el control compartido sin perder preferencias, edición de filas ni el o
 
 - [ ] Actualizar la persistencia para guardar el objeto `{ criterio, direccion }` serializado.
   - Mantener la clave existente para no crear preferencias divergentes.
-  - Leer tanto JSON nuevo como los textos históricos.
+  - `guardarPreferenciaOrdenEtiquetas(orden)` debe guardar `JSON.stringify(normalizarOrden(orden))`.
+  - `obtenerPreferenciaOrdenEtiquetas()` debe intentar `JSON.parse(value)` y normalizar el objeto; si no es JSON válido, tratarlo como valor histórico.
   - Migrar `recientes` a fecha descendente.
   - Migrar `antiguas` a fecha ascendente.
   - Migrar `alfabetico` a alfabético ascendente.
@@ -173,10 +192,12 @@ Adoptar el control compartido sin perder preferencias, edición de filas ni el o
 - [ ] Sustituir en `TablaEtiquetas.vue` el `TarjetaSeccion` completo de orden por `SelectorOrdenamiento`.
   - Eliminar título, descripción, explicación, pastillas y CSS que ya no tenga consumidores.
   - Cambiar `ordenSeleccionado` de texto a objeto.
-  - Persistir cada cambio emitido por el selector.
+  - Crear `actualizarOrden(nuevoOrden)`: asigna el objeto normalizado a `ordenSeleccionado` y espera `guardarPreferenciaOrdenEtiquetas(ordenSeleccionado.value)`.
+  - Conectar `@update:model-value="actualizarOrden"`; no usar un `watch` profundo adicional.
 - [ ] Rehacer `etiquetasOrdenadas` mediante `ordenarColeccion()`.
   - Para fecha usar el índice original porque la colección actual no guarda fecha por etiqueta: índice mayor equivale a incorporación más reciente.
   - Para texto usar `obtenerNombreArticulo(etiqueta)`.
+  - Para clave usar `normalizarCodigo(etiqueta.codigo)`.
   - Conservar `indiceOriginal` para que editar, confirmar, restablecer y eliminar sigan afectando el elemento persistido correcto.
 - [ ] Verificar explícitamente que `PaginaEtiquetas.vue` continúe enviando el arreglo guardado original a `generarDocumentoEtiquetas()`.
   - No exponer `etiquetasOrdenadas` al generador.
@@ -191,7 +212,7 @@ Reemplazar el selector temporal de Listados y mantener pantalla, persistencia y 
 ### Archivos y símbolos involucrados
 
 - `src/pages/PaginaListados.vue`.
-- `src/components/Logica/Listados/OrdenarArticulosListado.js` o sus consumidores después de consolidar la utilidad.
+- `src/components/Logica/Compartidos/OrdenarColeccion.js`.
 - `src/components/Logica/Listados/ExportarListadosExcel.js` como consumidor indirecto del arreglo visual.
 
 ### Pasos de ejecución
@@ -200,6 +221,7 @@ Reemplazar el selector temporal de Listados y mantener pantalla, persistencia y 
 - [ ] Guardar automáticamente el listado al cambiar criterio o dirección.
 - [ ] Exponer las cuatro combinaciones, incluida descripción Z–A.
 - [ ] Mantener `articulosOrdenados` como única colección de presentación.
+  - Invocar `ordenarColeccion(listadoActivo.articulos, listadoActivo.orden, { obtenerFecha: articulo => articulo.fechaIngreso, obtenerTexto: articulo => articulo.descripcion, obtenerClave: articulo => articulo.codigo })`.
   - La posición mostrada en avisos de duplicado debe provenir de esta colección.
   - La tabla/tarjetas deben recibir esta colección.
   - El exportador debe recibir esta misma colección ya ordenada y no reordenarla.
@@ -215,7 +237,7 @@ Garantizar que el control sea claro en todos los consumidores y retirar código 
 
 - [ ] Ajustar el componente compartido a teléfonos angostos, tabletas y escritorio.
   - Evitar desbordamiento horizontal.
-  - Mantener ambos criterios visibles en una fila cuando exista espacio y permitir una distribución compacta en anchos mínimos.
+  - Usar siempre `display: grid`, `grid-template-columns: repeat(2, minmax(0, 1fr))` y `gap: 8px`; los dos criterios permanecen en una fila incluso a 320 px.
   - No reducir objetivos táctiles ni ocultar la dirección activa.
 - [ ] Validar navegación completa por teclado.
   - Tab enfoca cada criterio.
@@ -235,7 +257,6 @@ Validar los cuatro órdenes, la migración, las reglas distintas de salida y la 
 
 - [ ] Ejecutar `npm run lint` y corregir todos los errores o imports sin uso.
 - [ ] Ejecutar `npm run build` y comprobar que ambos consumidores compilen.
-- [ ] Ejecutar `npm test` documentando que actualmente no contiene pruebas reales.
 
 ### Pruebas manuales
 
