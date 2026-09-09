@@ -17,6 +17,7 @@ import {
   IconPackages,
   IconPaw,
   IconSearch,
+  IconListDetails,
   IconSettings,
   IconTableRow,
   IconTag,
@@ -42,6 +43,12 @@ const modulosDisponibles = [
     descripcion: 'Busca un artículo y consulta o actualiza su ubicación',
     icono: IconSearch,
     ruta: '/ConsultaDeUbicacion',
+  },
+  {
+    titulo: 'Listados',
+    descripcion: 'Crea, guarda y comparte listados de artículos',
+    icono: IconListDetails,
+    ruta: '/listados',
   },
   {
     titulo: 'Stock',

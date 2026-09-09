@@ -57,6 +57,12 @@
               </q-item-section>
               <q-item-section>Consulta de Ubicación</q-item-section>
             </q-item>
+            <q-item clickable v-ripple to="/listados">
+              <q-item-section avatar>
+                <IconListDetails :stroke="2" />
+              </q-item-section>
+              <q-item-section>Listados</q-item-section>
+            </q-item>
             <q-item clickable v-ripple to="/stock">
               <q-item-section avatar>
                 <IconPackages :stroke="2" />
@@ -212,6 +218,7 @@ import {
   IconTableRow,
   IconMapRoute,
   IconSearch,
+  IconListDetails,
   IconPackages,
   IconTag,
   IconSettings,

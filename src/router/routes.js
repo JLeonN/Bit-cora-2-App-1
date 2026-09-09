@@ -45,6 +45,12 @@ const routes = [
         name: 'ConsultaDeUbicacion',
         component: () => import('pages/ConsultaDeUbicacion.vue'),
       },
+      // LISTADOS - Creación y exportación de listas de artículos
+      {
+        path: '/listados',
+        name: 'Listados',
+        component: () => import('pages/PaginaListados.vue'),
+      },
       // STOCK - Conteo de artículos y exportación de inventario
       {
         path: '/stock',
