@@ -21,12 +21,7 @@
     </TarjetaSeccion>
 
     <template v-if="listadoActivo">
-      <TarjetaSeccion
-        titulo="Agregar artículos"
-        :expandida-por-defecto="true"
-        descripcion-resumen="Buscá por código o descripción, o usá la cámara para escanear."
-        :ocultar-resumen-al-expandir="true"
-      >
+      <section class="zona-agregar-listado" aria-label="Agregar artículos al listado">
         <FormularioListado
           ref="formularioListadoRef"
           :deshabilitado="ocupado"
@@ -37,29 +32,24 @@
           @modal-abierto="modalActivo = true"
           @modal-cerrado="modalActivo = false"
         />
-      </TarjetaSeccion>
-
-      <TarjetaSeccion
-        titulo="Columnas del listado"
-        :expandida-por-defecto="false"
-        descripcion-resumen="Código y descripción siempre se muestran. Elegí si querés ver stock y ubicación."
-        :ocultar-resumen-al-expandir="true"
-      >
-        <div class="interruptores-listado">
-          <q-toggle
-            :model-value="listadoActivo.configuracion.mostrarStock"
-            label="Stock"
-            color="primary"
-            @update:model-value="actualizarConfiguracion('mostrarStock', $event)"
-          />
-          <q-toggle
-            :model-value="listadoActivo.configuracion.mostrarUbicacion"
-            label="Ubicación"
-            color="primary"
-            @update:model-value="actualizarConfiguracion('mostrarUbicacion', $event)"
-          />
+        <div class="columnas-visibles-listado">
+          <span class="titulo-columnas-listado">Columnas visibles</span>
+          <div class="interruptores-listado">
+            <q-toggle
+              :model-value="listadoActivo.configuracion.mostrarStock"
+              label="Stock"
+              color="primary"
+              @update:model-value="actualizarConfiguracion('mostrarStock', $event)"
+            />
+            <q-toggle
+              :model-value="listadoActivo.configuracion.mostrarUbicacion"
+              label="Ubicación"
+              color="primary"
+              @update:model-value="actualizarConfiguracion('mostrarUbicacion', $event)"
+            />
+          </div>
         </div>
-      </TarjetaSeccion>
+      </section>
 
       <SelectorOrdenVisual
         v-if="articulosOrdenados.length > 0"
@@ -586,6 +576,26 @@ onUnmounted(() => {
 .pagina-listados {
   padding-bottom: var(--espacio-inferior-contenido, 120px);
 }
+.zona-agregar-listado {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.columnas-visibles-listado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background-color: var(--color-superficie);
+  color: var(--color-texto-principal);
+}
+.titulo-columnas-listado {
+  font-weight: 600;
+}
 .interruptores-listado {
   display: flex;
   align-items: center;
@@ -598,10 +608,10 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 @media (max-width: 600px) {
-  .interruptores-listado {
+  .columnas-visibles-listado {
     align-items: flex-start;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
 }
 </style>

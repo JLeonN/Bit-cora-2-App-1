@@ -14,6 +14,7 @@
               <input
                 ref="inputBusquedaRef"
                 v-model="busquedaArticulo"
+                class="campo-entrada-formulario"
                 type="text"
                 placeholder="Código o descripción del artículo"
                 :disabled="deshabilitado"
