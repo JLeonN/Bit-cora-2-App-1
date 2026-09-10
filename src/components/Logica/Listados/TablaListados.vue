@@ -22,28 +22,33 @@
       </div>
       <article
         v-for="(articulo, indice) in articulos"
-        :key="articulo.codigo"
+        :key="articulo.idFila"
         class="fila-listado"
         :class="{
-          'resaltado-atencion': codigoResaltado === articulo.codigo,
+          'fila-listado-duplicada': codigosDuplicados.has(articulo.codigo),
         }"
-        :data-codigo="articulo.codigo"
         role="row"
       >
         <div v-if="mostrarNumeracion" class="celda-listado celda-numeracion" data-etiqueta="Número">
           {{ indice + 1 }}
         </div>
-        <div class="celda-listado celda-codigo" data-etiqueta="Código">{{ articulo.codigo }}</div>
+        <div
+          class="celda-listado celda-codigo"
+          :class="{ 'texto-duplicado': codigosDuplicados.has(articulo.codigo) }"
+          data-etiqueta="Código"
+        >
+          {{ articulo.codigo }}
+        </div>
         <div class="celda-listado celda-descripcion" data-etiqueta="Descripción">
           {{ articulo.descripcion }}
         </div>
         <label v-if="mostrarStock" class="celda-listado celda-editable" data-etiqueta="Stock">
           <span class="etiqueta-movil">Stock</span>
           <input
-            v-model="borradores[articulo.codigo].stockListado"
+            v-model="borradores[articulo.idFila].stockListado"
             type="text"
             inputmode="numeric"
-            :class="{ 'campo-invalido': !esStockValido(borradores[articulo.codigo].stockListado) }"
+            :class="{ 'campo-invalido': !esStockValido(borradores[articulo.idFila].stockListado) }"
             :aria-label="`Stock de ${articulo.codigo}`"
             @blur="confirmarStock(articulo)"
             @keyup.enter="$event.target.blur()"
@@ -56,10 +61,10 @@
         >
           <span class="etiqueta-movil">Ubicación</span>
           <input
-            v-model="borradores[articulo.codigo].ubicacionListado"
+            v-model="borradores[articulo.idFila].ubicacionListado"
             type="text"
             :aria-label="`Ubicación de ${articulo.codigo}`"
-            @input="normalizarBorradorUbicacion(articulo.codigo)"
+            @input="normalizarBorradorUbicacion(articulo.idFila)"
             @blur="confirmarUbicacion(articulo)"
             @keyup.enter="$event.target.blur()"
           />
@@ -93,24 +98,23 @@
     >
       <TarjetaArticulo
         v-for="(articulo, indice) in articulos"
-        :key="articulo.codigo"
+        :key="articulo.idFila"
         :nombre="articulo.descripcion"
         :codigo="articulo.codigo"
         :class="{
-          'resaltado-atencion': codigoResaltado === articulo.codigo,
+          'tarjeta-listado-duplicada': codigosDuplicados.has(articulo.codigo),
         }"
-        :data-codigo="articulo.codigo"
       >
         <template v-if="mostrarStock || mostrarUbicacion" #contenido>
           <div class="campos-listado-tarjeta">
             <label v-if="mostrarStock" class="campo-listado-tarjeta">
               <span>Stock</span>
               <input
-                v-model="borradores[articulo.codigo].stockListado"
+                v-model="borradores[articulo.idFila].stockListado"
                 type="text"
                 inputmode="numeric"
                 :class="{
-                  'campo-invalido': !esStockValido(borradores[articulo.codigo].stockListado),
+                  'campo-invalido': !esStockValido(borradores[articulo.idFila].stockListado),
                 }"
                 :aria-label="`Stock de ${articulo.codigo}`"
                 @blur="confirmarStock(articulo)"
@@ -120,10 +124,10 @@
             <label v-if="mostrarUbicacion" class="campo-listado-tarjeta">
               <span>Ubicación</span>
               <input
-                v-model="borradores[articulo.codigo].ubicacionListado"
+                v-model="borradores[articulo.idFila].ubicacionListado"
                 type="text"
                 :aria-label="`Ubicación de ${articulo.codigo}`"
-                @input="normalizarBorradorUbicacion(articulo.codigo)"
+                @input="normalizarBorradorUbicacion(articulo.idFila)"
                 @blur="confirmarUbicacion(articulo)"
                 @keyup.enter="$event.target.blur()"
               />
@@ -170,7 +174,7 @@ const props = defineProps({
   mostrarNumeracion: { type: Boolean, required: true },
   mostrarStock: { type: Boolean, required: true },
   mostrarUbicacion: { type: Boolean, required: true },
-  codigoResaltado: { type: String, default: '' },
+  codigosDuplicados: { type: Set, default: () => new Set() },
 })
 const emit = defineEmits(['editar-stock', 'editar-ubicacion', 'eliminar', 'enviar-etiqueta'])
 const borradores = reactive({})
@@ -187,12 +191,12 @@ const columnasListado = computed(() => {
 watch(
   () => props.articulos,
   (articulos) => {
-    const codigosActuales = new Set(articulos.map((articulo) => articulo.codigo))
-    Object.keys(borradores).forEach((codigo) => {
-      if (!codigosActuales.has(codigo)) delete borradores[codigo]
+    const identificadoresActuales = new Set(articulos.map((articulo) => articulo.idFila))
+    Object.keys(borradores).forEach((idFila) => {
+      if (!identificadoresActuales.has(idFila)) delete borradores[idFila]
     })
     articulos.forEach((articulo) => {
-      borradores[articulo.codigo] = {
+      borradores[articulo.idFila] = {
         stockListado: articulo.stockListado ?? '',
         ubicacionListado: articulo.ubicacionListado ?? '',
       }
@@ -207,34 +211,24 @@ function esStockValido(valor) {
   return Number.isFinite(numero) && Number.isInteger(numero)
 }
 
-function normalizarBorradorUbicacion(codigo) {
-  borradores[codigo].ubicacionListado = String(borradores[codigo].ubicacionListado || '')
+function normalizarBorradorUbicacion(idFila) {
+  borradores[idFila].ubicacionListado = String(borradores[idFila].ubicacionListado || '')
     .toUpperCase()
     .replace(/\s+/g, '-')
 }
 
 function confirmarStock(articulo) {
-  const stockListado = borradores[articulo.codigo].stockListado
+  const stockListado = borradores[articulo.idFila].stockListado
   if (String(stockListado) === String(articulo.stockListado ?? '')) return
-  emit('editar-stock', { codigo: articulo.codigo, stockListado })
+  emit('editar-stock', { idFila: articulo.idFila, stockListado })
 }
 
 function confirmarUbicacion(articulo) {
-  normalizarBorradorUbicacion(articulo.codigo)
-  const ubicacionListado = borradores[articulo.codigo].ubicacionListado.trim()
+  normalizarBorradorUbicacion(articulo.idFila)
+  const ubicacionListado = borradores[articulo.idFila].ubicacionListado.trim()
   if (ubicacionListado === String(articulo.ubicacionListado || '')) return
-  emit('editar-ubicacion', { codigo: articulo.codigo, ubicacionListado })
+  emit('editar-ubicacion', { idFila: articulo.idFila, ubicacionListado })
 }
-
-function enfocarArticulo(codigo) {
-  const filasArticulo = Array.from(document.querySelectorAll('[data-codigo]')).filter(
-    (fila) => fila.dataset.codigo === codigo,
-  )
-  const elemento = filasArticulo.find((fila) => fila.offsetParent !== null) || filasArticulo[0]
-  elemento?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
-
-defineExpose({ enfocarArticulo })
 </script>
 
 <style scoped>
@@ -331,9 +325,8 @@ defineExpose({ enfocarArticulo })
   border: 0;
   cursor: pointer;
 }
-.resaltado-atencion {
-  background: var(--color-primario-claro);
-  box-shadow: inset 4px 0 var(--color-primario);
+.fila-listado-duplicada {
+  background: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
 .campos-listado-tarjeta {
   display: grid;
@@ -376,6 +369,14 @@ defineExpose({ enfocarArticulo })
 }
 .boton-eliminar-tarjeta {
   color: var(--color-error);
+}
+.tarjeta-listado-duplicada {
+  background: color-mix(in oklab, var(--color-error) 10%, var(--color-fondo));
+  border-color: var(--color-error);
+}
+.tarjeta-listado-duplicada :deep(.codigo-tarjeta-articulo) {
+  color: var(--color-error);
+  font-weight: 700;
 }
 @media (max-width: 720px) {
   .tabla-listados {

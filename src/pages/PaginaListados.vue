@@ -25,12 +25,16 @@
         <FormularioListado
           ref="formularioListadoRef"
           :deshabilitado="ocupado"
+          :articulo-repetido="articuloPendienteRepetido"
+          :lineas-repetidas="lineasArticuloPendiente"
           @articulo-seleccionado="agregarArticulo"
           @base-datos-cargada="manejarBaseCargada"
           @base-datos-limpia="baseDatosCargada = false"
           @error-carga="manejarErrorCarga"
           @modal-abierto="modalActivo = true"
           @modal-cerrado="modalActivo = false"
+          @confirmar-repetido="confirmarArticuloRepetido"
+          @cancelar-repetido="cancelarArticuloRepetido"
         />
         <div class="columnas-visibles-listado">
           <span class="titulo-columnas-listado">Columnas visibles</span>
@@ -112,12 +116,11 @@
       </div>
 
       <TablaListados
-        ref="tablaListadosRef"
         :articulos="articulosOrdenados"
         :mostrar-numeracion="listadoActivo.configuracion.mostrarNumeracion"
         :mostrar-stock="listadoActivo.configuracion.mostrarStock"
         :mostrar-ubicacion="listadoActivo.configuracion.mostrarUbicacion"
-        :codigo-resaltado="codigoResaltadoVisible"
+        :codigos-duplicados="codigosDuplicados"
         @editar-stock="guardarCambioStock"
         @editar-ubicacion="guardarCambioUbicacion"
         @eliminar="eliminarArticulo"
@@ -200,7 +203,6 @@ import {
 } from '../components/BaseDeDatos/UsoAlmacenamientoListados.js'
 import { inicializarBaseDatos, obtenerEstadoCarga } from '../components/BaseDeDatos/LectorExcel.js'
 import { normalizarCodigoBusqueda } from '../components/Logica/Compartidos/CodigoEscaner.js'
-import { usarResaltadoAtencion } from '../components/Logica/Compartidos/UsoResaltadoAtencion.js'
 import {
   cargarDatosLocalesArticulos,
   resolverDatosArticulo,
@@ -241,10 +243,8 @@ const datosLocalesArticulos = ref({
   stockConfirmadoPorCodigo: new Map(),
   ubicacionPorCodigo: new Map(),
 })
-const codigoResaltado = ref('')
+const articuloPendienteRepetido = ref(null)
 const formularioListadoRef = ref(null)
-const tablaListadosRef = ref(null)
-const { estaResaltado, activarResaltado } = usarResaltadoAtencion(2400)
 const ocupado = computed(
   () =>
     cargandoDatosLocales.value ||
@@ -262,7 +262,24 @@ const articulosOrdenados = computed(() =>
     obtenerClave: (articulo) => articulo.codigo,
   }),
 )
-const codigoResaltadoVisible = computed(() => (estaResaltado.value ? codigoResaltado.value : ''))
+const lineasArticuloPendiente = computed(() => {
+  const codigoPendiente = normalizarCodigoBusqueda(articuloPendienteRepetido.value?.codigo)
+  if (!codigoPendiente) return []
+  return articulosOrdenados.value.reduce((lineas, articulo, indice) => {
+    if (normalizarCodigoBusqueda(articulo.codigo) === codigoPendiente) lineas.push(indice + 1)
+    return lineas
+  }, [])
+})
+const codigosDuplicados = computed(() => {
+  const conteoPorCodigo = new Map()
+  listadoActivo.value?.articulos.forEach((articulo) => {
+    const codigo = normalizarCodigoBusqueda(articulo.codigo)
+    if (codigo) conteoPorCodigo.set(codigo, (conteoPorCodigo.get(codigo) || 0) + 1)
+  })
+  return new Set(
+    [...conteoPorCodigo.entries()].filter(([, cantidad]) => cantidad > 1).map(([codigo]) => codigo),
+  )
+})
 const criteriosOrdenListado = computed(() => {
   const criterios = ['fechaIngreso', 'alfabetico']
   if (listadoActivo.value?.configuracion.mostrarStock) criterios.push('cantidad')
@@ -341,6 +358,7 @@ async function ejecutarAdministracion(operacion) {
 }
 
 function crearNuevoListado() {
+  articuloPendienteRepetido.value = null
   ejecutarAdministracion(async () => {
     const creado = await crearListado()
     reemplazarListadoLocal(creado)
@@ -350,6 +368,7 @@ function crearNuevoListado() {
 }
 
 function abrirListado(id) {
+  articuloPendienteRepetido.value = null
   ejecutarAdministracion(async () => {
     const listado = await obtenerListado(id)
     if (!listado) throw new Error('No se encontró el listado')
@@ -365,6 +384,7 @@ function renombrarListadoActivo({ id, nombrePersonalizado }) {
 }
 
 function duplicarListadoActivo(id) {
+  articuloPendienteRepetido.value = null
   ejecutarAdministracion(async () => {
     reemplazarListadoLocal(await duplicarListado(id))
     notificar('positive', 'Listado duplicado')
@@ -383,6 +403,7 @@ function cerrarModalEliminarListado() {
 function confirmarEliminarListado() {
   const id = listadoAEliminar.value?.id
   if (!id) return
+  articuloPendienteRepetido.value = null
   cerrarModalEliminarListado()
   ejecutarAdministracion(async () => {
     const resultado = await eliminarListado(id)
@@ -402,20 +423,20 @@ async function persistirActivo() {
 async function agregarArticulo(articulo) {
   const codigo = normalizarCodigoBusqueda(articulo?.codigo)
   if (!codigo || !listadoActivo.value) return
-  const existente = listadoActivo.value.articulos.find((item) => item.codigo === codigo)
-  if (existente) {
-    const posicion = articulosOrdenados.value.findIndex((item) => item.codigo === codigo) + 1
-    codigoResaltado.value = codigo
-    await activarResaltado()
-    tablaListadosRef.value?.enfocarArticulo?.(codigo)
-    Notify.create({
-      type: 'warning',
-      message: `El artículo ya está en el listado, posición ${posicion}`,
-      position: 'top',
-      timeout: 2400,
-    })
+  if (listadoActivo.value.articulos.some((item) => item.codigo === codigo)) {
+    articuloPendienteRepetido.value = {
+      ...articulo,
+      codigo,
+      nombre: String(articulo.nombre || articulo.descripcion || 'Artículo sin nombre').trim(),
+    }
     return
   }
+  await insertarArticulo(articulo)
+}
+
+async function insertarArticulo(articulo) {
+  const codigo = normalizarCodigoBusqueda(articulo?.codigo)
+  if (!codigo || !listadoActivo.value) return
   const fechaMayor = listadoActivo.value.articulos.reduce(
     (mayor, item) => Math.max(mayor, Number(item.fechaIngreso || 0)),
     0,
@@ -428,6 +449,7 @@ async function agregarArticulo(articulo) {
     datosLocalesArticulos.value,
   )
   listadoActivo.value.articulos.push({
+    idFila: crypto.randomUUID(),
     codigo,
     descripcion: String(articulo.nombre || '').trim(),
     stockOriginal: articulo.stock ?? '',
@@ -439,15 +461,29 @@ async function agregarArticulo(articulo) {
   await persistirActivo()
 }
 
-async function guardarCambioStock({ codigo, stockListado }) {
-  const articulo = listadoActivo.value?.articulos.find((item) => item.codigo === codigo)
+async function confirmarArticuloRepetido() {
+  const articulo = articuloPendienteRepetido.value
+  if (!articulo) return
+  articuloPendienteRepetido.value = null
+  await insertarArticulo(articulo)
+  await formularioListadoRef.value?.enfocarBusqueda?.()
+}
+
+async function cancelarArticuloRepetido() {
+  articuloPendienteRepetido.value = null
+  await nextTick()
+  await formularioListadoRef.value?.limpiarBusqueda?.({ descartarTextoCopiado: true })
+}
+
+async function guardarCambioStock({ idFila, stockListado }) {
+  const articulo = listadoActivo.value?.articulos.find((item) => item.idFila === idFila)
   if (!articulo) return
   articulo.stockListado = stockListado
   await persistirActivo()
 }
 
-async function guardarCambioUbicacion({ codigo, ubicacionListado }) {
-  const articulo = listadoActivo.value?.articulos.find((item) => item.codigo === codigo)
+async function guardarCambioUbicacion({ idFila, ubicacionListado }) {
+  const articulo = listadoActivo.value?.articulos.find((item) => item.idFila === idFila)
   if (!articulo) return
   articulo.ubicacionListado = ubicacionListado
   await persistirActivo()
@@ -456,7 +492,7 @@ async function guardarCambioUbicacion({ codigo, ubicacionListado }) {
 async function eliminarArticulo(articulo) {
   if (!listadoActivo.value) return
   listadoActivo.value.articulos = listadoActivo.value.articulos.filter(
-    (item) => item.codigo !== articulo.codigo,
+    (item) => item.idFila !== articulo.idFila,
   )
   await persistirActivo()
 }
@@ -483,7 +519,9 @@ async function actualizarConfiguracion(campo, valor) {
   const columnaVisible = Boolean(valor)
   listadoActivo.value.configuracion[campo] = columnaVisible
   const criterioOculto =
-    (!columnaVisible && campo === 'mostrarStock' && listadoActivo.value.orden.criterio === 'cantidad') ||
+    (!columnaVisible &&
+      campo === 'mostrarStock' &&
+      listadoActivo.value.orden.criterio === 'cantidad') ||
     (!columnaVisible &&
       campo === 'mostrarUbicacion' &&
       listadoActivo.value.orden.criterio === 'ubicacion')
@@ -577,9 +615,7 @@ async function exportarListado() {
   exportando.value = true
   try {
     const generarArchivo =
-      formatoExportacion.value === 'pdf'
-        ? generarYGuardarPDFListado
-        : generarYGuardarExcelListado
+      formatoExportacion.value === 'pdf' ? generarYGuardarPDFListado : generarYGuardarExcelListado
     const resultado = await generarArchivo(listadoActivo.value, articulosOrdenados.value)
     if (!esNavegadorWeb.value) {
       await compartirArchivo(resultado.uri, resultado.nombreArchivo, {
@@ -591,7 +627,10 @@ async function exportarListado() {
       notificar('positive', `${nombreFormatoExportacion.value} descargado correctamente`)
     }
   } catch (error) {
-    notificar('negative', error.message || `No se pudo generar el ${nombreFormatoExportacion.value}`)
+    notificar(
+      'negative',
+      error.message || `No se pudo generar el ${nombreFormatoExportacion.value}`,
+    )
   } finally {
     exportando.value = false
   }

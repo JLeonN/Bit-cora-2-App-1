@@ -19,5 +19,9 @@ export function usarTextoCopiadoInput(nombreOrigen) {
     return textoCopiado
   }
 
-  return { copiarTextoActual, obtenerTextoCopiado }
+  function limpiarTextoCopiado() {
+    textoCopiado = ''
+  }
+
+  return { copiarTextoActual, limpiarTextoCopiado, obtenerTextoCopiado }
 }

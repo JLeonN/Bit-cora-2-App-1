@@ -22,7 +22,7 @@
                 class="campo-entrada-formulario"
                 type="text"
                 placeholder="Código o descripción del artículo"
-                :disabled="deshabilitado"
+                :disabled="busquedaDeshabilitada"
                 @focus="mostrarBuscador = true"
                 @blur="ocultarBuscadorConDemora"
                 @input="normalizarBusqueda"
@@ -34,7 +34,7 @@
                 type="button"
                 class="boton-copiar-codigo"
                 title="Copiar texto"
-                :disabled="deshabilitado"
+                :disabled="busquedaDeshabilitada"
                 @click="copiarBusquedaActual"
               >
                 <IconCopy :size="16" />
@@ -50,11 +50,41 @@
               type="button"
               class="camara-ubicacion"
               title="Escanear con cámara"
-              :disabled="deshabilitado"
+              :disabled="busquedaDeshabilitada"
               @click="abrirCamara"
             >
               <IconCamera :size="22" :stroke="2" />
             </button>
+          </div>
+          <div
+            v-if="articuloRepetido"
+            class="aviso-articulo-repetido"
+            role="alert"
+            aria-live="polite"
+          >
+            <div class="datos-articulo-repetido">
+              <strong>{{ articuloRepetido.nombre }}</strong>
+              <span>{{ articuloRepetido.codigo }}</span>
+            </div>
+            <p>
+              Este artículo ya aparece en {{ textoLineasRepetidas }}. ¿Querés agregarlo igualmente?
+            </p>
+            <div class="acciones-articulo-repetido">
+              <button
+                type="button"
+                class="boton-confirmar-repetido"
+                @click="emit('confirmar-repetido')"
+              >
+                Sí, agregar
+              </button>
+              <button
+                type="button"
+                class="boton-cancelar-repetido"
+                @click="emit('cancelar-repetido')"
+              >
+                No
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -71,7 +101,7 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { IconCamera, IconCopy } from '@tabler/icons-vue'
 import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
@@ -90,7 +120,11 @@ import {
 } from '../Compartidos/InputArticuloInteligente.js'
 import { usarTextoCopiadoInput } from '../Compartidos/UsoTextoCopiadoInput.js'
 
-defineProps({ deshabilitado: { type: Boolean, default: false } })
+const props = defineProps({
+  deshabilitado: { type: Boolean, default: false },
+  articuloRepetido: { type: Object, default: null },
+  lineasRepetidas: { type: Array, default: () => [] },
+})
 const emit = defineEmits([
   'articulo-seleccionado',
   'base-datos-cargada',
@@ -98,6 +132,8 @@ const emit = defineEmits([
   'error-carga',
   'modal-abierto',
   'modal-cerrado',
+  'confirmar-repetido',
+  'cancelar-repetido',
 ])
 const busquedaArticulo = ref('')
 const mostrarBuscador = ref(false)
@@ -107,7 +143,15 @@ const baseDatosCargada = ref(false)
 const inputBusquedaRef = ref(null)
 const autoseleccionArticuloHabilitada = ref(false)
 const ultimoEspacioTiempo = ref(0)
-const { copiarTextoActual, obtenerTextoCopiado } = usarTextoCopiadoInput('FormularioListado')
+const { copiarTextoActual, limpiarTextoCopiado, obtenerTextoCopiado } =
+  usarTextoCopiadoInput('FormularioListado')
+const busquedaDeshabilitada = computed(() => props.deshabilitado || Boolean(props.articuloRepetido))
+const textoLineasRepetidas = computed(() => {
+  const lineas = props.lineasRepetidas
+  if (lineas.length === 1) return `la línea ${lineas[0]}`
+  const ultimaLinea = lineas.at(-1)
+  return `las líneas ${lineas.slice(0, -1).join(', ')} y ${ultimaLinea}`
+})
 
 function manejarBaseCargada(datos) {
   baseDatosCargada.value = true
@@ -207,6 +251,14 @@ async function enfocarBusqueda() {
   inputBusquedaRef.value?.focus()
 }
 
+async function limpiarBusqueda({ descartarTextoCopiado = false } = {}) {
+  busquedaArticulo.value = ''
+  mostrarBuscador.value = false
+  estadoBusqueda.value = { articuloUnico: null }
+  if (descartarTextoCopiado) limpiarTextoCopiado()
+  await enfocarBusqueda()
+}
+
 function cerrarInteraccion() {
   if (mostrarCamara.value) {
     cerrarCamara()
@@ -216,6 +268,10 @@ function cerrarInteraccion() {
     mostrarBuscador.value = false
     return true
   }
+  if (props.articuloRepetido) {
+    emit('cancelar-repetido')
+    return true
+  }
   return false
 }
 
@@ -223,7 +279,7 @@ onMounted(async () => {
   autoseleccionArticuloHabilitada.value = await obtenerAutoseleccionArticulo()
 })
 
-defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada })
+defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpiarBusqueda })
 </script>
 
 <style scoped>
@@ -232,5 +288,55 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada })
 }
 .formulario-listado :deep(.formulario-ubicacion) {
   padding-bottom: 0;
+}
+.aviso-articulo-repetido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem;
+  color: var(--color-texto-principal);
+  background: color-mix(in oklab, var(--color-acento) 10%, var(--color-superficie));
+  border: 1px solid var(--color-acento);
+  border-radius: 10px;
+}
+.datos-articulo-repetido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+.datos-articulo-repetido strong {
+  overflow-wrap: anywhere;
+}
+.datos-articulo-repetido span {
+  color: var(--color-texto-secundario);
+  font-size: 0.76rem;
+}
+.aviso-articulo-repetido p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.acciones-articulo-repetido {
+  display: flex;
+  gap: 0.6rem;
+}
+.acciones-articulo-repetido button {
+  min-height: 40px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.boton-confirmar-repetido {
+  background: var(--color-primario);
+}
+.boton-cancelar-repetido {
+  background: var(--color-superficie);
+}
+@media (max-width: 480px) {
+  .acciones-articulo-repetido button {
+    flex: 1;
+  }
 }
 </style>

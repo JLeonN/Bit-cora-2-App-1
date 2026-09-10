@@ -4,7 +4,7 @@ import { normalizarOrden } from '../Logica/Compartidos/OrdenarColeccion.js'
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
-export const VERSION_LISTADOS = '1.3'
+export const VERSION_LISTADOS = '1.4'
 
 const CONFIGURACION_INICIAL = Object.freeze({
   mostrarNumeracion: false,
@@ -36,9 +36,7 @@ function extraerNombrePersonalizado(listado) {
   }
   const nombreAnterior = normalizarTexto(listado?.nombre)
   if (!nombreAnterior || nombreAnterior === 'Listado sin nombre') return ''
-  const compuesto = nombreAnterior.match(
-    /^Listado _ (.+) _ \d{2}-\d{2}-\d{4} \d{2}-\d{2}$/u,
-  )
+  const compuesto = nombreAnterior.match(/^Listado _ (.+) _ \d{2}-\d{2}-\d{4} \d{2}-\d{2}$/u)
   if (compuesto) return normalizarTexto(compuesto[1])
   if (/^Listado \d{2}-\d{2}-\d{4} \d{2}-\d{2}(?: \d+)?$/u.test(nombreAnterior)) return ''
   return nombreAnterior
@@ -50,6 +48,7 @@ function normalizarArticulo(articulo) {
   const stockOriginal = articulo?.stockOriginal ?? ''
   const ubicacionOriginal = normalizarUbicacion(articulo?.ubicacionOriginal)
   return {
+    idFila: normalizarTexto(articulo?.idFila) || crypto.randomUUID(),
     codigo,
     descripcion: normalizarTexto(articulo?.descripcion || articulo?.nombre),
     stockOriginal,
@@ -61,13 +60,10 @@ function normalizarArticulo(articulo) {
 }
 
 function normalizarArticulos(articulos) {
-  const mapa = new Map()
-  const ordenados = (Array.isArray(articulos) ? articulos : [])
+  return (Array.isArray(articulos) ? articulos : [])
     .map(normalizarArticulo)
     .filter(Boolean)
     .sort((articuloA, articuloB) => articuloA.fechaIngreso - articuloB.fechaIngreso)
-  ordenados.forEach((articulo) => mapa.set(articulo.codigo, articulo))
-  return Array.from(mapa.values())
 }
 
 function normalizarListado(listado, { actualizar = false } = {}) {
@@ -177,7 +173,10 @@ export async function duplicarListado(id) {
       : 'Copia',
     creadoEn: ahora,
     actualizadoEn: ahora,
-    articulos: original.articulos.map((articulo) => ({ ...articulo })),
+    articulos: original.articulos.map((articulo) => ({
+      ...articulo,
+      idFila: crypto.randomUUID(),
+    })),
   }
   const guardada = await guardarListado(copia)
   await guardarListadoActivo(guardada.id)
@@ -190,7 +189,8 @@ export async function eliminarListado(id) {
   coleccion.listados = coleccion.listados.filter((listado) => listado.id !== id)
   const eliminado = cantidadAnterior !== coleccion.listados.length
   await persistirColeccion(coleccion)
-  let listadoActivo = coleccion.listados.sort((a, b) => b.actualizadoEn - a.actualizadoEn)[0] || null
+  let listadoActivo =
+    coleccion.listados.sort((a, b) => b.actualizadoEn - a.actualizadoEn)[0] || null
   if (!listadoActivo) listadoActivo = await crearListado()
   else await guardarListadoActivo(listadoActivo.id)
   return { eliminado, listadoActivo: clonar(listadoActivo) }
