@@ -68,24 +68,24 @@ Disponer de una API independiente de Vue y de la interfaz que resuelva stock y u
 
 ### Pasos de ejecución
 
-- [ ] Crear `src/components/Logica/Compartidos/ServicioDatosLocalesArticulo.js` respetando PascalCase y UTF-8.
+- [x] Crear `src/components/Logica/Compartidos/ServicioDatosLocalesArticulo.js` respetando PascalCase y UTF-8.
   - Importar `obtenerSesionStock`, `obtenerUbicaciones` y `normalizarCodigoBusqueda` desde sus rutas existentes.
   - Mantener privados los detalles de Capacitor Preferences y las estructuras completas de almacenamiento.
-- [ ] Implementar `cargarDatosLocalesArticulos()` como función asíncrona.
+- [x] Implementar `cargarDatosLocalesArticulos()` como función asíncrona.
   - Leer `obtenerSesionStock()` y `obtenerUbicaciones()` en paralelo mediante `Promise.all`.
   - Construir `stockConfirmadoPorCodigo` como `Map`, incorporando únicamente registros con código válido y `confirmado === true`.
   - Guardar como valor el `stockContado` incluso cuando sea numéricamente `0`.
   - Construir `ubicacionPorCodigo` como `Map` solamente con códigos y ubicaciones no vacíos.
   - Respetar la prioridad temporal de la lista local de ubicaciones: como los movimientos recientes se guardan al comienzo, la primera ubicación válida encontrada para un código debe prevalecer y no ser reemplazada por duplicados posteriores de la colección.
   - Devolver un contexto con ambos mapas; si los almacenamientos están vacíos, devolver mapas vacíos y permitir que el consumidor use el Excel.
-- [ ] Implementar `resolverDatosArticulo(articuloExcel, datosLocales)` como función pura y síncrona.
+- [x] Implementar `resolverDatosArticulo(articuloExcel, datosLocales)` como función pura y síncrona.
   - Normalizar el código con la misma función utilizada por Listados.
   - Resolver `stockListado` mediante presencia en `stockConfirmadoPorCodigo`; si no existe, usar `articuloExcel.stock ?? ''`.
   - Resolver `ubicacionListado` mediante presencia de una ubicación local no vacía; si no existe, normalizar y usar `articuloExcel.ubicacionAntigua`.
   - Devolver además `origenStock` y `origenUbicacion`, limitados a los valores `memoria` y `excel`, para que futuros consumidores puedan diagnosticar o mostrar el origen sin repetir la decisión.
   - No mutar `articuloExcel`, los mapas ni los registros de almacenamiento recibidos.
   - Tratar stock y ubicación de forma independiente: la existencia de un dato local no debe forzar el origen del otro.
-- [ ] Mantener el contrato del servicio desacoplado de `ref`, `computed`, notificaciones, componentes y objetos completos de Listados.
+- [x] Mantener el contrato del servicio desacoplado de `ref`, `computed`, notificaciones, componentes y objetos completos de Listados.
   - El servicio debe ser reutilizable desde cualquier página o servicio que disponga de un artículo del Excel.
   - Un error inesperado de lectura debe propagarse al consumidor; no debe confundirse silenciosamente con la ausencia legítima de datos locales.
 
@@ -103,20 +103,20 @@ Aplicar los datos locales resueltos al crear un artículo nuevo, conservando int
 
 ### Pasos de ejecución
 
-- [ ] Importar `cargarDatosLocalesArticulos` y `resolverDatosArticulo` desde el nuevo servicio compartido.
-- [ ] Crear el estado `datosLocalesArticulos` con un contexto inicial que contenga mapas vacíos.
+- [x] Importar `cargarDatosLocalesArticulos` y `resolverDatosArticulo` desde el nuevo servicio compartido.
+- [x] Crear el estado `datosLocalesArticulos` con un contexto inicial que contenga mapas vacíos.
   - No almacenar copias completas de las sesiones dentro de cada artículo del listado.
   - Mantener un único contexto indexado durante la permanencia en la página para evitar lecturas de Preferences por cada escaneo.
-- [ ] Crear `cargarDatosLocales()` para actualizar atómicamente el contexto mediante `cargarDatosLocalesArticulos()`.
+- [x] Crear `cargarDatosLocales()` para actualizar atómicamente el contexto mediante `cargarDatosLocalesArticulos()`.
   - Permitir que un error llegue al flujo de inicialización existente y se muestre con la notificación de error de la página.
   - No bloquear ni borrar los listados persistidos si falla esta carga.
-- [ ] Ajustar `onMounted` para cargar el Excel persistido y las fuentes locales antes de habilitar el uso efectivo del formulario.
+- [x] Ajustar `onMounted` para cargar el Excel persistido y las fuentes locales antes de habilitar el uso efectivo del formulario.
   - Ejecutar en paralelo las operaciones independientes cuando no altere el orden requerido.
   - Conservar la secuencia necesaria de `cargarListados`, `establecerBaseCargada` y `actualizarBarra`.
   - Garantizar que una interacción inmediata no use accidentalmente mapas iniciales vacíos mientras la memoria local todavía se está leyendo.
-- [ ] Ajustar `manejarBaseCargada` para conservar el comportamiento de notificación y asegurar que el contexto local esté disponible después de cargar o reemplazar manualmente el Excel.
+- [x] Ajustar `manejarBaseCargada` para conservar el comportamiento de notificación y asegurar que el contexto local esté disponible después de cargar o reemplazar manualmente el Excel.
   - No filtrar los registros confirmados por la identidad exacta del archivo: la prioridad solicitada se determina por código y por la memoria vigente del dispositivo.
-- [ ] Modificar `agregarArticulo(articulo)` únicamente después de comprobar que el artículo no existe ya en el listado activo.
+- [x] Modificar `agregarArticulo(articulo)` únicamente después de comprobar que el artículo no existe ya en el listado activo.
   - Ejecutar `resolverDatosArticulo(articulo, datosLocalesArticulos.value)`.
   - Mantener `stockOriginal: articulo.stock ?? ''` como referencia original del Excel.
   - Asignar el resultado `stockListado` al campo editable `stockListado`.
@@ -124,7 +124,7 @@ Aplicar los datos locales resueltos al crear un artículo nuevo, conservando int
   - Asignar el resultado `ubicacionListado` al campo editable `ubicacionListado`.
   - No persistir `origenStock` ni `origenUbicacion` dentro del listado mientras no exista un consumidor real de esos metadatos.
   - Conservar `descripcion`, `codigo`, `fechaIngreso`, detección de duplicados, resaltado y persistencia actuales.
-- [ ] Mantener sin cambios el tratamiento de artículos existentes.
+- [x] Mantener sin cambios el tratamiento de artículos existentes.
   - Si el código ya está en el listado, conservar su stock y ubicación actuales y ejecutar solamente el aviso y resaltado ya implementados.
   - Al abrir o duplicar un listado, no volver a consultar Stock, Ubicaciones ni Excel para reconstruir sus artículos.
   - Las ediciones realizadas mediante `guardarCambioStock` y `guardarCambioUbicacion` deben seguir teniendo prioridad dentro del listado hasta que Leo elimine el artículo o decida enviarlo a otro módulo.
@@ -144,19 +144,19 @@ Dejar una frontera clara para que otros módulos reutilicen la misma prioridad s
 
 ### Pasos de ejecución
 
-- [ ] Verificar que toda decisión sobre prioridad de fuentes quede dentro de `ServicioDatosLocalesArticulo.js` y no duplicada en `PaginaListados.vue`.
-- [ ] Mantener como API pública solamente las operaciones necesarias:
+- [x] Verificar que toda decisión sobre prioridad de fuentes quede dentro de `ServicioDatosLocalesArticulo.js` y no duplicada en `PaginaListados.vue`.
+- [x] Mantener como API pública solamente las operaciones necesarias:
   - `cargarDatosLocalesArticulos(): Promise<{ stockConfirmadoPorCodigo: Map, ubicacionPorCodigo: Map }>`.
   - `resolverDatosArticulo(articuloExcel, datosLocales): { stockListado, ubicacionListado, origenStock, origenUbicacion }`.
-- [ ] Confirmar que la forma final del artículo de Listados sigue siendo compatible con:
+- [x] Confirmar que la forma final del artículo de Listados sigue siendo compatible con:
   - `normalizarArticulo` y `guardarListado` de `UsoAlmacenamientoListados.js`.
   - `enviarTodosAStock` y `enviarTodosAUbicaciones` de `ServicioIntegracionListados.js`.
   - `generarYGuardarExcelListado` de `ExportarListadosExcel.js`.
   - `TablaListados.vue` y sus eventos de edición.
-- [ ] No refactorizar `PaginaStock.vue` ni `ServicioRegistroUbicacion.js` en esta implementación.
+- [x] No refactorizar `PaginaStock.vue` ni `ServicioRegistroUbicacion.js` en esta implementación.
   - Esos flujos incluyen reglas adicionales de historial, respaldo y edición que no forman parte del alta de Listados.
   - Un futuro consumidor podrá utilizar `resolverDatosArticulo` si necesita exactamente el mismo contrato de prioridad.
-- [ ] Revisar que ningún nombre nuevo contenga guiones medios o bajos y que no se incorporen textos con caracteres dañados.
+- [x] Revisar que ningún nombre nuevo contenga guiones medios o bajos y que no se incorporen textos con caracteres dañados.
 
 ## FASE TESTING
 
@@ -166,9 +166,9 @@ Validar que cada dato se obtiene de la fuente correcta, que los respaldos funcio
 
 ### Pruebas automatizadas
 
-- [ ] Ejecutar `npm run lint` y corregir cualquier error o advertencia introducida por los archivos modificados.
-- [ ] Ejecutar `npm run build` y comprobar que Quasar complete la compilación sin errores de importación, sintaxis o empaquetado.
-- [ ] Ejecutar `npm test` únicamente como comprobación del script existente y documentar que el proyecto informa `No test specified`.
+- [x] Ejecutar `npm run lint` y corregir cualquier error o advertencia introducida por los archivos modificados.
+- [x] Ejecutar `npm run build` y comprobar que Quasar complete la compilación sin errores de importación, sintaxis o empaquetado.
+- [x] Ejecutar `npm test` únicamente como comprobación del script existente y documentar que el proyecto informa `No test specified`.
 
 ### Pruebas manuales
 
@@ -195,11 +195,11 @@ Validar que cada dato se obtiene de la fuente correcta, que los respaldos funcio
 
 ## Progreso del plan
 
-- [ ] Fase 1: Crear el servicio compartido de resolución
-- [ ] Fase 2: Integrar la prioridad en el alta de Listados
-- [ ] Fase 3: Consolidar la reutilización y compatibilidad
+- [x] Fase 1: Crear el servicio compartido de resolución
+- [x] Fase 2: Integrar la prioridad en el alta de Listados
+- [x] Fase 3: Consolidar la reutilización y compatibilidad
 - [ ] Fase Testing
 
 Fecha de creación: 9 de septiembre de 2026
 Fecha de última actualización: 9 de septiembre de 2026
-Estado: BORRADOR
+Estado: EN PROCESO

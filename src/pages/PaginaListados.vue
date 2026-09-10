@@ -173,12 +173,13 @@ import {
   obtenerListados,
   renombrarListado,
 } from '../components/BaseDeDatos/UsoAlmacenamientoListados.js'
-import {
-  inicializarBaseDatos,
-  obtenerEstadoCarga,
-} from '../components/BaseDeDatos/LectorExcel.js'
+import { inicializarBaseDatos, obtenerEstadoCarga } from '../components/BaseDeDatos/LectorExcel.js'
 import { normalizarCodigoBusqueda } from '../components/Logica/Compartidos/CodigoEscaner.js'
 import { usarResaltadoAtencion } from '../components/Logica/Compartidos/UsoResaltadoAtencion.js'
+import {
+  cargarDatosLocalesArticulos,
+  resolverDatosArticulo,
+} from '../components/Logica/Compartidos/ServicioDatosLocalesArticulo.js'
 import {
   CRITERIOS_ORDEN,
   normalizarOrden,
@@ -204,12 +205,22 @@ const exportando = ref(false)
 const enviandoStock = ref(false)
 const enviandoUbicaciones = ref(false)
 const administrando = ref(false)
+const cargandoDatosLocales = ref(true)
+const datosLocalesArticulos = ref({
+  stockConfirmadoPorCodigo: new Map(),
+  ubicacionPorCodigo: new Map(),
+})
 const codigoResaltado = ref('')
 const formularioListadoRef = ref(null)
 const tablaListadosRef = ref(null)
 const { estaResaltado, activarResaltado } = usarResaltadoAtencion(2400)
 const ocupado = computed(
-  () => administrando.value || exportando.value || enviandoStock.value || enviandoUbicaciones.value,
+  () =>
+    cargandoDatosLocales.value ||
+    administrando.value ||
+    exportando.value ||
+    enviandoStock.value ||
+    enviandoUbicaciones.value,
 )
 const articulosOrdenados = computed(() =>
   ordenarColeccion(listadoActivo.value?.articulos || [], listadoActivo.value?.orden, {
@@ -220,9 +231,7 @@ const articulosOrdenados = computed(() =>
     obtenerClave: (articulo) => articulo.codigo,
   }),
 )
-const codigoResaltadoVisible = computed(() =>
-  estaResaltado.value ? codigoResaltado.value : '',
-)
+const codigoResaltadoVisible = computed(() => (estaResaltado.value ? codigoResaltado.value : ''))
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
@@ -268,6 +277,15 @@ async function cargarListados() {
   if (!activo) activo = listados.value[0] || (await crearListado())
   reemplazarListadoLocal(activo)
   await guardarListadoActivo(activo.id)
+}
+
+async function cargarDatosLocales() {
+  cargandoDatosLocales.value = true
+  try {
+    datosLocalesArticulos.value = await cargarDatosLocalesArticulos()
+  } finally {
+    cargandoDatosLocales.value = false
+  }
 }
 
 async function ejecutarAdministracion(operacion) {
@@ -362,14 +380,20 @@ async function agregarArticulo(articulo) {
     (mayor, item) => Math.max(mayor, Number(item.fechaIngreso || 0)),
     0,
   )
-  const ubicacionOriginal = String(articulo.ubicacionAntigua || '').trim().toUpperCase()
+  const ubicacionOriginal = String(articulo.ubicacionAntigua || '')
+    .trim()
+    .toUpperCase()
+  const { stockListado, ubicacionListado } = resolverDatosArticulo(
+    articulo,
+    datosLocalesArticulos.value,
+  )
   listadoActivo.value.articulos.push({
     codigo,
     descripcion: String(articulo.nombre || '').trim(),
     stockOriginal: articulo.stock ?? '',
-    stockListado: articulo.stock ?? '',
+    stockListado,
     ubicacionOriginal,
-    ubicacionListado: ubicacionOriginal,
+    ubicacionListado,
     fechaIngreso: Math.max(Date.now(), fechaMayor + 1),
   })
   await persistirActivo()
@@ -434,11 +458,19 @@ async function enviarTodosAStock() {
       ...listadoActivo.value,
       articulos: articulosOrdenados.value,
     })
-    if (resultado.enviados.length) notificar('positive', `${resultado.enviados.length} artículos enviados a Stock`)
+    if (resultado.enviados.length)
+      notificar('positive', `${resultado.enviados.length} artículos enviados a Stock`)
     if (resultado.omitidosConfirmados.length) {
-      notificar('warning', `${resultado.omitidosConfirmados.length} artículos omitidos por estar confirmados`)
+      notificar(
+        'warning',
+        `${resultado.omitidosConfirmados.length} artículos omitidos por estar confirmados`,
+      )
     }
-    if (resultado.invalidos.length) notificar('warning', `${resultado.invalidos.length} valores de stock inválidos no se enviaron`)
+    if (resultado.invalidos.length)
+      notificar(
+        'warning',
+        `${resultado.invalidos.length} valores de stock inválidos no se enviaron`,
+      )
   } catch (error) {
     notificar('negative', error.message || 'No se pudieron enviar los artículos a Stock')
   } finally {
@@ -454,8 +486,11 @@ async function enviarTodosAUbicaciones() {
       ...listadoActivo.value,
       articulos: articulosOrdenados.value,
     })
-    if (resultado.enviados.length) notificar('positive', `${resultado.enviados.length} artículos enviados a Ubicaciones`)
-    if (resultado.invalidos.length) notificar('warning', `${resultado.invalidos.length} ubicaciones inválidas no se enviaron`)
+    await cargarDatosLocales()
+    if (resultado.enviados.length)
+      notificar('positive', `${resultado.enviados.length} artículos enviados a Ubicaciones`)
+    if (resultado.invalidos.length)
+      notificar('warning', `${resultado.invalidos.length} ubicaciones inválidas no se enviaron`)
   } catch (error) {
     notificar('negative', error.message || 'No se pudieron enviar los artículos a Ubicaciones')
   } finally {
@@ -482,15 +517,20 @@ async function enviarTodosAEtiquetas() {
     return
   }
   const resultado = await enviarTodosAEtiquetasServicio(articulosOrdenados.value)
-  if (resultado.cantidad) notificar('positive', `${resultado.cantidad} artículos enviados a Etiquetas`)
-  if (resultado.omitidos) notificar('warning', `${resultado.omitidos} artículos inexistentes fueron omitidos`)
+  if (resultado.cantidad)
+    notificar('positive', `${resultado.cantidad} artículos enviados a Etiquetas`)
+  if (resultado.omitidos)
+    notificar('warning', `${resultado.omitidos} artículos inexistentes fueron omitidos`)
 }
 
 async function exportarListado() {
   if (exportando.value || !listadoActivo.value) return
   exportando.value = true
   try {
-    const resultado = await generarYGuardarExcelListado(listadoActivo.value, articulosOrdenados.value)
+    const resultado = await generarYGuardarExcelListado(
+      listadoActivo.value,
+      articulosOrdenados.value,
+    )
     if (!esNavegadorWeb.value) {
       await compartirArchivo(resultado.uri, resultado.nombreArchivo, {
         titulo: 'Listado de artículos',
@@ -507,9 +547,15 @@ async function exportarListado() {
   }
 }
 
-function manejarBaseCargada(datos) {
+async function manejarBaseCargada(datos) {
   baseDatosCargada.value = true
+  try {
+    await cargarDatosLocales()
+  } catch (error) {
+    notificar('negative', error.message || 'No se pudieron cargar los datos guardados')
+  }
   if (datos?.mensaje) notificar('positive', datos.mensaje)
+  await formularioListadoRef.value?.enfocarBusqueda?.()
 }
 
 function manejarErrorCarga(mensaje) {
@@ -537,7 +583,16 @@ function actualizarBarra() {
 watch(configuracionBarra, actualizarBarra, { deep: true })
 
 onMounted(async () => {
-  await inicializarBaseDatos()
+  const [, resultadoDatosLocales] = await Promise.allSettled([
+    inicializarBaseDatos(),
+    cargarDatosLocales(),
+  ])
+  if (resultadoDatosLocales.status === 'rejected') {
+    notificar(
+      'negative',
+      resultadoDatosLocales.reason?.message || 'No se pudieron cargar los datos guardados',
+    )
+  }
   baseDatosCargada.value = obtenerEstadoCarga().cargado
   await cargarListados()
   await nextTick()
