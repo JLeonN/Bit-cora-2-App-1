@@ -123,6 +123,32 @@
         @eliminar="eliminarArticulo"
         @enviar-etiqueta="enviarArticuloAEtiquetas"
       />
+      <section
+        v-if="articulosOrdenados.length"
+        class="exportacion-listado"
+        aria-label="Formato y envío del listado"
+      >
+        <div class="selector-formato-listado">
+          <span class="titulo-formato-listado">Enviar listado como</span>
+          <q-btn-toggle
+            v-model="formatoExportacion"
+            no-caps
+            unelevated
+            spread
+            toggle-color="primary"
+            :disable="exportando"
+            :options="OPCIONES_FORMATO_EXPORTACION"
+            aria-label="Formato del archivo"
+          />
+          <span class="ayuda-formato-listado">
+            {{
+              formatoExportacion === 'excel'
+                ? 'Excel está seleccionado por defecto.'
+                : 'PDF A4 horizontal, listo para imprimir.'
+            }}
+          </span>
+        </div>
+      </section>
     </template>
 
     <ModalEliminar
@@ -192,7 +218,13 @@ import {
   enviarTodosAUbicaciones as enviarTodosAUbicacionesServicio,
 } from '../components/Logica/Listados/ServicioIntegracionListados.js'
 import { generarYGuardarExcelListado } from '../components/Logica/Listados/ExportarListadosExcel.js'
+import { generarYGuardarPDFListado } from '../components/Logica/Listados/ExportarListadosPDF.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+
+const OPCIONES_FORMATO_EXPORTACION = [
+  { label: 'Excel', value: 'excel' },
+  { label: 'PDF A4', value: 'pdf' },
+]
 
 const emit = defineEmits(['configurar-barra'])
 const listados = ref([])
@@ -202,6 +234,7 @@ const modalActivo = ref(false)
 const listadoAEliminar = ref(null)
 const eliminarTodosSolicitado = ref(false)
 const exportando = ref(false)
+const formatoExportacion = ref('excel')
 const enviandoStock = ref(false)
 const enviandoUbicaciones = ref(false)
 const administrando = ref(false)
@@ -233,18 +266,21 @@ const articulosOrdenados = computed(() =>
 )
 const codigoResaltadoVisible = computed(() => (estaResaltado.value ? codigoResaltado.value : ''))
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
+const nombreFormatoExportacion = computed(() =>
+  formatoExportacion.value === 'pdf' ? 'PDF A4' : 'Excel',
+)
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: !esNavegadorWeb.value && articulosOrdenados.value.length > 0,
   puedeEnviar: articulosOrdenados.value.length > 0 && !exportando.value,
   iconoEnviar: IconShare,
-  tituloEnviar: 'Compartir listado',
+  tituloEnviar: `Compartir listado como ${nombreFormatoExportacion.value}`,
   botonesPersonalizados: esNavegadorWeb.value
     ? [
         {
           accion: 'descargar-listado',
           icono: IconDownload,
-          titulo: 'Descargar Excel del listado',
+          titulo: `Descargar ${nombreFormatoExportacion.value} del listado`,
           desactivado: articulosOrdenados.value.length === 0 || exportando.value,
           claseCSS: '',
         },
@@ -527,21 +563,22 @@ async function exportarListado() {
   if (exportando.value || !listadoActivo.value) return
   exportando.value = true
   try {
-    const resultado = await generarYGuardarExcelListado(
-      listadoActivo.value,
-      articulosOrdenados.value,
-    )
+    const generarArchivo =
+      formatoExportacion.value === 'pdf'
+        ? generarYGuardarPDFListado
+        : generarYGuardarExcelListado
+    const resultado = await generarArchivo(listadoActivo.value, articulosOrdenados.value)
     if (!esNavegadorWeb.value) {
       await compartirArchivo(resultado.uri, resultado.nombreArchivo, {
-        titulo: 'Listado de artículos',
+        titulo: `Listado de artículos en ${nombreFormatoExportacion.value}`,
         texto: `Archivo ${resultado.nombreArchivo}`,
         tituloDialogo: 'Seleccioná la app para compartir',
       })
     } else {
-      notificar('positive', 'Excel descargado correctamente')
+      notificar('positive', `${nombreFormatoExportacion.value} descargado correctamente`)
     }
   } catch (error) {
-    notificar('negative', error.message || 'No se pudo generar el Excel')
+    notificar('negative', error.message || `No se pudo generar el ${nombreFormatoExportacion.value}`)
   } finally {
     exportando.value = false
   }
@@ -652,6 +689,26 @@ onUnmounted(() => {
 }
 .icono-accion-listado {
   color: var(--color-primario);
+}
+.exportacion-listado {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background: var(--color-superficie);
+}
+.selector-formato-listado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.titulo-formato-listado {
+  color: var(--color-texto-principal);
+  font-weight: 700;
+}
+.ayuda-formato-listado {
+  color: var(--color-texto-secundario);
+  font-size: 0.82rem;
 }
 @media (max-width: 600px) {
   .columnas-visibles-listado {
