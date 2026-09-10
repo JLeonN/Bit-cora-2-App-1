@@ -6,10 +6,11 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 
 ### 📦 **Estructura General**
 
-La aplicación se divide en 7 módulos principales:
+La aplicación se divide en 8 módulos principales:
 - **Preparadores**: Registro diario de pedidos preparados, cantidades de ítems y estadísticas completas (ver `Resumen3Pedidos.md`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `Resumen4Ubicaciones.md`)
 - **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.md`)
+- **Listados**: Creación de listas persistentes con edición, ordenamiento, exportación e integración con otros módulos
 - **Stock**: Conteo de artículos, comparación con Excel e integración con Ubicaciones y Etiquetas (ver `Resumen7Stock.md`)
 - **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `Resumen5Etiquetas.md`)
 - **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
@@ -26,6 +27,7 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 - **Tarjeta Preparadores**: Acceso a `/TablaPedidos`
 - **Tarjeta Ubicaciones**: Acceso a `/AjustarUbicaciones`
 - **Tarjeta Consulta De Ubicación**: Acceso a `/ConsultaDeUbicacion`
+- **Tarjeta Listados**: Acceso a `/listados`
 - **Tarjeta Etiquetas**: Acceso a `/etiquetas`
 - Diseño responsive con grid adaptativo
 - Efectos hover y transiciones suaves
@@ -378,3 +380,11 @@ src/
 - El tutorial explica la carga de números de pedido, cantidades de ítems, cámara y lector Bluetooth.
 - La barra flotante se ubica a un píxel del banner publicitario usando su altura real.
 - Release vigente actualizada: 4.2.37.
+
+### Actualización de release 4.2.38
+
+- Se incorporó el módulo Listados para crear, conservar, duplicar y administrar listas de artículos.
+- Los listados permiten elegir columnas, editar stock y ubicación, ordenar el contenido y admitir artículos repetidos con confirmación.
+- Se agregó exportación en Excel y PDF A4, además del envío completo a Stock, Ubicaciones y Etiquetas.
+- Etiquetas, Stock y Listados comparten controles de ordenamiento por llegada, nombre, cantidad o ubicación según corresponda.
+- Release vigente actualizada: 4.2.38.

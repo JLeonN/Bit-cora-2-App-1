@@ -1,15 +1,25 @@
 {
-  "versionDisponible": "4.2.37",
+  "versionDisponible": "4.2.38",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Preparadores",
+        "apartado": "Listados",
         "novedades": [
-          "El módulo Pedidos ahora se llama Preparadores para representar mejor el trabajo diario.",
-          "La guía explica cómo registrar pedidos, indicar sus ítems y usar la cámara o un lector Bluetooth.",
-          "La barra de acciones se ubica más cerca de la publicidad para aprovechar mejor la pantalla."
+          "Creá y guardá distintos listados, asignales un nombre y podés abrirlos, duplicarlos o eliminarlos cuando lo necesites.",
+          "Buscá artículos por código o descripción, usá la cámara o un lector y activá la selección automática para agilizar la carga.",
+          "Ahora podés agregar artículos repetidos después de confirmar el aviso que indica en qué líneas ya aparecen.",
+          "Elegí si querés mostrar numeración, stock y ubicación, y editá cada fila directamente desde el listado.",
+          "El stock confirmado y las ubicaciones guardadas en el dispositivo tienen prioridad sobre los datos originales del Excel.",
+          "Enviá el listado completo a Etiquetas, Stock o Ubicaciones desde acciones siempre disponibles."
+        ]
+      },
+      {
+        "apartado": "Orden y exportación",
+        "novedades": [
+          "Ordená los artículos por llegada, nombre, stock o ubicación, manteniendo el mismo orden en los archivos generados.",
+          "Descargá o compartí cada listado como Excel o PDF A4, respetando las columnas visibles y la numeración elegida."
         ]
       }
     ]
