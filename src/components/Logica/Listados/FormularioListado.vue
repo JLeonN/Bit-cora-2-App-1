@@ -29,6 +29,16 @@
                 @keydown="manejarDobleEspacio"
                 @keyup.enter="resolverBusqueda"
               />
+              <button
+                v-if="busquedaArticulo"
+                type="button"
+                class="boton-copiar-codigo"
+                title="Copiar texto"
+                :disabled="deshabilitado"
+                @click="copiarBusquedaActual"
+              >
+                <IconCopy :size="16" />
+              </button>
               <CodigoMasNombre
                 v-if="mostrarBuscador && busquedaArticulo.length >= 3"
                 :busqueda="busquedaArticulo"
@@ -62,7 +72,7 @@
 
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
-import { IconCamera } from '@tabler/icons-vue'
+import { IconCamera, IconCopy } from '@tabler/icons-vue'
 import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
 import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
@@ -78,6 +88,7 @@ import {
   manejarDobleEspacioInput,
   normalizarInputArticulo,
 } from '../Compartidos/InputArticuloInteligente.js'
+import { usarTextoCopiadoInput } from '../Compartidos/UsoTextoCopiadoInput.js'
 
 defineProps({ deshabilitado: { type: Boolean, default: false } })
 const emit = defineEmits([
@@ -96,6 +107,7 @@ const baseDatosCargada = ref(false)
 const inputBusquedaRef = ref(null)
 const autoseleccionArticuloHabilitada = ref(false)
 const ultimoEspacioTiempo = ref(0)
+const { copiarTextoActual, obtenerTextoCopiado } = usarTextoCopiadoInput('FormularioListado')
 
 function manejarBaseCargada(datos) {
   baseDatosCargada.value = true
@@ -158,9 +170,13 @@ function resolverBusqueda(valor = busquedaArticulo.value) {
   if (estadoBusqueda.value?.articuloUnico) seleccionarArticulo(estadoBusqueda.value.articuloUnico)
 }
 
+async function copiarBusquedaActual() {
+  await copiarTextoActual(busquedaArticulo.value)
+}
+
 function seleccionarArticulo(articulo) {
   emit('articulo-seleccionado', articulo)
-  busquedaArticulo.value = ''
+  busquedaArticulo.value = obtenerTextoCopiado()
   mostrarBuscador.value = false
   enfocarBusqueda()
 }

@@ -155,6 +155,7 @@ import {
   manejarDobleEspacioInput,
   normalizarInputArticulo,
 } from '../Compartidos/InputArticuloInteligente.js'
+import { usarTextoCopiadoInput } from '../Compartidos/UsoTextoCopiadoInput.js'
 import {
   guardarUltimaUbicacion,
   obtenerUltimaUbicacion,
@@ -191,8 +192,8 @@ const articuloSeleccionadoInfo = ref(null)
 const origenSeleccionActual = ref('ninguno')
 const mantenerBuscadorVisible = ref(false)
 const autoseleccionandoCodigo = ref(false)
-const textoCopiadoCodigo = ref('')
 const autoseleccionArticuloHabilitada = ref(false)
+const { copiarTextoActual, obtenerTextoCopiado } = usarTextoCopiadoInput('FormularioUbicacion')
 
 // --- Flag para prevenir doble click / doble submit ---
 const bloqueandoClick = ref(false)
@@ -292,16 +293,7 @@ function manejarDesenfoqueCodigo() {
 }
 
 async function copiarCodigoActual() {
-  const texto = String(nuevoCodigo.value || '')
-  if (!texto) return
-  textoCopiadoCodigo.value = texto
-  try {
-    if (navigator?.clipboard?.writeText) {
-      await navigator.clipboard.writeText(texto)
-    }
-  } catch (error) {
-    console.warn('[FormularioUbicacion] No se pudo copiar al portapapeles:', error)
-  }
+  await copiarTextoActual(nuevoCodigo.value)
 }
 
 function manejarDesenfoqueUbicacion() {
@@ -472,8 +464,9 @@ async function gestionarEnvio() {
   mostrarBuscador.value = false
 
   // Si el usuario copió un código/nombre, reponerlo automáticamente al agregar.
-  if (textoCopiadoCodigo.value) {
-    nuevoCodigo.value = textoCopiadoCodigo.value
+  const textoCopiado = obtenerTextoCopiado()
+  if (textoCopiado) {
+    nuevoCodigo.value = textoCopiado
   }
 
   // Volver al input de código para carga rápida en serie
