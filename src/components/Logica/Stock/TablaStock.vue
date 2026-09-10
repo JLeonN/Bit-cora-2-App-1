@@ -22,92 +22,89 @@
     </div>
 
     <div v-if="registros.length > 0" class="lista-stock">
-      <article
+      <TarjetaArticulo
         v-for="registro in registros"
         :key="registro.codigo"
+        :nombre="registro.nombre"
+        :codigo="registro.codigo"
         class="fila-stock"
         :class="{
           'fila-stock-pendiente': !registro.confirmado,
           'fila-stock-sl': esUbicacionActualSL(registro),
         }"
       >
-        <div class="encabezado-fila-stock">
-          <div>
-            <p class="nombre-stock">{{ registro.nombre }}</p>
-            <p class="codigo-stock">{{ registro.codigo }}</p>
-          </div>
-        </div>
-
-        <div class="datos-fila-stock">
-          <p>Stock Excel: <strong>{{ registro.stockExcel }}</strong></p>
-          <p v-if="registro.stockExcelAjustado" class="aviso-stock-ajustado">
-            El stock del Excel se ajustó a un entero válido.
-          </p>
-          <div v-if="codigoEditando !== registro.codigo" class="linea-contado">
-            <button
-              type="button"
-              class="boton-valor-editable"
-              title="Editar conteo"
-              @click="iniciarEdicion(registro)"
+        <template #contenido>
+          <div class="datos-fila-stock">
+            <p>
+              Stock Excel: <strong>{{ registro.stockExcel }}</strong>
+            </p>
+            <p v-if="registro.stockExcelAjustado" class="aviso-stock-ajustado">
+              El stock del Excel se ajustó a un entero válido.
+            </p>
+            <div v-if="codigoEditando !== registro.codigo" class="linea-contado">
+              <button
+                type="button"
+                class="boton-valor-editable"
+                title="Editar conteo"
+                @click="iniciarEdicion(registro)"
+              >
+                Contado: <strong>{{ registro.stockContado }}</strong>
+                <IconPencil :size="16" />
+              </button>
+            </div>
+            <p
+              v-if="registro.confirmado && obtenerDiferencia(registro) !== 0"
+              class="diferencia-stock"
+              :class="{
+                'diferencia-stock-faltante': obtenerDiferencia(registro) < 0,
+                'diferencia-stock-sobrante': obtenerDiferencia(registro) > 0,
+              }"
             >
-              Contado: <strong>{{ registro.stockContado }}</strong>
-              <IconPencil :size="16" />
-            </button>
+              {{ obtenerTextoDiferencia(registro) }}
+            </p>
+            <p v-if="codigoEditando !== registro.codigo">
+              {{ registro.ubicacionOrigen === 'excel' ? 'Ubicación del Excel' : 'Ubicación' }}:
+              <strong>
+                <span :class="{ 'texto-sl-neon': esUbicacionActualSL(registro) }">
+                  {{ registro.ubicacionActual || 'Sin ubicación registrada' }}
+                </span>
+              </strong>
+            </p>
           </div>
-          <p
-            v-if="registro.confirmado && obtenerDiferencia(registro) !== 0"
-            class="diferencia-stock"
-            :class="{
-              'diferencia-stock-faltante': obtenerDiferencia(registro) < 0,
-              'diferencia-stock-sobrante': obtenerDiferencia(registro) > 0,
-            }"
-          >
-            {{ obtenerTextoDiferencia(registro) }}
-          </p>
-          <p v-if="codigoEditando !== registro.codigo">
-            {{ registro.ubicacionOrigen === 'excel' ? 'Ubicación del Excel' : 'Ubicación' }}:
-            <strong>
-              <span :class="{ 'texto-sl-neon': esUbicacionActualSL(registro) }">
-                {{ registro.ubicacionActual || 'Sin ubicación registrada' }}
-              </span>
-            </strong>
-          </p>
-        </div>
-
-        <div v-if="codigoEditando === registro.codigo" class="editor-fila-stock">
-          <label class="etiqueta-editor">Stock contado</label>
-          <div class="control-contador">
-            <button type="button" @click="restarCantidad">−</button>
+          <div v-if="codigoEditando === registro.codigo" class="editor-fila-stock">
+            <label class="etiqueta-editor">Stock contado</label>
+            <div class="control-contador">
+              <button type="button" @click="restarCantidad">−</button>
+              <input
+                ref="inputCantidadEdicionRef"
+                v-model="cantidadEdicion"
+                type="number"
+                step="1"
+                @focus="$event.target.select()"
+                @input="validarCantidad"
+              />
+              <button type="button" @click="sumarCantidad">+</button>
+            </div>
+            <label class="etiqueta-editor" :for="`ubicacion-${registro.codigo}`">Ubicación</label>
             <input
-              ref="inputCantidadEdicionRef"
-              v-model="cantidadEdicion"
-              type="number"
-              step="1"
-              @focus="$event.target.select()"
-              @input="validarCantidad"
+              :id="`ubicacion-${registro.codigo}`"
+              v-model="ubicacionEdicion"
+              type="text"
+              class="input-ubicacion-edicion sin-enfoque-automatico"
+              placeholder="Ubicación"
+              @blur="formatearUbicacion"
             />
-            <button type="button" @click="sumarCantidad">+</button>
+            <div class="acciones-editor">
+              <button type="button" class="boton-guardar-edicion" @click="guardarEdicion(registro)">
+                Guardar
+              </button>
+              <button type="button" class="boton-cancelar-edicion" @click="cancelarEdicion">
+                Cancelar
+              </button>
+            </div>
           </div>
-          <label class="etiqueta-editor" :for="`ubicacion-${registro.codigo}`">Ubicación</label>
-          <input
-            :id="`ubicacion-${registro.codigo}`"
-            v-model="ubicacionEdicion"
-            type="text"
-            class="input-ubicacion-edicion sin-enfoque-automatico"
-            placeholder="Ubicación"
-            @blur="formatearUbicacion"
-          />
-          <div class="acciones-editor">
-            <button type="button" class="boton-guardar-edicion" @click="guardarEdicion(registro)">
-              Guardar
-            </button>
-            <button type="button" class="boton-cancelar-edicion" @click="cancelarEdicion">
-              Cancelar
-            </button>
-          </div>
-        </div>
-
-        <div class="pie-fila-stock">
+        </template>
+        <template #informacion-pie>
           <div class="estado-stock" :class="{ 'estado-confirmado': registro.confirmado }">
             <IconCircleCheck v-if="registro.confirmado" :size="18" />
             <IconClock v-else :size="18" />
@@ -117,48 +114,46 @@
               <span class="texto-pendiente-corto">Pendiente</span>
             </template>
           </div>
-          <div class="acciones-fila-stock">
-            <button
-              v-if="!registro.confirmado"
-              type="button"
-              class="boton-fila boton-confirmar-fila"
-              title="Confirmar conteo"
-              @click="$emit('confirmar', registro)"
-            >
-              <IconCheck :size="19" />
-            </button>
-            <button
-              type="button"
-              class="boton-fila"
-              title="Editar"
-              @click="iniciarEdicion(registro)"
-            >
-              <IconPencil class="icono-ubicacion icono-editar" :size="19" />
-            </button>
-            <button
-              type="button"
-              class="boton-fila"
-              title="Enviar a Etiquetas"
-              @click="$emit('enviar-etiqueta', registro)"
-            >
-              <IconTag class="icono-ubicacion icono-etiqueta" :size="19" />
-            </button>
-            <button
-              type="button"
-              class="boton-fila boton-eliminar-fila"
-              title="Eliminar"
-              @click="$emit('eliminar', registro)"
-            >
-              <IconTrash class="icono-ubicacion icono-borrar" :size="19" />
-            </button>
-          </div>
-        </div>
-      </article>
+        </template>
+        <template #acciones>
+          <button
+            v-if="!registro.confirmado"
+            type="button"
+            class="boton-accion-tarjeta boton-confirmar-fila"
+            title="Confirmar conteo"
+            @click="$emit('confirmar', registro)"
+          >
+            <IconCheck :size="19" />
+          </button>
+          <button
+            type="button"
+            class="boton-accion-tarjeta"
+            title="Editar"
+            @click="iniciarEdicion(registro)"
+          >
+            <IconPencil class="icono-ubicacion icono-editar" :size="19" />
+          </button>
+          <button
+            type="button"
+            class="boton-accion-tarjeta"
+            title="Enviar a Etiquetas"
+            @click="$emit('enviar-etiqueta', registro)"
+          >
+            <IconTag class="icono-ubicacion icono-etiqueta" :size="19" />
+          </button>
+          <button
+            type="button"
+            class="boton-accion-tarjeta boton-eliminar-fila"
+            title="Eliminar"
+            @click="$emit('eliminar', registro)"
+          >
+            <IconTrash class="icono-ubicacion icono-borrar" :size="19" />
+          </button>
+        </template>
+      </TarjetaArticulo>
     </div>
 
-    <div v-else class="estado-vacio-stock">
-      Todavía no hay artículos en Stock.
-    </div>
+    <div v-else class="estado-vacio-stock">Todavía no hay artículos en Stock.</div>
   </div>
 </template>
 
@@ -172,6 +167,7 @@ import {
   IconTag,
   IconTrash,
 } from '@tabler/icons-vue'
+import TarjetaArticulo from '../Compartidos/TarjetaArticulo.vue'
 
 defineProps({
   registros: {
@@ -196,9 +192,11 @@ const ubicacionEdicion = ref('')
 const inputCantidadEdicionRef = ref(null)
 
 function esUbicacionActualSL(registro) {
-  return String(registro?.ubicacionActual || '')
-    .trim()
-    .toUpperCase() === 'SL'
+  return (
+    String(registro?.ubicacionActual || '')
+      .trim()
+      .toUpperCase() === 'SL'
+  )
 }
 
 function obtenerDiferencia(registro) {
@@ -209,9 +207,7 @@ function obtenerTextoDiferencia(registro) {
   const diferencia = obtenerDiferencia(registro)
   const cantidad = Math.abs(diferencia)
   const unidad = cantidad === 1 ? 'unidad' : 'unidades'
-  return diferencia < 0
-    ? `Faltan ${cantidad} ${unidad}`
-    : `Se contaron ${cantidad} ${unidad} más`
+  return diferencia < 0 ? `Faltan ${cantidad} ${unidad}` : `Se contaron ${cantidad} ${unidad} más`
 }
 
 async function iniciarEdicion(registro) {
@@ -292,34 +288,12 @@ defineExpose({
   display: grid;
   gap: 0.8rem;
 }
-.fila-stock {
-  border: 1px solid var(--color-borde);
-  border-radius: 12px;
-  padding: 1rem;
-  background: var(--color-fondo);
-}
 .fila-stock-pendiente {
   border-color: var(--color-carga);
 }
 .fila-stock-sl {
   border-color: var(--color-neon-sl-borde);
   box-shadow: 0 0 10px var(--color-neon-sl-sombra);
-}
-.encabezado-fila-stock {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.8rem;
-  align-items: flex-start;
-}
-.nombre-stock {
-  margin: 0;
-  color: var(--color-texto-principal);
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-.codigo-stock {
-  margin: 0.2rem 0 0 0;
-  color: var(--color-texto-secundario);
 }
 .estado-stock {
   display: flex;
@@ -337,13 +311,6 @@ defineExpose({
 }
 .texto-pendiente-corto {
   display: none;
-}
-.pie-fila-stock {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  margin-top: 0.8rem;
 }
 .datos-fila-stock p {
   margin: 0.45rem 0 0 0;
@@ -412,8 +379,7 @@ defineExpose({
   text-align: left;
   padding: 0 0.75rem;
 }
-.acciones-editor,
-.acciones-fila-stock {
+.acciones-editor {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
@@ -437,18 +403,6 @@ defineExpose({
   color: var(--color-texto-secundario);
   border: 1px solid var(--color-borde);
 }
-.boton-fila {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--color-borde);
-  background: var(--color-superficie);
-  color: var(--color-texto-principal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
 .boton-confirmar-fila {
   color: var(--color-exito);
 }
@@ -466,15 +420,6 @@ defineExpose({
   }
   .texto-pendiente-corto {
     display: inline;
-  }
-}
-@media (max-width: 370px) {
-  .pie-fila-stock {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .acciones-fila-stock {
-    align-self: flex-end;
   }
 }
 </style>

@@ -12,10 +12,7 @@
       aria-label="Artículos del listado"
       :style="{ '--columnas-listado': columnasListado }"
     >
-      <div
-        class="fila-listado encabezado-listado"
-        role="row"
-      >
+      <div class="fila-listado encabezado-listado" role="row">
         <strong v-if="mostrarNumeracion" class="encabezado-numeracion">N.º</strong>
         <strong>Código</strong>
         <strong>Descripción</strong>
@@ -89,12 +86,84 @@
         </div>
       </article>
     </div>
+    <div
+      v-if="articulos.length > 0"
+      class="lista-movil-listados"
+      aria-label="Artículos del listado"
+    >
+      <TarjetaArticulo
+        v-for="(articulo, indice) in articulos"
+        :key="articulo.codigo"
+        :nombre="articulo.descripcion"
+        :codigo="articulo.codigo"
+        :class="{
+          'resaltado-atencion': codigoResaltado === articulo.codigo,
+        }"
+        :data-codigo="articulo.codigo"
+      >
+        <template v-if="mostrarStock || mostrarUbicacion" #contenido>
+          <div class="campos-listado-tarjeta">
+            <label v-if="mostrarStock" class="campo-listado-tarjeta">
+              <span>Stock</span>
+              <input
+                v-model="borradores[articulo.codigo].stockListado"
+                type="text"
+                inputmode="numeric"
+                :class="{
+                  'campo-invalido': !esStockValido(borradores[articulo.codigo].stockListado),
+                }"
+                :aria-label="`Stock de ${articulo.codigo}`"
+                @blur="confirmarStock(articulo)"
+                @keyup.enter="$event.target.blur()"
+              />
+            </label>
+            <label v-if="mostrarUbicacion" class="campo-listado-tarjeta">
+              <span>Ubicación</span>
+              <input
+                v-model="borradores[articulo.codigo].ubicacionListado"
+                type="text"
+                :aria-label="`Ubicación de ${articulo.codigo}`"
+                @input="normalizarBorradorUbicacion(articulo.codigo)"
+                @blur="confirmarUbicacion(articulo)"
+                @keyup.enter="$event.target.blur()"
+              />
+            </label>
+          </div>
+        </template>
+        <template #informacion-pie>
+          <span v-if="mostrarNumeracion" class="numeracion-tarjeta-listado"
+            >N.º {{ indice + 1 }}</span
+          >
+        </template>
+        <template #acciones>
+          <button
+            type="button"
+            class="boton-accion-tarjeta"
+            title="Enviar a Etiquetas"
+            aria-label="Enviar a Etiquetas"
+            @click="emit('enviar-etiqueta', articulo)"
+          >
+            <IconTag class="icono-ubicacion icono-etiqueta" :size="19" :stroke="2" />
+          </button>
+          <button
+            type="button"
+            class="boton-accion-tarjeta boton-eliminar-tarjeta"
+            title="Eliminar artículo"
+            aria-label="Eliminar artículo"
+            @click="emit('eliminar', articulo)"
+          >
+            <IconTrash class="icono-ubicacion icono-borrar" :size="19" :stroke="2" />
+          </button>
+        </template>
+      </TarjetaArticulo>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import { IconListDetails, IconTag, IconTrash } from '@tabler/icons-vue'
+import TarjetaArticulo from '../Compartidos/TarjetaArticulo.vue'
 
 const props = defineProps({
   articulos: { type: Array, default: () => [] },
@@ -158,9 +227,10 @@ function confirmarUbicacion(articulo) {
 }
 
 function enfocarArticulo(codigo) {
-  const elemento = Array.from(document.querySelectorAll('[data-codigo]')).find(
+  const filasArticulo = Array.from(document.querySelectorAll('[data-codigo]')).filter(
     (fila) => fila.dataset.codigo === codigo,
   )
+  const elemento = filasArticulo.find((fila) => fila.offsetParent !== null) || filasArticulo[0]
   elemento?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
@@ -189,6 +259,9 @@ defineExpose({ enfocarArticulo })
   border: 1px solid var(--color-borde);
   border-radius: 12px;
 }
+.lista-movil-listados {
+  display: none;
+}
 .fila-listado {
   display: grid;
   grid-template-columns: var(--columnas-listado);
@@ -197,7 +270,9 @@ defineExpose({ enfocarArticulo })
   padding: 12px 14px;
   color: var(--color-texto-principal);
   border-bottom: 1px solid var(--color-borde);
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .fila-listado:last-child {
   border-bottom: 0;
@@ -210,7 +285,8 @@ defineExpose({ enfocarArticulo })
 .encabezado-listado strong {
   color: var(--color-primario-claro);
 }
-.encabezado-numeracion,.celda-numeracion {
+.encabezado-numeracion,
+.celda-numeracion {
   text-align: center;
 }
 .celda-numeracion {
@@ -259,53 +335,60 @@ defineExpose({ enfocarArticulo })
   background: var(--color-primario-claro);
   box-shadow: inset 4px 0 var(--color-primario);
 }
+.campos-listado-tarjeta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding-top: 0.8rem;
+}
+.campo-listado-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.campo-listado-tarjeta span {
+  color: var(--color-texto-secundario);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.campo-listado-tarjeta input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 7px 8px;
+  color: var(--color-texto-principal);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+.campo-listado-tarjeta input:focus {
+  border-color: var(--color-primario);
+  outline: none;
+}
+.campo-listado-tarjeta input.campo-invalido {
+  border-color: var(--color-texto-secundario);
+}
+.numeracion-tarjeta-listado {
+  color: var(--color-texto-secundario);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.boton-eliminar-tarjeta {
+  color: var(--color-error);
+}
 @media (max-width: 720px) {
   .tabla-listados {
-    display: grid;
-    gap: 10px;
-    overflow: visible;
-    background: transparent;
-    border: 0;
-  }
-  .encabezado-listado {
     display: none;
   }
-  .fila-listado {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 14px;
-    background: var(--color-superficie);
-    border: 1px solid var(--color-borde);
-    border-radius: 12px;
-  }
-  .celda-codigo,.celda-descripcion {
-    grid-column: 1 / -1;
-  }
-  .celda-numeracion {
-    grid-column: 1 / -1;
-    text-align: left;
-  }
-  .celda-editable {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .etiqueta-movil {
-    display: block;
-    color: var(--color-texto-secundario);
-    font-size: 0.78rem;
-    font-weight: 600;
-  }
-  .acciones-fila-listado {
-    grid-column: 1 / -1;
+  .lista-movil-listados {
+    display: grid;
+    gap: 0.8rem;
   }
 }
 @media (max-width: 380px) {
-  .fila-listado {
+  .campos-listado-tarjeta {
     grid-template-columns: 1fr;
-  }
-  .celda-numeracion,.celda-codigo,.celda-descripcion,.acciones-fila-listado {
-    grid-column: auto;
   }
 }
 </style>
