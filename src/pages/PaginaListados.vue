@@ -2,23 +2,23 @@
   <div class="contenedor-tabla pagina-listados">
     <h2 class="titulo-tabla">Listados</h2>
 
-    <TarjetaSeccion
-      titulo="Administrar listados"
-      :expandida-por-defecto="true"
-      descripcion-resumen="Creá, abrí, renombrá, duplicá o eliminá tus listados guardados."
-      :ocultar-resumen-al-expandir="true"
-    >
-      <GestorListados
-        :listados="listados"
-        :listado-activo="listadoActivo"
-        :ocupado="ocupado"
-        @crear="crearNuevoListado"
-        @abrir="abrirListado"
-        @renombrar="renombrarListadoActivo"
-        @duplicar="duplicarListadoActivo"
-        @solicitar-eliminar="solicitarEliminarListado"
-      />
-    </TarjetaSeccion>
+    <div class="tarjeta-administrar-listados">
+      <div class="encabezado-administrar-listados">
+        <h3>Administrar listados</h3>
+      </div>
+      <div class="contenido-administrar-listados">
+        <GestorListados
+          :listados="listados"
+          :listado-activo="listadoActivo"
+          :ocupado="ocupado"
+          @crear="crearNuevoListado"
+          @abrir="abrirListado"
+          @renombrar="renombrarListadoActivo"
+          @duplicar="duplicarListadoActivo"
+          @solicitar-eliminar="solicitarEliminarListado"
+        />
+      </div>
+    </div>
 
     <template v-if="listadoActivo">
       <section class="zona-agregar-listado" aria-label="Agregar artículos al listado">
@@ -185,7 +185,6 @@ import {
 import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
-import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import {
@@ -670,6 +669,25 @@ onUnmounted(() => {
 .pagina-listados {
   padding-bottom: var(--espacio-inferior-contenido, 120px);
 }
+.tarjeta-administrar-listados {
+  margin-bottom: 20px;
+  overflow: hidden;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+}
+.encabezado-administrar-listados {
+  padding: 20px;
+}
+.encabezado-administrar-listados h3 {
+  margin: 0;
+  color: var(--color-texto-principal);
+  font-size: 18px;
+  font-weight: 600;
+}
+.contenido-administrar-listados {
+  padding: 0 20px 20px;
+}
 .zona-agregar-listado {
   display: flex;
   flex-direction: column;
@@ -725,6 +743,15 @@ onUnmounted(() => {
   font-size: 0.82rem;
 }
 @media (max-width: 600px) {
+  .encabezado-administrar-listados {
+    padding: 16px;
+  }
+  .encabezado-administrar-listados h3 {
+    font-size: 16px;
+  }
+  .contenido-administrar-listados {
+    padding: 0 16px 16px;
+  }
   .columnas-visibles-listado {
     align-items: flex-start;
     flex-direction: column;
