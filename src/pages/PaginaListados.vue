@@ -61,7 +61,7 @@
         v-if="articulosOrdenados.length > 0"
         :model-value="listadoActivo.orden"
         :deshabilitado="ocupado"
-        :criterios-disponibles="CRITERIOS_ORDEN"
+        :criterios-disponibles="criteriosOrdenListado"
         etiqueta-cantidad="Stock"
         @update:model-value="actualizarOrden"
       />
@@ -207,7 +207,6 @@ import {
   resolverDatosArticulo,
 } from '../components/Logica/Compartidos/ServicioDatosLocalesArticulo.js'
 import {
-  CRITERIOS_ORDEN,
   normalizarOrden,
   ordenarColeccion,
 } from '../components/Logica/Compartidos/OrdenarColeccion.js'
@@ -265,6 +264,12 @@ const articulosOrdenados = computed(() =>
   }),
 )
 const codigoResaltadoVisible = computed(() => (estaResaltado.value ? codigoResaltado.value : ''))
+const criteriosOrdenListado = computed(() => {
+  const criterios = ['fechaIngreso', 'alfabetico']
+  if (listadoActivo.value?.configuracion.mostrarStock) criterios.push('cantidad')
+  if (listadoActivo.value?.configuracion.mostrarUbicacion) criterios.push('ubicacion')
+  return criterios
+})
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const nombreFormatoExportacion = computed(() =>
   formatoExportacion.value === 'pdf' ? 'PDF A4' : 'Excel',
@@ -476,7 +481,16 @@ async function confirmarEliminarTodos() {
 
 async function actualizarConfiguracion(campo, valor) {
   if (!listadoActivo.value) return
-  listadoActivo.value.configuracion[campo] = Boolean(valor)
+  const columnaVisible = Boolean(valor)
+  listadoActivo.value.configuracion[campo] = columnaVisible
+  const criterioOculto =
+    (!columnaVisible && campo === 'mostrarStock' && listadoActivo.value.orden.criterio === 'cantidad') ||
+    (!columnaVisible &&
+      campo === 'mostrarUbicacion' &&
+      listadoActivo.value.orden.criterio === 'ubicacion')
+  if (criterioOculto) {
+    listadoActivo.value.orden = { criterio: 'fechaIngreso', direccion: 'descendente' }
+  }
   await persistirActivo()
 }
 
