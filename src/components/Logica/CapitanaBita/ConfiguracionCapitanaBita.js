@@ -28,7 +28,6 @@ export const ESQUEMA_RESPUESTA_CAPITANA_BITA = Schema.object({
     esPedidoDeRepuestos: Schema.boolean(),
     solicitudes: Schema.array({
       items: ESQUEMA_SOLICITUD,
-      maxItems: MAXIMO_SOLICITUDES_CAPITANA_BITA,
     }),
   },
 })

@@ -32,6 +32,10 @@ yarn-error.log*
 # local .env files
 .env.local*
 
+# Configuración local de Firebase Android
+/android/app/google-services.json
+firebase-debug.log
+
 # Artefactos locales de pruebas UI
 .playwright-mcp/
 etiquetas-bug.png
