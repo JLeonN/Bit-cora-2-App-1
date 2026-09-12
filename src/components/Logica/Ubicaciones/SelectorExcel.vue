@@ -384,6 +384,7 @@ onMounted(async () => {
       cantidad: cantidadArticulos.value,
       mensaje: `Base de datos cargada automáticamente: ${cantidadArticulos.value} artículos`,
       archivo: informacionArchivo.value,
+      cargaAutomatica: true,
     })
   }
 })

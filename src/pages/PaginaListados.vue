@@ -865,7 +865,7 @@ async function manejarBaseCargada(datos) {
     notificar('negative', error.message || 'No se pudieron cargar los datos guardados')
   }
   if (datos?.mensaje) notificar('positive', datos.mensaje)
-  await formularioListadoRef.value?.enfocarBusqueda?.()
+  if (!datos?.cargaAutomatica) await formularioListadoRef.value?.enfocarBusqueda?.()
 }
 
 function manejarErrorCarga(mensaje) {

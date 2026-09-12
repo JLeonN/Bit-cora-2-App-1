@@ -180,7 +180,7 @@ const textoLineasRepetidas = computed(() => {
 function manejarBaseCargada(datos) {
   baseDatosCargada.value = true
   emit('base-datos-cargada', datos)
-  enfocarBusqueda()
+  if (!datos?.cargaAutomatica) enfocarBusqueda()
 }
 
 function manejarBaseLimpia() {
