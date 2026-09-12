@@ -1,25 +1,16 @@
 {
-  "versionDisponible": "4.2.38",
+  "versionDisponible": "4.2.39",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Listados",
+        "apartado": "Búsqueda de artículos",
         "novedades": [
-          "Creá y guardá distintos listados, asignales un nombre y podés abrirlos, duplicarlos o eliminarlos cuando lo necesites.",
-          "Buscá artículos por código o descripción, usá la cámara o un lector y activá la selección automática para agilizar la carga.",
-          "Ahora podés agregar artículos repetidos después de confirmar el aviso que indica en qué líneas ya aparecen.",
-          "Elegí si querés mostrar numeración, stock y ubicación, y editá cada fila directamente desde el listado.",
-          "El stock confirmado y las ubicaciones guardadas en el dispositivo tienen prioridad sobre los datos originales del Excel.",
-          "Enviá el listado completo a Etiquetas, Stock o Ubicaciones desde acciones siempre disponibles."
-        ]
-      },
-      {
-        "apartado": "Orden y exportación",
-        "novedades": [
-          "Ordená los artículos por llegada, nombre, stock o ubicación, manteniendo el mismo orden en los archivos generados.",
-          "Descargá o compartí cada listado como Excel o PDF A4, respetando las columnas visibles y la numeración elegida."
+          "Agregá palabras en Contexto de búsqueda para limitar los resultados por marca, modelo u otra referencia.",
+          "Cada listado conserva su propio contexto, mientras Stock, Ubicaciones, Consulta y Etiquetas guardan contextos independientes.",
+          "Los códigos exactos y los escaneos siguen encontrando el artículo aunque no coincida con el contexto ingresado.",
+          "El formulario de Consulta de ubicación ahora muestra los campos en un orden más claro y cómodo en pantallas angostas."
         ]
       }
     ]

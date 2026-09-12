@@ -216,10 +216,12 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 
 ### 🔎 **Sistema de Búsqueda Inteligente (breve)**
 
-**El formulario de etiquetas integra el buscador CodigoMasNombre.vue**
+**El formulario de etiquetas integra `BuscadorArticulos.vue` y un contexto persistente propio**
 
 - **Búsqueda en tiempo real** al escribir código
 - **Priorización** de resultados exactos
+- **Filtro contextual** por palabras dentro de la descripción
+- **Códigos exactos y escaneos** sin bloqueo por contexto
 - **Selección automática** con click
 
 **Para información completa**, ver: `Resumen4Ubicaciones.md`

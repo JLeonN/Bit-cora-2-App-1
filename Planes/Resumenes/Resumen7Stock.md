@@ -4,7 +4,8 @@ Stock permite contar artículos usando la base Excel compartida por Ubicaciones,
 
 ## Flujo principal
 
-- La búsqueda reutiliza `CodigoMasNombre.vue` y selecciona automáticamente una coincidencia única.
+- La búsqueda reutiliza `BuscadorArticulos.vue`, admite un contexto persistente propio y selecciona automáticamente una coincidencia única.
+- Los códigos exactos y escaneos se resuelven aunque no coincidan con el contexto.
 - Un artículo nuevo inicia con el stock original del Excel.
 - Un artículo contado anteriormente recupera el último total para continuar sumando.
 - Los conteos se guardan con un único registro por código.

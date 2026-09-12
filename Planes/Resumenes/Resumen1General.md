@@ -95,11 +95,14 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 
 ### 🔎 **Sistema de Búsqueda Inteligente (breve)**
 
-**Sistema compartido** usado en Ubicaciones, Consulta De Ubicación y Etiquetas.
+**Sistema compartido** usado en Listados, Stock, Ubicaciones, Consulta De Ubicación, Etiquetas y Fotos.
 
-- **CodigoMasNombre.vue**: Buscador con priorización de resultados
+- **BuscadorArticulos.vue**: Buscador visual con priorización de resultados
+- **ServicioBusquedaArticulos.js**: Normalización, filtrado contextual y resolución exacta sin depender de la interfaz
+- **CampoContextoArticulo.vue**: Contexto opcional y persistente para limitar búsquedas por descripción
 - **Búsqueda en tiempo real** con resaltado de coincidencias
-- **Máximo 3 resultados** por búsqueda
+- **Máximo 50 resultados** por búsqueda
+- **Códigos exactos y escaneos**: Ignoran el contexto para conservar el flujo operativo
 - **Compatible con persistencia automática**
 
 **Ver detalle completo en:** `Resumen4Ubicaciones.md`
@@ -257,7 +260,6 @@ src/
     │   └── Ubicaciones/
     │       ├── CamaraEscaneo.vue
     │       ├── CamaraUbicaciones.vue
-    │       ├── CodigoMasNombre.vue
     │       ├── ExportarUbicacionesExcel.js
     │       ├── FormularioUbicacion.vue
     │       ├── TablaUbicaciones.vue
@@ -388,3 +390,11 @@ src/
 - Se agregó exportación en Excel y PDF A4, además del envío completo a Stock, Ubicaciones y Etiquetas.
 - Etiquetas, Stock y Listados comparten controles de ordenamiento por llegada, nombre, cantidad o ubicación según corresponda.
 - Release vigente actualizada: 4.2.38.
+
+### Actualización de release 4.2.39
+
+- Se agregó un contexto persistente para limitar las búsquedas de artículos por marca, modelo u otras palabras.
+- Cada listado conserva su contexto y los módulos Stock, Ubicaciones, Consulta y Etiquetas mantienen valores independientes.
+- Los códigos exactos y escaneos continúan resolviéndose aunque el contexto no coincida.
+- Consulta De Ubicación ordena el contexto sobre el buscador para conservar el ancho útil en pantallas angostas.
+- Release vigente actualizada: 4.2.39.
