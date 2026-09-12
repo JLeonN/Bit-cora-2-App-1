@@ -566,6 +566,12 @@ onUnmounted(() => {
   align-items: center;
   transition: all 0.35s ease;
 }
+.bloque-buscador :deep(.campo-contexto-articulo) {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 0;
+}
 .bloque-buscador-con-resultado {
   margin-top: 0.4rem;
 }
