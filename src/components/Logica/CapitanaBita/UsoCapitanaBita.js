@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import { obtenerMemoriasParaContexto } from '../../BaseDeDatos/UsoAlmacenamientoMemoriasCapitanaBita.js'
 import { procesarAudioCapitanaBita, procesarTextoCapitanaBita } from './ServicioCapitanaBita.js'
@@ -10,6 +10,35 @@ import {
 
 let enfriamientoCompartidoHasta = 0
 
+const MENSAJES_PROCESAMIENTO = Object.freeze([
+  'Trazando la ruta del pedido…',
+  'Descifrando abreviaciones del maestro…',
+  'Revisando la bodega de repuestos…',
+  'Afinando la búsqueda como un motor recién regulado…',
+  'Buscando el repuesto a babor y estribor…',
+  'Preparando los resultados para desembarcar…',
+])
+
+function elegirMensajeAleatorio(mensajes) {
+  return mensajes[Math.floor(Math.random() * mensajes.length)]
+}
+
+function crearMensajesSaludo(nombreUsuario) {
+  const nombre =
+    String(nombreUsuario || '').trim() && nombreUsuario !== 'Usua desconocido'
+      ? String(nombreUsuario).trim()
+      : 'tripulante'
+  const tratamiento = `amo ${nombre}`
+  return [
+    `Hola, ${tratamiento}. Capitana Bita lista para zarpar.`,
+    `Bienvenido a bordo, ${tratamiento}. La bodega de repuestos está lista.`,
+    `A la orden, ${tratamiento}. Motores encendidos y catálogo a estribor.`,
+    `${tratamiento}, cubierta despejada: pongamos rumbo al repuesto correcto.`,
+    `${tratamiento}, el barco está afinado como un motor recién ajustado.`,
+    `Capitana Bita al timón, ${tratamiento}. Decime qué pieza buscamos.`,
+  ]
+}
+
 export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificadorDestino }) {
   const texto = ref('')
   const grabando = ref(false)
@@ -19,8 +48,11 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
   const permisoBloqueado = ref(false)
   const resultado = ref(null)
   const error = ref(null)
+  const mensajeSaludo = ref('')
+  const mensajeProcesamiento = ref(MENSAJES_PROCESAMIENTO[0])
   const enfriamientoHasta = ref(enfriamientoCompartidoHasta)
   let intervaloDuracion = null
+  let intervaloMensajesProcesamiento = null
   let temporizadorEnfriamiento = null
   let datosSolicitudGrabada = null
 
@@ -55,6 +87,26 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
 
   function actualizarConexion() {
     comprobarDisponibilidad()
+  }
+
+  async function prepararMensajeSaludo() {
+    const nombreUsuario = await obtenerNombreUsuario()
+    mensajeSaludo.value = elegirMensajeAleatorio(crearMensajesSaludo(nombreUsuario))
+  }
+
+  function detenerMensajesProcesamiento() {
+    if (intervaloMensajesProcesamiento) window.clearInterval(intervaloMensajesProcesamiento)
+    intervaloMensajesProcesamiento = null
+  }
+
+  function iniciarMensajesProcesamiento() {
+    detenerMensajesProcesamiento()
+    let indice = Math.floor(Math.random() * MENSAJES_PROCESAMIENTO.length)
+    mensajeProcesamiento.value = MENSAJES_PROCESAMIENTO[indice]
+    intervaloMensajesProcesamiento = window.setInterval(() => {
+      indice = (indice + 1) % MENSAJES_PROCESAMIENTO.length
+      mensajeProcesamiento.value = MENSAJES_PROCESAMIENTO[indice]
+    }, 2200)
   }
 
   function limpiarError() {
@@ -227,14 +279,21 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     return true
   }
 
+  watch(procesando, (estaProcesando) => {
+    if (estaProcesando) iniciarMensajesProcesamiento()
+    else detenerMensajesProcesamiento()
+  })
+
   onMounted(() => {
     globalThis.addEventListener?.('online', actualizarConexion)
     globalThis.addEventListener?.('offline', actualizarConexion)
+    void prepararMensajeSaludo()
   })
   onUnmounted(() => {
     globalThis.removeEventListener?.('online', actualizarConexion)
     globalThis.removeEventListener?.('offline', actualizarConexion)
     detenerContador()
+    detenerMensajesProcesamiento()
     if (temporizadorEnfriamiento) window.clearTimeout(temporizadorEnfriamiento)
     void cancelarGrabacionServicio()
   })
@@ -246,6 +305,8 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     procesando,
     disponible,
     motivoNoDisponible,
+    mensajeSaludo,
+    mensajeProcesamiento,
     resultado,
     error,
     enfriamientoHasta,

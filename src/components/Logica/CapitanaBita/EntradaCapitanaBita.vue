@@ -35,13 +35,12 @@
     <p v-if="grabando" class="estado-capitana-bita estado-grabando">
       Grabando… Tocá nuevamente para finalizar · {{ duracionFormateada }}
     </p>
-    <p v-else-if="procesando" class="estado-capitana-bita">
-      Capitana Bita está procesando el pedido…
-    </p>
+    <p v-else-if="procesando" class="estado-capitana-bita">{{ mensajeProcesamiento }}</p>
     <p v-else-if="error" class="estado-capitana-bita estado-error" role="alert">{{ error }}</p>
     <p v-else-if="motivoNoDisponible" class="estado-capitana-bita">
       {{ motivoNoDisponible }}
     </p>
+    <p v-else-if="mensajeSaludo" class="estado-capitana-bita">{{ mensajeSaludo }}</p>
   </section>
 </template>
 
@@ -63,6 +62,8 @@ const {
   procesando,
   disponible,
   motivoNoDisponible,
+  mensajeSaludo,
+  mensajeProcesamiento,
   error,
   enviarTexto,
   alternarGrabacion,
