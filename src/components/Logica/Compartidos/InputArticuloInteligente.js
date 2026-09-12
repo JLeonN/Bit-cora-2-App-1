@@ -1,11 +1,8 @@
 import { nextTick } from 'vue'
+import { normalizarEntradaBusquedaArticulo } from './ServicioBusquedaArticulos.js'
 
 export function normalizarInputArticulo(valor) {
-  return String(valor || '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9Ñ -]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/\s+/g, ' ')
+  return normalizarEntradaBusquedaArticulo(valor)
 }
 
 export function manejarDobleEspacioInput({

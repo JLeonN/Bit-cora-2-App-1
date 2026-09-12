@@ -3,6 +3,11 @@
     <div class="contenedor-principal-formulario">
       <!-- INPUT CÓDIGO CON BUSCADOR -->
       <div class="ubicacion-campo ubicacion-campo-con-buscador">
+        <CampoContextoArticulo
+          id-campo="contexto-ubicaciones"
+          :model-value="contextoBusqueda"
+          @update:model-value="actualizarContextoBusqueda"
+        />
         <ControlAutoseleccionArticulo
           :model-value="autoseleccionArticuloHabilitada"
           texto-ayuda="Cuando está activada, si la búsqueda encuentra un solo artículo, se selecciona automáticamente y muestra su información. Si está desactivada, podrás elegirlo manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras tipo pistola: suelen enviar Enter al terminar la lectura y dejan el artículo listo para agregar."
@@ -33,9 +38,10 @@
             </button>
 
             <!-- Componente buscador -->
-            <CodigoMasNombre
+            <BuscadorArticulos
               v-if="mostrarBuscador && nuevoCodigo.length >= 3"
               :busqueda="nuevoCodigo"
+              :contexto-busqueda="contextoBusqueda"
               @articulo-seleccionado="seleccionarArticuloDelBuscador"
               @estado-busqueda="manejarEstadoBuscador"
             />
@@ -148,7 +154,8 @@ import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
 import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
-import CodigoMasNombre from './CodigoMasNombre.vue'
+import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
+import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
 import ControlAutoseleccionArticulo from '../Compartidos/ControlAutoseleccionArticulo.vue'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 import {
@@ -156,6 +163,11 @@ import {
   normalizarInputArticulo,
 } from '../Compartidos/InputArticuloInteligente.js'
 import { usarTextoCopiadoInput } from '../Compartidos/UsoTextoCopiadoInput.js'
+import {
+  AMBITOS_CONTEXTO_ARTICULO,
+  obtenerContextoArticulo,
+  guardarContextoArticulo,
+} from '../../BaseDeDatos/UsoAlmacenamientoContextosArticulo.js'
 import {
   guardarUltimaUbicacion,
   obtenerUltimaUbicacion,
@@ -170,6 +182,7 @@ const inputUbicacion = ref(null)
 
 // --- ESTADO LOCAL DEL FORMULARIO ---
 const nuevoCodigo = ref('')
+const contextoBusqueda = ref('')
 const nuevaUbicacion = ref('')
 
 const placeholderCodigo = ref('Código o nombre del artículo')
@@ -200,6 +213,15 @@ const bloqueandoClick = ref(false)
 
 // --- EMITS ---
 const emit = defineEmits(['ubicacion-agregada', 'modal-abierto', 'modal-cerrado'])
+
+async function actualizarContextoBusqueda(valor) {
+  contextoBusqueda.value = valor
+  try {
+    await guardarContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.UBICACIONES, valor)
+  } catch (error) {
+    console.error('[FormularioUbicacion] No se pudo guardar el contexto:', error)
+  }
+}
 
 // --- FUNCIONES INTERNAS ---
 function restablecerPlaceholderCodigo() {
@@ -513,11 +535,13 @@ function procesarUbicacionesEscaneadas(ubicaciones) {
 
 // --- LIFECYCLE ---
 onMounted(async () => {
-  const [ultimaUbicacion, autoseleccionGuardada] = await Promise.all([
+  const [ultimaUbicacion, autoseleccionGuardada, contextoGuardado] = await Promise.all([
     obtenerUltimaUbicacion(),
     obtenerAutoseleccionArticulo(),
+    obtenerContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.UBICACIONES),
   ])
   autoseleccionArticuloHabilitada.value = autoseleccionGuardada
+  contextoBusqueda.value = contextoGuardado
 
   // CARGAR ÚLTIMA UBICACIÓN AL INICIAR
   if (ultimaUbicacion) {

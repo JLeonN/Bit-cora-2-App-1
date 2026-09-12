@@ -21,7 +21,7 @@
         />
 
         <!-- Buscador inteligente -->
-        <CodigoMasNombre
+        <BuscadorArticulos
           v-if="mostrarBuscador"
           :busqueda="nuevoCodigo"
           @articulo-seleccionado="seleccionarArticulo"
@@ -44,7 +44,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick, computed } from 'vue'
-import CodigoMasNombre from '../Logica/Ubicaciones/CodigoMasNombre.vue'
+import BuscadorArticulos from '../Logica/Compartidos/BuscadorArticulos.vue'
 import { normalizarInputPreservandoCursor } from '../Logica/Compartidos/NormalizarInputCursor.js'
 
 const props = defineProps({

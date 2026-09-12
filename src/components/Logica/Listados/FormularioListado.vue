@@ -9,6 +9,12 @@
     <div v-else class="formulario formulario-ubicacion">
       <div class="contenedor-principal-formulario">
         <div class="ubicacion-campo ubicacion-campo-con-buscador">
+          <CampoContextoArticulo
+            id-campo="contexto-listado"
+            :model-value="contextoBusqueda"
+            :deshabilitado="busquedaDeshabilitada"
+            @update:model-value="emit('actualizar-contexto', $event)"
+          />
           <ControlAutoseleccionArticulo
             :model-value="autoseleccionArticuloHabilitada"
             texto-ayuda="Cuando está activada, si la búsqueda encuentra un solo artículo, se agrega automáticamente al listado. Si está desactivada, podrás elegirlo manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras tipo pistola."
@@ -39,9 +45,10 @@
               >
                 <IconCopy :size="16" />
               </button>
-              <CodigoMasNombre
+              <BuscadorArticulos
                 v-if="mostrarBuscador && busquedaArticulo.length >= 3"
                 :busqueda="busquedaArticulo"
+                :contexto-busqueda="contextoBusqueda"
                 @articulo-seleccionado="seleccionarArticulo"
                 @estado-busqueda="manejarEstadoBuscador"
               />
@@ -104,7 +111,8 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { IconCamera, IconCopy } from '@tabler/icons-vue'
 import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
-import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
+import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
+import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import ControlAutoseleccionArticulo from '../Compartidos/ControlAutoseleccionArticulo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
@@ -112,7 +120,7 @@ import {
   guardarAutoseleccionArticulo,
   obtenerAutoseleccionArticulo,
 } from '../Ubicaciones/recordarUltimaTipografia.js'
-import { obtenerArticuloPorCodigoEscaneado } from '../Compartidos/CodigoEscaner.js'
+import { obtenerArticuloExacto } from '../Compartidos/ServicioBusquedaArticulos.js'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 import {
   manejarDobleEspacioInput,
@@ -122,6 +130,7 @@ import { usarTextoCopiadoInput } from '../Compartidos/UsoTextoCopiadoInput.js'
 
 const props = defineProps({
   deshabilitado: { type: Boolean, default: false },
+  contextoBusqueda: { type: String, default: '' },
   articuloRepetido: { type: Object, default: null },
   lineasRepetidas: { type: Array, default: () => [] },
 })
@@ -134,6 +143,7 @@ const emit = defineEmits([
   'modal-cerrado',
   'confirmar-repetido',
   'cancelar-repetido',
+  'actualizar-contexto',
 ])
 const busquedaArticulo = ref('')
 const mostrarBuscador = ref(false)
@@ -206,7 +216,11 @@ async function cambiarAutoseleccionArticulo(habilitada) {
 }
 
 function resolverBusqueda(valor = busquedaArticulo.value) {
-  const articuloExacto = obtenerArticuloPorCodigoEscaneado(obtenerArticulosCargados(), valor)
+  const articuloExacto = obtenerArticuloExacto({
+    articulos: obtenerArticulosCargados(),
+    busqueda: valor,
+    contextoBusqueda: props.contextoBusqueda,
+  })
   if (articuloExacto) {
     seleccionarArticulo(articuloExacto)
     return

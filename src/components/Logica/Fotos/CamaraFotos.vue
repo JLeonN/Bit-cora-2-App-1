@@ -33,7 +33,7 @@
         </div>
 
         <!-- Componente de búsqueda -->
-        <CodigoMasNombre
+        <BuscadorArticulos
           :busqueda="busquedaCodigo"
           @articulo-seleccionado="seleccionarArticulo"
           @estado-busqueda="manejarEstadoBuscador"
@@ -80,7 +80,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { IconCamera, IconX, IconCheck, IconTrash } from '@tabler/icons-vue'
 import { Filesystem, Directory } from '@capacitor/filesystem'
-import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
+import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 
 const emit = defineEmits(['cerrar', 'fotos-guardadas'])

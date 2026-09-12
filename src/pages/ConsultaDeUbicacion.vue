@@ -9,6 +9,11 @@
     />
 
     <div class="bloque-buscador" :class="{ 'bloque-buscador-con-resultado': articuloConsultado }">
+      <CampoContextoArticulo
+        id-campo="contexto-consulta-ubicacion"
+        :model-value="contextoBusqueda"
+        @update:model-value="actualizarContextoBusqueda"
+      />
       <div class="campo-buscador">
         <input
           ref="inputBusquedaRef"
@@ -32,9 +37,10 @@
           <IconCopy :size="16" />
         </button>
 
-        <CodigoMasNombre
+        <BuscadorArticulos
           v-if="mostrarBuscador && busquedaArticulo.length >= 3"
           :busqueda="busquedaArticulo"
+          :contexto-busqueda="contextoBusqueda"
           @articulo-seleccionado="seleccionarArticulo"
           @estado-busqueda="manejarEstadoBuscador"
         />
@@ -121,7 +127,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
 import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
-import CodigoMasNombre from '../components/Logica/Ubicaciones/CodigoMasNombre.vue'
+import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
+import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
 import {
   obtenerArticulosCargados,
@@ -130,11 +137,17 @@ import {
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
-import { obtenerArticuloPorCodigoEscaneado } from '../components/Logica/Compartidos/CodigoEscaner.js'
+import { obtenerArticuloExacto } from '../components/Logica/Compartidos/ServicioBusquedaArticulos.js'
+import {
+  AMBITOS_CONTEXTO_ARTICULO,
+  obtenerContextoArticulo,
+  guardarContextoArticulo,
+} from '../components/BaseDeDatos/UsoAlmacenamientoContextosArticulo.js'
 
 const emit = defineEmits(['configurar-barra'])
 
 const busquedaArticulo = ref('')
+const contextoBusqueda = ref('')
 const articuloConsultado = ref(null)
 const mostrarBuscador = ref(false)
 const inputEnfocado = ref(false)
@@ -260,16 +273,19 @@ const manejarDesenfoqueBusqueda = () => {
   }, 200)
 }
 
-const buscarEnBase = (textoBusqueda) => {
-  const termino = textoBusqueda.trim().toUpperCase()
-  if (!termino) return null
-  const articulos = obtenerArticulosCargados()
-  if (!Array.isArray(articulos) || articulos.length === 0) return null
-  const porCodigoEscaneado = obtenerArticuloPorCodigoEscaneado(articulos, termino)
-  if (porCodigoEscaneado) return porCodigoEscaneado
-  const porCodigo = articulos.find((articulo) => articulo.codigo === termino)
-  if (porCodigo) return porCodigo
-  return articulos.find((articulo) => articulo.nombre === termino) || null
+const buscarEnBase = (textoBusqueda) => obtenerArticuloExacto({
+  articulos: obtenerArticulosCargados(),
+  busqueda: textoBusqueda,
+  contextoBusqueda: contextoBusqueda.value,
+})
+
+async function actualizarContextoBusqueda(valor) {
+  contextoBusqueda.value = valor
+  try {
+    await guardarContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.CONSULTA_UBICACION, valor)
+  } catch {
+    Notify.create({ type: 'negative', message: 'No se pudo guardar el contexto de búsqueda', position: 'top' })
+  }
 }
 
 const buscarArticuloExacto = () => {
@@ -497,7 +513,8 @@ watch(
   },
 )
 
-onMounted(() => {
+onMounted(async () => {
+  contextoBusqueda.value = await obtenerContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.CONSULTA_UBICACION)
   actualizarEstadoBaseDatos()
   actualizarConfiguracionBarra()
   intervaloBaseDatos = setInterval(() => {

@@ -27,6 +27,7 @@
           :deshabilitado="ocupado"
           :articulo-repetido="articuloPendienteRepetido"
           :lineas-repetidas="lineasArticuloPendiente"
+          :contexto-busqueda="listadoActivo.contextoBusqueda"
           @articulo-seleccionado="agregarArticulo"
           @base-datos-cargada="manejarBaseCargada"
           @base-datos-limpia="baseDatosCargada = false"
@@ -35,6 +36,7 @@
           @modal-cerrado="modalActivo = false"
           @confirmar-repetido="confirmarArticuloRepetido"
           @cancelar-repetido="cancelarArticuloRepetido"
+          @actualizar-contexto="guardarContextoBusqueda"
         />
         <div class="columnas-visibles-listado">
           <span class="titulo-columnas-listado">Columnas visibles</span>
@@ -418,6 +420,16 @@ async function persistirActivo() {
   const guardado = await guardarListado(listadoActivo.value)
   reemplazarListadoLocal(guardado)
   return guardado
+}
+
+async function guardarContextoBusqueda(contextoBusqueda) {
+  if (!listadoActivo.value) return
+  listadoActivo.value.contextoBusqueda = contextoBusqueda
+  try {
+    await persistirActivo()
+  } catch {
+    notificar('negative', 'No se pudo guardar el contexto de búsqueda')
+  }
 }
 
 async function agregarArticulo(articulo) {

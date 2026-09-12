@@ -1,10 +1,11 @@
 import { Preferences } from '@capacitor/preferences'
 import { normalizarCodigoBusqueda } from '../Logica/Compartidos/CodigoEscaner.js'
 import { normalizarOrden } from '../Logica/Compartidos/OrdenarColeccion.js'
+import { normalizarEntradaBusquedaArticulo } from '../Logica/Compartidos/ServicioBusquedaArticulos.js'
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
-export const VERSION_LISTADOS = '1.4'
+export const VERSION_LISTADOS = '1.5'
 
 const CONFIGURACION_INICIAL = Object.freeze({
   mostrarNumeracion: false,
@@ -82,6 +83,7 @@ function normalizarListado(listado, { actualizar = false } = {}) {
       mostrarUbicacion: Boolean(listado?.configuracion?.mostrarUbicacion),
     },
     orden: normalizarOrden(listado?.orden),
+    contextoBusqueda: normalizarEntradaBusquedaArticulo(listado?.contextoBusqueda),
     articulos: normalizarArticulos(listado?.articulos),
   }
 }
@@ -146,6 +148,7 @@ export async function crearListado() {
     actualizadoEn: ahora,
     configuracion: CONFIGURACION_INICIAL,
     orden: ORDEN_INICIAL,
+    contextoBusqueda: '',
     articulos: [],
   })
   coleccion.listados.push(listado)

@@ -35,6 +35,12 @@
       </button>
     </TarjetaSeccion>
 
+    <CampoContextoArticulo
+      id-campo="contexto-stock"
+      :model-value="contextoBusqueda"
+      :deshabilitado="hayConflictoFuente"
+      @update:model-value="actualizarContextoBusqueda"
+    />
     <div class="bloque-buscador-stock">
       <div class="campo-buscador-stock">
         <input
@@ -58,9 +64,10 @@
         >
           <IconCopy :size="16" />
         </button>
-        <CodigoMasNombre
+        <BuscadorArticulos
           v-if="mostrarBuscador && busquedaArticulo.length >= 3"
           :busqueda="busquedaArticulo"
+          :contexto-busqueda="contextoBusqueda"
           @articulo-seleccionado="seleccionarArticulo"
           @estado-busqueda="manejarEstadoBuscador"
         />
@@ -252,7 +259,8 @@ import {
   IconTrash,
 } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
-import CodigoMasNombre from '../components/Logica/Ubicaciones/CodigoMasNombre.vue'
+import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
+import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
@@ -282,7 +290,12 @@ import {
   registrarUbicacionArticulo,
 } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
-import { obtenerArticuloPorCodigoEscaneado } from '../components/Logica/Compartidos/CodigoEscaner.js'
+import { obtenerArticuloExacto } from '../components/Logica/Compartidos/ServicioBusquedaArticulos.js'
+import {
+  AMBITOS_CONTEXTO_ARTICULO,
+  obtenerContextoArticulo,
+  guardarContextoArticulo,
+} from '../components/BaseDeDatos/UsoAlmacenamientoContextosArticulo.js'
 import {
   CRITERIOS_ORDEN,
   normalizarOrden,
@@ -299,6 +312,7 @@ const ubicaciones = ref([])
 const baseDatosCargada = ref(false)
 const informacionArchivo = ref(null)
 const busquedaArticulo = ref('')
+const contextoBusqueda = ref('')
 const mostrarBuscador = ref(false)
 const inputEnfocado = ref(false)
 const articuloSeleccionado = ref(null)
@@ -480,6 +494,15 @@ async function recargarDatos() {
   actualizarEstadoBase()
 }
 
+async function actualizarContextoBusqueda(valor) {
+  contextoBusqueda.value = valor
+  try {
+    await guardarContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.STOCK, valor)
+  } catch {
+    notificar('negative', 'No se pudo guardar el contexto de búsqueda')
+  }
+}
+
 function ordenarGrupoStock(registros) {
   return ordenarColeccion(registros, ordenSeleccionado.value, {
     obtenerFecha: (registro) => registro.fechaIngreso,
@@ -560,12 +583,8 @@ function manejarDobleEspacio(evento) {
 
 function buscarArticuloExacto() {
   if (!asegurarFuenteValida()) return
-  const termino = busquedaArticulo.value.trim().toUpperCase()
   const articulos = obtenerArticulosCargados()
-  const articuloEscaneado = obtenerArticuloPorCodigoEscaneado(articulos, termino)
-  const articulo = articuloEscaneado || articulos.find(
-    (item) => item.codigo === termino || item.nombre === termino,
-  )
+  const articulo = obtenerArticuloExacto({ articulos, busqueda: busquedaArticulo.value, contextoBusqueda: contextoBusqueda.value })
   if (!articulo) {
     notificar('warning', 'Artículo inexistente en la base cargada')
     return
@@ -909,7 +928,7 @@ function actualizarBarra() {
 watch(configuracionBarra, actualizarBarra, { deep: true })
 
 onMounted(async () => {
-  await recargarDatos()
+  await Promise.all([recargarDatos(), obtenerContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.STOCK).then((valor) => { contextoBusqueda.value = valor })])
   actualizarBarra()
   intervaloBase = setInterval(actualizarEstadoBase, 1000)
 })

@@ -1,6 +1,11 @@
 <template>
   <div class="contenedor-formulario-etiqueta">
     <form @submit.prevent="agregarEtiqueta" class="formulario-etiqueta">
+      <CampoContextoArticulo
+        id-campo="contexto-etiquetas"
+        :model-value="contextoBusqueda"
+        @update:model-value="actualizarContextoBusqueda"
+      />
       <!-- Campo Código con buscador integrado -->
       <div class="campo-con-buscador">
         <label for="codigo-etiqueta">Código del artículo</label>
@@ -22,9 +27,10 @@
         </div>
 
         <!-- Buscador integrado -->
-        <CodigoMasNombre
+        <BuscadorArticulos
           v-if="mostrarResultados && codigoIngresado.length >= 3"
           :busqueda="codigoIngresado"
+          :contexto-busqueda="contextoBusqueda"
           @articulo-seleccionado="seleccionarArticulo"
           @estado-busqueda="manejarEstadoBuscador"
         />
@@ -118,21 +124,41 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { IconCamera, IconPlus, IconTrash, IconMinus } from '@tabler/icons-vue'
-import CodigoMasNombre from '../Ubicaciones/CodigoMasNombre.vue'
+import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
+import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 import { obtenerArticuloPorCodigoEscaneado } from '../Compartidos/CodigoEscaner.js'
+import {
+  AMBITOS_CONTEXTO_ARTICULO,
+  obtenerContextoArticulo,
+  guardarContextoArticulo,
+} from '../../BaseDeDatos/UsoAlmacenamientoContextosArticulo.js'
 
 const emit = defineEmits(['agregar-etiqueta', 'modal-abierto', 'modal-cerrado'])
 
 // --- ESTADO REACTIVO ---
 const codigoIngresado = ref('')
+const contextoBusqueda = ref('')
 const descripcionIngresada = ref('')
 const ubicacionIngresada = ref('')
 const cantidadCopias = ref(1)
+
+async function actualizarContextoBusqueda(valor) {
+  contextoBusqueda.value = valor
+  try {
+    await guardarContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.ETIQUETAS, valor)
+  } catch (error) {
+    console.error('[FormularioEtiqueta] No se pudo guardar el contexto:', error)
+  }
+}
+
+onMounted(async () => {
+  contextoBusqueda.value = await obtenerContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.ETIQUETAS)
+})
 
 const mostrarResultados = ref(false)
 const mostrarCamara = ref(false)
