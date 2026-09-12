@@ -41,8 +41,16 @@ export function resolverSolicitudesCapitanaBita({
   contextoBusqueda,
   memorias,
 }) {
-  if (!Array.isArray(solicitudes) || !Array.isArray(articulos)) return []
-  return solicitudes.map((solicitud) => {
+  if (!Array.isArray(solicitudes) || !Array.isArray(articulos)) {
+    console.warn('[CapitanaBita] No se pueden resolver solicitudes: datos inválidos')
+    return []
+  }
+  console.info('[CapitanaBita] Iniciando búsqueda local', {
+    solicitudes: solicitudes.length,
+    articulos: articulos.length,
+    contextoBusqueda,
+  })
+  const resoluciones = solicitudes.map((solicitud) => {
     const memoriaAplicada = obtenerMemoriaExacta(solicitud, contextoBusqueda, memorias)
     const consultas = crearConsultas(solicitud, memoriaAplicada)
     const candidatosPorCodigo = new Map()
@@ -72,6 +80,13 @@ export function resolverSolicitudesCapitanaBita({
       !articuloUnico.consultasOrigen.some(
         (consulta) => normalizarTextoComparacionArticulo(consulta) === consultaPrincipal,
       )
+    console.info('[CapitanaBita] Solicitud resuelta localmente', {
+      idSolicitud: solicitud.idSolicitud,
+      consultas: consultas.length,
+      candidatos: candidatos.length,
+      estado,
+      memoriaAplicada: Boolean(memoriaAplicada),
+    })
     return {
       idSolicitud: solicitud.idSolicitud,
       textoOriginal: solicitud.textoOriginal,
@@ -86,4 +101,6 @@ export function resolverSolicitudesCapitanaBita({
         (estado === 'ambigua' || Boolean(unicaPorAlternativa)),
     }
   })
+  console.info('[CapitanaBita] Búsqueda local finalizada', { resoluciones: resoluciones.length })
+  return resoluciones
 }

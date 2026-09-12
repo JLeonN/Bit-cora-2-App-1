@@ -20,6 +20,7 @@
             ref="entradaCapitanaBitaRef"
             :contexto-busqueda="contextoBusqueda"
             :deshabilitado="busquedaDeshabilitada"
+            :identificador-destino="identificadorDestino"
             @resultado-procesado="emit('resultado-capitana-bita', $event)"
             @estado-interaccion="estadoInteraccionCapitanaBita = $event"
           />

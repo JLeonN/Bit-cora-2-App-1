@@ -79,13 +79,21 @@ const duracionFormateada = computed(() => {
 })
 
 async function enviar() {
+  console.info('[CapitanaBita] Evento de envío recibido por la interfaz')
   const procesado = await enviarTexto()
-  if (procesado) emit('resultado-procesado', procesado)
+  if (procesado) {
+    console.info('[CapitanaBita] La interfaz emite el resultado de texto')
+    emit('resultado-procesado', procesado)
+  }
 }
 
 async function alternar() {
+  console.info('[CapitanaBita] Evento de micrófono recibido por la interfaz')
   const procesado = await alternarGrabacion()
-  if (procesado) emit('resultado-procesado', procesado)
+  if (procesado) {
+    console.info('[CapitanaBita] La interfaz emite el resultado de audio')
+    emit('resultado-procesado', procesado)
+  }
 }
 
 async function cerrarInteraccion() {

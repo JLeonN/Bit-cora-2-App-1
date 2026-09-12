@@ -81,20 +81,39 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
 
   async function prepararSolicitud() {
     comprobarDisponibilidad()
-    if (!disponible.value) return null
+    if (!disponible.value) {
+      console.warn('[CapitanaBita] Solicitud detenida: servicio no disponible', {
+        motivo: motivoNoDisponible.value,
+      })
+      return null
+    }
     const contextoBusqueda = String(obtenerContextoBusqueda?.() || '')
     const identificadorDestino = String(obtenerIdentificadorDestino?.() || '')
+    console.info('[CapitanaBita] Preparando solicitud', {
+      contextoBusqueda,
+      identificadorDestino,
+    })
     const [nombreUsuario, memorias] = await Promise.all([
       obtenerNombreUsuario(),
       obtenerMemoriasParaContexto(contextoBusqueda),
     ])
+    console.info('[CapitanaBita] Datos locales preparados', {
+      tieneNombreUsuario: Boolean(nombreUsuario),
+      memorias: memorias.length,
+    })
     return { contextoBusqueda, identificadorDestino, nombreUsuario, memorias }
   }
 
   async function enviarTexto() {
-    if (procesando.value || !String(texto.value || '').trim()) return null
+    const textoLimpio = String(texto.value || '').trim()
+    console.info('[CapitanaBita] Envío de texto solicitado', {
+      procesando: procesando.value,
+      caracteres: textoLimpio.length,
+    })
+    if (procesando.value || !textoLimpio) return null
     const datos = await prepararSolicitud()
     if (!datos) return null
+    const inicio = Date.now()
     procesando.value = true
     limpiarError()
     try {
@@ -105,8 +124,17 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
         identificadorDestino: datos.identificadorDestino,
       }
       texto.value = ''
+      console.info('[CapitanaBita] Texto procesado correctamente', {
+        solicitudes: resultado.value.solicitudes.length,
+        duracionMs: Date.now() - inicio,
+      })
       return resultado.value
     } catch (errorRecibido) {
+      console.error('[CapitanaBita] Error al procesar texto', {
+        codigo: errorRecibido?.codigo || '',
+        mensaje: errorRecibido?.message || '',
+        duracionMs: Date.now() - inicio,
+      })
       aplicarError(errorRecibido)
       return null
     } finally {
@@ -128,6 +156,10 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
   }
 
   async function alternarGrabacion() {
+    console.info('[CapitanaBita] Botón de micrófono pulsado', {
+      grabando: grabando.value,
+      procesando: procesando.value,
+    })
     if (procesando.value) return null
     limpiarError()
     if (!grabando.value) {
@@ -138,7 +170,12 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
         datosSolicitudGrabada = datos
         grabando.value = true
         iniciarContador()
+        console.info('[CapitanaBita] Grabación iniciada')
       } catch (errorRecibido) {
+        console.error('[CapitanaBita] No se pudo iniciar la grabación', {
+          codigo: errorRecibido?.codigo || '',
+          mensaje: errorRecibido?.message || '',
+        })
         aplicarError(errorRecibido)
       }
       return null
@@ -148,16 +185,30 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     grabando.value = false
     detenerContador()
     procesando.value = true
+    const inicio = Date.now()
     try {
       const audio = await detenerGrabacion()
+      console.info('[CapitanaBita] Audio capturado', {
+        mimeType: audio.mimeType,
+        caracteresBase64: audio.base64?.length || 0,
+      })
       const procesado = await procesarAudioCapitanaBita({ ...audio, ...datos })
       resultado.value = {
         ...procesado,
         contextoBusquedaUsado: datos.contextoBusqueda,
         identificadorDestino: datos.identificadorDestino,
       }
+      console.info('[CapitanaBita] Audio procesado correctamente', {
+        solicitudes: resultado.value.solicitudes.length,
+        duracionMs: Date.now() - inicio,
+      })
       return resultado.value
     } catch (errorRecibido) {
+      console.error('[CapitanaBita] Error al procesar audio', {
+        codigo: errorRecibido?.codigo || '',
+        mensaje: errorRecibido?.message || '',
+        duracionMs: Date.now() - inicio,
+      })
       aplicarError(errorRecibido)
       return null
     } finally {

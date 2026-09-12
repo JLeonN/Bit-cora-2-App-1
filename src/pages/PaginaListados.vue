@@ -541,15 +541,31 @@ function cerrarResultadosCapitanaBita() {
 }
 
 async function procesarColaCapitanaBita() {
-  if (procesandoColaCapitanaBita.value || articuloPendienteRepetido.value) return
+  if (procesandoColaCapitanaBita.value || articuloPendienteRepetido.value) {
+    console.info('[CapitanaBita] Cola de inserción en espera', {
+      procesando: procesandoColaCapitanaBita.value,
+      articuloRepetidoPendiente: Boolean(articuloPendienteRepetido.value),
+      pendientes: colaInsercionCapitanaBita.value.length,
+    })
+    return
+  }
+  console.info('[CapitanaBita] Procesando cola de inserción', {
+    pendientes: colaInsercionCapitanaBita.value.length,
+  })
   procesandoColaCapitanaBita.value = true
   try {
     while (colaInsercionCapitanaBita.value.length && !articuloPendienteRepetido.value) {
       const pendiente = colaInsercionCapitanaBita.value.shift()
+      console.info('[CapitanaBita] Agregando artículo al listado', {
+        codigo: pendiente.articulo?.codigo || '',
+      })
       await agregarArticulo(pendiente.articulo, { desdeCapitanaBita: true })
     }
   } finally {
     procesandoColaCapitanaBita.value = false
+    console.info('[CapitanaBita] Cola de inserción finalizada', {
+      pendientes: colaInsercionCapitanaBita.value.length,
+    })
   }
 }
 
@@ -557,12 +573,29 @@ function encolarArticuloCapitanaBita(articulo, cantidad = 1) {
   for (let indice = 0; indice < cantidad; indice += 1) {
     colaInsercionCapitanaBita.value.push({ articulo })
   }
+  console.info('[CapitanaBita] Artículo encolado', {
+    codigo: articulo?.codigo || '',
+    cantidad,
+    pendientes: colaInsercionCapitanaBita.value.length,
+  })
   void procesarColaCapitanaBita()
 }
 
 async function procesarResultadoCapitanaBita(resultadoGemini) {
-  if (!listadoActivo.value || !resultadoGemini) return
-  if (resultadoGemini.identificadorDestino !== listadoActivo.value.id) return
+  console.info('[CapitanaBita] Resultado recibido por la página', {
+    tieneListadoActivo: Boolean(listadoActivo.value),
+    tieneResultado: Boolean(resultadoGemini),
+    destinoResultado: resultadoGemini?.identificadorDestino || '',
+    destinoActivo: listadoActivo.value?.id || '',
+  })
+  if (!listadoActivo.value || !resultadoGemini) {
+    console.warn('[CapitanaBita] Resultado descartado: falta listado activo o resultado')
+    return
+  }
+  if (resultadoGemini.identificadorDestino !== listadoActivo.value.id) {
+    console.warn('[CapitanaBita] Resultado descartado: cambió el listado activo')
+    return
+  }
   cerrarResultadosCapitanaBita()
   const contextoBusqueda = resultadoGemini.contextoBusquedaUsado || ''
   if (!resultadoGemini.esPedidoDeRepuestos || resultadoGemini.solicitudes.length === 0) {
@@ -571,9 +604,15 @@ async function procesarResultadoCapitanaBita(resultadoGemini) {
     return
   }
   const memorias = await obtenerMemoriasParaContexto(contextoBusqueda)
+  const articulos = obtenerArticulosCargados()
+  console.info('[CapitanaBita] Preparando resolución del resultado', {
+    solicitudes: resultadoGemini.solicitudes.length,
+    articulos: articulos.length,
+    memorias: memorias.length,
+  })
   const resoluciones = resolverSolicitudesCapitanaBita({
     solicitudes: resultadoGemini.solicitudes,
-    articulos: obtenerArticulosCargados(),
+    articulos,
     contextoBusqueda,
     memorias,
   })
@@ -592,6 +631,11 @@ async function procesarResultadoCapitanaBita(resultadoGemini) {
     })
   const ambiguedades = resoluciones.filter((resolucion) => resolucion.estado === 'ambigua')
   const noEncontrados = resoluciones.filter((resolucion) => resolucion.estado === 'noEncontrada')
+  console.info('[CapitanaBita] Resultado local resumido', {
+    unicas: resoluciones.filter((resolucion) => resolucion.estado === 'unica').length,
+    ambiguedades: ambiguedades.length,
+    noEncontrados: noEncontrados.length,
+  })
   resultadoPendienteCapitanaBita.value =
     ambiguedades.length || noEncontrados.length || memoriasPropuestasCapitanaBita.value.length
       ? {

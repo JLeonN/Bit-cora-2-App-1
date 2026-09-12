@@ -12,12 +12,15 @@ import {
   MODELO_CAPITANA_BITA,
 } from './ConfiguracionCapitanaBita.js'
 
+const TIEMPO_MAXIMO_SOLICITUD_MS = 45000
+
 const MENSAJES_ERROR = Object.freeze({
   sinConexion: 'Capitana Bita necesita conexión a internet.',
   permiso: 'Permití el acceso al micrófono para dictar.',
   appCheck: 'No se pudo verificar esta instalación de Bitácora.',
   cuota: 'Capitana Bita alcanzó un límite temporal. Probá nuevamente más tarde.',
   saturado: 'Capitana Bita alcanzó un límite temporal. Probá nuevamente más tarde.',
+  tiempoAgotado: 'Capitana Bita demoró demasiado en responder. Probá nuevamente.',
   respuestaInvalida: 'No pude interpretar el pedido. Probá nuevamente.',
   desconocido: 'Capitana Bita no está disponible temporalmente. Probá nuevamente.',
 })
@@ -126,19 +129,29 @@ function crearPrompt({ contextoBusqueda, memorias, tipoEntrada }) {
 }
 
 async function obtenerModeloCapitanaBita(nombreUsuario) {
+  console.info('[CapitanaBita] Preparando Firebase AI')
   const aplicacion = await obtenerAplicacionFirebaseProtegida()
   const ai = getAI(aplicacion, { backend: new GoogleAIBackend() })
-  return getGenerativeModel(ai, {
-    model: MODELO_CAPITANA_BITA,
-    systemInstruction: crearInstruccionSistemaCapitanaBita(nombreUsuario),
-    generationConfig: {
-      temperature: 0.1,
-      maxOutputTokens: MAXIMO_TOKENS_SALIDA_CAPITANA_BITA,
-      responseMimeType: 'application/json',
-      responseSchema: ESQUEMA_RESPUESTA_CAPITANA_BITA,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+  const modelo = getGenerativeModel(
+    ai,
+    {
+      model: MODELO_CAPITANA_BITA,
+      systemInstruction: crearInstruccionSistemaCapitanaBita(nombreUsuario),
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: MAXIMO_TOKENS_SALIDA_CAPITANA_BITA,
+        responseMimeType: 'application/json',
+        responseSchema: ESQUEMA_RESPUESTA_CAPITANA_BITA,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      },
     },
+    { timeout: TIEMPO_MAXIMO_SOLICITUD_MS },
+  )
+  console.info('[CapitanaBita] Firebase AI preparado', {
+    modelo: MODELO_CAPITANA_BITA,
+    tiempoMaximoMs: TIEMPO_MAXIMO_SOLICITUD_MS,
   })
+  return modelo
 }
 
 function obtenerEnfriamiento(error) {
@@ -164,24 +177,49 @@ function clasificarError(error) {
   if (/503|unavailable|overloaded|saturat/.test(detalle)) {
     return new ErrorCapitanaBita('saturado', error, obtenerEnfriamiento(error))
   }
+  if (/timeout|timed.out|deadline|tiempo.agotado/.test(detalle)) {
+    return new ErrorCapitanaBita('tiempoAgotado', error)
+  }
   return new ErrorCapitanaBita('desconocido', error)
 }
 
-async function procesarContenido({ contenido, nombreUsuario }) {
+async function procesarContenido({ contenido, nombreUsuario, tipoEntrada }) {
+  const inicio = Date.now()
   try {
     if (!globalThis.navigator?.onLine) throw new ErrorCapitanaBita('sinConexion')
+    console.info('[CapitanaBita] Enviando solicitud a Gemini', { tipoEntrada })
     const modelo = await obtenerModeloCapitanaBita(nombreUsuario)
     const resultado = await modelo.generateContent(contenido)
+    console.info('[CapitanaBita] Gemini respondió', {
+      tipoEntrada,
+      duracionMs: Date.now() - inicio,
+    })
     const textoRespuesta = resultado.response.text()
+    console.info('[CapitanaBita] Respuesta recibida como texto', {
+      caracteres: textoRespuesta.length,
+    })
     let datos
     try {
       datos = JSON.parse(textoRespuesta)
     } catch (error) {
       throw new ErrorCapitanaBita('respuestaInvalida', error)
     }
-    return validarRespuestaCapitanaBita(datos)
+    const respuestaValidada = validarRespuestaCapitanaBita(datos)
+    console.info('[CapitanaBita] Respuesta validada', {
+      esPedidoDeRepuestos: respuestaValidada.esPedidoDeRepuestos,
+      solicitudes: respuestaValidada.solicitudes.length,
+    })
+    return respuestaValidada
   } catch (error) {
-    throw clasificarError(error)
+    const errorClasificado = clasificarError(error)
+    console.error('[CapitanaBita] Falló la solicitud', {
+      tipoEntrada,
+      duracionMs: Date.now() - inicio,
+      codigo: errorClasificado.codigo,
+      codigoOriginal: error?.code || error?.cause?.code || '',
+      mensajeOriginal: error?.message || error?.cause?.message || '',
+    })
+    throw errorClasificado
   }
 }
 
@@ -197,6 +235,7 @@ export async function procesarTextoCapitanaBita({
   return procesarContenido({
     contenido: prompt,
     nombreUsuario,
+    tipoEntrada: 'texto',
   })
 }
 
@@ -212,5 +251,6 @@ export async function procesarAudioCapitanaBita({
   return procesarContenido({
     contenido: [{ text: prompt }, { inlineData: { data: base64, mimeType } }],
     nombreUsuario,
+    tipoEntrada: 'audio',
   })
 }
