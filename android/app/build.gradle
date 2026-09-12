@@ -36,6 +36,10 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation platform("com.google.firebase:firebase-bom:34.19.0")
+    implementation "com.google.firebase:firebase-appcheck"
+    debugImplementation "com.google.firebase:firebase-appcheck-debug"
+    releaseImplementation "com.google.firebase:firebase-appcheck-playintegrity"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
@@ -50,6 +54,6 @@ try {
         apply plugin: 'com.google.gms.google-services'
     }
 } catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.info("google-services.json no encontrado; los servicios Firebase nativos no estarán disponibles")
 }
    

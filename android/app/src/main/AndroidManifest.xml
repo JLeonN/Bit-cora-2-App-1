@@ -3,6 +3,7 @@
 
     <!-- Permiso de cámara -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     
     <!-- Permisos de internet para AdMob -->
     <uses-permission android:name="android.permission.INTERNET"/>

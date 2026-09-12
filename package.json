@@ -37,6 +37,7 @@
         "@quasar/extras": "^1.16.4",
         "@tabler/icons-vue": "^3.34.1",
         "@zxing/library": "^0.21.3",
+        "capacitor-voice-recorder": "^7.0.6",
         "docx": "^9.5.1",
         "firebase": "^12.16.0",
         "jsbarcode": "^3.12.1",

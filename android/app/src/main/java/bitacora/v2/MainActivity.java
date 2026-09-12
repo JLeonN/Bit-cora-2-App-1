@@ -7,8 +7,10 @@ import android.content.Intent;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(android.os.Bundle savedInstanceState) {
+        ConfiguradorAppCheck.inicializar(this);
         registerPlugin(PluginContadorPasos.class);
         registerPlugin(PluginArchivoCompartido.class);
+        registerPlugin(PluginAppCheckNativo.class);
         super.onCreate(savedInstanceState);
         PluginArchivoCompartido.procesarIntentCompartido(this, getIntent());
     }

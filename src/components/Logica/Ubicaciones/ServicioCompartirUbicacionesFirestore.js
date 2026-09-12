@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core'
+import { obtenerAplicacionFirebase } from '../Compartidos/ServicioFirebase.js'
 
 const COLECCION_UBICACIONES_COMPARTIDAS = 'ubicacionesCompartidas'
 const MAXIMO_UBICACIONES_COMPARTIDAS = 200
@@ -22,23 +23,6 @@ function confirmarNavegadorWeb() {
   }
 }
 
-function obtenerConfiguracionFirebase() {
-  const configuracion = {
-    apiKey: process.env.FIREBASE_API_KEY || '',
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
-    projectId: process.env.FIREBASE_PROJECT_ID || '',
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: process.env.FIREBASE_APP_ID || '',
-  }
-
-  if (Object.values(configuracion).some((valor) => !valor)) {
-    throw new Error('El enlace compartido todavía no está configurado en esta versión de la app.')
-  }
-
-  return configuracion
-}
-
 async function obtenerDependenciasFirebase() {
   if (dependenciasFirebase) return dependenciasFirebase
 
@@ -54,9 +38,8 @@ async function obtenerFirestore() {
   confirmarNavegadorWeb()
   if (instanciaFirestore) return instanciaFirestore
 
-  const { getApps, initializeApp, getFirestore } = await obtenerDependenciasFirebase()
-  const configuracion = obtenerConfiguracionFirebase()
-  const aplicacion = getApps().length > 0 ? getApps()[0] : initializeApp(configuracion)
+  const { getFirestore } = await obtenerDependenciasFirebase()
+  const aplicacion = await obtenerAplicacionFirebase()
   instanciaFirestore = getFirestore(aplicacion)
   return instanciaFirestore
 }
@@ -66,7 +49,9 @@ function normalizarUbicaciones(ubicaciones) {
     throw new Error('No hay ubicaciones para compartir.')
   }
   if (ubicaciones.length > MAXIMO_UBICACIONES_COMPARTIDAS) {
-    throw new Error(`Podés compartir hasta ${MAXIMO_UBICACIONES_COMPARTIDAS} ubicaciones por enlace.`)
+    throw new Error(
+      `Podés compartir hasta ${MAXIMO_UBICACIONES_COMPARTIDAS} ubicaciones por enlace.`,
+    )
   }
 
   const codigos = new Set()
@@ -106,7 +91,9 @@ function validarDocumentoCompartido(datos) {
   }
 
   return {
-    usuario: String(datos.usuario || 'Sin usuario').trim().slice(0, MAXIMO_CARACTERES_USUARIO),
+    usuario: String(datos.usuario || 'Sin usuario')
+      .trim()
+      .slice(0, MAXIMO_CARACTERES_USUARIO),
     cantidadUbicaciones: datos.cantidadUbicaciones,
     fechaCreacion: convertirFecha(datos.fechaCreacion),
     ubicaciones: normalizarUbicaciones(datos.ubicaciones),
@@ -117,7 +104,9 @@ export async function publicarUbicacionesCompartidas(ubicaciones, nombreUsuario)
   const ubicacionesNormalizadas = normalizarUbicaciones(ubicaciones)
   const firestore = await obtenerFirestore()
   const { addDoc, collection, serverTimestamp } = await obtenerDependenciasFirebase()
-  const usuario = String(nombreUsuario || 'Sin usuario').trim().slice(0, MAXIMO_CARACTERES_USUARIO)
+  const usuario = String(nombreUsuario || 'Sin usuario')
+    .trim()
+    .slice(0, MAXIMO_CARACTERES_USUARIO)
   const documento = await addDoc(collection(firestore, COLECCION_UBICACIONES_COMPARTIDAS), {
     version: 1,
     usuario: usuario || 'Sin usuario',

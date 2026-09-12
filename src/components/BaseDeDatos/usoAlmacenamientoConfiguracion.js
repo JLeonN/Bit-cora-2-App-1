@@ -28,13 +28,13 @@ export async function obtenerNombreUsuario() {
 
     if (value) {
       const configuracion = JSON.parse(value)
-      return configuracion.nombreUsuario || 'Usua des'
+      return configuracion.nombreUsuario || 'Usua desconocido'
     }
 
-    return 'Usua des'
+    return 'Usua desconocido'
   } catch (error) {
     console.error('Error al obtener nombre de usuario:', error)
-    return 'Usua des'
+    return 'Usua desconocido'
   }
 }
 
@@ -58,13 +58,13 @@ export async function obtenerConfiguracionCompleta() {
     }
 
     return {
-      nombreUsuario: 'Usua des',
+      nombreUsuario: 'Usua desconocido',
       fechaActualizacion: null,
     }
   } catch (error) {
     console.error('Error al obtener configuración completa:', error)
     return {
-      nombreUsuario: 'Usua des',
+      nombreUsuario: 'Usua desconocido',
       fechaActualizacion: null,
     }
   }

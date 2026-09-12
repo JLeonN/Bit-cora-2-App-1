@@ -12,7 +12,9 @@ export default defineConfig((ctx) => {
   const rutaVariablesLocales = path.join(rutaDirectorioActual, '.env.local')
   if (!process.env.GITHUB_ACTIONS && fs.existsSync(rutaVariablesLocales)) {
     const lineasVariables = fs.readFileSync(rutaVariablesLocales, 'utf8').split(/\r?\n/)
-    for (const linea of lineasVariables) {
+    for (const lineaOriginal of lineasVariables) {
+      const linea = lineaOriginal.trim()
+      if (!linea || linea[0] === '#') continue
       const separador = linea.indexOf('=')
       if (separador <= 0) continue
       const nombre = linea.slice(0, separador).trim()
@@ -88,6 +90,7 @@ export default defineConfig((ctx) => {
         FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET || '',
         FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
         FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || '',
+        FIREBASE_APP_CHECK_SITE_KEY: process.env.FIREBASE_APP_CHECK_SITE_KEY || '',
       },
       // analyze: true,
       // env: {},

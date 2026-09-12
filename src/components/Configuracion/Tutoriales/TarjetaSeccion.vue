@@ -49,7 +49,7 @@ const props = defineProps({
     required: true,
   },
   icono: {
-    type: Object,
+    type: [Object, Function],
     default: null,
   },
   expandidaPorDefecto: {

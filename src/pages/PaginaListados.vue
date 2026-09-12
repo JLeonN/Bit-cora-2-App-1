@@ -28,6 +28,7 @@
           :articulo-repetido="articuloPendienteRepetido"
           :lineas-repetidas="lineasArticuloPendiente"
           :contexto-busqueda="listadoActivo.contextoBusqueda"
+          :identificador-destino="listadoActivo.id"
           @articulo-seleccionado="agregarArticulo"
           @base-datos-cargada="manejarBaseCargada"
           @base-datos-limpia="baseDatosCargada = false"
@@ -37,6 +38,17 @@
           @confirmar-repetido="confirmarArticuloRepetido"
           @cancelar-repetido="cancelarArticuloRepetido"
           @actualizar-contexto="guardarContextoBusqueda"
+          @resultado-capitana-bita="procesarResultadoCapitanaBita"
+        />
+        <PanelResultadosCapitanaBita
+          v-if="resultadoPendienteCapitanaBita"
+          :transcripcion="resultadoPendienteCapitanaBita.transcripcion"
+          :ambiguedades="resultadoPendienteCapitanaBita.ambiguedades"
+          :no-encontrados="resultadoPendienteCapitanaBita.noEncontrados"
+          :memorias-propuestas="memoriasPropuestasCapitanaBita"
+          @seleccionar-candidato="seleccionarCandidatoCapitanaBita"
+          @recordar-seleccion="guardarMemoriaDesdeSeleccion"
+          @cerrar="cerrarResultadosCapitanaBita"
         />
         <div class="columnas-visibles-listado">
           <span class="titulo-columnas-listado">Columnas visibles</span>
@@ -190,6 +202,7 @@ import {
 import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
+import PanelResultadosCapitanaBita from '../components/Logica/CapitanaBita/PanelResultadosCapitanaBita.vue'
 import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import {
@@ -203,7 +216,16 @@ import {
   obtenerListados,
   renombrarListado,
 } from '../components/BaseDeDatos/UsoAlmacenamientoListados.js'
-import { inicializarBaseDatos, obtenerEstadoCarga } from '../components/BaseDeDatos/LectorExcel.js'
+import {
+  inicializarBaseDatos,
+  obtenerArticulosCargados,
+  obtenerEstadoCarga,
+} from '../components/BaseDeDatos/LectorExcel.js'
+import {
+  guardarMemoriaCapitanaBita,
+  obtenerMemoriasParaContexto,
+} from '../components/BaseDeDatos/UsoAlmacenamientoMemoriasCapitanaBita.js'
+import { resolverSolicitudesCapitanaBita } from '../components/Logica/CapitanaBita/ResolverSolicitudesCapitanaBita.js'
 import { normalizarCodigoBusqueda } from '../components/Logica/Compartidos/CodigoEscaner.js'
 import {
   cargarDatosLocalesArticulos,
@@ -247,13 +269,18 @@ const datosLocalesArticulos = ref({
 })
 const articuloPendienteRepetido = ref(null)
 const formularioListadoRef = ref(null)
+const resultadoPendienteCapitanaBita = ref(null)
+const memoriasPropuestasCapitanaBita = ref([])
+const colaInsercionCapitanaBita = ref([])
+const procesandoColaCapitanaBita = ref(false)
 const ocupado = computed(
   () =>
     cargandoDatosLocales.value ||
     administrando.value ||
     exportando.value ||
     enviandoStock.value ||
-    enviandoUbicaciones.value,
+    enviandoUbicaciones.value ||
+    procesandoColaCapitanaBita.value,
 )
 const articulosOrdenados = computed(() =>
   ordenarColeccion(listadoActivo.value?.articulos || [], listadoActivo.value?.orden, {
@@ -360,7 +387,9 @@ async function ejecutarAdministracion(operacion) {
 }
 
 function crearNuevoListado() {
+  formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
+  limpiarEstadoCapitanaBita()
   ejecutarAdministracion(async () => {
     const creado = await crearListado()
     reemplazarListadoLocal(creado)
@@ -370,7 +399,9 @@ function crearNuevoListado() {
 }
 
 function abrirListado(id) {
+  formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
+  limpiarEstadoCapitanaBita()
   ejecutarAdministracion(async () => {
     const listado = await obtenerListado(id)
     if (!listado) throw new Error('No se encontró el listado')
@@ -386,7 +417,9 @@ function renombrarListadoActivo({ id, nombrePersonalizado }) {
 }
 
 function duplicarListadoActivo(id) {
+  formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
+  limpiarEstadoCapitanaBita()
   ejecutarAdministracion(async () => {
     reemplazarListadoLocal(await duplicarListado(id))
     notificar('positive', 'Listado duplicado')
@@ -405,7 +438,9 @@ function cerrarModalEliminarListado() {
 function confirmarEliminarListado() {
   const id = listadoAEliminar.value?.id
   if (!id) return
+  formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
+  limpiarEstadoCapitanaBita()
   cerrarModalEliminarListado()
   ejecutarAdministracion(async () => {
     const resultado = await eliminarListado(id)
@@ -432,7 +467,7 @@ async function guardarContextoBusqueda(contextoBusqueda) {
   }
 }
 
-async function agregarArticulo(articulo) {
+async function agregarArticulo(articulo, { desdeCapitanaBita = false } = {}) {
   const codigo = normalizarCodigoBusqueda(articulo?.codigo)
   if (!codigo || !listadoActivo.value) return
   if (listadoActivo.value.articulos.some((item) => item.codigo === codigo)) {
@@ -440,10 +475,12 @@ async function agregarArticulo(articulo) {
       ...articulo,
       codigo,
       nombre: String(articulo.nombre || articulo.descripcion || 'Artículo sin nombre').trim(),
+      desdeCapitanaBita,
     }
-    return
+    return false
   }
   await insertarArticulo(articulo)
+  return true
 }
 
 async function insertarArticulo(articulo) {
@@ -479,12 +516,140 @@ async function confirmarArticuloRepetido() {
   articuloPendienteRepetido.value = null
   await insertarArticulo(articulo)
   await formularioListadoRef.value?.enfocarBusqueda?.()
+  void procesarColaCapitanaBita()
 }
 
 async function cancelarArticuloRepetido() {
+  const desdeCapitanaBita = articuloPendienteRepetido.value?.desdeCapitanaBita
   articuloPendienteRepetido.value = null
   await nextTick()
-  await formularioListadoRef.value?.limpiarBusqueda?.({ descartarTextoCopiado: true })
+  if (!desdeCapitanaBita) {
+    await formularioListadoRef.value?.limpiarBusqueda?.({ descartarTextoCopiado: true })
+  }
+  void procesarColaCapitanaBita()
+}
+
+function limpiarEstadoCapitanaBita() {
+  resultadoPendienteCapitanaBita.value = null
+  memoriasPropuestasCapitanaBita.value = []
+  colaInsercionCapitanaBita.value = []
+}
+
+function cerrarResultadosCapitanaBita() {
+  resultadoPendienteCapitanaBita.value = null
+  memoriasPropuestasCapitanaBita.value = []
+}
+
+async function procesarColaCapitanaBita() {
+  if (procesandoColaCapitanaBita.value || articuloPendienteRepetido.value) return
+  procesandoColaCapitanaBita.value = true
+  try {
+    while (colaInsercionCapitanaBita.value.length && !articuloPendienteRepetido.value) {
+      const pendiente = colaInsercionCapitanaBita.value.shift()
+      await agregarArticulo(pendiente.articulo, { desdeCapitanaBita: true })
+    }
+  } finally {
+    procesandoColaCapitanaBita.value = false
+  }
+}
+
+function encolarArticuloCapitanaBita(articulo, cantidad = 1) {
+  for (let indice = 0; indice < cantidad; indice += 1) {
+    colaInsercionCapitanaBita.value.push({ articulo })
+  }
+  void procesarColaCapitanaBita()
+}
+
+async function procesarResultadoCapitanaBita(resultadoGemini) {
+  if (!listadoActivo.value || !resultadoGemini) return
+  if (resultadoGemini.identificadorDestino !== listadoActivo.value.id) return
+  cerrarResultadosCapitanaBita()
+  const contextoBusqueda = resultadoGemini.contextoBusquedaUsado || ''
+  if (!resultadoGemini.esPedidoDeRepuestos || resultadoGemini.solicitudes.length === 0) {
+    cerrarResultadosCapitanaBita()
+    notificar('info', resultadoGemini.respuesta || 'No encontré una solicitud de repuestos.')
+    return
+  }
+  const memorias = await obtenerMemoriasParaContexto(contextoBusqueda)
+  const resoluciones = resolverSolicitudesCapitanaBita({
+    solicitudes: resultadoGemini.solicitudes,
+    articulos: obtenerArticulosCargados(),
+    contextoBusqueda,
+    memorias,
+  })
+  resoluciones
+    .filter((resolucion) => resolucion.estado === 'unica')
+    .forEach((resolucion) => {
+      encolarArticuloCapitanaBita(resolucion.articuloUnico, resolucion.cantidad)
+      if (resolucion.puedeOfrecerMemoria) {
+        memoriasPropuestasCapitanaBita.value.push({
+          idSolicitud: resolucion.idSolicitud,
+          contexto: contextoBusqueda,
+          textoOriginal: resolucion.textoOriginal,
+          articulo: resolucion.articuloUnico,
+        })
+      }
+    })
+  const ambiguedades = resoluciones.filter((resolucion) => resolucion.estado === 'ambigua')
+  const noEncontrados = resoluciones.filter((resolucion) => resolucion.estado === 'noEncontrada')
+  resultadoPendienteCapitanaBita.value =
+    ambiguedades.length || noEncontrados.length || memoriasPropuestasCapitanaBita.value.length
+      ? {
+          transcripcion: resultadoGemini.transcripcion,
+          ambiguedades,
+          noEncontrados,
+          contextoBusqueda,
+        }
+      : null
+  if (!resultadoPendienteCapitanaBita.value) {
+    notificar('positive', resultadoGemini.respuesta || 'Pedido agregado al listado.')
+  }
+}
+
+function seleccionarCandidatoCapitanaBita({ idSolicitud, articulo }) {
+  const pendiente = resultadoPendienteCapitanaBita.value
+  if (!pendiente) return
+  const grupo = pendiente.ambiguedades.find((item) => item.idSolicitud === idSolicitud)
+  if (!grupo) return
+  encolarArticuloCapitanaBita(articulo, grupo.cantidad)
+  pendiente.ambiguedades = pendiente.ambiguedades.filter((item) => item.idSolicitud !== idSolicitud)
+  if (grupo.puedeOfrecerMemoria) {
+    memoriasPropuestasCapitanaBita.value.push({
+      idSolicitud,
+      contexto: pendiente.contextoBusqueda,
+      textoOriginal: grupo.textoOriginal,
+      articulo,
+    })
+  }
+  if (
+    !pendiente.ambiguedades.length &&
+    !pendiente.noEncontrados.length &&
+    !memoriasPropuestasCapitanaBita.value.length
+  ) {
+    cerrarResultadosCapitanaBita()
+  }
+}
+
+async function guardarMemoriaDesdeSeleccion(propuesta) {
+  try {
+    await guardarMemoriaCapitanaBita({
+      contexto: propuesta.contexto,
+      expresionUsuario: propuesta.textoOriginal,
+      busquedaConfirmada: propuesta.articulo.nombre,
+      codigoArticuloReferencia: propuesta.articulo.codigo,
+      descripcionArticuloReferencia: propuesta.articulo.nombre,
+    })
+    memoriasPropuestasCapitanaBita.value = memoriasPropuestasCapitanaBita.value.filter(
+      (item) => item.idSolicitud !== propuesta.idSolicitud,
+    )
+    notificar('positive', 'Memoria guardada. Podés editarla o borrarla desde Configuración.', 4000)
+    const pendiente = resultadoPendienteCapitanaBita.value
+    if (pendiente && !pendiente.ambiguedades.length && !pendiente.noEncontrados.length) {
+      cerrarResultadosCapitanaBita()
+    }
+  } catch (error) {
+    notificar('negative', error.message || 'No se pudo guardar la memoria.')
+  }
 }
 
 async function guardarCambioStock({ idFila, stockListado }) {
@@ -666,6 +831,10 @@ function manejarErrorCarga(mensaje) {
 
 function cerrarPasoAtrasNativo() {
   if (formularioListadoRef.value?.cerrarInteraccion?.()) return true
+  if (resultadoPendienteCapitanaBita.value) {
+    cerrarResultadosCapitanaBita()
+    return true
+  }
   if (listadoAEliminar.value) {
     cerrarModalEliminarListado()
     return true

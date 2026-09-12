@@ -14,6 +14,10 @@
         />
       </TarjetaSeccion>
 
+      <TarjetaSeccion titulo="Memorias de Capitana Bita" :icono="IconBrain">
+        <GestionMemoriasCapitanaBita ref="gestionMemoriasRef" />
+      </TarjetaSeccion>
+
       <!-- SECCIÓN: Tutoriales y Ayuda -->
       <TarjetaSeccion
         titulo="Tutoriales y Ayuda"
@@ -30,9 +34,10 @@
 <script setup>
 import { getCurrentInstance, computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { IconUser, IconBook } from '@tabler/icons-vue'
+import { IconBook, IconBrain, IconUser } from '@tabler/icons-vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import ConfiguracionUsuario from '../components/Configuracion/ConfiguracionUsuario.vue'
+import GestionMemoriasCapitanaBita from '../components/Configuracion/GestionMemoriasCapitanaBita.vue'
 import SeccionTutoriales from '../components/Configuracion/Tutoriales/SeccionTutoriales.vue'
 
 const instance = getCurrentInstance()
@@ -44,24 +49,32 @@ const solicitudEnfoqueNombre = computed(() => String(route.query.enfocarNombre |
 const tutorialesExpandidos = computed(() => route.query.tutoriales === '1')
 const solicitudResaltadoTutoriales = computed(() => String(route.query.tutoriales || ''))
 const configuracionUsuarioRef = ref(null)
+const gestionMemoriasRef = ref(null)
 
 // Configurar barra de botones al montar el componente
 const configurarBarraBotones = () => {
   const emit = instance?.emit
   if (emit) {
-    emit('configurar-barra', {
-      mostrarAgregar: false,
-      mostrarEnviar: false,
-      puedeEnviar: false,
-      botonesPersonalizados: [],
-    }, {
-      onAtrasNativo: cerrarPasoAtrasNativo,
-    })
+    emit(
+      'configurar-barra',
+      {
+        mostrarAgregar: false,
+        mostrarEnviar: false,
+        puedeEnviar: false,
+        botonesPersonalizados: [],
+      },
+      {
+        onAtrasNativo: cerrarPasoAtrasNativo,
+      },
+    )
   }
 }
 
 function cerrarPasoAtrasNativo() {
-  return !!configuracionUsuarioRef.value?.cerrarPasoAtrasNativo?.()
+  return (
+    !!gestionMemoriasRef.value?.cerrarPasoAtrasNativo?.() ||
+    !!configuracionUsuarioRef.value?.cerrarPasoAtrasNativo?.()
+  )
 }
 
 // Manejar actualización de nombre

@@ -13,7 +13,15 @@
             id-campo="contexto-listado"
             :model-value="contextoBusqueda"
             :deshabilitado="busquedaDeshabilitada"
+            :identificador-destino="identificadorDestino"
             @update:model-value="emit('actualizar-contexto', $event)"
+          />
+          <EntradaCapitanaBita
+            ref="entradaCapitanaBitaRef"
+            :contexto-busqueda="contextoBusqueda"
+            :deshabilitado="busquedaDeshabilitada"
+            @resultado-procesado="emit('resultado-capitana-bita', $event)"
+            @estado-interaccion="estadoInteraccionCapitanaBita = $event"
           />
           <ControlAutoseleccionArticulo
             :model-value="autoseleccionArticuloHabilitada"
@@ -115,6 +123,7 @@ import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import ControlAutoseleccionArticulo from '../Compartidos/ControlAutoseleccionArticulo.vue'
+import EntradaCapitanaBita from '../CapitanaBita/EntradaCapitanaBita.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import {
   guardarAutoseleccionArticulo,
@@ -133,6 +142,7 @@ const props = defineProps({
   contextoBusqueda: { type: String, default: '' },
   articuloRepetido: { type: Object, default: null },
   lineasRepetidas: { type: Array, default: () => [] },
+  identificadorDestino: { type: String, default: '' },
 })
 const emit = defineEmits([
   'articulo-seleccionado',
@@ -144,6 +154,7 @@ const emit = defineEmits([
   'confirmar-repetido',
   'cancelar-repetido',
   'actualizar-contexto',
+  'resultado-capitana-bita',
 ])
 const busquedaArticulo = ref('')
 const mostrarBuscador = ref(false)
@@ -153,6 +164,8 @@ const baseDatosCargada = ref(false)
 const inputBusquedaRef = ref(null)
 const autoseleccionArticuloHabilitada = ref(false)
 const ultimoEspacioTiempo = ref(0)
+const entradaCapitanaBitaRef = ref(null)
+const estadoInteraccionCapitanaBita = ref({ grabando: false, procesando: false })
 const { copiarTextoActual, limpiarTextoCopiado, obtenerTextoCopiado } =
   usarTextoCopiadoInput('FormularioListado')
 const busquedaDeshabilitada = computed(() => props.deshabilitado || Boolean(props.articuloRepetido))
@@ -274,6 +287,10 @@ async function limpiarBusqueda({ descartarTextoCopiado = false } = {}) {
 }
 
 function cerrarInteraccion() {
+  if (estadoInteraccionCapitanaBita.value.grabando) {
+    void entradaCapitanaBitaRef.value?.cerrarInteraccion?.()
+    return true
+  }
   if (mostrarCamara.value) {
     cerrarCamara()
     return true
