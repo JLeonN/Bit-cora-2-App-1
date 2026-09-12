@@ -52,6 +52,7 @@ export function crearInstruccionSistemaCapitanaBita(nombreUsuario) {
     'Conservá restricciones expresas como delantero, trasero, completo, color, año o versión.',
     'Usá el contexto como marca, modelo o año, pero nunca lo transformes en un artículo.',
     'En alternativas incluí solo sinónimos útiles y nunca códigos inventados.',
+    'Tené en cuenta abreviaciones habituales del maestro, como LAT para lateral, DER para derecha, IZQ para izquierda, DEL para delantero y TRAS para trasero.',
     'Devolvé exclusivamente el JSON definido por el esquema, sin Markdown.',
     trato,
   ]

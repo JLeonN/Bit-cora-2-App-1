@@ -1,4 +1,8 @@
 import { obtenerArticuloPorCodigoEscaneado } from './CodigoEscaner.js'
+import {
+  expandirAbreviacionesArticulo,
+  sonPalabrasEquivalentesArticulo,
+} from './DiccionarioAbreviacionesArticulos.js'
 
 export function normalizarEntradaBusquedaArticulo(valor) {
   return String(valor || '')
@@ -19,19 +23,29 @@ export function normalizarTextoComparacionArticulo(valor) {
 }
 
 function tokenizarConsulta(valor) {
-  return normalizarTextoComparacionArticulo(valor).split(' ').filter(Boolean)
+  return normalizarNombreBusquedaArticulo(valor).split(' ').filter(Boolean)
+}
+
+function normalizarNombreBusquedaArticulo(valor) {
+  return expandirAbreviacionesArticulo(normalizarTextoComparacionArticulo(valor))
+}
+
+function contienePalabraEquivalente(palabrasNombre, palabraBuscada) {
+  return palabrasNombre.some((palabraNombre) =>
+    sonPalabrasEquivalentesArticulo(palabraNombre, palabraBuscada),
+  )
 }
 
 export function coincideContextoArticulo(articulo, contextoBusqueda) {
   const terminos = tokenizarConsulta(contextoBusqueda)
   if (terminos.length === 0) return true
-  const nombre = normalizarTextoComparacionArticulo(articulo?.nombre).replace(/ /g, '')
-  return terminos.every((termino) => nombre.includes(termino))
+  const palabrasNombre = tokenizarConsulta(articulo?.nombre)
+  return terminos.every((termino) => contienePalabraEquivalente(palabrasNombre, termino))
 }
 
 function calcularPuntajeRelevancia(nombre, terminoBusqueda) {
-  const nombreNormalizado = normalizarTextoComparacionArticulo(nombre).toLowerCase()
-  const terminoNormalizado = normalizarTextoComparacionArticulo(terminoBusqueda).toLowerCase()
+  const nombreNormalizado = normalizarNombreBusquedaArticulo(nombre).toLowerCase()
+  const terminoNormalizado = normalizarNombreBusquedaArticulo(terminoBusqueda).toLowerCase()
   const palabrasBuscadas = terminoNormalizado.split(' ').filter(Boolean)
   const palabrasNombre = nombreNormalizado.split(' ').filter(Boolean)
   if (!terminoNormalizado || palabrasBuscadas.length === 0) return 0
@@ -43,7 +57,9 @@ function calcularPuntajeRelevancia(nombre, terminoBusqueda) {
   let palabrasEnOrden = true
   palabrasBuscadas.forEach((palabra) => {
     const indiceExacto = palabrasNombre.indexOf(palabra)
-    const indiceParcial = palabrasNombre.findIndex((nombrePalabra) => nombrePalabra.includes(palabra))
+    const indiceParcial = palabrasNombre.findIndex((nombrePalabra) =>
+      sonPalabrasEquivalentesArticulo(nombrePalabra, palabra),
+    )
     const indice = indiceExacto !== -1 ? indiceExacto : indiceParcial
     if (indiceExacto !== -1) puntaje += 500
     else if (indiceParcial !== -1) puntaje += 250
@@ -81,15 +97,18 @@ export function buscarArticulos({ articulos, busqueda, contextoBusqueda = '', li
   if (!Array.isArray(articulos) || !String(busqueda || '').trim()) return []
   const escaneado = obtenerArticuloPorCodigoEscaneado(articulos, busqueda)
   if (escaneado) return [{ articulo: escaneado, tipoCoincidencia: 'codigo-escaneado' }]
-  const termino = normalizarTextoComparacionArticulo(busqueda).toLowerCase()
+  const termino = normalizarNombreBusquedaArticulo(busqueda).toLowerCase()
   const palabras = termino.split(' ').filter(Boolean)
   const candidatos = articulos.filter((articulo) => coincideContextoArticulo(articulo, contextoBusqueda))
   const codigosEmpiezan = candidatos.filter((articulo) =>
     normalizarTextoComparacionArticulo(articulo.codigo).toLowerCase().startsWith(termino),
   )
   const nombresCoinciden = candidatos.filter((articulo) => {
-    const nombre = normalizarTextoComparacionArticulo(articulo.nombre).toLowerCase()
-    return palabras.every((palabra) => nombre.includes(palabra)) && !codigosEmpiezan.includes(articulo)
+    const palabrasNombre = tokenizarConsulta(articulo.nombre).map((palabra) => palabra.toLowerCase())
+    return (
+      palabras.every((palabra) => contienePalabraEquivalente(palabrasNombre, palabra)) &&
+      !codigosEmpiezan.includes(articulo)
+    )
   })
   const codigosContienen = candidatos.filter((articulo) => {
     const codigo = normalizarTextoComparacionArticulo(articulo.codigo).toLowerCase()
@@ -102,9 +121,15 @@ export function buscarArticulos({ articulos, busqueda, contextoBusqueda = '', li
   ]
   if (palabras.length <= 1) {
     const parciales = candidatos.filter((articulo) => {
-      const nombre = normalizarTextoComparacionArticulo(articulo.nombre).toLowerCase()
-      return palabras.some((palabra) => nombre.includes(palabra)) &&
-        !codigosEmpiezan.includes(articulo) && !nombresCoinciden.includes(articulo) && !codigosContienen.includes(articulo)
+      const palabrasNombre = tokenizarConsulta(articulo.nombre).map((palabra) =>
+        palabra.toLowerCase(),
+      )
+      return (
+        palabras.some((palabra) => contienePalabraEquivalente(palabrasNombre, palabra)) &&
+        !codigosEmpiezan.includes(articulo) &&
+        !nombresCoinciden.includes(articulo) &&
+        !codigosContienen.includes(articulo)
+      )
     })
     resultados.push(...ordenarPorRelevancia(parciales, termino).map((articulo) => ({ articulo, tipoCoincidencia: 'nombre-parcial' })))
   }
