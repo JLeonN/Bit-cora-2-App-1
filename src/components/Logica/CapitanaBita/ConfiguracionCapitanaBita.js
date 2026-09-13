@@ -56,7 +56,6 @@ export const ESQUEMA_RESPUESTA_IMAGEN_CAPITANA_BITA = Schema.object({
     esListadoDeArticulos: Schema.boolean(),
     filas: Schema.array({
       items: ESQUEMA_FILA_IMAGEN,
-      maxItems: MAXIMO_SOLICITUDES_CAPITANA_BITA,
     }),
     advertencias: Schema.array({
       items: Schema.string({ description: 'Problema visual breve sin inventar contenido.' }),
