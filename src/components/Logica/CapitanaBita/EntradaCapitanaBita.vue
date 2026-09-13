@@ -221,11 +221,14 @@ defineExpose({ cerrarInteraccion })
 }
 @media (max-width: 480px) {
   .fila-entrada-capitana-bita {
-    grid-template-columns: repeat(3, 44px);
-    justify-content: end;
+    grid-template-columns: repeat(3, minmax(44px, 1fr));
+    width: 100%;
   }
   .campo-capitana-bita {
     grid-column: 1 / -1;
+    width: 100%;
+  }
+  .boton-capitana-bita {
     width: 100%;
   }
 }
