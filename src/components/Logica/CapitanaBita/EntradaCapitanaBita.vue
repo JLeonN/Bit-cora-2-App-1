@@ -16,31 +16,11 @@
         class="boton-capitana-bita"
         title="Leer artículos desde una imagen"
         :disabled="deshabilitado || grabando || procesando || capturandoImagen"
-        @click="menuImagenAbierto = true"
+        :aria-expanded="menuImagenAbierto"
+        aria-controls="opciones-imagen-capitana-bita"
+        @click="alternarMenuImagen"
       >
         <IconPhoto :size="21" />
-        <q-menu v-model="menuImagenAbierto" anchor="bottom right" self="top right">
-          <q-list style="min-width: 190px">
-            <q-item
-              clickable
-              v-close-popup
-              style="min-height: 44px"
-              @click="seleccionarImagen(ORIGENES_CAPTURA_IMAGEN.CAMARA)"
-            >
-              <q-item-section avatar><IconCamera :size="21" /></q-item-section>
-              <q-item-section>Tomar foto</q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-close-popup
-              style="min-height: 44px"
-              @click="seleccionarImagen(ORIGENES_CAPTURA_IMAGEN.GALERIA)"
-            >
-              <q-item-section avatar><IconPhoto :size="21" /></q-item-section>
-              <q-item-section>Elegir de galería</q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
       </button>
       <button
         type="button"
@@ -62,6 +42,28 @@
       >
         <IconSend class="icono-enviar" :size="21" />
       </button>
+      <div
+        v-if="menuImagenAbierto"
+        id="opciones-imagen-capitana-bita"
+        class="opciones-imagen-capitana-bita"
+      >
+        <button
+          type="button"
+          class="opcion-imagen-capitana-bita"
+          @click="seleccionarImagen(ORIGENES_CAPTURA_IMAGEN.CAMARA)"
+        >
+          <IconCamera :size="20" />
+          <span>Tomar foto</span>
+        </button>
+        <button
+          type="button"
+          class="opcion-imagen-capitana-bita"
+          @click="seleccionarImagen(ORIGENES_CAPTURA_IMAGEN.GALERIA)"
+        >
+          <IconPhoto :size="20" />
+          <span>Elegir de galería</span>
+        </button>
+      </div>
     </div>
     <p v-if="grabando" class="estado-capitana-bita estado-grabando">
       Grabando… Tocá nuevamente para finalizar · {{ duracionFormateada }}
@@ -118,12 +120,19 @@ const duracionFormateada = computed(() => {
 
 async function enviar() {
   console.info('[CapitanaBita] Evento de envío recibido por la interfaz')
+  menuImagenAbierto.value = false
   await enviarTexto()
 }
 
 async function alternar() {
   console.info('[CapitanaBita] Evento de micrófono recibido por la interfaz')
+  menuImagenAbierto.value = false
   await alternarGrabacion()
+}
+
+function alternarMenuImagen() {
+  menuImagenAbierto.value = !menuImagenAbierto.value
+  console.info('[CapitanaBita] Selector de imagen', { abierto: menuImagenAbierto.value })
 }
 
 async function seleccionarImagen(origen) {
@@ -209,6 +218,28 @@ defineExpose({ cerrarInteraccion })
 }
 .boton-grabando {
   background: var(--color-error);
+}
+.opciones-imagen-capitana-bita {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.opcion-imagen-capitana-bita {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.55rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  cursor: pointer;
+}
+.opcion-imagen-capitana-bita:active {
+  background: var(--color-primario);
 }
 .estado-capitana-bita {
   margin: 0;
