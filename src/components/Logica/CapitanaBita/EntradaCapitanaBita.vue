@@ -19,7 +19,7 @@
         :title="grabando ? 'Finalizar grabación' : 'Dictar pedido'"
         @click="alternar"
       >
-        <IconMicrophone v-if="!grabando" :size="21" />
+        <IconMicrophone v-if="!grabando" class="icono-microfono" :size="21" />
         <IconPlayerStop v-else :size="21" />
       </button>
       <button
@@ -29,7 +29,7 @@
         :disabled="deshabilitado || !disponible || !texto.trim()"
         @click="enviar"
       >
-        <IconSend :size="21" />
+        <IconSend class="icono-enviar" :size="21" />
       </button>
     </div>
     <p v-if="grabando" class="estado-capitana-bita estado-grabando">
@@ -133,13 +133,26 @@ defineExpose({ cerrarInteraccion })
 .boton-capitana-bita {
   width: 44px;
   min-height: 44px;
-  display: grid;
-  place-items: center;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  line-height: 0;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
   background: var(--color-primario);
   color: var(--color-texto-principal);
   cursor: pointer;
+}
+.boton-capitana-bita svg {
+  display: block;
+}
+.icono-microfono {
+  transform: translateY(1px);
+}
+.icono-enviar {
+  transform: translate(-1px, 1px);
 }
 .boton-capitana-bita:disabled {
   background: var(--color-desactivado);
