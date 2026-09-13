@@ -8,14 +8,45 @@
         class="campo-entrada-formulario campo-capitana-bita"
         type="text"
         placeholder="Escribí o dictá una lista de artículos"
-        :disabled="procesando || deshabilitado"
+        :disabled="procesando || capturandoImagen || deshabilitado"
         @keyup.enter="enviar"
       />
       <button
         type="button"
         class="boton-capitana-bita"
+        title="Leer artículos desde una imagen"
+        :disabled="deshabilitado || grabando || procesando || capturandoImagen"
+        @click="menuImagenAbierto = true"
+      >
+        <IconPhoto :size="21" />
+        <q-menu v-model="menuImagenAbierto" anchor="bottom right" self="top right">
+          <q-list style="min-width: 190px">
+            <q-item
+              clickable
+              v-close-popup
+              style="min-height: 44px"
+              @click="seleccionarImagen(ORIGENES_CAPTURA_IMAGEN.CAMARA)"
+            >
+              <q-item-section avatar><IconCamera :size="21" /></q-item-section>
+              <q-item-section>Tomar foto</q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              style="min-height: 44px"
+              @click="seleccionarImagen(ORIGENES_CAPTURA_IMAGEN.GALERIA)"
+            >
+              <q-item-section avatar><IconPhoto :size="21" /></q-item-section>
+              <q-item-section>Elegir de galería</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </button>
+      <button
+        type="button"
+        class="boton-capitana-bita"
         :class="{ 'boton-grabando': grabando }"
-        :disabled="deshabilitado || (!disponible && !grabando)"
+        :disabled="deshabilitado || capturandoImagen || (!disponible && !grabando)"
         :title="grabando ? 'Finalizar grabación' : 'Dictar pedido'"
         @click="alternar"
       >
@@ -26,7 +57,7 @@
         type="button"
         class="boton-capitana-bita"
         title="Enviar a Capitana Bita"
-        :disabled="deshabilitado || !disponible || !texto.trim()"
+        :disabled="deshabilitado || capturandoImagen || !disponible || !texto.trim()"
         @click="enviar"
       >
         <IconSend class="icono-enviar" :size="21" />
@@ -35,6 +66,7 @@
     <p v-if="grabando" class="estado-capitana-bita estado-grabando">
       Grabando… Tocá nuevamente para finalizar · {{ duracionFormateada }}
     </p>
+    <p v-else-if="capturandoImagen" class="estado-capitana-bita">Preparando la imagen…</p>
     <p v-else-if="procesando" class="estado-capitana-bita">{{ mensajeProcesamiento }}</p>
     <p v-else-if="error" class="estado-capitana-bita estado-error" role="alert">{{ error }}</p>
     <p v-else-if="motivoNoDisponible" class="estado-capitana-bita">
@@ -45,8 +77,9 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
-import { IconMicrophone, IconPlayerStop, IconSend } from '@tabler/icons-vue'
+import { computed, ref, watch } from 'vue'
+import { IconCamera, IconMicrophone, IconPhoto, IconPlayerStop, IconSend } from '@tabler/icons-vue'
+import { ORIGENES_CAPTURA_IMAGEN } from '../Compartidos/ServicioCapturaImagen.js'
 import { usarCapitanaBita } from './UsoCapitanaBita.js'
 
 const props = defineProps({
@@ -60,18 +93,22 @@ const {
   grabando,
   duracionGrabacion,
   procesando,
+  capturandoImagen,
   disponible,
   motivoNoDisponible,
   mensajeSaludo,
   mensajeProcesamiento,
   error,
+  resultado,
   enviarTexto,
   alternarGrabacion,
   cancelarGrabacion,
+  procesarImagenSeleccionada,
 } = usarCapitanaBita({
   obtenerContextoBusqueda: () => props.contextoBusqueda,
   obtenerIdentificadorDestino: () => props.identificadorDestino,
 })
+const menuImagenAbierto = ref(false)
 
 const duracionFormateada = computed(() => {
   const minutos = Math.floor(duracionGrabacion.value / 60)
@@ -81,29 +118,41 @@ const duracionFormateada = computed(() => {
 
 async function enviar() {
   console.info('[CapitanaBita] Evento de envío recibido por la interfaz')
-  const procesado = await enviarTexto()
-  if (procesado) {
-    console.info('[CapitanaBita] La interfaz emite el resultado de texto')
-    emit('resultado-procesado', procesado)
-  }
+  await enviarTexto()
 }
 
 async function alternar() {
   console.info('[CapitanaBita] Evento de micrófono recibido por la interfaz')
-  const procesado = await alternarGrabacion()
-  if (procesado) {
-    console.info('[CapitanaBita] La interfaz emite el resultado de audio')
-    emit('resultado-procesado', procesado)
-  }
+  await alternarGrabacion()
+}
+
+async function seleccionarImagen(origen) {
+  menuImagenAbierto.value = false
+  await procesarImagenSeleccionada(origen)
 }
 
 async function cerrarInteraccion() {
+  if (menuImagenAbierto.value) {
+    menuImagenAbierto.value = false
+    return true
+  }
   return cancelarGrabacion()
 }
 
-watch([grabando, procesando], ([estaGrabando, estaProcesando]) => {
-  emit('estado-interaccion', { grabando: estaGrabando, procesando: estaProcesando })
+watch(resultado, (nuevoResultado) => {
+  if (nuevoResultado) emit('resultado-procesado', nuevoResultado)
 })
+watch(
+  [grabando, procesando, capturandoImagen, menuImagenAbierto],
+  ([estaGrabando, estaProcesando, estaCapturando, menuAbierto]) => {
+    emit('estado-interaccion', {
+      grabando: estaGrabando,
+      procesando: estaProcesando,
+      capturandoImagen: estaCapturando,
+      menuImagenAbierto: menuAbierto,
+    })
+  },
+)
 defineExpose({ cerrarInteraccion })
 </script>
 
@@ -124,7 +173,7 @@ defineExpose({ cerrarInteraccion })
 }
 .fila-entrada-capitana-bita {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 0.45rem;
 }
 .campo-capitana-bita {
@@ -169,5 +218,15 @@ defineExpose({ cerrarInteraccion })
 .estado-grabando,
 .estado-error {
   color: var(--color-error);
+}
+@media (max-width: 480px) {
+  .fila-entrada-capitana-bita {
+    grid-template-columns: repeat(3, 44px);
+    justify-content: end;
+  }
+  .campo-capitana-bita {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
 }
 </style>

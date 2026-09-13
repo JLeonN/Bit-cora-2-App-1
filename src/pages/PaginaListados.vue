@@ -45,8 +45,13 @@
           :transcripcion="resultadoPendienteCapitanaBita.transcripcion"
           :ambiguedades="resultadoPendienteCapitanaBita.ambiguedades"
           :no-encontrados="resultadoPendienteCapitanaBita.noEncontrados"
+          :inconsistencias="resultadoPendienteCapitanaBita.inconsistencias"
+          :advertencias="resultadoPendienteCapitanaBita.advertencias"
+          :resumen="resultadoPendienteCapitanaBita.resumen"
+          :tipo-entrada="resultadoPendienteCapitanaBita.tipoEntrada"
           :memorias-propuestas="memoriasPropuestasCapitanaBita"
           @seleccionar-candidato="seleccionarCandidatoCapitanaBita"
+          @omitir-solicitud="omitirSolicitudCapitanaBita"
           @recordar-seleccion="guardarMemoriaDesdeSeleccion"
           @cerrar="cerrarResultadosCapitanaBita"
         />
@@ -226,6 +231,7 @@ import {
   obtenerMemoriasParaContexto,
 } from '../components/BaseDeDatos/UsoAlmacenamientoMemoriasCapitanaBita.js'
 import { resolverSolicitudesCapitanaBita } from '../components/Logica/CapitanaBita/ResolverSolicitudesCapitanaBita.js'
+import { resolverSolicitudesImagenCapitanaBita } from '../components/Logica/CapitanaBita/ResolverSolicitudesImagenCapitanaBita.js'
 import { normalizarCodigoBusqueda } from '../components/Logica/Compartidos/CodigoEscaner.js'
 import {
   cargarDatosLocalesArticulos,
@@ -484,8 +490,22 @@ async function agregarArticulo(articulo, { desdeCapitanaBita = false } = {}) {
 }
 
 async function insertarArticulo(articulo) {
+  const fila = crearFilaListado(articulo)
+  if (!fila || !listadoActivo.value) return
+  listadoActivo.value.articulos.push(fila)
+  try {
+    await persistirActivo()
+  } catch (error) {
+    listadoActivo.value.articulos = listadoActivo.value.articulos.filter(
+      (item) => item.idFila !== fila.idFila,
+    )
+    throw error
+  }
+}
+
+function crearFilaListado(articulo, fechaMinima = 0) {
   const codigo = normalizarCodigoBusqueda(articulo?.codigo)
-  if (!codigo || !listadoActivo.value) return
+  if (!codigo || !listadoActivo.value) return null
   const fechaMayor = listadoActivo.value.articulos.reduce(
     (mayor, item) => Math.max(mayor, Number(item.fechaIngreso || 0)),
     0,
@@ -497,7 +517,7 @@ async function insertarArticulo(articulo) {
     articulo,
     datosLocalesArticulos.value,
   )
-  listadoActivo.value.articulos.push({
+  return {
     idFila: crypto.randomUUID(),
     codigo,
     descripcion: String(articulo.nombre || '').trim(),
@@ -505,18 +525,22 @@ async function insertarArticulo(articulo) {
     stockListado,
     ubicacionOriginal,
     ubicacionListado,
-    fechaIngreso: Math.max(Date.now(), fechaMayor + 1),
-  })
-  await persistirActivo()
+    fechaIngreso: Math.max(Date.now(), fechaMayor + 1, fechaMinima),
+  }
 }
 
 async function confirmarArticuloRepetido() {
   const articulo = articuloPendienteRepetido.value
   if (!articulo) return
   articuloPendienteRepetido.value = null
-  await insertarArticulo(articulo)
-  await formularioListadoRef.value?.enfocarBusqueda?.()
-  void procesarColaCapitanaBita()
+  try {
+    await insertarArticulo(articulo)
+    await formularioListadoRef.value?.enfocarBusqueda?.()
+    void procesarColaCapitanaBita()
+  } catch (error) {
+    articuloPendienteRepetido.value = articulo
+    notificar('negative', error.message || 'No se pudo guardar el artículo repetido.')
+  }
 }
 
 async function cancelarArticuloRepetido() {
@@ -555,11 +579,45 @@ async function procesarColaCapitanaBita() {
   procesandoColaCapitanaBita.value = true
   try {
     while (colaInsercionCapitanaBita.value.length && !articuloPendienteRepetido.value) {
-      const pendiente = colaInsercionCapitanaBita.value.shift()
-      console.info('[CapitanaBita] Agregando artículo al listado', {
-        codigo: pendiente.articulo?.codigo || '',
-      })
-      await agregarArticulo(pendiente.articulo, { desdeCapitanaBita: true })
+      const bloque = []
+      const filasAgregadas = []
+      while (colaInsercionCapitanaBita.value.length && !articuloPendienteRepetido.value) {
+        const pendiente = colaInsercionCapitanaBita.value.shift()
+        const codigo = normalizarCodigoBusqueda(pendiente.articulo?.codigo)
+        const repetido = listadoActivo.value?.articulos.some(
+          (item) => normalizarCodigoBusqueda(item.codigo) === codigo,
+        )
+        if (repetido) {
+          articuloPendienteRepetido.value = {
+            ...pendiente.articulo,
+            codigo,
+            nombre: String(pendiente.articulo?.nombre || 'Artículo sin nombre').trim(),
+            desdeCapitanaBita: true,
+          }
+          break
+        }
+        const fila = crearFilaListado(pendiente.articulo)
+        if (!fila) continue
+        listadoActivo.value.articulos.push(fila)
+        bloque.push(pendiente)
+        filasAgregadas.push(fila)
+      }
+      if (filasAgregadas.length) {
+        try {
+          await persistirActivo()
+        } catch (error) {
+          const idsFallidos = new Set(filasAgregadas.map((fila) => fila.idFila))
+          listadoActivo.value.articulos = listadoActivo.value.articulos.filter(
+            (fila) => !idsFallidos.has(fila.idFila),
+          )
+          colaInsercionCapitanaBita.value.unshift(...bloque)
+          notificar(
+            'negative',
+            error.message || `No se guardaron ${bloque.length} artículos; permanecen pendientes.`,
+          )
+          break
+        }
+      }
     }
   } finally {
     procesandoColaCapitanaBita.value = false
@@ -581,6 +639,15 @@ function encolarArticuloCapitanaBita(articulo, cantidad = 1) {
   void procesarColaCapitanaBita()
 }
 
+function encolarResolucionesCapitanaBita(resoluciones) {
+  resoluciones.forEach((resolucion) => {
+    for (let indice = 0; indice < resolucion.cantidad; indice += 1) {
+      colaInsercionCapitanaBita.value.push({ articulo: resolucion.articuloUnico })
+    }
+  })
+  return procesarColaCapitanaBita()
+}
+
 async function procesarResultadoCapitanaBita(resultadoGemini) {
   console.info('[CapitanaBita] Resultado recibido por la página', {
     tieneListadoActivo: Boolean(listadoActivo.value),
@@ -598,28 +665,32 @@ async function procesarResultadoCapitanaBita(resultadoGemini) {
   }
   cerrarResultadosCapitanaBita()
   const contextoBusqueda = resultadoGemini.contextoBusquedaUsado || ''
-  if (!resultadoGemini.esPedidoDeRepuestos || resultadoGemini.solicitudes.length === 0) {
+  const esImagen = resultadoGemini.tipoEntrada === 'imagen'
+  const tieneContenido = esImagen
+    ? resultadoGemini.esListadoDeArticulos && resultadoGemini.filas.length > 0
+    : resultadoGemini.esPedidoDeRepuestos && resultadoGemini.solicitudes.length > 0
+  if (!tieneContenido) {
     cerrarResultadosCapitanaBita()
     notificar('info', resultadoGemini.respuesta || 'No encontré una solicitud de repuestos.')
     return
   }
-  const memorias = await obtenerMemoriasParaContexto(contextoBusqueda)
   const articulos = obtenerArticulosCargados()
-  console.info('[CapitanaBita] Preparando resolución del resultado', {
-    solicitudes: resultadoGemini.solicitudes.length,
-    articulos: articulos.length,
-    memorias: memorias.length,
-  })
-  const resoluciones = resolverSolicitudesCapitanaBita({
-    solicitudes: resultadoGemini.solicitudes,
-    articulos,
-    contextoBusqueda,
-    memorias,
-  })
-  resoluciones
-    .filter((resolucion) => resolucion.estado === 'unica')
-    .forEach((resolucion) => {
-      encolarArticuloCapitanaBita(resolucion.articuloUnico, resolucion.cantidad)
+  const memorias = esImagen ? [] : await obtenerMemoriasParaContexto(contextoBusqueda)
+  const resoluciones = esImagen
+    ? resolverSolicitudesImagenCapitanaBita({
+        filas: resultadoGemini.filas,
+        articulos,
+        contextoBusqueda,
+      })
+    : resolverSolicitudesCapitanaBita({
+        solicitudes: resultadoGemini.solicitudes,
+        articulos,
+        contextoBusqueda,
+        memorias,
+      })
+  const unicas = resoluciones.filter((resolucion) => resolucion.estado === 'unica')
+  if (!esImagen) {
+    unicas.forEach((resolucion) => {
       if (resolucion.puedeOfrecerMemoria) {
         memoriasPropuestasCapitanaBita.value.push({
           idSolicitud: resolucion.idSolicitud,
@@ -629,24 +700,42 @@ async function procesarResultadoCapitanaBita(resultadoGemini) {
         })
       }
     })
+  }
   const ambiguedades = resoluciones.filter((resolucion) => resolucion.estado === 'ambigua')
   const noEncontrados = resoluciones.filter((resolucion) => resolucion.estado === 'noEncontrada')
-  console.info('[CapitanaBita] Resultado local resumido', {
-    unicas: resoluciones.filter((resolucion) => resolucion.estado === 'unica').length,
-    ambiguedades: ambiguedades.length,
-    noEncontrados: noEncontrados.length,
-  })
+  const inconsistencias = resoluciones.filter((resolucion) => resolucion.estado === 'inconsistente')
+  const advertencias = esImagen ? resultadoGemini.advertencias : []
+  const cantidadPreparada = unicas.reduce((total, resolucion) => total + resolucion.cantidad, 0)
+  const resumen = esImagen
+    ? `${cantidadPreparada} artículos preparados, ${ambiguedades.length} necesitan confirmación y ${noEncontrados.length + inconsistencias.length} no pudieron identificarse.`
+    : ''
   resultadoPendienteCapitanaBita.value =
-    ambiguedades.length || noEncontrados.length || memoriasPropuestasCapitanaBita.value.length
+    ambiguedades.length ||
+    noEncontrados.length ||
+    inconsistencias.length ||
+    advertencias.length ||
+    memoriasPropuestasCapitanaBita.value.length
       ? {
           transcripcion: resultadoGemini.transcripcion,
           ambiguedades,
           noEncontrados,
+          inconsistencias,
+          advertencias,
+          resumen,
+          tipoEntrada: resultadoGemini.tipoEntrada,
           contextoBusqueda,
         }
       : null
+  await encolarResolucionesCapitanaBita(unicas)
   if (!resultadoPendienteCapitanaBita.value) {
-    notificar('positive', resultadoGemini.respuesta || 'Pedido agregado al listado.')
+    if (!articuloPendienteRepetido.value && !colaInsercionCapitanaBita.value.length) {
+      notificar(
+        'positive',
+        esImagen
+          ? `${cantidadPreparada} artículos agregados desde la imagen.`
+          : resultadoGemini.respuesta || 'Pedido agregado al listado.',
+      )
+    }
   }
 }
 
@@ -668,6 +757,29 @@ function seleccionarCandidatoCapitanaBita({ idSolicitud, articulo }) {
   if (
     !pendiente.ambiguedades.length &&
     !pendiente.noEncontrados.length &&
+    !pendiente.inconsistencias.length &&
+    !pendiente.advertencias.length &&
+    !memoriasPropuestasCapitanaBita.value.length
+  ) {
+    cerrarResultadosCapitanaBita()
+  }
+}
+
+function omitirSolicitudCapitanaBita(idSolicitud) {
+  const pendiente = resultadoPendienteCapitanaBita.value
+  if (!pendiente) return
+  pendiente.ambiguedades = pendiente.ambiguedades.filter((item) => item.idSolicitud !== idSolicitud)
+  pendiente.noEncontrados = pendiente.noEncontrados.filter(
+    (item) => item.idSolicitud !== idSolicitud,
+  )
+  pendiente.inconsistencias = pendiente.inconsistencias.filter(
+    (item) => item.idSolicitud !== idSolicitud,
+  )
+  if (
+    !pendiente.ambiguedades.length &&
+    !pendiente.noEncontrados.length &&
+    !pendiente.inconsistencias.length &&
+    !pendiente.advertencias.length &&
     !memoriasPropuestasCapitanaBita.value.length
   ) {
     cerrarResultadosCapitanaBita()
@@ -688,7 +800,13 @@ async function guardarMemoriaDesdeSeleccion(propuesta) {
     )
     notificar('positive', 'Memoria guardada. Podés editarla o borrarla desde Configuración.', 4000)
     const pendiente = resultadoPendienteCapitanaBita.value
-    if (pendiente && !pendiente.ambiguedades.length && !pendiente.noEncontrados.length) {
+    if (
+      pendiente &&
+      !pendiente.ambiguedades.length &&
+      !pendiente.noEncontrados.length &&
+      !pendiente.inconsistencias.length &&
+      !pendiente.advertencias.length
+    ) {
       cerrarResultadosCapitanaBita()
     }
   } catch (error) {

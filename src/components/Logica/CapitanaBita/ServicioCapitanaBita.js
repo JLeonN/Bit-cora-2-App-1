@@ -2,8 +2,11 @@ import { getAI, getGenerativeModel, GoogleAIBackend, ThinkingLevel } from 'fireb
 import { normalizarTextoComparacionArticulo } from '../Compartidos/ServicioBusquedaArticulos.js'
 import { obtenerAplicacionFirebaseProtegida } from '../Compartidos/ServicioFirebase.js'
 import {
+  crearInstruccionImagenCapitanaBita,
   crearInstruccionSistemaCapitanaBita,
+  ESQUEMA_RESPUESTA_IMAGEN_CAPITANA_BITA,
   ESQUEMA_RESPUESTA_CAPITANA_BITA,
+  MAXIMO_ADVERTENCIAS_IMAGEN_CAPITANA_BITA,
   MAXIMO_ALTERNATIVAS_CAPITANA_BITA,
   MAXIMO_CARACTERES_CAMPO_CAPITANA_BITA,
   MAXIMO_CARACTERES_TEXTO_CAPITANA_BITA,
@@ -17,6 +20,10 @@ const TIEMPO_MAXIMO_SOLICITUD_MS = 45000
 const MENSAJES_ERROR = Object.freeze({
   sinConexion: 'Capitana Bita necesita conexión a internet.',
   permiso: 'Permití el acceso al micrófono para dictar.',
+  permisoCamara: 'Permití el acceso a la cámara para tomar la foto.',
+  formatoImagen: 'Elegí una imagen JPEG, PNG o WebP.',
+  tamanoImagen: 'La imagen es demasiado grande. Probá con una foto de menor resolución.',
+  lecturaImagen: 'No se pudo leer la imagen. Elegí otra o tomá una foto nueva.',
   appCheck: 'No se pudo verificar esta instalación de Bitácora.',
   cuota: 'Capitana Bita alcanzó un límite temporal. Probá nuevamente más tarde.',
   saturado: 'Capitana Bita alcanzó un límite temporal. Probá nuevamente más tarde.',
@@ -113,22 +120,92 @@ export function validarRespuestaCapitanaBita(valor) {
   }
 }
 
+export function validarRespuestaImagenCapitanaBita(valor) {
+  if (
+    !valor ||
+    typeof valor !== 'object' ||
+    typeof valor.transcripcion !== 'string' ||
+    typeof valor.respuesta !== 'string' ||
+    typeof valor.esListadoDeArticulos !== 'boolean' ||
+    !Array.isArray(valor.filas) ||
+    !Array.isArray(valor.advertencias) ||
+    !valor.advertencias.every((advertencia) => typeof advertencia === 'string')
+  ) {
+    throw new ErrorCapitanaBita('respuestaInvalida')
+  }
+  if (!valor.esListadoDeArticulos && valor.filas.length !== 0) {
+    throw new ErrorCapitanaBita('respuestaInvalida')
+  }
+  if (valor.esListadoDeArticulos && valor.filas.length === 0) {
+    throw new ErrorCapitanaBita('respuestaInvalida')
+  }
+  const idsUsados = new Set()
+  const filas = valor.filas.slice(0, MAXIMO_SOLICITUDES_CAPITANA_BITA).map((fila, indice) => {
+    if (
+      !fila ||
+      typeof fila !== 'object' ||
+      typeof fila.textoVisible !== 'string' ||
+      typeof fila.codigoVisible !== 'string' ||
+      typeof fila.descripcionVisible !== 'string' ||
+      !Number.isInteger(fila.cantidad) ||
+      fila.cantidad < 1 ||
+      typeof fila.lecturaClara !== 'boolean' ||
+      typeof fila.motivoDuda !== 'string'
+    ) {
+      throw new ErrorCapitanaBita('respuestaInvalida')
+    }
+    const codigoVisible = limitarTexto(fila.codigoVisible)
+    const descripcionVisible = limitarTexto(fila.descripcionVisible)
+    if (!codigoVisible && !descripcionVisible) throw new ErrorCapitanaBita('respuestaInvalida')
+    const idSolicitud = crearIdSolicitud(indice, idsUsados, fila.idSolicitud)
+    idsUsados.add(idSolicitud)
+    const motivoDuda = limitarTexto(fila.motivoDuda)
+    if ((fila.lecturaClara && motivoDuda) || (!fila.lecturaClara && !motivoDuda)) {
+      throw new ErrorCapitanaBita('respuestaInvalida')
+    }
+    return {
+      idSolicitud,
+      textoVisible: limitarTexto(fila.textoVisible),
+      codigoVisible,
+      descripcionVisible,
+      cantidad: Math.min(fila.cantidad, 999),
+      lecturaClara: fila.lecturaClara,
+      motivoDuda,
+    }
+  })
+  const advertencias = valor.advertencias
+    .slice(0, MAXIMO_ADVERTENCIAS_IMAGEN_CAPITANA_BITA)
+    .map((advertencia) => limitarTexto(advertencia, 300))
+    .filter(Boolean)
+  return {
+    transcripcion: limitarTexto(valor.transcripcion, MAXIMO_CARACTERES_TEXTO_CAPITANA_BITA),
+    respuesta: limitarTexto(valor.respuesta, 300),
+    esListadoDeArticulos: valor.esListadoDeArticulos,
+    filas,
+    advertencias,
+  }
+}
+
 function crearPrompt({ contextoBusqueda, memorias, tipoEntrada }) {
   const contexto = normalizarTextoComparacionArticulo(contextoBusqueda) || 'SIN CONTEXTO'
   const equivalencias = (Array.isArray(memorias) ? memorias : []).map((memoria) => ({
     expresionUsuario: limitarTexto(memoria.expresionUsuario),
     busquedaConfirmada: limitarTexto(memoria.busquedaConfirmada),
   }))
+  const instruccionResultado =
+    tipoEntrada === 'imagen'
+      ? 'Si no hay un listado de artículos válido, marcá esListadoDeArticulos como false y filas vacío.'
+      : 'Si no hay un pedido de repuestos válido, marcá esPedidoDeRepuestos como false y solicitudes vacío.'
   return [
     `Tipo de entrada: ${tipoEntrada}.`,
     `Contexto de búsqueda: ${contexto}.`,
     `Equivalencias confirmadas para este contexto: ${JSON.stringify(equivalencias)}.`,
     'Separá todos los artículos solicitados y respetá sus cantidades.',
-    'Si no hay un pedido de repuestos válido, marcá esPedidoDeRepuestos como false y solicitudes vacío.',
+    instruccionResultado,
   ].join('\n')
 }
 
-async function obtenerModeloCapitanaBita(nombreUsuario) {
+async function obtenerModeloCapitanaBita({ esquemaRespuesta, instruccionSistema }) {
   console.info('[CapitanaBita] Preparando Firebase AI')
   const aplicacion = await obtenerAplicacionFirebaseProtegida()
   const ai = getAI(aplicacion, { backend: new GoogleAIBackend() })
@@ -136,12 +213,12 @@ async function obtenerModeloCapitanaBita(nombreUsuario) {
     ai,
     {
       model: MODELO_CAPITANA_BITA,
-      systemInstruction: crearInstruccionSistemaCapitanaBita(nombreUsuario),
+      systemInstruction: instruccionSistema,
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: MAXIMO_TOKENS_SALIDA_CAPITANA_BITA,
         responseMimeType: 'application/json',
-        responseSchema: ESQUEMA_RESPUESTA_CAPITANA_BITA,
+        responseSchema: esquemaRespuesta,
         thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       },
     },
@@ -183,12 +260,23 @@ function clasificarError(error) {
   return new ErrorCapitanaBita('desconocido', error)
 }
 
-async function procesarContenido({ contenido, nombreUsuario, tipoEntrada }) {
+async function procesarContenido({
+  contenido,
+  nombreUsuario,
+  tipoEntrada,
+  esquemaRespuesta,
+  instruccionSistema,
+  validarRespuesta,
+}) {
   const inicio = Date.now()
   try {
     if (!globalThis.navigator?.onLine) throw new ErrorCapitanaBita('sinConexion')
     console.info('[CapitanaBita] Enviando solicitud a Gemini', { tipoEntrada })
-    const modelo = await obtenerModeloCapitanaBita(nombreUsuario)
+    const modelo = await obtenerModeloCapitanaBita({
+      nombreUsuario,
+      esquemaRespuesta,
+      instruccionSistema,
+    })
     const resultado = await modelo.generateContent(contenido)
     console.info('[CapitanaBita] Gemini respondió', {
       tipoEntrada,
@@ -204,10 +292,10 @@ async function procesarContenido({ contenido, nombreUsuario, tipoEntrada }) {
     } catch (error) {
       throw new ErrorCapitanaBita('respuestaInvalida', error)
     }
-    const respuestaValidada = validarRespuestaCapitanaBita(datos)
+    const respuestaValidada = validarRespuesta(datos)
     console.info('[CapitanaBita] Respuesta validada', {
-      esPedidoDeRepuestos: respuestaValidada.esPedidoDeRepuestos,
-      solicitudes: respuestaValidada.solicitudes.length,
+      tipoEntrada,
+      solicitudes: respuestaValidada.solicitudes?.length ?? respuestaValidada.filas?.length ?? 0,
     })
     return respuestaValidada
   } catch (error) {
@@ -236,6 +324,9 @@ export async function procesarTextoCapitanaBita({
     contenido: prompt,
     nombreUsuario,
     tipoEntrada: 'texto',
+    esquemaRespuesta: ESQUEMA_RESPUESTA_CAPITANA_BITA,
+    instruccionSistema: crearInstruccionSistemaCapitanaBita(nombreUsuario),
+    validarRespuesta: validarRespuestaCapitanaBita,
   })
 }
 
@@ -252,5 +343,31 @@ export async function procesarAudioCapitanaBita({
     contenido: [{ text: prompt }, { inlineData: { data: base64, mimeType } }],
     nombreUsuario,
     tipoEntrada: 'audio',
+    esquemaRespuesta: ESQUEMA_RESPUESTA_CAPITANA_BITA,
+    instruccionSistema: crearInstruccionSistemaCapitanaBita(nombreUsuario),
+    validarRespuesta: validarRespuestaCapitanaBita,
+  })
+}
+
+export async function procesarImagenCapitanaBita({
+  base64,
+  mimeType,
+  contextoBusqueda,
+  nombreUsuario,
+  memorias,
+}) {
+  const tiposAdmitidos = new Set(['image/jpeg', 'image/png', 'image/webp'])
+  const mimeTypeNormalizado = String(mimeType || '').toLowerCase()
+  if (!base64 || !tiposAdmitidos.has(mimeTypeNormalizado)) {
+    throw new ErrorCapitanaBita('formatoImagen')
+  }
+  const prompt = crearPrompt({ contextoBusqueda, memorias, tipoEntrada: 'imagen' })
+  return procesarContenido({
+    contenido: [{ text: prompt }, { inlineData: { data: base64, mimeType: mimeTypeNormalizado } }],
+    nombreUsuario,
+    tipoEntrada: 'imagen',
+    esquemaRespuesta: ESQUEMA_RESPUESTA_IMAGEN_CAPITANA_BITA,
+    instruccionSistema: crearInstruccionImagenCapitanaBita(nombreUsuario),
+    validarRespuesta: validarRespuestaImagenCapitanaBita,
   })
 }

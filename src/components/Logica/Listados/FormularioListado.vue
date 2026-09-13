@@ -166,7 +166,12 @@ const inputBusquedaRef = ref(null)
 const autoseleccionArticuloHabilitada = ref(false)
 const ultimoEspacioTiempo = ref(0)
 const entradaCapitanaBitaRef = ref(null)
-const estadoInteraccionCapitanaBita = ref({ grabando: false, procesando: false })
+const estadoInteraccionCapitanaBita = ref({
+  grabando: false,
+  procesando: false,
+  capturandoImagen: false,
+  menuImagenAbierto: false,
+})
 const { copiarTextoActual, limpiarTextoCopiado, obtenerTextoCopiado } =
   usarTextoCopiadoInput('FormularioListado')
 const busquedaDeshabilitada = computed(() => props.deshabilitado || Boolean(props.articuloRepetido))
@@ -288,7 +293,11 @@ async function limpiarBusqueda({ descartarTextoCopiado = false } = {}) {
 }
 
 function cerrarInteraccion() {
-  if (estadoInteraccionCapitanaBita.value.grabando) {
+  if (
+    estadoInteraccionCapitanaBita.value.grabando ||
+    estadoInteraccionCapitanaBita.value.capturandoImagen ||
+    estadoInteraccionCapitanaBita.value.menuImagenAbierto
+  ) {
     void entradaCapitanaBitaRef.value?.cerrarInteraccion?.()
     return true
   }

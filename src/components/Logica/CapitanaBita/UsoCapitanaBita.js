@@ -1,7 +1,21 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import { obtenerMemoriasParaContexto } from '../../BaseDeDatos/UsoAlmacenamientoMemoriasCapitanaBita.js'
-import { procesarAudioCapitanaBita, procesarTextoCapitanaBita } from './ServicioCapitanaBita.js'
+import {
+  capturarImagen,
+  clasificarErrorCapturaImagen,
+  CODIGOS_ERROR_CAPTURA_IMAGEN,
+  prepararResultadoCapturaImagen,
+} from '../Compartidos/ServicioCapturaImagen.js'
+import {
+  consumirCapturaRestaurada,
+  escucharCapturasRestauradas,
+} from '../Compartidos/ServicioRecuperacionCapturaImagen.js'
+import {
+  procesarAudioCapitanaBita,
+  procesarImagenCapitanaBita,
+  procesarTextoCapitanaBita,
+} from './ServicioCapitanaBita.js'
 import {
   cancelarGrabacion as cancelarGrabacionServicio,
   detenerGrabacion,
@@ -44,6 +58,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
   const grabando = ref(false)
   const duracionGrabacion = ref(0)
   const procesando = ref(false)
+  const capturandoImagen = ref(false)
   const enLinea = ref(globalThis.navigator?.onLine !== false)
   const permisoBloqueado = ref(false)
   const resultado = ref(null)
@@ -55,17 +70,20 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
   let intervaloMensajesProcesamiento = null
   let temporizadorEnfriamiento = null
   let datosSolicitudGrabada = null
+  let dejarDeEscucharCapturasRestauradas = null
 
   const disponible = computed(
     () =>
       enLinea.value &&
       !permisoBloqueado.value &&
       !procesando.value &&
+      !capturandoImagen.value &&
       Date.now() >= enfriamientoHasta.value,
   )
   const motivoNoDisponible = computed(() => {
     if (!enLinea.value) return 'Capitana Bita necesita conexión a internet.'
     if (permisoBloqueado.value) return 'Permití el acceso al micrófono para dictar.'
+    if (capturandoImagen.value) return 'Preparando la imagen…'
     if (procesando.value) return 'Capitana Bita está procesando el pedido…'
     if (Date.now() < enfriamientoHasta.value) {
       return `Podés reintentar desde las ${new Date(enfriamientoHasta.value).toLocaleTimeString(
@@ -124,16 +142,25 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
       enfriamientoCompartidoHasta = errorRecibido.enfriamientoHasta
       enfriamientoHasta.value = enfriamientoCompartidoHasta
       if (temporizadorEnfriamiento) window.clearTimeout(temporizadorEnfriamiento)
-      temporizadorEnfriamiento = window.setTimeout(() => {
-        enfriamientoHasta.value = 0
-        enfriamientoCompartidoHasta = 0
-      }, Math.max(0, enfriamientoCompartidoHasta - Date.now()))
+      temporizadorEnfriamiento = window.setTimeout(
+        () => {
+          enfriamientoHasta.value = 0
+          enfriamientoCompartidoHasta = 0
+        },
+        Math.max(0, enfriamientoCompartidoHasta - Date.now()),
+      )
     }
   }
 
-  async function prepararSolicitud() {
+  async function prepararSolicitud({ permitirSinConexion = false } = {}) {
     comprobarDisponibilidad()
-    if (!disponible.value) {
+    const bloqueada =
+      procesando.value ||
+      capturandoImagen.value ||
+      permisoBloqueado.value ||
+      Date.now() < enfriamientoHasta.value ||
+      (!permitirSinConexion && !enLinea.value)
+    if (bloqueada) {
       console.warn('[CapitanaBita] Solicitud detenida: servicio no disponible', {
         motivo: motivoNoDisponible.value,
       })
@@ -172,6 +199,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
       const procesado = await procesarTextoCapitanaBita({ texto: texto.value, ...datos })
       resultado.value = {
         ...procesado,
+        tipoEntrada: 'texto',
         contextoBusquedaUsado: datos.contextoBusqueda,
         identificadorDestino: datos.identificadorDestino,
       }
@@ -212,7 +240,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
       grabando: grabando.value,
       procesando: procesando.value,
     })
-    if (procesando.value) return null
+    if (procesando.value || capturandoImagen.value) return null
     limpiarError()
     if (!grabando.value) {
       const datos = await prepararSolicitud()
@@ -247,6 +275,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
       const procesado = await procesarAudioCapitanaBita({ ...audio, ...datos })
       resultado.value = {
         ...procesado,
+        tipoEntrada: 'audio',
         contextoBusquedaUsado: datos.contextoBusqueda,
         identificadorDestino: datos.identificadorDestino,
       }
@@ -279,6 +308,93 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     return true
   }
 
+  function aplicarErrorImagen(errorRecibido) {
+    if (errorRecibido?.codigo === CODIGOS_ERROR_CAPTURA_IMAGEN.CANCELADA) return
+    error.value = errorRecibido?.message || 'No se pudo procesar la imagen.'
+  }
+
+  async function procesarImagenPreparada(imagen, datos) {
+    if (!imagen || !datos) return null
+    if (String(obtenerIdentificadorDestino?.() || '') !== datos.identificadorDestino) return null
+    if (globalThis.navigator?.onLine === false) {
+      error.value = 'Capitana Bita necesita conexión a internet para leer la imagen.'
+      imagen.base64 = ''
+      return null
+    }
+    procesando.value = true
+    limpiarError()
+    try {
+      const procesado = await procesarImagenCapitanaBita({ ...imagen, ...datos })
+      resultado.value = {
+        ...procesado,
+        tipoEntrada: 'imagen',
+        contextoBusquedaUsado: datos.contextoBusqueda,
+        identificadorDestino: datos.identificadorDestino,
+      }
+      return resultado.value
+    } catch (errorRecibido) {
+      aplicarError(errorRecibido)
+      return null
+    } finally {
+      imagen.base64 = ''
+      procesando.value = false
+    }
+  }
+
+  async function procesarImagenSeleccionada(origen) {
+    if (grabando.value || procesando.value || capturandoImagen.value) return null
+    const datos = await prepararSolicitud({ permitirSinConexion: true })
+    if (!datos) return null
+    capturandoImagen.value = true
+    limpiarError()
+    try {
+      const imagen = await capturarImagen({
+        origen,
+        metadatosRecuperacion: {
+          idCaptura: crypto.randomUUID(),
+          consumidor: 'capitanaBitaListados',
+          identificadorDestino: datos.identificadorDestino,
+          contextoBusqueda: datos.contextoBusqueda,
+          creadaEn: Date.now(),
+        },
+      })
+      capturandoImagen.value = false
+      return await procesarImagenPreparada(imagen, datos)
+    } catch (errorRecibido) {
+      aplicarErrorImagen(errorRecibido)
+      return null
+    } finally {
+      capturandoImagen.value = false
+    }
+  }
+
+  async function consumirResultadoRestaurado() {
+    if (capturandoImagen.value || procesando.value) return null
+    const restaurada = await consumirCapturaRestaurada('capitanaBitaListados')
+    if (!restaurada) return null
+    const datos = restaurada.metadatos
+    if (String(obtenerIdentificadorDestino?.() || '') !== datos.identificadorDestino) return null
+    if (!restaurada.resultado?.success) {
+      aplicarErrorImagen(clasificarErrorCapturaImagen(restaurada.resultado?.error))
+      return null
+    }
+    capturandoImagen.value = true
+    try {
+      const [nombreUsuario, memorias, imagen] = await Promise.all([
+        obtenerNombreUsuario(),
+        obtenerMemoriasParaContexto(datos.contextoBusqueda || ''),
+        prepararResultadoCapturaImagen(restaurada.resultado.data, datos.origen),
+      ])
+      capturandoImagen.value = false
+      return await procesarImagenPreparada(imagen, { ...datos, nombreUsuario, memorias })
+    } catch (errorRecibido) {
+      aplicarErrorImagen(clasificarErrorCapturaImagen(errorRecibido))
+      return null
+    } finally {
+      capturandoImagen.value = false
+    }
+  }
+
   watch(procesando, (estaProcesando) => {
     if (estaProcesando) iniciarMensajesProcesamiento()
     else detenerMensajesProcesamiento()
@@ -288,6 +404,10 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     globalThis.addEventListener?.('online', actualizarConexion)
     globalThis.addEventListener?.('offline', actualizarConexion)
     void prepararMensajeSaludo()
+    dejarDeEscucharCapturasRestauradas = escucharCapturasRestauradas((consumidor) => {
+      if (consumidor === 'capitanaBitaListados') void consumirResultadoRestaurado()
+    })
+    void consumirResultadoRestaurado()
   })
   onUnmounted(() => {
     globalThis.removeEventListener?.('online', actualizarConexion)
@@ -296,6 +416,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     detenerMensajesProcesamiento()
     if (temporizadorEnfriamiento) window.clearTimeout(temporizadorEnfriamiento)
     void cancelarGrabacionServicio()
+    dejarDeEscucharCapturasRestauradas?.()
   })
 
   return {
@@ -303,6 +424,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     grabando,
     duracionGrabacion,
     procesando,
+    capturandoImagen,
     disponible,
     motivoNoDisponible,
     mensajeSaludo,
@@ -313,6 +435,7 @@ export function usarCapitanaBita({ obtenerContextoBusqueda, obtenerIdentificador
     enviarTexto,
     alternarGrabacion,
     cancelarGrabacion,
+    procesarImagenSeleccionada,
     cerrarResultados,
     limpiarError,
     comprobarDisponibilidad,

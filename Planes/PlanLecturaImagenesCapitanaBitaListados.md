@@ -179,7 +179,7 @@ Disponer de una API reutilizable que entregue una imagen temporal normalizada y 
 
 ### Pasos de ejecución
 
-- [ ] Crear `ServicioCapturaImagen.js` sin dependencias de Capitana Bita, Listados o Firebase.
+- [x] Crear `ServicioCapturaImagen.js` sin dependencias de Capitana Bita, Listados o Firebase.
   - Exportar `ORIGENES_CAPTURA_IMAGEN` como objeto congelado con `CAMARA: 'camara'` y `GALERIA: 'galeria'`.
   - Exportar `ErrorCapturaImagen extends Error` con las propiedades `codigo` y `causa`.
   - Definir códigos estables: `cancelada`, `permiso`, `noDisponible`, `formatoInvalido`, `lecturaFallida`, `tamanoExcedido` y `desconocido`.
@@ -191,7 +191,7 @@ Disponer de una API reutilizable que entregue una imagen temporal normalizada y 
   - Solicitar como máximo 3072 píxeles de ancho y alto en Android, manteniendo la proporción.
   - En web, usar la ruta entregada por Camera y preparar la imagen mediante `fetch`, `Blob`, `Image` y `canvas`; la cámara web puede degradar al selector del navegador cuando no exista experiencia PWA nativa.
   - Revocar cualquier `blob:` URL creada después de finalizar la lectura.
-- [ ] Implementar `prepararImagenCapturada({ url, formato, origen })` como exportación reutilizable y comprobable de manera aislada.
+- [x] Implementar `prepararImagenCapturada({ url, formato, origen })` como exportación reutilizable y comprobable de manera aislada.
   - Aceptar únicamente JPEG, PNG y WebP como entradas confiables para Firebase AI Logic.
   - Cargar la imagen completa antes de crear el canvas.
   - Mantener la proporción y no aumentar imágenes pequeñas.
@@ -203,7 +203,7 @@ Disponer de una API reutilizable que entregue una imagen temporal normalizada y 
   - Retornar `{ base64, mimeType, ancho, alto, tamanoBytes, origen }`.
   - Retornar base64 sin encabezado `data:` porque `inlineData.data` requiere solamente los bytes codificados.
   - Liberar canvas, blobs, URLs y referencias grandes al terminar o fallar.
-- [ ] Implementar recuperación genérica de la actividad Camera.
+- [x] Implementar recuperación genérica de la actividad Camera.
   - `registrarCapturaPendiente({ idCaptura, consumidor, identificadorDestino, origen, creadaEn })` debe persistir metadatos mínimos antes de abrir la actividad externa.
   - Usar una clave de Preferences declarada como constante; los guiones bajos se permiten únicamente en constantes y valores persistidos.
   - `registrarResultadoCapturaRestaurada(resultado)` debe aceptar solamente eventos cuyo `pluginId` sea Camera y cuyo `methodName` sea `getPhoto`.
@@ -211,13 +211,13 @@ Disponer de una API reutilizable que entregue una imagen temporal normalizada y 
   - `consumirCapturaRestaurada(consumidor)` debe devolver el resultado una sola vez y limpiar tanto resultado como metadatos.
   - Aplicar vencimiento a metadatos pendientes antiguos para no procesar una fotografía en una sesión posterior.
   - `limpiarCapturaPendiente(idCaptura)` debe ejecutarse después de éxito, cancelación o error normal.
-- [ ] Crear el boot `RecuperacionCapturaImagen.js`.
+- [x] Crear el boot `RecuperacionCapturaImagen.js`.
   - Usar `App.addListener('appRestoredResult', ...)` solamente en Android nativo.
   - Delegar toda la clasificación y persistencia al servicio compartido.
   - No navegar, mostrar notificaciones ni importar módulos de Capitana Bita desde el boot.
   - Registrar el boot en `quasar.config.js` después de `BotonAtrasNativo`.
-- [ ] Verificar que `android/app/src/main/AndroidManifest.xml` conserve `android.permission.CAMERA` y no agregar permisos de lectura o escritura de almacenamiento.
-- [ ] Considerar terminada la fase cuando cualquier consumidor pueda solicitar cámara o galería y obtener el mismo contrato normalizado sin conocer detalles de Capacitor.
+- [x] Verificar que `android/app/src/main/AndroidManifest.xml` conserve `android.permission.CAMERA` y no agregar permisos de lectura o escritura de almacenamiento.
+- [x] Considerar terminada la fase cuando cualquier consumidor pueda solicitar cámara o galería y obtener el mismo contrato normalizado sin conocer detalles de Capacitor.
 
 ## FASE 2: Definir la extracción visual estructurada de Capitana Bita
 
@@ -232,8 +232,8 @@ Enviar una imagen normalizada a Gemini y recibir evidencia literal y validada de
 
 ### Pasos de ejecución
 
-- [ ] Mantener `ESQUEMA_RESPUESTA_CAPITANA_BITA` sin cambios incompatibles para texto y audio.
-- [ ] Crear en `ConfiguracionCapitanaBita.js` un esquema independiente para imágenes.
+- [x] Mantener `ESQUEMA_RESPUESTA_CAPITANA_BITA` sin cambios incompatibles para texto y audio.
+- [x] Crear en `ConfiguracionCapitanaBita.js` un esquema independiente para imágenes.
   - Exportar `ESQUEMA_RESPUESTA_IMAGEN_CAPITANA_BITA`.
   - Cada fila debe contener `idSolicitud`, `textoVisible`, `codigoVisible`, `descripcionVisible`, `cantidad`, `lecturaClara` y `motivoDuda`.
   - `codigoVisible` y `descripcionVisible` pueden ser cadenas vacías individualmente, pero el validador rechazará una fila si ambas están vacías.
@@ -242,7 +242,7 @@ Enviar una imagen normalizada a Gemini y recibir evidencia literal y validada de
   - `motivoDuda` será vacío cuando la lectura sea clara y describirá brevemente corte, desenfoque o conflicto cuando sea dudosa.
   - La respuesta debe incluir `transcripcion`, `respuesta`, `esListadoDeArticulos`, `filas` y `advertencias`.
   - Limitar `filas` a `MAXIMO_SOLICITUDES_CAPITANA_BITA` y las advertencias a una constante pequeña y explícita.
-- [ ] Crear una instrucción visual especializada.
+- [x] Crear una instrucción visual especializada.
   - Indicar que la fuente puede ser papel, monitor o pantalla fotografiada.
   - Pedir lectura fila por fila y en orden visual de arriba hacia abajo.
   - Ordenar que se ignore stock, precio, ubicación, encabezados, numeración de hoja, corrector ortográfico, bordes y demás columnas no útiles para Listados.
@@ -250,29 +250,29 @@ Enviar una imagen normalizada a Gemini y recibir evidencia literal y validada de
   - Prohibir completar códigos, modelos, años, colores o palabras cortadas.
   - Prohibir convertir números cercanos en cantidades salvo que estén inequívocamente identificados como cantidad.
   - Indicar que las filas totalmente ilegibles no se conviertan en solicitudes y se resuman en `advertencias`.
-- [ ] Refactorizar `obtenerModeloCapitanaBita()` para aceptar el esquema de respuesta y la instrucción adicional requeridos por cada tipo de entrada.
+- [x] Refactorizar `obtenerModeloCapitanaBita()` para aceptar el esquema de respuesta y la instrucción adicional requeridos por cada tipo de entrada.
   - Texto y audio deben seguir usando el esquema, temperatura, tokens, thinking y validación actuales.
   - Imagen debe usar el nuevo esquema sin crear otro proveedor de Firebase ni omitir App Check.
-- [ ] Refactorizar `procesarContenido()` para recibir una función de validación y conservar la clasificación de errores existente.
+- [x] Refactorizar `procesarContenido()` para recibir una función de validación y conservar la clasificación de errores existente.
   - Mantener el timeout de 45 segundos salvo evidencia real obtenida durante implementación que obligue a ajustarlo.
   - Incluir `tipoEntrada: 'imagen'` en logs sin imprimir base64, contenido visual ni descripciones completas.
-- [ ] Exportar `validarRespuestaImagenCapitanaBita(valor)`.
+- [x] Exportar `validarRespuestaImagenCapitanaBita(valor)`.
   - Validar tipos, límites, cadenas y cantidades antes de devolver datos a la interfaz.
   - Recortar cantidades al intervalo `1..999`, igual que el flujo existente.
   - Generar identificadores únicos cuando Gemini repita u omita `idSolicitud`.
   - Normalizar únicamente espacios exteriores; conservar la evidencia visible para la resolución posterior.
   - Rechazar respuestas que afirmen contener artículos pero no incluyan filas válidas.
   - Limitar `transcripcion`, `respuesta`, `motivoDuda` y advertencias con constantes existentes o nuevas verificadas.
-- [ ] Exportar `procesarImagenCapitanaBita({ base64, mimeType, contextoBusqueda, nombreUsuario, memorias })`.
+- [x] Exportar `procesarImagenCapitanaBita({ base64, mimeType, contextoBusqueda, nombreUsuario, memorias })`.
   - Rechazar base64 vacío o MIME type no admitido antes de crear el modelo.
   - Construir `contenido` como arreglo con la parte de texto primero y `{ inlineData: { data: base64, mimeType } }` después.
   - Incluir contexto y equivalencias confirmadas solo como ayuda interpretativa; ordenar que no se transformen en evidencia visible ni códigos inventados.
   - Devolver el contrato visual validado y añadir `tipoEntrada: 'imagen'` desde la capa coordinadora.
-- [ ] Ampliar `MENSAJES_ERROR` con errores propios de imagen que no confundan cámara con micrófono.
+- [x] Ampliar `MENSAJES_ERROR` con errores propios de imagen que no confundan cámara con micrófono.
   - El permiso de cámara debe indicar exactamente que se permita acceso a la cámara.
   - Formato, tamaño y lectura deben tener mensajes accionables.
   - Una cancelación voluntaria no debe convertirse en `ErrorCapitanaBita` ni iniciar enfriamiento.
-- [ ] Considerar terminada la fase cuando el servicio entregue evidencia visual estructurada sin consultar ni modificar el maestro.
+- [x] Considerar terminada la fase cuando el servicio entregue evidencia visual estructurada sin consultar ni modificar el maestro.
 
 ## FASE 3: Crear la resolución estricta y exhaustiva contra el maestro
 
@@ -288,7 +288,7 @@ Convertir la evidencia visual validada en resoluciones locales deterministas que
 
 ### Pasos de ejecución
 
-- [ ] Crear `ServicioCoincidenciasEvidenciaArticulo.js` como servicio puro y reutilizable.
+- [x] Crear `ServicioCoincidenciasEvidenciaArticulo.js` como servicio puro y reutilizable.
   - No importar Vue, Capacitor, Firebase, Preferences ni componentes.
   - Exportar `crearIndiceCodigosMaestro(articulos)` para agrupar todos los registros por código normalizado y detectar duplicados sin colapsarlos.
   - Exportar `resolverCoincidenciasPorEvidencia({ articulos, codigoVisible, descripcionVisible, contextoBusqueda })`.
@@ -299,7 +299,7 @@ Convertir la evidencia visual validada en resoluciones locales deterministas que
   - Reutilizar la semántica de contexto actual para filtrar descripciones, pero permitir que un código exacto único ignore el contexto, igual que el comportamiento operativo existente.
   - Separar los resultados en `coincidenciasCodigoExacto`, `candidatosCompatibles`, `codigosDuplicados` y `hayConflicto`.
   - No inventar un puntaje probabilístico ni utilizar números aleatorios.
-- [ ] Crear `ResolverSolicitudesImagenCapitanaBita.js` con `resolverSolicitudesImagenCapitanaBita({ filas, articulos, contextoBusqueda })`.
+- [x] Crear `ResolverSolicitudesImagenCapitanaBita.js` con `resolverSolicitudesImagenCapitanaBita({ filas, articulos, contextoBusqueda })`.
   - Validar arreglos de entrada y devolver arreglo vacío ante contratos inválidos, registrando únicamente un warning técnico.
   - Resolver cada fila mediante `resolverCoincidenciasPorEvidencia()`.
   - Devolver para cada resolución `idSolicitud`, `textoOriginal`, `cantidad`, `estado`, `candidatos`, `articuloUnico`, `motivoConfirmacion` y `origen: 'imagen'`.
@@ -309,10 +309,10 @@ Convertir la evidencia visual validada en resoluciones locales deterministas que
   - Usar `estado: 'inconsistente'` para códigos duplicados o conflicto entre código y descripción.
   - Conservar candidatos separados por identidad interna; no colapsar registros diferentes únicamente porque comparten código.
   - No ofrecer memorias de contexto a partir de imágenes dudosas. Una selección visual puede usarse en la operación actual, pero no debe contaminar automáticamente las memorias creadas para expresiones de texto o voz.
-- [ ] Mantener `ResolverSolicitudesCapitanaBita.js` como resolutor de texto y audio.
+- [x] Mantener `ResolverSolicitudesCapitanaBita.js` como resolutor de texto y audio.
   - No sustituir su búsqueda flexible por la lógica estricta de imágenes.
   - Compartir solamente normalizadores y equivalencias cuyo contrato sea verdaderamente común.
-- [ ] Considerar terminada la fase cuando ejecutar dos veces la misma evidencia contra el mismo maestro produzca exactamente los mismos estados y candidatos.
+- [x] Considerar terminada la fase cuando ejecutar dos veces la misma evidencia contra el mismo maestro produzca exactamente los mismos estados y candidatos.
 
 ## FASE 4: Integrar cámara y galería en la entrada de Capitana Bita
 
@@ -328,7 +328,7 @@ Agregar una interacción clara y responsiva para obtener una imagen y procesarla
 
 ### Pasos de ejecución
 
-- [ ] Ampliar `usarCapitanaBita()` con estado específico de imágenes.
+- [x] Ampliar `usarCapitanaBita()` con estado específico de imágenes.
   - Agregar `capturandoImagen` con valor inicial `false`.
   - Agregar `procesarImagenSeleccionada(origen)` como única entrada pública desde el componente.
   - Ejecutar `prepararSolicitud()` antes de abrir Camera para congelar `contextoBusqueda`, `identificadorDestino`, nombre y memorias del listado correcto.
@@ -340,11 +340,11 @@ Agregar una interacción clara y responsiva para obtener una imagen y procesarla
   - Si la captura se canceló, restaurar estados sin notificación negativa.
   - Si falla permiso o lectura de imagen, mostrar el error específico sin establecer `permisoBloqueado`, porque esa bandera corresponde al micrófono.
   - Mantener el enfriamiento compartido solo para errores de Gemini, cuota o saturación.
-- [ ] Actualizar `disponible` y `motivoNoDisponible`.
+- [x] Actualizar `disponible` y `motivoNoDisponible`.
   - Evitar iniciar texto, audio o una segunda captura mientras se captura o procesa una imagen.
   - No bloquear permanentemente texto y audio si la cámara fue rechazada.
   - Añadir mensajes de procesamiento relacionados con lectura de imagen sin eliminar los existentes.
-- [ ] Modificar `EntradaCapitanaBita.vue`.
+- [x] Modificar `EntradaCapitanaBita.vue`.
   - Añadir un botón con icono de imagen o cámara dentro de la fila existente.
   - Presentar opciones explícitas `Tomar foto` y `Elegir de galería`; cada opción enviará uno de los valores de `ORIGENES_CAPTURA_IMAGEN`.
   - Mantener botones táctiles de al menos 44 px.
@@ -353,16 +353,16 @@ Agregar una interacción clara y responsiva para obtener una imagen y procesarla
   - Emitir `estado-interaccion` con `{ grabando, procesando, capturandoImagen }`.
   - Emitir los resultados visuales mediante el evento existente `resultado-procesado` para no crear dos rutas paralelas hacia Listados.
   - Mantener `cerrarInteraccion()` capaz de cerrar menús propios y cancelar grabación; la actividad nativa Camera conservará el comportamiento del botón Atrás del sistema.
-- [ ] Adaptar la grilla responsiva de `.fila-entrada-capitana-bita`.
+- [x] Adaptar la grilla responsiva de `.fila-entrada-capitana-bita`.
   - En anchos suficientes, mantener input y botones en una sola fila.
   - En teléfonos estrechos, conservar el input legible y evitar desbordamiento horizontal.
   - Usar exclusivamente variables de `src/css/app.css`.
   - Mantener CSS compacto sin líneas vacías entre reglas.
-- [ ] Actualizar `FormularioListado.vue`.
+- [x] Actualizar `FormularioListado.vue`.
   - Ampliar `estadoInteraccionCapitanaBita` con `capturandoImagen: false`.
   - Considerar la captura dentro de `cerrarInteraccion()` cuando exista una interacción local cerrable.
   - Mantener sin cambios los eventos públicos actuales hacia `PaginaListados.vue`.
-- [ ] Considerar terminada la fase cuando el usuario pueda elegir origen, cancelar, capturar y ver un estado de procesamiento sin afectar el buscador manual.
+- [x] Considerar terminada la fase cuando el usuario pueda elegir origen, cancelar, capturar y ver un estado de procesamiento sin afectar el buscador manual.
 
 ## FASE 5: Resolver e insertar resultados visuales en Listados
 
@@ -377,17 +377,17 @@ Agregar de inmediato las coincidencias seguras y presentar todas las demás de m
 
 ### Pasos de ejecución
 
-- [ ] Dividir la resolución dentro de `procesarResultadoCapitanaBita()` según `tipoEntrada`.
+- [x] Dividir la resolución dentro de `procesarResultadoCapitanaBita()` según `tipoEntrada`.
   - Texto y audio deben continuar usando `resolverSolicitudesCapitanaBita()` y las memorias actuales.
   - Imagen debe usar `resolverSolicitudesImagenCapitanaBita()` y no crear propuestas de memoria.
   - Mantener la comparación entre `identificadorDestino` y `listadoActivo.id` antes de resolver o insertar.
   - Mantener el contexto exacto capturado al iniciar la solicitud.
-- [ ] Crear una representación común de resultados para el panel.
+- [x] Crear una representación común de resultados para el panel.
   - Separar `unicas`, `ambiguedades`, `noEncontrados` e `inconsistencias`.
   - Conservar `transcripcion`, `advertencias`, `tipoEntrada` y un resumen con cantidades.
   - Contabilizar artículos según cantidad efectiva y solicitudes según filas detectadas; no mezclar ambos números en el mensaje.
   - Mostrar un resumen equivalente a `18 artículos preparados, 3 necesitan confirmación y 2 no pudieron identificarse`.
-- [ ] Optimizar la cola de inserción de Capitana Bita para lotes.
+- [x] Optimizar la cola de inserción de Capitana Bita para lotes.
   - Crear una función de encolado múltiple que reciba resoluciones seguras ya validadas.
   - Expandir la cantidad a filas porque ese es el modelo persistido actual.
   - Preparar consecutivamente filas no repetidas y ejecutar una sola llamada a `persistirActivo()` por bloque seguro.
@@ -396,7 +396,7 @@ Agregar de inmediato las coincidencias seguras y presentar todas las demás de m
   - No perder elementos pendientes si falla Preferences; conservarlos o reportar con precisión cuáles no se guardaron.
   - Capturar errores por bloque y notificar al usuario en lugar de dejar promesas rechazadas sin manejar.
   - Mantener `ocupado` activo durante la escritura para impedir cambios de listado a mitad de lote.
-- [ ] Ampliar `PanelResultadosCapitanaBita.vue`.
+- [x] Ampliar `PanelResultadosCapitanaBita.vue`.
   - Para una ambigüedad con un candidato, mostrar `Confirmá si este es el artículo correcto` y el motivo de duda.
   - Para dos o más candidatos, mantener `Elegí el artículo correcto`.
   - Añadir una acción `Omitir` por solicitud para continuar cuando ninguna opción sea correcta.
@@ -405,19 +405,19 @@ Agregar de inmediato las coincidencias seguras y presentar todas las demás de m
   - Para un código duplicado en el maestro, explicar que debe corregirse el Excel; no ofrecer una selección que el almacenamiento de Listados no pueda representar de manera segura.
   - Usar una clave de candidato estable que no dependa exclusivamente del código cuando existan registros repetidos.
   - Mantener la acción de memorias solamente para resultados de texto o audio.
-- [ ] Añadir `omitirSolicitudCapitanaBita(idSolicitud)` en `PaginaListados.vue`.
+- [x] Añadir `omitirSolicitudCapitanaBita(idSolicitud)` en `PaginaListados.vue`.
   - Eliminar únicamente la solicitud indicada.
   - Cerrar el panel cuando no queden pendientes, no encontrados, inconsistencias, advertencias ni memorias propuestas.
-- [ ] Mantener las reglas actuales de duplicados del listado.
+- [x] Mantener las reglas actuales de duplicados del listado.
   - Una coincidencia segura que ya existe en el listado debe pasar por la confirmación existente.
   - Una cantidad mayor que uno crea filas repetidas y cada repetición sigue sujeta a la política vigente.
   - No fusionar filas ni introducir una nueva columna de cantidad dentro de este alcance.
-- [ ] Ajustar notificaciones finales.
+- [x] Ajustar notificaciones finales.
   - Si todas las filas fueron seguras, notificar la cantidad agregada desde la imagen.
   - Si existen pendientes, dejar visible el panel y no afirmar que todo fue agregado.
   - Si ninguna fila fue válida, informar sin modificar el listado.
   - Si el usuario cierra el panel, conservar solamente los artículos seguros ya persistidos y descartar pendientes visuales.
-- [ ] Considerar terminada la fase cuando ningún caso dudoso pueda llegar a `insertarArticulo()` sin confirmación explícita.
+- [x] Considerar terminada la fase cuando ningún caso dudoso pueda llegar a `insertarArticulo()` sin confirmación explícita.
 
 ## FASE 6: Robustecer errores, privacidad y navegación
 
@@ -436,28 +436,28 @@ Cerrar los caminos secundarios que pueden dejar estados bloqueados, procesar im�
 
 ### Pasos de ejecución
 
-- [ ] Verificar el comportamiento sin conexión antes de enviar a Gemini.
+- [x] Verificar el comportamiento sin conexión antes de enviar a Gemini.
   - La cámara o galería pueden abrirse, pero la app debe advertir antes del envío y liberar la imagen si no existe conexión.
   - No conservar una captura para un reintento automático posterior.
-- [ ] Separar claramente cancelación y error.
+- [x] Separar claramente cancelación y error.
   - Detectar el mensaje estable `User cancelled photos app` y equivalentes encapsulados por el servicio.
   - Cancelar debe dejar el formulario utilizable y no mostrar una alerta negativa.
   - Permiso denegado, formato no compatible, imagen demasiado grande y fallo de lectura deben mostrar mensajes distintos.
-- [ ] Proteger el destino del resultado.
+- [x] Proteger el destino del resultado.
   - Descartar una respuesta si el listado activo cambió.
   - Limpiar resultados visuales y cola al crear, abrir, duplicar o eliminar listados, reutilizando `limpiarEstadoCapitanaBita()`.
   - No aplicar una captura restaurada si sus metadatos vencieron o pertenecen a otro listado.
-- [ ] Proteger privacidad y memoria.
+- [x] Proteger privacidad y memoria.
   - No guardar base64, transcripción visual ni miniaturas en Preferences, IndexedDB, Listados o memorias de Capitana Bita.
   - Preferences solo puede conservar metadatos mínimos de recuperación y debe limpiarlos al consumir o vencer.
   - No registrar base64, rutas temporales, texto completo de la imagen ni respuesta JSON completa en consola.
   - Liberar URLs temporales y referencias de imagen en todos los caminos de salida.
-- [ ] Mantener navegación Android.
+- [x] Mantener navegación Android.
   - Mientras esté abierto el selector nativo, el botón Atrás debe cancelar la actividad nativa.
   - Después de regresar a la WebView, `cerrarPasoAtrasNativo()` debe seguir cerrando primero interacciones de formulario, resultados y modales antes de navegar.
   - `modalActivo` debe reflejar únicamente modales controlados por la WebView; no simular un modal mientras Camera controla su propia actividad.
-- [ ] Confirmar que no se requieren cambios en `MainActivity.java`, `capacitor.config.json` ni el manifiesto fuera del permiso ya existente.
-- [ ] Considerar terminada la fase cuando todos los caminos de cancelación y error restauren `capturandoImagen` y `procesando` a `false`.
+- [x] Confirmar que no se requieren cambios en `MainActivity.java`, `capacitor.config.json` ni el manifiesto fuera del permiso ya existente.
+- [x] Considerar terminada la fase cuando todos los caminos de cancelación y error restauren `capturandoImagen` y `procesando` a `false`.
 
 ## FASE TESTING
 
@@ -467,7 +467,7 @@ Validar la extracción, certeza, persistencia, recuperación y experiencia compl
 
 ### Pruebas automatizadas
 
-- [ ] Crear `Pruebas/CapitanaBita/ResolverSolicitudesImagenCapitanaBita.test.js` con `node:test` y `node:assert/strict`.
+- [x] Crear `Pruebas/CapitanaBita/ResolverSolicitudesImagenCapitanaBita.test.js` con `node:test` y `node:assert/strict`.
   - Código completo exacto y único más lectura clara produce `unica`.
   - Descripción completa única más lectura clara produce `unica`.
   - Descripción parcial distintiva que deja un solo candidato coherente produce `unica`.
@@ -483,10 +483,10 @@ Validar la extracción, certeza, persistencia, recuperación y experiencia compl
   - La resolución inspecciona más de 50 coincidencias y no hereda el límite del buscador interactivo.
   - El contexto filtra descripciones, pero un código exacto único sigue siendo autoritativo.
   - Repetir la misma resolución entrega el mismo orden, estados y candidatos.
-- [ ] Modificar el script `test` de `package.json` para ejecutar exactamente el archivo anterior con Node.
-- [ ] Ejecutar `npm test` y comprobar que todas las pruebas finalicen correctamente.
-- [ ] Ejecutar `npm run lint` y corregir todos los errores antes de cerrar.
-- [ ] Ejecutar `npm run build` y comprobar que Quasar genere la aplicación sin errores.
+- [x] Modificar el script `test` de `package.json` para ejecutar exactamente el archivo anterior con Node.
+- [x] Ejecutar `npm test` y comprobar que todas las pruebas finalicen correctamente.
+- [x] Ejecutar `npm run lint` y corregir todos los errores antes de cerrar.
+- [x] Ejecutar `npm run build` y comprobar que Quasar genere la aplicación sin errores.
 
 ### Pruebas manuales de captura
 
@@ -558,14 +558,14 @@ Validar la extracción, certeza, persistencia, recuperación y experiencia compl
 
 ## Progreso del plan
 
-- [ ] Fase 1: Crear la infraestructura compartida de imágenes
-- [ ] Fase 2: Definir la extracción visual estructurada de Capitana Bita
-- [ ] Fase 3: Crear la resolución estricta y exhaustiva contra el maestro
-- [ ] Fase 4: Integrar cámara y galería en la entrada de Capitana Bita
-- [ ] Fase 5: Resolver e insertar resultados visuales en Listados
-- [ ] Fase 6: Robustecer errores, privacidad y navegación
+- [x] Fase 1: Crear la infraestructura compartida de imágenes
+- [x] Fase 2: Definir la extracción visual estructurada de Capitana Bita
+- [x] Fase 3: Crear la resolución estricta y exhaustiva contra el maestro
+- [x] Fase 4: Integrar cámara y galería en la entrada de Capitana Bita
+- [x] Fase 5: Resolver e insertar resultados visuales en Listados
+- [x] Fase 6: Robustecer errores, privacidad y navegación
 - [ ] Fase Testing
 
 Fecha de creación: 13 de septiembre de 2026
 Fecha de última actualización: 13 de septiembre de 2026
-Estado: BORRADOR
+Estado: EN EJECUCIÓN — implementación terminada; pruebas manuales y Android pendientes

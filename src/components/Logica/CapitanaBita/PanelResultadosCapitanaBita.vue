@@ -3,6 +3,7 @@
     <header class="encabezado-resultados-capitana-bita">
       <div>
         <strong>Capitana Bita</strong>
+        <p v-if="resumen">{{ resumen }}</p>
         <p v-if="transcripcion">“{{ transcripcion }}”</p>
       </div>
       <button type="button" title="Cerrar resultados" @click="emit('cerrar')">
@@ -16,22 +17,45 @@
     >
       <p>
         <strong>{{ grupo.textoOriginal }}</strong
-        >: elegí el artículo correcto.
+        >:
+        {{
+          grupo.candidatos.length === 1
+            ? 'confirmá si este es el artículo correcto.'
+            : 'elegí el artículo correcto.'
+        }}
       </p>
+      <small v-if="grupo.motivoConfirmacion">{{ grupo.motivoConfirmacion }}</small>
       <button
-        v-for="articulo in grupo.candidatos"
-        :key="articulo.codigo"
+        v-for="(articulo, indice) in grupo.candidatos"
+        :key="`${grupo.idSolicitud}-${indice}`"
         type="button"
         class="candidato-capitana-bita"
         @click="emit('seleccionar-candidato', { idSolicitud: grupo.idSolicitud, articulo })"
       >
-        <span>{{ articulo.nombre }}</span>
-        <small>{{ articulo.codigo }}</small>
+        <span>{{ articulo.nombre }}</span
+        ><small>{{ articulo.codigo }}</small>
+      </button>
+      <button
+        type="button"
+        class="omitir-capitana-bita"
+        @click="emit('omitir-solicitud', grupo.idSolicitud)"
+      >
+        Omitir
       </button>
     </div>
     <div v-if="noEncontrados.length" class="grupo-resultado-capitana-bita">
       <strong>No encontrados</strong>
       <p v-for="grupo in noEncontrados" :key="grupo.idSolicitud">{{ grupo.textoOriginal }}</p>
+    </div>
+    <div v-if="inconsistencias.length" class="grupo-resultado-capitana-bita">
+      <strong>Inconsistencias del Excel maestro</strong>
+      <p v-for="grupo in inconsistencias" :key="grupo.idSolicitud">
+        {{ grupo.textoOriginal }}: {{ grupo.motivoConfirmacion }}
+      </p>
+    </div>
+    <div v-if="advertencias.length" class="grupo-resultado-capitana-bita">
+      <strong>Advertencias de lectura</strong>
+      <p v-for="(advertencia, indice) in advertencias" :key="indice">{{ advertencia }}</p>
     </div>
     <div
       v-for="propuesta in memoriasPropuestas"
@@ -54,14 +78,25 @@ const props = defineProps({
   transcripcion: { type: String, default: '' },
   ambiguedades: { type: Array, default: () => [] },
   noEncontrados: { type: Array, default: () => [] },
+  inconsistencias: { type: Array, default: () => [] },
+  advertencias: { type: Array, default: () => [] },
+  resumen: { type: String, default: '' },
+  tipoEntrada: { type: String, default: '' },
   memoriasPropuestas: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['seleccionar-candidato', 'recordar-seleccion', 'cerrar'])
+const emit = defineEmits([
+  'seleccionar-candidato',
+  'omitir-solicitud',
+  'recordar-seleccion',
+  'cerrar',
+])
 const visible = computed(
   () =>
     Boolean(props.transcripcion) ||
     props.ambiguedades.length > 0 ||
     props.noEncontrados.length > 0 ||
+    props.inconsistencias.length > 0 ||
+    props.advertencias.length > 0 ||
     props.memoriasPropuestas.length > 0,
 )
 </script>
@@ -115,6 +150,15 @@ const visible = computed(
 }
 .candidato-capitana-bita small {
   color: var(--color-primario-claro);
+}
+.omitir-capitana-bita {
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-superficie);
+  color: var(--color-texto-secundario);
+  cursor: pointer;
 }
 .memoria-propuesta {
   display: flex;
