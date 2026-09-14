@@ -16,7 +16,9 @@
             :identificador-destino="identificadorDestino"
             @update:model-value="emit('actualizar-contexto', $event)"
           />
+          <!-- Capitana Bita se conserva implementada, pero permanece oculta porque por el momento no se utilizará. -->
           <EntradaCapitanaBita
+            v-if="MOSTRAR_CAPITANA_BITA"
             ref="entradaCapitanaBitaRef"
             :contexto-busqueda="contextoBusqueda"
             :deshabilitado="busquedaDeshabilitada"
@@ -62,16 +64,37 @@
                 @estado-busqueda="manejarEstadoBuscador"
               />
             </div>
+          </div>
+          <div class="acciones-entrada-listado">
             <button
               type="button"
-              class="camara-ubicacion"
+              class="boton-accion-entrada-listado boton-importar-excel-listado"
+              :disabled="busquedaDeshabilitada || importandoExcel"
+              @click="seleccionarExcelListado"
+            >
+              <IconLoader2 v-if="importandoExcel" :size="21" class="icono-girando" />
+              <IconFileSpreadsheet v-else :size="21" :stroke="2" />
+              <span>{{ importandoExcel ? 'Procesando…' : 'Cargar Excel' }}</span>
+            </button>
+            <button
+              type="button"
+              class="boton-accion-entrada-listado boton-escanear-listado"
               title="Escanear con cámara"
-              :disabled="busquedaDeshabilitada"
+              :disabled="busquedaDeshabilitada || importandoExcel"
               @click="abrirCamara"
             >
-              <IconCamera :size="22" :stroke="2" />
+              <IconCamera :size="21" :stroke="2" />
+              <span>Escanear</span>
             </button>
           </div>
+          <input
+            ref="inputExcelListadoRef"
+            class="input-excel-listado-oculto"
+            type="file"
+            accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            :disabled="busquedaDeshabilitada || importandoExcel"
+            @change="manejarArchivoExcelSeleccionado"
+          />
           <div
             v-if="articuloRepetido"
             class="aviso-articulo-repetido"
@@ -118,7 +141,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { IconCamera, IconCopy } from '@tabler/icons-vue'
+import { IconCamera, IconCopy, IconFileSpreadsheet, IconLoader2 } from '@tabler/icons-vue'
 import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
@@ -138,12 +161,15 @@ import {
 } from '../Compartidos/InputArticuloInteligente.js'
 import { usarTextoCopiadoInput } from '../Compartidos/UsoTextoCopiadoInput.js'
 
+// Cambiar a true cuando se decida volver a habilitar Capitana Bita en Listados.
+const MOSTRAR_CAPITANA_BITA = false
 const props = defineProps({
   deshabilitado: { type: Boolean, default: false },
   contextoBusqueda: { type: String, default: '' },
   articuloRepetido: { type: Object, default: null },
   lineasRepetidas: { type: Array, default: () => [] },
   identificadorDestino: { type: String, default: '' },
+  importandoExcel: { type: Boolean, default: false },
 })
 const emit = defineEmits([
   'articulo-seleccionado',
@@ -156,6 +182,7 @@ const emit = defineEmits([
   'cancelar-repetido',
   'actualizar-contexto',
   'resultado-capitana-bita',
+  'archivo-excel-seleccionado',
 ])
 const busquedaArticulo = ref('')
 const mostrarBuscador = ref(false)
@@ -166,6 +193,7 @@ const inputBusquedaRef = ref(null)
 const autoseleccionArticuloHabilitada = ref(false)
 const ultimoEspacioTiempo = ref(0)
 const entradaCapitanaBitaRef = ref(null)
+const inputExcelListadoRef = ref(null)
 const estadoInteraccionCapitanaBita = ref({
   grabando: false,
   procesando: false,
@@ -269,6 +297,17 @@ function abrirCamara() {
   mostrarCamara.value = true
 }
 
+function seleccionarExcelListado() {
+  if (busquedaDeshabilitada.value || props.importandoExcel || !inputExcelListadoRef.value) return
+  inputExcelListadoRef.value.value = ''
+  inputExcelListadoRef.value.click()
+}
+
+function manejarArchivoExcelSeleccionado(evento) {
+  const archivo = evento.target?.files?.[0]
+  if (archivo) emit('archivo-excel-seleccionado', archivo)
+}
+
 function cerrarCamara() {
   mostrarCamara.value = false
 }
@@ -329,6 +368,55 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpia
 }
 .formulario-listado :deep(.formulario-ubicacion) {
   padding-bottom: 0;
+}
+.fila-codigo-camara {
+  display: block;
+}
+.contenedor-input-codigo {
+  width: 100%;
+}
+.acciones-entrada-listado {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.65rem;
+}
+.boton-accion-entrada-listado {
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 9px;
+  color: var(--color-texto-principal);
+  background: var(--color-primario);
+  font-weight: 700;
+  cursor: pointer;
+}
+.boton-accion-entrada-listado:focus-visible {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 2px;
+}
+.boton-accion-entrada-listado:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.boton-escanear-listado {
+  background: var(--color-primario-oscuro);
+}
+.input-excel-listado-oculto {
+  display: none;
+}
+.icono-girando {
+  animation: girar-icono-listado 1s linear infinite;
+}
+@keyframes girar-icono-listado {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .aviso-articulo-repetido {
   display: flex;

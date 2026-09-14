@@ -29,7 +29,9 @@
           :lineas-repetidas="lineasArticuloPendiente"
           :contexto-busqueda="listadoActivo.contextoBusqueda"
           :identificador-destino="listadoActivo.id"
+          :importando-excel="importandoExcel"
           @articulo-seleccionado="agregarArticulo"
+          @archivo-excel-seleccionado="importarExcelListado"
           @base-datos-cargada="manejarBaseCargada"
           @base-datos-limpia="baseDatosCargada = false"
           @error-carga="manejarErrorCarga"
@@ -40,8 +42,14 @@
           @actualizar-contexto="guardarContextoBusqueda"
           @resultado-capitana-bita="procesarResultadoCapitanaBita"
         />
+        <PanelResultadoImportacionExcel
+          v-if="resultadoImportacionExcel"
+          :resultado="resultadoImportacionExcel"
+          @cerrar="cerrarResultadoImportacionExcel"
+        />
+        <!-- Los resultados de Capitana Bita se conservan, pero permanecen ocultos mientras la función no se utilice. -->
         <PanelResultadosCapitanaBita
-          v-if="resultadoPendienteCapitanaBita"
+          v-if="MOSTRAR_CAPITANA_BITA && resultadoPendienteCapitanaBita"
           :transcripcion="resultadoPendienteCapitanaBita.transcripcion"
           :ambiguedades="resultadoPendienteCapitanaBita.ambiguedades"
           :no-encontrados="resultadoPendienteCapitanaBita.noEncontrados"
@@ -194,6 +202,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { Notify } from 'quasar'
 import {
@@ -208,6 +217,7 @@ import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
 import PanelResultadosCapitanaBita from '../components/Logica/CapitanaBita/PanelResultadosCapitanaBita.vue'
+import PanelResultadoImportacionExcel from '../components/Logica/Listados/PanelResultadoImportacionExcel.vue'
 import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import {
@@ -250,13 +260,27 @@ import {
 import { generarYGuardarExcelListado } from '../components/Logica/Listados/ExportarListadosExcel.js'
 import { generarYGuardarPDFListado } from '../components/Logica/Listados/ExportarListadosPDF.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import {
+  procesarArchivoExcelListado,
+  procesarExcelCompartidoListado,
+} from '../components/Logica/Listados/ServicioImportacionExcelListado.js'
+import {
+  esArchivoExcel,
+  leerArchivoCompartidoComoBase64,
+  limpiarArchivoCompartidoPendiente,
+  obtenerArchivoCompartidoPendiente,
+} from '../components/Logica/Compartidos/ServicioArchivoCompartido.js'
 
 const OPCIONES_FORMATO_EXPORTACION = [
   { label: 'Excel', value: 'excel' },
   { label: 'PDF A4', value: 'pdf' },
 ]
+// Cambiar a true cuando se decida volver a habilitar Capitana Bita en Listados.
+const MOSTRAR_CAPITANA_BITA = false
 
 const emit = defineEmits(['configurar-barra'])
+const route = useRoute()
+const router = useRouter()
 const listados = ref([])
 const listadoActivo = ref(null)
 const baseDatosCargada = ref(false)
@@ -279,6 +303,12 @@ const resultadoPendienteCapitanaBita = ref(null)
 const memoriasPropuestasCapitanaBita = ref([])
 const colaInsercionCapitanaBita = ref([])
 const procesandoColaCapitanaBita = ref(false)
+const importandoExcel = ref(false)
+const resultadoImportacionExcel = ref(null)
+const esperandoMaestroParaImportar = ref(false)
+const identificadorExcelCompartidoEnProceso = ref('')
+const paginaInicializada = ref(false)
+const identificadorAvisoMaestro = ref('')
 const ocupado = computed(
   () =>
     cargandoDatosLocales.value ||
@@ -286,7 +316,8 @@ const ocupado = computed(
     exportando.value ||
     enviandoStock.value ||
     enviandoUbicaciones.value ||
-    procesandoColaCapitanaBita.value,
+    procesandoColaCapitanaBita.value ||
+    importandoExcel.value,
 )
 const articulosOrdenados = computed(() =>
   ordenarColeccion(listadoActivo.value?.articulos || [], listadoActivo.value?.orden, {
@@ -357,6 +388,10 @@ function notificar(tipo, mensaje, timeout = 2400) {
   Notify.create({ type: tipo, message: mensaje, position: 'top', timeout })
 }
 
+function obtenerValorConsulta(valor) {
+  return Array.isArray(valor) ? String(valor[0] || '') : String(valor || '')
+}
+
 function reemplazarListadoLocal(guardado) {
   listadoActivo.value = guardado
   const restantes = listados.value.filter((listado) => listado.id !== guardado.id)
@@ -396,6 +431,7 @@ function crearNuevoListado() {
   formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
   limpiarEstadoCapitanaBita()
+  limpiarEstadoImportacionExcel()
   ejecutarAdministracion(async () => {
     const creado = await crearListado()
     reemplazarListadoLocal(creado)
@@ -408,6 +444,7 @@ function abrirListado(id) {
   formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
   limpiarEstadoCapitanaBita()
+  limpiarEstadoImportacionExcel()
   ejecutarAdministracion(async () => {
     const listado = await obtenerListado(id)
     if (!listado) throw new Error('No se encontró el listado')
@@ -426,6 +463,7 @@ function duplicarListadoActivo(id) {
   formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
   limpiarEstadoCapitanaBita()
+  limpiarEstadoImportacionExcel()
   ejecutarAdministracion(async () => {
     reemplazarListadoLocal(await duplicarListado(id))
     notificar('positive', 'Listado duplicado')
@@ -447,6 +485,7 @@ function confirmarEliminarListado() {
   formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
   limpiarEstadoCapitanaBita()
+  limpiarEstadoImportacionExcel()
   cerrarModalEliminarListado()
   ejecutarAdministracion(async () => {
     const resultado = await eliminarListado(id)
@@ -461,6 +500,192 @@ async function persistirActivo() {
   const guardado = await guardarListado(listadoActivo.value)
   reemplazarListadoLocal(guardado)
   return guardado
+}
+
+async function limpiarConsultaExcelCompartido() {
+  const consulta = { ...route.query }
+  delete consulta.destinoExcel
+  delete consulta.archivoCompartido
+  await router.replace({ path: route.path, query: consulta })
+}
+
+async function finalizarExcelCompartidoPendiente(
+  identificador,
+  { conservarConsulta = false } = {},
+) {
+  if (!identificador) return { exito: false }
+  const resultado = await limpiarArchivoCompartidoPendiente(identificador)
+  if (!conservarConsulta) await limpiarConsultaExcelCompartido()
+  return resultado
+}
+
+function limpiarEstadoImportacionExcel() {
+  resultadoImportacionExcel.value = null
+  if (!importandoExcel.value) identificadorExcelCompartidoEnProceso.value = ''
+}
+
+async function cerrarResultadoImportacionExcel() {
+  const identificador = resultadoImportacionExcel.value?.identificadorCompartido || ''
+  resultadoImportacionExcel.value = null
+  if (
+    identificador &&
+    obtenerValorConsulta(route.query.archivoCompartido) === identificador &&
+    route.query.destinoExcel === 'listado'
+  ) {
+    await limpiarConsultaExcelCompartido()
+  }
+}
+
+async function aplicarResultadoImportacionExcel(
+  resultadoAnalisis,
+  { identificadorCompartido = '' } = {},
+) {
+  if (!listadoActivo.value) throw new Error('No hay un listado activo para importar.')
+  const resoluciones = Array.isArray(resultadoAnalisis?.resoluciones)
+    ? resultadoAnalisis.resoluciones
+    : []
+  const resolucionesUnicas = resoluciones.filter((fila) => fila.estado === 'unica')
+  const articulosAnteriores = [...listadoActivo.value.articulos]
+  const conteoPrevio = new Map()
+  articulosAnteriores.forEach((articulo) => {
+    const codigo = normalizarCodigoBusqueda(articulo.codigo)
+    if (codigo) conteoPrevio.set(codigo, (conteoPrevio.get(codigo) || 0) + 1)
+  })
+  const conteoImportado = new Map()
+  resolucionesUnicas.forEach((fila) => {
+    const codigo = normalizarCodigoBusqueda(fila.articuloUnico?.codigo)
+    if (!codigo) return
+    const registro = conteoImportado.get(codigo) || {
+      codigo,
+      descripcion: String(fila.articuloUnico?.nombre || '').trim(),
+      cantidadImportada: 0,
+      cantidadPrevia: conteoPrevio.get(codigo) || 0,
+    }
+    registro.cantidadImportada += 1
+    conteoImportado.set(codigo, registro)
+  })
+
+  const idsFilasImportadas = []
+  try {
+    for (let indice = resolucionesUnicas.length - 1; indice >= 0; indice -= 1) {
+      const fila = crearFilaListado(resolucionesUnicas[indice].articuloUnico)
+      if (!fila) continue
+      listadoActivo.value.articulos.push(fila)
+      idsFilasImportadas.unshift(fila.idFila)
+    }
+    if (idsFilasImportadas.length) await persistirActivo()
+  } catch (error) {
+    listadoActivo.value.articulos = articulosAnteriores
+    throw error
+  }
+
+  return {
+    nombreArchivo: resultadoAnalisis.nombreArchivo,
+    totalHojas: resultadoAnalisis.totalHojas,
+    totalFilasUtiles: resultadoAnalisis.totalFilasUtiles,
+    cantidadAgregada: idsFilasImportadas.length,
+    idsFilasImportadas,
+    repetidos: [...conteoImportado.values()].filter(
+      (registro) => registro.cantidadImportada > 1 || registro.cantidadPrevia > 0,
+    ),
+    ambiguas: resoluciones.filter((fila) => fila.estado === 'ambigua'),
+    noEncontradas: resoluciones.filter((fila) => fila.estado === 'noEncontrada'),
+    inconsistencias: resoluciones.filter((fila) => fila.estado === 'inconsistente'),
+    identificadorCompartido,
+  }
+}
+
+async function ejecutarImportacionExcel({ obtenerResultado, identificadorCompartido = '' }) {
+  if (importandoExcel.value || !listadoActivo.value || typeof obtenerResultado !== 'function') return
+  importandoExcel.value = true
+  identificadorExcelCompartidoEnProceso.value = identificadorCompartido
+  resultadoImportacionExcel.value = null
+  try {
+    const resultadoAnalisis = await obtenerResultado()
+    const resultado = await aplicarResultadoImportacionExcel(resultadoAnalisis, {
+      identificadorCompartido,
+    })
+    resultadoImportacionExcel.value = resultado
+    if (identificadorCompartido) {
+      const limpieza = await finalizarExcelCompartidoPendiente(identificadorCompartido, {
+        conservarConsulta: true,
+      })
+      if (!limpieza?.exito) {
+        notificar('warning', 'El listado se importó, pero no se pudo limpiar el archivo temporal.')
+      }
+    }
+    const cantidad = resultado.cantidadAgregada
+    notificar('positive', `Se agregaron ${cantidad} artículo${cantidad === 1 ? '' : 's'}.`)
+  } catch (error) {
+    resultadoImportacionExcel.value = null
+    notificar('negative', error.message || 'No se pudo importar el Excel.')
+    if (identificadorCompartido) {
+      await finalizarExcelCompartidoPendiente(identificadorCompartido)
+      notificar('warning', 'Volvé a compartir el archivo para intentarlo nuevamente.')
+    }
+  } finally {
+    importandoExcel.value = false
+    identificadorExcelCompartidoEnProceso.value = ''
+    await formularioListadoRef.value?.enfocarBusqueda?.()
+  }
+}
+
+async function importarExcelListado(archivo) {
+  if (ocupado.value || !listadoActivo.value) return
+  if (!baseDatosCargada.value || !obtenerArticulosCargados().length) {
+    notificar('warning', 'Cargá el Excel maestro antes de importar un listado.')
+    return
+  }
+  await ejecutarImportacionExcel({
+    obtenerResultado: () =>
+      procesarArchivoExcelListado({
+        archivo,
+        articulos: obtenerArticulosCargados(),
+        contextoBusqueda: listadoActivo.value.contextoBusqueda,
+      }),
+  })
+}
+
+async function procesarExcelCompartidoPendiente() {
+  if (!paginaInicializada.value || importandoExcel.value) return
+  if (route.query.destinoExcel !== 'listado') return
+  const identificador = obtenerValorConsulta(route.query.archivoCompartido)
+  if (!identificador || identificadorExcelCompartidoEnProceso.value === identificador) return
+  const pendiente = await obtenerArchivoCompartidoPendiente()
+  if (
+    !pendiente?.uri ||
+    pendiente.identificador !== identificador ||
+    !esArchivoExcel(pendiente.nombre, pendiente.tipo)
+  ) {
+    await limpiarConsultaExcelCompartido()
+    return
+  }
+  if (!baseDatosCargada.value || !obtenerArticulosCargados().length) {
+    esperandoMaestroParaImportar.value = true
+    if (identificadorAvisoMaestro.value !== identificador) {
+      identificadorAvisoMaestro.value = identificador
+      notificar(
+        'warning',
+        'Cargá primero el Excel maestro; después importaremos el listado recibido.',
+        4000,
+      )
+    }
+    return
+  }
+  esperandoMaestroParaImportar.value = false
+  await ejecutarImportacionExcel({
+    identificadorCompartido: identificador,
+    obtenerResultado: async () => {
+      const base64 = await leerArchivoCompartidoComoBase64(pendiente.uri)
+      return procesarExcelCompartidoListado({
+        base64,
+        nombreArchivo: pendiente.nombre,
+        tipoArchivo: pendiente.tipo,
+        articulos: obtenerArticulosCargados(),
+        contextoBusqueda: listadoActivo.value.contextoBusqueda,
+      })
+    },
+  })
 }
 
 async function guardarContextoBusqueda(contextoBusqueda) {
@@ -983,6 +1208,7 @@ async function manejarBaseCargada(datos) {
     notificar('negative', error.message || 'No se pudieron cargar los datos guardados')
   }
   if (datos?.mensaje) notificar('positive', datos.mensaje)
+  if (esperandoMaestroParaImportar.value) await procesarExcelCompartidoPendiente()
   if (!datos?.cargaAutomatica) await formularioListadoRef.value?.enfocarBusqueda?.()
 }
 
@@ -993,6 +1219,10 @@ function manejarErrorCarga(mensaje) {
 
 function cerrarPasoAtrasNativo() {
   if (formularioListadoRef.value?.cerrarInteraccion?.()) return true
+  if (resultadoImportacionExcel.value) {
+    void cerrarResultadoImportacionExcel()
+    return true
+  }
   if (resultadoPendienteCapitanaBita.value) {
     cerrarResultadosCapitanaBita()
     return true
@@ -1013,6 +1243,12 @@ function actualizarBarra() {
 }
 
 watch(configuracionBarra, actualizarBarra, { deep: true })
+watch(
+  () => [route.query.destinoExcel, route.query.archivoCompartido],
+  () => {
+    if (paginaInicializada.value) void procesarExcelCompartidoPendiente()
+  },
+)
 
 onMounted(async () => {
   const [, resultadoDatosLocales] = await Promise.allSettled([
@@ -1029,10 +1265,13 @@ onMounted(async () => {
   await cargarListados()
   await nextTick()
   formularioListadoRef.value?.establecerBaseCargada?.(baseDatosCargada.value)
+  paginaInicializada.value = true
+  await procesarExcelCompartidoPendiente()
   actualizarBarra()
 })
 
 onUnmounted(() => {
+  paginaInicializada.value = false
   emit(
     'configurar-barra',
     {

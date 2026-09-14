@@ -76,7 +76,7 @@
           v-if="hayExcelCompartidoPendiente"
           type="button"
           class="boton-reintentar-selector"
-          @click="cargarExcelCompartidoPendiente"
+          @click="reintentarExcelCompartido"
         >
           <IconRefresh :size="16" />
           Reintentar Excel recibido
@@ -180,10 +180,14 @@ import {
 } from '../Compartidos/ServicioArchivoCompartido.js'
 
 // --- PROPS ---
-defineProps({
+const props = defineProps({
   mostrarPreview: {
     type: Boolean,
     default: false, // Solo para desarrollo
+  },
+  identificadorArchivoCompartido: {
+    type: String,
+    default: '',
   },
 })
 
@@ -198,7 +202,12 @@ const mostrarModalEliminar = ref(false)
 const hayExcelCompartidoPendiente = ref(false)
 
 // --- EMITS ---
-const emit = defineEmits(['base-datos-cargada', 'error-carga', 'base-datos-limpia'])
+const emit = defineEmits([
+  'base-datos-cargada',
+  'error-carga',
+  'base-datos-limpia',
+  'archivo-compartido-finalizado',
+])
 
 // --- COMPUTED ---
 const textoBoton = computed(() => {
@@ -307,9 +316,20 @@ function actualizarEstado() {
   })
 }
 
-async function cargarExcelCompartidoPendiente() {
+async function cargarExcelCompartidoPendiente(identificadorAutorizado) {
+  if (!identificadorAutorizado) return false
   const pendiente = await obtenerArchivoCompartidoPendiente()
-  if (!pendiente?.uri || !esArchivoExcel(pendiente.nombre, pendiente.tipo)) return false
+  if (
+    !pendiente?.uri ||
+    pendiente.identificador !== identificadorAutorizado ||
+    !esArchivoExcel(pendiente.nombre, pendiente.tipo)
+  ) {
+    emit('archivo-compartido-finalizado', {
+      identificador: identificadorAutorizado,
+      resultado: 'noDisponible',
+    })
+    return false
+  }
 
   hayExcelCompartidoPendiente.value = true
   let cargaExitosa = false
@@ -349,20 +369,44 @@ async function cargarExcelCompartidoPendiente() {
     return true
   } finally {
     if (cargaExitosa) {
-      await limpiarArchivoCompartidoPendiente(pendiente.identificador)
-      hayExcelCompartidoPendiente.value = false
+      const resultadoLimpieza = await limpiarArchivoCompartidoPendiente(identificadorAutorizado)
+      if (resultadoLimpieza?.exito) {
+        hayExcelCompartidoPendiente.value = false
+        emit('archivo-compartido-finalizado', {
+          identificador: identificadorAutorizado,
+          resultado: 'cargado',
+        })
+      }
     }
     estaCargando.value = false
     mensajeCarga.value = ''
   }
 }
 
+function reintentarExcelCompartido() {
+  return cargarExcelCompartidoPendiente(props.identificadorArchivoCompartido)
+}
+
 async function descartarExcelCompartido() {
+  const identificadorAutorizado = props.identificadorArchivoCompartido
+  if (!identificadorAutorizado) return
   const pendiente = await obtenerArchivoCompartidoPendiente()
-  await limpiarArchivoCompartidoPendiente(pendiente.identificador)
+  if (pendiente.identificador !== identificadorAutorizado) {
+    emit('archivo-compartido-finalizado', {
+      identificador: identificadorAutorizado,
+      resultado: 'noDisponible',
+    })
+    return
+  }
+  const resultado = await limpiarArchivoCompartidoPendiente(identificadorAutorizado)
+  if (!resultado?.exito) return
   hayExcelCompartidoPendiente.value = false
   mensajeError.value = ''
   actualizarEstado()
+  emit('archivo-compartido-finalizado', {
+    identificador: identificadorAutorizado,
+    resultado: 'descartado',
+  })
 }
 
 // --- LIFECYCLE ---
@@ -372,8 +416,12 @@ onMounted(async () => {
   // ** INICIALIZAR BASE DE DATOS AL MONTAR **
   await inicializarBaseDatos()
 
-  const seCargoExcelCompartido = await cargarExcelCompartidoPendiente()
-  if (seCargoExcelCompartido) return
+  if (props.identificadorArchivoCompartido) {
+    const seCargoExcelCompartido = await cargarExcelCompartidoPendiente(
+      props.identificadorArchivoCompartido,
+    )
+    if (seCargoExcelCompartido) return
+  }
 
   // Actualizar estado después de la inicialización
   actualizarEstado()

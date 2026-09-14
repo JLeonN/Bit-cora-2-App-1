@@ -3,8 +3,8 @@ import { App } from '@capacitor/app'
 
 const estadoBotonAtras = {
   router: null,
-  estaDrawerAbierto: () => false,
-  cerrarDrawer: () => {},
+  hayInteraccionGlobalAbierta: () => false,
+  cerrarInteraccionGlobal: () => {},
   obtenerRutaActual: () => '/',
   obtenerManejadorPagina: () => null,
 }
@@ -16,8 +16,8 @@ export function configurarEstadoBotonAtrasNativo(configuracion) {
 }
 
 export function limpiarEstadoBotonAtrasNativo() {
-  estadoBotonAtras.estaDrawerAbierto = () => false
-  estadoBotonAtras.cerrarDrawer = () => {}
+  estadoBotonAtras.hayInteraccionGlobalAbierta = () => false
+  estadoBotonAtras.cerrarInteraccionGlobal = () => {}
   estadoBotonAtras.obtenerRutaActual = () => '/'
   estadoBotonAtras.obtenerManejadorPagina = () => null
 }
@@ -38,8 +38,8 @@ export async function iniciarBotonAtrasNativo(router) {
 }
 
 async function manejarBotonAtrasNativo() {
-  if (estadoBotonAtras.estaDrawerAbierto()) {
-    estadoBotonAtras.cerrarDrawer()
+  if (estadoBotonAtras.hayInteraccionGlobalAbierta()) {
+    await estadoBotonAtras.cerrarInteraccionGlobal()
     return
   }
 

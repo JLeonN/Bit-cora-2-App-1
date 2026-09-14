@@ -153,7 +153,7 @@
         :titulo-enviar="configuracionBarra.tituloEnviar"
         :botones-personalizados="configuracionBarra.botonesPersonalizados"
         :hay-banner-visible="hayBannerVisible"
-        :modal-activo="modalActivo"
+        :modal-activo="hayModalGlobalActivo"
         :style="estiloBarraInferior"
         @agregar="manejarAgregar"
         @enviar="manejarEnviar"
@@ -207,12 +207,20 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
+      <ModalDestinoExcelCompartido
+        v-if="excelCompartidoPendiente"
+        :nombre-archivo="excelCompartidoPendiente.nombre"
+        :procesando="resolviendoDestinoExcel"
+        @usar-como-maestro="usarExcelCompartidoComoMaestro"
+        @importar-como-listado="importarExcelCompartidoComoListado"
+        @cancelar="cancelarExcelCompartido"
+      />
     </q-layout>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   IconTableRow,
@@ -227,6 +235,7 @@ import {
 } from '@tabler/icons-vue'
 import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
+import ModalDestinoExcelCompartido from 'components/Modales/ModalDestinoExcelCompartido.vue'
 import { esModoPruebaPublicidad } from 'components/Configuracion/ConfiguracionPublicidad.js'
 import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
@@ -245,6 +254,7 @@ import {
 import {
   esArchivoExcel,
   escucharArchivoCompartido,
+  limpiarArchivoCompartidoPendiente,
   obtenerArchivoCompartidoPendiente,
 } from 'src/components/Logica/Compartidos/ServicioArchivoCompartido.js'
 
@@ -256,6 +266,8 @@ const hayBannerVisible = ref(false)
 const modalActivo = ref(false)
 const hayActualizacionDisponible = ref(false)
 const mostrarModalActualizacion = ref(false)
+const excelCompartidoPendiente = ref(null)
+const resolviendoDestinoExcel = ref(false)
 const versionDisponible = ref('')
 const versionInstalada = ref('')
 const urlPlayStoreActualizacion = ref('')
@@ -284,14 +296,19 @@ const claseHeader = esModoPruebaPublicidad
   : 'bg-primario-oscuro texto-principal'
 const esPaginaInicio = computed(() => router.currentRoute.value.path === '/')
 const mostrarContadorPasos = servicioPasos.estaDisponible()
+const hayModalGlobalActivo = computed(
+  () =>
+    modalActivo.value ||
+    mostrarModalActualizacion.value ||
+    Boolean(excelCompartidoPendiente.value),
+)
 
 onMounted(async () => {
   activarEnfoqueGlobalInputs()
   configurarEstadoBotonAtrasNativo({
-    estaDrawerAbierto: () => drawer.value,
-    cerrarDrawer: () => {
-      drawer.value = false
-    },
+    hayInteraccionGlobalAbierta: () =>
+      drawer.value || Boolean(excelCompartidoPendiente.value) || mostrarModalActualizacion.value,
+    cerrarInteraccionGlobal,
     obtenerRutaActual: () => router.currentRoute.value.path,
     obtenerManejadorPagina: () => paginaActivaRef?.onAtrasNativo,
   })
@@ -315,8 +332,8 @@ onMounted(async () => {
   if (typeof window !== 'undefined') {
     window.addEventListener('resize', actualizarDimensionesPantalla)
   }
-  desuscribirArchivoCompartido = await escucharArchivoCompartido(redirigirExcelCompartidoPendiente)
-  await redirigirExcelCompartidoPendiente()
+  desuscribirArchivoCompartido = await escucharArchivoCompartido(revisarExcelCompartidoPendiente)
+  await revisarExcelCompartidoPendiente()
 })
 
 onUnmounted(() => {
@@ -430,22 +447,97 @@ const actualizarDimensionesPantalla = () => {
   anchoPantalla.value = window.innerWidth
 }
 
-const redirigirExcelCompartidoPendiente = async () => {
-  const pendiente = await obtenerArchivoCompartidoPendiente()
-  if (!pendiente?.uri || !esArchivoExcel(pendiente.nombre, pendiente.tipo)) return
+function obtenerValorConsulta(valor) {
+  return Array.isArray(valor) ? String(valor[0] || '') : String(valor || '')
+}
 
+function rutaPoseeDestinoPendiente(pendiente) {
   const rutaActual = router.currentRoute.value
+  const destino = obtenerValorConsulta(rutaActual.query.destinoExcel)
+  const identificador = obtenerValorConsulta(rutaActual.query.archivoCompartido)
+  const rutaDestino = destino === 'maestro' ? '/AjustarUbicaciones' : '/listados'
+  return (
+    ['maestro', 'listado'].includes(destino) &&
+    rutaActual.path === rutaDestino &&
+    identificador === pendiente.identificador
+  )
+}
+
+const revisarExcelCompartidoPendiente = async () => {
+  const pendiente = await obtenerArchivoCompartidoPendiente()
   if (
-    rutaActual.path === '/AjustarUbicaciones' &&
-    rutaActual.query.archivoCompartido === pendiente.identificador
+    !pendiente?.uri ||
+    !pendiente.identificador ||
+    !esArchivoExcel(pendiente.nombre, pendiente.tipo)
   ) {
+    excelCompartidoPendiente.value = null
     return
   }
-  await router.replace({
-    path: '/AjustarUbicaciones',
-    query: { archivoCompartido: pendiente.identificador || Date.now().toString() },
-  })
+  if (rutaPoseeDestinoPendiente(pendiente)) {
+    excelCompartidoPendiente.value = null
+    return
+  }
+  mostrarModalActualizacion.value = false
+  excelCompartidoPendiente.value = pendiente
 }
+
+async function navegarADestinoExcel(destino) {
+  if (resolviendoDestinoExcel.value || !excelCompartidoPendiente.value) return
+  resolviendoDestinoExcel.value = true
+  const identificador = excelCompartidoPendiente.value.identificador
+  try {
+    await router.replace({
+      path: destino === 'maestro' ? '/AjustarUbicaciones' : '/listados',
+      query: { destinoExcel: destino, archivoCompartido: identificador },
+    })
+    if (excelCompartidoPendiente.value?.identificador === identificador) {
+      excelCompartidoPendiente.value = null
+    }
+  } catch (error) {
+    console.error('[MainLayout] No se pudo abrir el destino del Excel compartido:', error)
+  } finally {
+    resolviendoDestinoExcel.value = false
+  }
+}
+
+function usarExcelCompartidoComoMaestro() {
+  return navegarADestinoExcel('maestro')
+}
+
+function importarExcelCompartidoComoListado() {
+  return navegarADestinoExcel('listado')
+}
+
+async function cancelarExcelCompartido() {
+  if (resolviendoDestinoExcel.value || !excelCompartidoPendiente.value) return
+  resolviendoDestinoExcel.value = true
+  const identificador = excelCompartidoPendiente.value.identificador
+  try {
+    const resultado = await limpiarArchivoCompartidoPendiente(identificador)
+    if (resultado?.exito && excelCompartidoPendiente.value?.identificador === identificador) {
+      excelCompartidoPendiente.value = null
+    }
+  } finally {
+    resolviendoDestinoExcel.value = false
+  }
+}
+
+async function cerrarInteraccionGlobal() {
+  if (drawer.value) {
+    drawer.value = false
+    return
+  }
+  if (excelCompartidoPendiente.value) {
+    await cancelarExcelCompartido()
+    return
+  }
+  if (mostrarModalActualizacion.value) mostrarModalActualizacion.value = false
+}
+
+watch(
+  () => router.currentRoute.value.fullPath,
+  () => revisarExcelCompartidoPendiente(),
+)
 
 const manejarConfiguracionBarra = (configuracion, refPagina) => {
   Object.assign(

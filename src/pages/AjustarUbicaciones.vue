@@ -12,9 +12,11 @@
         Cargá el archivo Excel de artículos para actualizar la base de búsqueda y validar códigos en tiempo real.
       </p>
       <SelectorExcel
+        :identificador-archivo-compartido="identificadorExcelMaestroCompartido"
         @base-datos-cargada="manejarBaseDatosCargada"
         @base-datos-limpia="manejarBaseDatosLimpia"
         @error-carga="manejarErrorCarga"
+        @archivo-compartido-finalizado="finalizarExcelMaestroCompartido"
       />
     </TarjetaSeccion>
 
@@ -77,6 +79,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { IconClock, IconDownload, IconLink, IconLoader2, IconSend } from '@tabler/icons-vue'
@@ -120,6 +123,8 @@ import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamient
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
+const route = useRoute()
+const router = useRouter()
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
@@ -133,6 +138,11 @@ let componenteUbicacionesActivo = true
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
+const identificadorExcelMaestroCompartido = computed(() => {
+  if (route.query.destinoExcel !== 'maestro') return ''
+  const identificador = route.query.archivoCompartido
+  return Array.isArray(identificador) ? String(identificador[0] || '') : String(identificador || '')
+})
 
 // Computed para garantizar que siempre sea array
 const ubicacionesArray = computed(() => {
@@ -287,6 +297,14 @@ function manejarErrorCarga(mensaje) {
   baseDatosExpandida.value = !obtenerEstadoCarga().cargado
   mensajeError.value = `Error al cargar archivo: ${mensaje}`
   setTimeout(() => (mensajeError.value = ''), 3000)
+}
+
+async function finalizarExcelMaestroCompartido({ identificador }) {
+  if (!identificador || identificador !== identificadorExcelMaestroCompartido.value) return
+  const consulta = { ...route.query }
+  delete consulta.destinoExcel
+  delete consulta.archivoCompartido
+  await router.replace({ path: route.path, query: consulta })
 }
 
 function programarPreparacionExcelCompartible({ debeInvalidar = true, esperar = true } = {}) {
