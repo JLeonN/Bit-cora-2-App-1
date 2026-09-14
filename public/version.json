@@ -1,16 +1,15 @@
 {
-  "versionDisponible": "4.2.39",
+  "versionDisponible": "4.2.40",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Búsqueda de artículos",
+        "apartado": "Capitana Bita",
         "novedades": [
-          "Agregá palabras en Contexto de búsqueda para limitar los resultados por marca, modelo u otra referencia.",
-          "Cada listado conserva su propio contexto, mientras Stock, Ubicaciones, Consulta y Etiquetas guardan contextos independientes.",
-          "Los códigos exactos y los escaneos siguen encontrando el artículo aunque no coincida con el contexto ingresado.",
-          "El formulario de Consulta de ubicación ahora muestra los campos en un orden más claro y cómodo en pantallas angostas."
+          "Ahora podés escribir o dictar pedidos para encontrar artículos y agregarlos a tus listados.",
+          "También podés tomar una foto o elegir una imagen de la galería para reconocer varios artículos juntos.",
+          "Se mejoró la distribución de los controles en teléfonos usados en posición vertical."
         ]
       }
     ]

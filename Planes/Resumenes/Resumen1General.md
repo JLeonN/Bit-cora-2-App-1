@@ -398,3 +398,11 @@ src/
 - Los códigos exactos y escaneos continúan resolviéndose aunque el contexto no coincida.
 - Consulta De Ubicación ordena el contexto sobre el buscador para conservar el ancho útil en pantallas angostas.
 - Release vigente actualizada: 4.2.39.
+
+### Actualización de release 4.2.40
+
+- Se incorporó Capitana Bita en Listados para interpretar pedidos escritos, dictados o fotografiados.
+- La cámara y la galería permiten reconocer varios artículos y resolverlos contra la base local antes de agregarlos.
+- Se mejoró la distribución vertical de la entrada y sus controles táctiles en teléfonos.
+- Android usa App Check de depuración en desarrollo y Play Integrity en versiones distribuidas por Google Play.
+- Release vigente actualizada: 4.2.40.
