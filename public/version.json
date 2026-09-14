@@ -1,15 +1,16 @@
 {
-  "versionDisponible": "4.2.40",
+  "versionDisponible": "4.2.41",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Capitana Bita",
+        "apartado": "Listados",
         "novedades": [
-          "Ahora podés escribir o dictar pedidos para encontrar artículos y agregarlos a tus listados.",
-          "También podés tomar una foto o elegir una imagen de la galería para reconocer varios artículos juntos.",
-          "Se mejoró la distribución de los controles en teléfonos usados en posición vertical."
+          "Ahora podés importar archivos Excel completos directamente en un listado.",
+          "La app encuentra artículos por código o descripción y agrega automáticamente las coincidencias seguras.",
+          "Al finalizar verás qué filas se agregaron, se repitieron o no pudieron encontrarse.",
+          "Los Excel abiertos desde otras aplicaciones ahora permiten elegir si se usarán como base maestra o como listado."
         ]
       }
     ]

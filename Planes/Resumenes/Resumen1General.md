@@ -406,3 +406,11 @@ src/
 - Se mejoró la distribución vertical de la entrada y sus controles táctiles en teléfonos.
 - Android usa App Check de depuración en desarrollo y Play Integrity en versiones distribuidas por Google Play.
 - Release vigente actualizada: 4.2.40.
+
+### Actualización de release 4.2.41
+
+- Listados permite importar archivos Excel completos y resolver artículos localmente por código o descripción.
+- Las coincidencias seguras se agregan en bloque y el resumen final identifica repetidos, ambigüedades, inconsistencias y filas no encontradas.
+- Los Excel recibidos desde otras aplicaciones permiten elegir si se usarán como maestro o se importarán al listado activo.
+- Capitana Bita queda conservada, pero oculta temporalmente en Listados.
+- Release vigente actualizada: 4.2.41.
