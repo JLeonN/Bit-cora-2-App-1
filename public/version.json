@@ -1,16 +1,14 @@
 {
-  "versionDisponible": "4.2.41",
+  "versionDisponible": "4.2.42",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Listados",
+        "apartado": "Buscador inteligente",
         "novedades": [
-          "Ahora podés importar archivos Excel completos directamente en un listado.",
-          "La app encuentra artículos por código o descripción y agrega automáticamente las coincidencias seguras.",
-          "Al finalizar verás qué filas se agregaron, se repitieron o no pudieron encontrarse.",
-          "Los Excel abiertos desde otras aplicaciones ahora permiten elegir si se usarán como base maestra o como listado."
+          "El buscador inteligente ahora responde mucho más rápido, especialmente en Android y con bases de artículos grandes.",
+          "Ahora podés buscar usando fragmentos cortos en cualquier orden, por ejemplo MAX TA o TA MAX, sin recibir falsos avisos de artículo inexistente."
         ]
       }
     ]

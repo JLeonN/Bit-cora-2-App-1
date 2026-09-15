@@ -414,3 +414,10 @@ src/
 - Los Excel recibidos desde otras aplicaciones permiten elegir si se usarán como maestro o se importarán al listado activo.
 - Capitana Bita queda conservada, pero oculta temporalmente en Listados.
 - Release vigente actualizada: 4.2.41.
+
+### Actualización de release 4.2.42
+
+- El buscador inteligente reutiliza los datos normalizados de los artículos para responder con mayor rapidez, especialmente en Android.
+- Las búsquedas aceptan fragmentos cortos después de tres caracteres totales y encuentran palabras escritas en cualquier orden.
+- Se mantienen el contexto, las abreviaciones, la prioridad de resultados, los códigos exactos y el escaneo.
+- Release vigente actualizada: 4.2.42.
