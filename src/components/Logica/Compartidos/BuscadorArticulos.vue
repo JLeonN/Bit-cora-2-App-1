@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, shallowRef, onMounted, onUnmounted, watch } from 'vue'
 import { IconDatabaseX, IconSearch } from '@tabler/icons-vue'
 import { obtenerArticulosCargados, obtenerEstadoCarga } from '../../BaseDeDatos/LectorExcel.js'
 import { buscarArticulos } from './ServicioBusquedaArticulos.js'
@@ -32,7 +32,7 @@ const props = defineProps({
   contextoBusqueda: { type: String, default: '' },
 })
 const emit = defineEmits(['articulo-seleccionado', 'estado-busqueda'])
-const articulosDisponibles = ref([])
+const articulosDisponibles = shallowRef([])
 const baseDatosCargada = ref(false)
 const cantidadArticulos = ref(0)
 const caracteresMinimos = 3
