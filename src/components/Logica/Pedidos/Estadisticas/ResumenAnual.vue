@@ -1,7 +1,45 @@
 <template>
   <div class="contenedor-resumen-anual">
-    <!-- Título con año actual -->
-    <h2 class="titulo-tabla">Resumen del año {{ anioActual }}</h2>
+    <!-- Navegación entre años -->
+    <div class="encabezado-resumen-anual">
+      <button
+        type="button"
+        class="boton-cambiar-anio"
+        :disabled="!puedeIrAnioAnterior"
+        :title="
+          anioAnteriorDisponible
+            ? `Ver resumen de ${anioAnteriorDisponible}`
+            : 'No hay años anteriores'
+        "
+        :aria-label="
+          anioAnteriorDisponible
+            ? `Ver resumen de ${anioAnteriorDisponible}`
+            : 'No hay años anteriores'
+        "
+        @click="cambiarAnio(-1)"
+      >
+        <IconChevronLeft :size="26" :stroke="2" />
+      </button>
+      <h2 class="titulo-tabla">Resumen del año {{ anioSeleccionado }}</h2>
+      <button
+        type="button"
+        class="boton-cambiar-anio"
+        :disabled="!puedeIrAnioSiguiente"
+        :title="
+          anioSiguienteDisponible
+            ? `Ver resumen de ${anioSiguienteDisponible}`
+            : 'No hay años siguientes'
+        "
+        :aria-label="
+          anioSiguienteDisponible
+            ? `Ver resumen de ${anioSiguienteDisponible}`
+            : 'No hay años siguientes'
+        "
+        @click="cambiarAnio(1)"
+      >
+        <IconChevronRight :size="26" :stroke="2" />
+      </button>
+    </div>
 
     <!-- Grid de métricas -->
     <div class="contenedor-metricas">
@@ -71,25 +109,29 @@
 
     <!-- Mensaje si no hay pedidos -->
     <div v-if="estadisticasAnuales.totalPedidos === 0" class="mensaje-vacio">
-      <p class="texto-secundario">No hay pedidos registrados en {{ anioActual }}</p>
+      <p class="texto-secundario">No hay pedidos registrados en {{ anioSeleccionado }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import {
   IconPackage,
   IconCalendarCheck,
   IconChartLine,
   IconTrophy,
   IconAward,
+  IconChevronLeft,
+  IconChevronRight,
 } from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
 import TarjetaEstadistica from './TarjetaEstadistica.vue'
 
 // Estado principal
-const anioActual = ref(new Date().getFullYear())
+const anioActualSistema = new Date().getFullYear()
+const anioSeleccionado = ref(anioActualSistema)
+const pedidosGuardados = ref([])
 const estadisticasAnuales = ref({
   totalPedidos: 0,
   totalItems: 0,
@@ -145,15 +187,42 @@ function obtenerNombreMes(numeroMes) {
   return nombresMeses[numeroMes] || 'Mes inválido'
 }
 
-// Calcular estadísticas del año
-async function calcularEstadisticasAnuales() {
-  try {
-    const todosLosPedidos = await obtenerPedidos()
+const aniosDisponibles = computed(() => {
+  const anios = new Set([anioActualSistema])
+  pedidosGuardados.value.forEach((pedido) => {
+    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
+    if (fecha && pedido.tipo !== 'falta') anios.add(fecha.getUTCFullYear())
+  })
+  return [...anios].sort((anioA, anioB) => anioA - anioB)
+})
+const anioAnteriorDisponible = computed(() => {
+  const indiceActual = aniosDisponibles.value.indexOf(anioSeleccionado.value)
+  return indiceActual > 0 ? aniosDisponibles.value[indiceActual - 1] : null
+})
+const anioSiguienteDisponible = computed(() => {
+  const indiceActual = aniosDisponibles.value.indexOf(anioSeleccionado.value)
+  return indiceActual >= 0 && indiceActual < aniosDisponibles.value.length - 1
+    ? aniosDisponibles.value[indiceActual + 1]
+    : null
+})
+const puedeIrAnioAnterior = computed(() => anioAnteriorDisponible.value !== null)
+const puedeIrAnioSiguiente = computed(() => anioSiguienteDisponible.value !== null)
 
-    // Filtrar pedidos del año actual (sin faltas)
-    const pedidosDelAnio = todosLosPedidos.filter((pedido) => {
+function cambiarAnio(direccion) {
+  const indiceActual = aniosDisponibles.value.indexOf(anioSeleccionado.value)
+  const anioDestino = aniosDisponibles.value[indiceActual + direccion]
+  if (!anioDestino) return
+  anioSeleccionado.value = anioDestino
+  calcularEstadisticasAnuales()
+}
+
+// Calcular estadísticas del año
+function calcularEstadisticasAnuales() {
+  try {
+    // Filtrar pedidos del año seleccionado (sin faltas)
+    const pedidosDelAnio = pedidosGuardados.value.filter((pedido) => {
       const fecha = parsearFechaDDMMYYYY(pedido.fecha)
-      return fecha && fecha.getUTCFullYear() === anioActual.value && pedido.tipo !== 'falta'
+      return fecha && fecha.getUTCFullYear() === anioSeleccionado.value && pedido.tipo !== 'falta'
     })
 
     // Total de pedidos
@@ -298,8 +367,13 @@ async function calcularEstadisticasAnuales() {
 }
 
 // Ciclo de vida
-onMounted(() => {
-  calcularEstadisticasAnuales()
+onMounted(async () => {
+  try {
+    pedidosGuardados.value = await obtenerPedidos()
+    calcularEstadisticasAnuales()
+  } catch (error) {
+    console.error('Error al cargar el resumen anual:', error)
+  }
 })
 </script>
 
@@ -308,6 +382,47 @@ onMounted(() => {
   padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+}
+.encabezado-resumen-anual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.encabezado-resumen-anual .titulo-tabla {
+  margin: 0;
+}
+.boton-cambiar-anio {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 50%;
+  background: var(--color-superficie);
+  color: var(--color-acento);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+.boton-cambiar-anio:hover:not(:disabled) {
+  transform: scale(1.08);
+  background: var(--color-fondo);
+}
+.boton-cambiar-anio:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.boton-cambiar-anio:disabled {
+  color: var(--color-desactivado);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.boton-cambiar-anio:focus-visible {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 2px;
 }
 
 /* Grid de métricas - RESPONSIVE COMPLETO SIN ESPACIOS */
