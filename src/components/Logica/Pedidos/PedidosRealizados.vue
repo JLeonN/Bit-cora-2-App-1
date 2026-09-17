@@ -1,9 +1,16 @@
 <template>
   <div class="contenedor-tabla">
-    <!-- Título -->
-    <div class="encabezado-pedidos">
-      <h2 class="titulo-tabla">Pedidos de{{ etiquetaMes }}</h2>
-    </div>
+    <NavegadorPeriodo
+      v-if="mostrarEstadisticas"
+      :etiqueta="tituloPeriodoMensual"
+      :puede-anterior="puedeIrMesAnterior"
+      :puede-siguiente="puedeIrMesSiguiente"
+      :texto-anterior="textoNavegacionAnterior"
+      :texto-siguiente="textoNavegacionSiguiente"
+      @anterior="cambiarMes(-1)"
+      @siguiente="cambiarMes(1)"
+    />
+    <h2 v-else class="titulo-tabla">Pedidos realizados</h2>
 
     <!-- Componente de estadísticas -->
     <ResumenMensual
@@ -93,7 +100,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { IconDownload, IconPencil, IconTrash } from '@tabler/icons-vue'
 import { guardarPedidos, obtenerPedidos } from '../../BaseDeDatos/almacenamiento.js'
@@ -101,15 +108,18 @@ import { descargarExcelPedidosEnNavegador, generarYGuardarExcelTemporal } from '
 import { compartirArchivo } from 'src/components/Logica/Pedidos/CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
+import NavegadorPeriodo from '../Compartidos/NavegadorPeriodo.vue'
 import ResumenMensual from './Estadisticas/ResumenMensual.vue'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra', 'modal-abierto', 'modal-cerrado'])
 
 const route = useRoute()
+const router = useRouter()
 
 // Estado principal
 const pedidosRealizados = ref([])
+const todosLosPedidosGuardados = ref([])
 const mostrarEstadisticas = ref(false)
 
 // Estados de modales
@@ -269,34 +279,89 @@ const cantidadPedidosRepetidos = computed(
   () => pedidosRealizados.value.filter((p) => esPedidoDuplicado(p.numero)).length,
 )
 
-const etiquetaMes = computed(() => {
-  const { inicio, fin } = route.query
-  if (inicio && fin) {
-    const partes = String(inicio).split('-')
-    if (partes.length >= 2) {
-      const anio = partes[0]
-      const mes = parseInt(partes[1], 10)
-      const nombresMes = [
-        'enero',
-        'febrero',
-        'marzo',
-        'abril',
-        'mayo',
-        'junio',
-        'julio',
-        'agosto',
-        'septiembre',
-        'octubre',
-        'noviembre',
-        'diciembre',
-      ]
-      if (mes >= 1 && mes <= 12) {
-        return ` ${nombresMes[mes - 1]} ${anio}`
-      }
-    }
-  }
-  return ''
+const nombresMes = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+]
+const claveMesSeleccionado = computed(() => {
+  const inicio = String(route.query.inicio || '')
+  return /^\d{4}-\d{2}-\d{2}$/.test(inicio) ? inicio.slice(0, 7) : ''
 })
+const mesesDisponibles = computed(() => {
+  const ahora = new Date()
+  const limiteActual = ahora.getFullYear() * 12 + ahora.getMonth()
+  const meses = new Set()
+  todosLosPedidosGuardados.value.forEach((pedido) => {
+    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
+    if (!fecha) return
+    const valorMes = fecha.getUTCFullYear() * 12 + fecha.getUTCMonth()
+    if (valorMes > limiteActual) return
+    const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0')
+    meses.add(`${fecha.getUTCFullYear()}-${mes}`)
+  })
+  return [...meses].sort()
+})
+const mesAnteriorDisponible = computed(() => {
+  const indiceActual = mesesDisponibles.value.indexOf(claveMesSeleccionado.value)
+  return indiceActual > 0 ? mesesDisponibles.value[indiceActual - 1] : null
+})
+const mesSiguienteDisponible = computed(() => {
+  const indiceActual = mesesDisponibles.value.indexOf(claveMesSeleccionado.value)
+  return indiceActual >= 0 && indiceActual < mesesDisponibles.value.length - 1
+    ? mesesDisponibles.value[indiceActual + 1]
+    : null
+})
+const puedeIrMesAnterior = computed(() => mesAnteriorDisponible.value !== null)
+const puedeIrMesSiguiente = computed(() => mesSiguienteDisponible.value !== null)
+
+function describirMes(claveMes) {
+  const [anio, mes] = String(claveMes || '')
+    .split('-')
+    .map(Number)
+  if (!anio || mes < 1 || mes > 12) return ''
+  return `${nombresMes[mes - 1]} ${anio}`
+}
+
+const tituloPeriodoMensual = computed(() => `Pedidos de ${describirMes(claveMesSeleccionado.value)}`)
+const textoNavegacionAnterior = computed(() =>
+  mesAnteriorDisponible.value
+    ? `Ver pedidos de ${describirMes(mesAnteriorDisponible.value)}`
+    : 'No hay meses anteriores guardados',
+)
+const textoNavegacionSiguiente = computed(() =>
+  mesSiguienteDisponible.value
+    ? `Ver pedidos de ${describirMes(mesSiguienteDisponible.value)}`
+    : 'No hay meses siguientes guardados',
+)
+
+function navegarAMes(claveMes) {
+  const [anio, mes] = claveMes.split('-').map(Number)
+  const fechaInicio = new Date(Date.UTC(anio, mes - 1, 1))
+  const fechaFin = new Date(Date.UTC(anio, mes, 0))
+  return router.replace({
+    name: 'PedidosRealizados',
+    query: {
+      inicio: fechaInicio.toISOString().split('T')[0],
+      fin: fechaFin.toISOString().split('T')[0],
+    },
+  })
+}
+
+function cambiarMes(direccion) {
+  const indiceActual = mesesDisponibles.value.indexOf(claveMesSeleccionado.value)
+  const mesDestino = mesesDisponibles.value[indiceActual + direccion]
+  if (mesDestino) navegarAMes(mesDestino)
+}
 
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
@@ -385,9 +450,21 @@ async function confirmarEliminacion() {
     if (indiceEnListaCompleta !== -1) {
       todosLosPedidos.splice(indiceEnListaCompleta, 1)
       await guardarPedidos(todosLosPedidos)
+      todosLosPedidosGuardados.value = todosLosPedidos
     }
 
     pedidosRealizados.value.splice(indiceEliminar.value, 1)
+    if (
+      mostrarEstadisticas.value &&
+      !mesesDisponibles.value.includes(claveMesSeleccionado.value)
+    ) {
+      const mesDestino =
+        mesesDisponibles.value.filter((mes) => mes < claveMesSeleccionado.value).at(-1) ||
+        mesesDisponibles.value.find((mes) => mes > claveMesSeleccionado.value)
+      mostrarModalEliminar.value = false
+      if (mesDestino) await navegarAMes(mesDestino)
+      return
+    }
   }
   mostrarModalEliminar.value = false
   actualizarConfiguracionBarra()
@@ -430,7 +507,8 @@ async function enviarPedidos() {
 
 // Ciclo de vida
 onMounted(async () => {
-  let datos = await obtenerPedidos()
+  todosLosPedidosGuardados.value = await obtenerPedidos()
+  let datos = todosLosPedidosGuardados.value
 
   const { inicio, fin } = route.query
 

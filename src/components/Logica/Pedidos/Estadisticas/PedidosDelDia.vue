@@ -1,14 +1,21 @@
 <template>
   <div class="contenedor-pedidos-dia">
-    <!-- Título con fecha actual -->
-    <h2 class="titulo-tabla">{{ fechaFormateada }}</h2>
+    <NavegadorPeriodo
+      :etiqueta="fechaFormateada"
+      :puede-anterior="puedeIrDiaAnterior"
+      :puede-siguiente="puedeIrDiaSiguiente"
+      :texto-anterior="textoNavegacionAnterior"
+      :texto-siguiente="textoNavegacionSiguiente"
+      @anterior="cambiarDia(-1)"
+      @siguiente="cambiarDia(1)"
+    />
 
     <!-- Tarjeta métrica con icono gamificado -->
     <TarjetaEstadistica
       :icono="obtenerIconoContador"
       :valor-principal="cantidadPedidosDelDia"
       texto-principal="Pedidos"
-      label-principal="Pedidos y items registrados hoy"
+      label-principal="Pedidos e items registrados del día"
       :valores-secundarios="[
         {
           numero: totalItemsDelDia,
@@ -132,6 +139,7 @@ import { compartirArchivo } from '../CompartirExcel.js'
 import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEditarFalta from 'src/components/Modales/ModalEditarFalta.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
+import NavegadorPeriodo from '../../Compartidos/NavegadorPeriodo.vue'
 import TarjetaEstadistica from './TarjetaEstadistica.vue'
 
 // Emit para configurar la barra inferior
@@ -140,6 +148,7 @@ const emit = defineEmits(['configurar-barra', 'modal-abierto', 'modal-cerrado'])
 // Estado principal
 const pedidosDelDia = ref([])
 const fechaActual = ref(new Date())
+const todosLosPedidosGuardados = ref([])
 
 // Estados de modales
 const mostrarModalEditarPedido = ref(false)
@@ -185,7 +194,8 @@ const fechaFormateada = computed(() => {
     month: 'long',
     day: 'numeric',
   }
-  return fechaActual.value.toLocaleDateString('es-ES', opciones)
+  const fecha = fechaActual.value.toLocaleDateString('es-ES', opciones)
+  return fecha.charAt(0).toUpperCase() + fecha.slice(1)
 })
 
 // Función para formatear fecha a DD/MM/YYYY
@@ -194,6 +204,72 @@ function formatearFechaHoy(fecha) {
   const mes = (fecha.getMonth() + 1).toString().padStart(2, '0')
   const anio = fecha.getFullYear()
   return `${dia}/${mes}/${anio}`
+}
+
+function parsearFechaDDMMYYYY(fechaTexto) {
+  if (!fechaTexto || typeof fechaTexto !== 'string') return null
+  const partes = fechaTexto.split('/')
+  if (partes.length !== 3) return null
+  const [dia, mes, anio] = partes.map(Number)
+  const fecha = new Date(anio, mes - 1, dia)
+  if (fecha.getFullYear() !== anio || fecha.getMonth() !== mes - 1 || fecha.getDate() !== dia) {
+    return null
+  }
+  return fecha
+}
+
+const fechasDisponibles = computed(() => {
+  const hoy = new Date()
+  hoy.setHours(23, 59, 59, 999)
+  const fechas = new Set([formatearFechaHoy(hoy)])
+  todosLosPedidosGuardados.value.forEach((pedido) => {
+    const fecha = parsearFechaDDMMYYYY(pedido.fecha)
+    if (fecha && fecha.getTime() <= hoy.getTime()) fechas.add(pedido.fecha)
+  })
+  return [...fechas].sort(
+    (fechaA, fechaB) =>
+      parsearFechaDDMMYYYY(fechaA).getTime() - parsearFechaDDMMYYYY(fechaB).getTime(),
+  )
+})
+const claveFechaSeleccionada = computed(() => formatearFechaHoy(fechaActual.value))
+const fechaAnteriorDisponible = computed(() => {
+  const indiceActual = fechasDisponibles.value.indexOf(claveFechaSeleccionada.value)
+  return indiceActual > 0 ? fechasDisponibles.value[indiceActual - 1] : null
+})
+const fechaSiguienteDisponible = computed(() => {
+  const indiceActual = fechasDisponibles.value.indexOf(claveFechaSeleccionada.value)
+  return indiceActual >= 0 && indiceActual < fechasDisponibles.value.length - 1
+    ? fechasDisponibles.value[indiceActual + 1]
+    : null
+})
+const puedeIrDiaAnterior = computed(() => fechaAnteriorDisponible.value !== null)
+const puedeIrDiaSiguiente = computed(() => fechaSiguienteDisponible.value !== null)
+
+function describirFecha(fechaTexto) {
+  const fecha = parsearFechaDDMMYYYY(fechaTexto)
+  if (!fecha) return ''
+  return fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+const textoNavegacionAnterior = computed(() =>
+  fechaAnteriorDisponible.value
+    ? `Ver pedidos del ${describirFecha(fechaAnteriorDisponible.value)}`
+    : 'No hay días anteriores guardados',
+)
+const textoNavegacionSiguiente = computed(() =>
+  fechaSiguienteDisponible.value
+    ? `Ver pedidos del ${describirFecha(fechaSiguienteDisponible.value)}`
+    : 'No hay días siguientes guardados',
+)
+
+function cambiarDia(direccion) {
+  const indiceActual = fechasDisponibles.value.indexOf(claveFechaSeleccionada.value)
+  const fechaDestino = fechasDisponibles.value[indiceActual + direccion]
+  const fechaParseada = parsearFechaDDMMYYYY(fechaDestino)
+  if (!fechaParseada) return
+  fechaActual.value = fechaParseada
+  mostrarPedidosFechaSeleccionada()
+  actualizarConfiguracionBarra()
 }
 
 // Función para normalizar números
@@ -312,16 +388,22 @@ watch(
 // Cargar pedidos del día
 async function cargarPedidosDelDia() {
   try {
-    const todosLosPedidos = await obtenerPedidos()
-    const fechaHoyFormateada = formatearFechaHoy(fechaActual.value)
-
-    pedidosDelDia.value = todosLosPedidos
-      .filter((pedido) => pedido.fecha === fechaHoyFormateada)
-      .reverse()
+    todosLosPedidosGuardados.value = await obtenerPedidos()
+    if (!fechasDisponibles.value.includes(claveFechaSeleccionada.value)) {
+      fechaActual.value = new Date()
+    }
+    mostrarPedidosFechaSeleccionada()
   } catch (error) {
     console.error('Error al cargar pedidos del día:', error)
     pedidosDelDia.value = []
   }
+}
+
+function mostrarPedidosFechaSeleccionada() {
+  pedidosDelDia.value = todosLosPedidosGuardados.value
+    .filter((pedido) => pedido.fecha === claveFechaSeleccionada.value)
+    .slice()
+    .reverse()
 }
 
 // Registrar día no trabajado
@@ -410,6 +492,8 @@ async function guardarEdicionFalta(datos) {
       todosLosPedidos[indiceEnListaCompleta].numero = datos.observacion
       todosLosPedidos[indiceEnListaCompleta].fecha = datos.fecha
       await guardarPedidos(todosLosPedidos)
+      const fechaEditada = parsearFechaDDMMYYYY(datos.fecha)
+      if (fechaEditada) fechaActual.value = fechaEditada
       await cargarPedidosDelDia()
       mensajeExito.value = 'Observación editada correctamente'
       setTimeout(() => (mensajeExito.value = ''), 3000)
@@ -514,11 +598,6 @@ onUnmounted(() => {
   padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-}
-.titulo-tabla {
-  &::first-letter {
-    text-transform: uppercase;
-  }
 }
 .contenedor-pedidos-dia :deep(.tarjeta-metrica) {
   margin-bottom: 1.5rem;

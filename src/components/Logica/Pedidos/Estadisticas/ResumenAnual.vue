@@ -1,45 +1,22 @@
 <template>
   <div class="contenedor-resumen-anual">
-    <!-- Navegación entre años -->
-    <div class="encabezado-resumen-anual">
-      <button
-        type="button"
-        class="boton-cambiar-anio"
-        :disabled="!puedeIrAnioAnterior"
-        :title="
-          anioAnteriorDisponible
-            ? `Ver resumen de ${anioAnteriorDisponible}`
-            : 'No hay años anteriores'
-        "
-        :aria-label="
-          anioAnteriorDisponible
-            ? `Ver resumen de ${anioAnteriorDisponible}`
-            : 'No hay años anteriores'
-        "
-        @click="cambiarAnio(-1)"
-      >
-        <IconChevronLeft :size="26" :stroke="2" />
-      </button>
-      <h2 class="titulo-tabla">Resumen del año {{ anioSeleccionado }}</h2>
-      <button
-        type="button"
-        class="boton-cambiar-anio"
-        :disabled="!puedeIrAnioSiguiente"
-        :title="
-          anioSiguienteDisponible
-            ? `Ver resumen de ${anioSiguienteDisponible}`
-            : 'No hay años siguientes'
-        "
-        :aria-label="
-          anioSiguienteDisponible
-            ? `Ver resumen de ${anioSiguienteDisponible}`
-            : 'No hay años siguientes'
-        "
-        @click="cambiarAnio(1)"
-      >
-        <IconChevronRight :size="26" :stroke="2" />
-      </button>
-    </div>
+    <NavegadorPeriodo
+      :etiqueta="`Resumen del año ${anioSeleccionado}`"
+      :puede-anterior="puedeIrAnioAnterior"
+      :puede-siguiente="puedeIrAnioSiguiente"
+      :texto-anterior="
+        anioAnteriorDisponible
+          ? `Ver resumen de ${anioAnteriorDisponible}`
+          : 'No hay años anteriores'
+      "
+      :texto-siguiente="
+        anioSiguienteDisponible
+          ? `Ver resumen de ${anioSiguienteDisponible}`
+          : 'No hay años siguientes'
+      "
+      @anterior="cambiarAnio(-1)"
+      @siguiente="cambiarAnio(1)"
+    />
 
     <!-- Grid de métricas -->
     <div class="contenedor-metricas">
@@ -122,10 +99,9 @@ import {
   IconChartLine,
   IconTrophy,
   IconAward,
-  IconChevronLeft,
-  IconChevronRight,
 } from '@tabler/icons-vue'
 import { obtenerPedidos } from '../../../BaseDeDatos/almacenamiento.js'
+import NavegadorPeriodo from '../../Compartidos/NavegadorPeriodo.vue'
 import TarjetaEstadistica from './TarjetaEstadistica.vue'
 
 // Estado principal
@@ -191,7 +167,10 @@ const aniosDisponibles = computed(() => {
   const anios = new Set([anioActualSistema])
   pedidosGuardados.value.forEach((pedido) => {
     const fecha = parsearFechaDDMMYYYY(pedido.fecha)
-    if (fecha && pedido.tipo !== 'falta') anios.add(fecha.getUTCFullYear())
+    const anioPedido = fecha?.getUTCFullYear()
+    if (anioPedido && anioPedido <= anioActualSistema && pedido.tipo !== 'falta') {
+      anios.add(anioPedido)
+    }
   })
   return [...anios].sort((anioA, anioB) => anioA - anioB)
 })
@@ -383,48 +362,6 @@ onMounted(async () => {
   max-width: 1200px;
   margin: 0 auto;
 }
-.encabezado-resumen-anual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-.encabezado-resumen-anual .titulo-tabla {
-  margin: 0;
-}
-.boton-cambiar-anio {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0;
-  border: 1px solid var(--color-borde);
-  border-radius: 50%;
-  background: var(--color-superficie);
-  color: var(--color-acento);
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
-}
-.boton-cambiar-anio:hover:not(:disabled) {
-  transform: scale(1.08);
-  background: var(--color-fondo);
-}
-.boton-cambiar-anio:active:not(:disabled) {
-  transform: scale(0.95);
-}
-.boton-cambiar-anio:disabled {
-  color: var(--color-desactivado);
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-.boton-cambiar-anio:focus-visible {
-  outline: 2px solid var(--color-acento);
-  outline-offset: 2px;
-}
-
 /* Grid de métricas - RESPONSIVE COMPLETO SIN ESPACIOS */
 .contenedor-metricas {
   display: grid;
