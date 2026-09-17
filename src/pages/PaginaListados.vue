@@ -209,7 +209,6 @@ import {
   IconDownload,
   IconMapRoute,
   IconPackages,
-  IconShare,
   IconTag,
   IconTrash,
 } from '@tabler/icons-vue'
@@ -360,7 +359,6 @@ const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: !esNavegadorWeb.value && articulosOrdenados.value.length > 0,
   puedeEnviar: articulosOrdenados.value.length > 0 && !exportando.value,
-  iconoEnviar: IconShare,
   tituloEnviar: `Compartir listado como ${nombreFormatoExportacion.value}`,
   botonesPersonalizados: esNavegadorWeb.value
     ? [
