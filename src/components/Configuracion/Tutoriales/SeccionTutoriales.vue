@@ -57,6 +57,25 @@
       </transition>
     </div>
 
+    <div class="acordeon-tutorial" @click="alternarTutorial('listados')">
+      <div class="acordeon-header">
+        <div class="header-izquierda">
+          <IconListDetails :stroke="2" class="icono-tutorial" />
+          <span class="titulo-tutorial">Cómo usar Listados</span>
+        </div>
+        <IconChevronDown
+          :stroke="2"
+          class="icono-chevron"
+          :class="{ 'chevron-rotado': tutorialExpandido === 'listados' }"
+        />
+      </div>
+      <transition name="expandir-contenido">
+        <div v-show="tutorialExpandido === 'listados'" class="acordeon-contenido">
+          <TutorialListados />
+        </div>
+      </transition>
+    </div>
+
     <div class="acordeon-tutorial" @click="alternarTutorial('stock')">
       <div class="acordeon-header">
         <div class="header-izquierda">
@@ -126,6 +145,7 @@ import {
   IconTableRow,
   IconMapRoute,
   IconSearch,
+  IconListDetails,
   IconPackages,
   IconTag,
   IconActivity,
@@ -134,6 +154,7 @@ import {
 import TutorialPedidos from './LosTutoriales/TutorialPedidos.vue'
 import TutorialUbicaciones from './LosTutoriales/TutorialUbicaciones.vue'
 import TutorialConsultaDeUbicacion from './LosTutoriales/TutorialConsultaDeUbicacion.vue'
+import TutorialListados from './LosTutoriales/TutorialListados.vue'
 import TutorialStock from './LosTutoriales/TutorialStock.vue'
 import TutorialEtiquetas from './LosTutoriales/TutorialEtiquetas.vue'
 import TutorialContadorPasos from './LosTutoriales/TutorialContadorPasos.vue'

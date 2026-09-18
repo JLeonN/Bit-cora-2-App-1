@@ -1,119 +1,97 @@
 <template>
-  <div class="tutorial-etiquetas">
+  <div class="tutorial-listados">
     <p class="tutorial-descripcion">
-      El módulo de <strong>Etiquetas</strong> te permite generar etiquetas profesionales con códigos
-      de barras en formato Code 39, listas para imprimir en diferentes tamaños.
+      El módulo de <strong>Listados</strong> te permite preparar varias listas de artículos,
+      completar stock y ubicación, enviarlas a otros módulos y exportarlas en Excel o PDF.
     </p>
-
     <div class="seccion-pasos">
       <h4 class="subtitulo-tutorial">
         <IconList :stroke="2" class="icono-subtitulo" />
         Pasos básicos
       </h4>
-
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Tamaño de etiqueta:</strong> Actualmente solo está disponible el tamaño 10x15cm.
-          Más tamaños estarán disponibles próximamente.
+          <strong>Administrar listados:</strong> Creá una lista nueva, asignale un nombre o duplicá
+          una existente. El selector te permite cambiar entre todos tus listados guardados.
         </div>
       </div>
-
       <div class="paso">
         <div class="numero-paso">2</div>
         <div class="contenido-paso">
-          <strong>Agregar etiquetas:</strong>
+          <strong>Cargar la base maestra:</strong> Seleccioná el Excel de artículos con las columnas
+          Código, Descripción, Ubicación y Stock. Esta base permite identificar y completar los
+          artículos del listado.
+        </div>
+      </div>
+      <div class="paso">
+        <div class="numero-paso">3</div>
+        <div class="contenido-paso">
+          <strong>Agregar artículos:</strong>
           <ul class="lista-metodos">
-            <li><IconKeyboard :stroke="2" class="icono-inline" /> Escribí el código manualmente</li>
+            <li><IconSearch :stroke="2" class="icono-inline" /> Buscá por código o descripción</li>
+            <li><IconCamera :stroke="2" class="icono-inline" /> Escaneá un código con la cámara</li>
             <li>
-              <IconCamera :stroke="2" class="icono-inline" /> Escaneá múltiples códigos con la
-              cámara
-            </li>
-            <li>
-              <IconTag :stroke="2" class="icono-inline" /> Recibí etiquetas desde el módulo de
-              Ubicaciones
+              <IconFileSpreadsheet :stroke="2" class="icono-inline" /> Usá “Cargar Excel” para
+              importar las filas de otro listado
             </li>
           </ul>
         </div>
       </div>
-
-      <div class="paso">
-        <div class="numero-paso">3</div>
-        <div class="contenido-paso">
-          <strong>Autocompletado inteligente:</strong> Si tenés la base de datos cargada, la
-          descripción y ubicación se completan automáticamente al seleccionar un artículo.
-        </div>
-      </div>
-
       <div class="paso">
         <div class="numero-paso">4</div>
         <div class="contenido-paso">
-          <strong>Ajustar copias:</strong> Usá los botones +/- para indicar cuántas copias querés de
-          cada etiqueta (útil para inventarios grandes).
+          <strong>Personalizar la lista:</strong> Mostrá u ocultá numeración, stock y ubicación.
+          También podés editar los valores visibles y ordenar los artículos según tu trabajo.
         </div>
       </div>
-
       <div class="paso">
         <div class="numero-paso">5</div>
         <div class="contenido-paso">
-          <strong>Generar PDF:</strong> Presioná el botón
-          <IconSend :stroke="2" class="icono-inline" /> para crear un documento PDF con todas las
-          etiquetas listas para imprimir.
+          <strong>Reutilizar los artículos:</strong> Enviá toda la lista a Stock o Ubicaciones, y
+          mandá uno o todos los artículos a Etiquetas.
+        </div>
+      </div>
+      <div class="paso">
+        <div class="numero-paso">6</div>
+        <div class="contenido-paso">
+          <strong>Exportar:</strong> Elegí Excel o PDF A4 y usá el botón de envío. En Android podrás
+          compartir el archivo; en web se descargará directamente.
         </div>
       </div>
     </div>
-
     <div class="seccion-tips">
       <h4 class="subtitulo-tutorial">
         <IconBulb :stroke="2" class="icono-subtitulo" />
         Tips útiles
       </h4>
-
       <div class="tip">
         <IconFilter :stroke="2" class="icono-tip" />
         <span
-          ><strong>Contexto de búsqueda:</strong> Antes de buscar, escribí datos como marca, modelo
-          o año para limitar las sugerencias. El contexto queda guardado hasta que lo borres.</span
+          ><strong>Contexto de búsqueda:</strong> Usá marca, modelo, año u otro dato para limitar
+          las coincidencias. Cada listado conserva su propio contexto.</span
         >
       </div>
-
       <div class="tip">
-        <IconBarcode :stroke="2" class="icono-tip" />
+        <IconSearch :stroke="2" class="icono-tip" />
         <span
-          ><strong>Código de barras Code 39:</strong> Es el formato estándar industrial, compatible
-          con cualquier escáner de códigos de barras.</span
+          ><strong>Buscador inteligente:</strong> Podés escribir fragmentos en cualquier orden. Con
+          la selección automática activada, una coincidencia única se agrega directamente.</span
         >
       </div>
-
       <div class="tip">
-        <IconAdjustments :stroke="2" class="icono-tip" />
+        <IconAlertTriangle :stroke="2" class="icono-tip" />
         <span
-          ><strong>Tamaños automáticos:</strong> El sistema ajusta el tamaño de la fuente del código
-          y descripción según su longitud para mejor legibilidad.</span
+          ><strong>Importación controlada:</strong> Al cargar otro Excel se agregan las filas
+          reconocidas y se muestra un resumen. Las ambiguas, inexistentes o inconsistentes quedan
+          detalladas, pero no se agregan.</span
         >
       </div>
-
       <div class="tip">
-        <IconAlertCircle :stroke="2" class="icono-tip" />
+        <IconCopy :stroke="2" class="icono-tip" />
         <span
-          ><strong>Códigos duplicados:</strong> Se resaltan en naranja. Es normal tener duplicados
-          si necesitás varias etiquetas del mismo artículo.</span
-        >
-      </div>
-
-      <div class="tip">
-        <IconInfoCircle :stroke="2" class="icono-tip" />
-        <span
-          ><strong>Artículos nuevos:</strong> Los códigos que no existen en la base de datos se
-          marcan en rojo, pero podés agregarlos igual (útil para productos nuevos).</span
-        >
-      </div>
-
-      <div class="tip">
-        <IconClock :stroke="2" class="icono-tip" />
-        <span
-          ><strong>Las etiquetas persisten:</strong> Después de generar el PDF, las etiquetas NO se
-          borran automáticamente. Podés seguir generando más documentos o editarlas.</span
+          ><strong>Artículos repetidos:</strong> Si un código ya existe, la app te muestra en qué
+          líneas aparece y te permite decidir si querés agregarlo nuevamente.</span
         >
       </div>
     </div>
@@ -122,23 +100,19 @@
 
 <script setup>
 import {
-  IconList,
-  IconKeyboard,
-  IconCamera,
-  IconTag,
-  IconSend,
+  IconAlertTriangle,
   IconBulb,
+  IconCamera,
+  IconCopy,
+  IconFileSpreadsheet,
   IconFilter,
-  IconBarcode,
-  IconAdjustments,
-  IconAlertCircle,
-  IconInfoCircle,
-  IconClock,
+  IconList,
+  IconSearch,
 } from '@tabler/icons-vue'
 </script>
 
 <style scoped>
-.tutorial-etiquetas {
+.tutorial-listados {
   padding-top: 16px;
 }
 .tutorial-descripcion {
@@ -207,8 +181,7 @@ import {
   color: var(--color-primario);
   width: 18px;
   height: 18px;
-  vertical-align: middle;
-  display: inline-block;
+  flex-shrink: 0;
 }
 .tip {
   display: flex;
@@ -238,7 +211,6 @@ import {
 .tip strong {
   color: var(--color-texto-principal);
 }
-/* Responsive */
 @media (max-width: 600px) {
   .tutorial-descripcion,
   .contenido-paso {

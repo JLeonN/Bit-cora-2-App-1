@@ -16,8 +16,8 @@
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
           <strong>Cargar base de datos:</strong> Primero, seleccioná tu archivo Excel con los
-          artículos. Estructura exacta: columna A Código, columna B Descripción, columna C
-          Ubicación y columna D Stock.
+          artículos. Estructura exacta: columna A Código, columna B Descripción, columna C Ubicación
+          y columna D Stock.
         </div>
       </div>
 
@@ -76,8 +76,18 @@
       <div class="tip">
         <IconSearch :stroke="2" class="icono-tip" />
         <span
-          ><strong>Buscador inteligente:</strong> Escribí 3 letras y el sistema te mostrará
-          coincidencias priorizando códigos exactos.</span
+          ><strong>Buscador inteligente:</strong> Escribí al menos 3 caracteres. Podés combinar
+          fragmentos en cualquier orden y el sistema priorizará las coincidencias más
+          precisas.</span
+        >
+      </div>
+
+      <div class="tip">
+        <IconFilter :stroke="2" class="icono-tip" />
+        <span
+          ><strong>Contexto de búsqueda:</strong> Escribí datos como marca, modelo o año para
+          limitar los artículos que aparecen. El contexto queda guardado y podés borrarlo con el
+          botón de la papelera.</span
         >
       </div>
 
@@ -128,6 +138,7 @@ import {
   IconSend,
   IconBulb,
   IconSearch,
+  IconFilter,
   IconTrash,
   IconAlertCircle,
   IconFileSpreadsheet,

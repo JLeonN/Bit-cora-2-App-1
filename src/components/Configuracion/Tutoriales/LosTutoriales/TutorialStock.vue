@@ -41,8 +41,8 @@
       <div class="paso">
         <div class="numero-paso">4</div>
         <div class="contenido-paso">
-          <strong>Revisar la ubicación:</strong> El campo muestra la ubicación actual o la del Excel.
-          Si la cambiás, también se registra el movimiento en Ubicaciones.
+          <strong>Revisar la ubicación:</strong> El campo muestra la ubicación actual o la del
+          Excel. Si la cambiás, también se registra el movimiento en Ubicaciones.
         </div>
       </div>
       <div class="paso">
@@ -78,8 +78,16 @@
       <div class="tip">
         <IconSearch :stroke="2" class="icono-tip" />
         <span
-          ><strong>Búsqueda inteligente:</strong> Cuando queda una sola coincidencia, el artículo se
-          selecciona automáticamente para acelerar el conteo.</span
+          ><strong>Búsqueda inteligente:</strong> Podés combinar fragmentos en cualquier orden.
+          Cuando queda una sola coincidencia, el artículo se selecciona automáticamente para
+          acelerar el conteo.</span
+        >
+      </div>
+      <div class="tip">
+        <IconFilter :stroke="2" class="icono-tip" />
+        <span
+          ><strong>Contexto de búsqueda:</strong> Escribí marca, modelo, año u otro dato para ver
+          solamente artículos relacionados. El contexto queda guardado hasta que lo borres.</span
         >
       </div>
       <div class="tip">
@@ -118,6 +126,7 @@
 import {
   IconList,
   IconSearch,
+  IconFilter,
   IconDatabaseImport,
   IconCheck,
   IconTag,

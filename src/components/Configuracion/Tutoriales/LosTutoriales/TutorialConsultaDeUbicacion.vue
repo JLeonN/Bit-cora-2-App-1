@@ -60,7 +60,18 @@
 
       <div class="tip">
         <IconSearch :stroke="2" class="icono-tip" />
-        <span><strong>Búsqueda rápida:</strong> Con 3 caracteres ya aparecen sugerencias.</span>
+        <span
+          ><strong>Búsqueda rápida:</strong> Con 3 caracteres ya aparecen sugerencias y podés
+          escribir fragmentos en cualquier orden.</span
+        >
+      </div>
+
+      <div class="tip">
+        <IconFilter :stroke="2" class="icono-tip" />
+        <span
+          ><strong>Contexto de búsqueda:</strong> Usá marca, modelo, año u otro dato común para
+          reducir las coincidencias. El contexto queda guardado hasta que lo borres.</span
+        >
       </div>
 
       <div class="tip">
@@ -83,7 +94,14 @@
 </template>
 
 <script setup>
-import { IconList, IconBulb, IconSearch, IconCamera, IconMapPin } from '@tabler/icons-vue'
+import {
+  IconList,
+  IconBulb,
+  IconSearch,
+  IconFilter,
+  IconCamera,
+  IconMapPin,
+} from '@tabler/icons-vue'
 </script>
 
 <style scoped>
