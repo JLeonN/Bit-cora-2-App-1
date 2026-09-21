@@ -41,7 +41,7 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 - **PaginaConfiguracion.vue**: Página principal con secciones colapsables
 - **ConfiguracionUsuario.vue**: Formulario para gestionar nombre de usuario con guía integrada
 - **TarjetaSeccion.vue**: Componente reutilizable para secciones colapsables
-- **SeccionTutoriales.vue**: Acordeones con tutoriales de Pedidos, Ubicaciones, Consulta De Ubicación y Etiquetas
+- **SeccionTutoriales.vue**: Acordeones con tutoriales de Preparadores, Ubicaciones, Consulta De Ubicación, Listados, Stock, Etiquetas y Contador de pasos
 - **Tutoriales individuales**: Pasos básicos y tips para cada módulo
 - **usoAlmacenamientoConfiguracion.js**: Persistencia de configuración
 - **Integración en MainLayout**: Nombre dinámico en header y drawer
@@ -421,3 +421,10 @@ src/
 - Las búsquedas aceptan fragmentos cortos después de tres caracteres totales y encuentran palabras escritas en cualquier orden.
 - Se mantienen el contexto, las abreviaciones, la prioridad de resultados, los códigos exactos y el escaneo.
 - Release vigente actualizada: 4.2.42.
+
+### Actualización de release 4.2.43
+
+- Preparadores permite recorrer con flechas los días, meses y años que tienen registros guardados.
+- Se incorporó el tutorial completo de Listados y se actualizó la ayuda del contexto de búsqueda en los módulos que lo utilizan.
+- Listados reutiliza el icono de envío general para mantener la navegación visualmente consistente.
+- Release vigente actualizada: 4.2.43.

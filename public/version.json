@@ -1,14 +1,16 @@
 {
-  "versionDisponible": "4.2.42",
+  "versionDisponible": "4.2.43",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Buscador inteligente",
+        "apartado": "Novedades",
         "novedades": [
-          "El buscador inteligente ahora responde mucho más rápido, especialmente en Android y con bases de artículos grandes.",
-          "Ahora podés buscar usando fragmentos cortos en cualquier orden, por ejemplo MAX TA o TA MAX, sin recibir falsos avisos de artículo inexistente."
+          "Ahora podés recorrer los días, meses y años con pedidos guardados usando las flechas de navegación.",
+          "Se agregó un tutorial completo para aprender a crear, importar, organizar y exportar Listados.",
+          "Los tutoriales ahora explican cómo usar el Contexto de búsqueda y combinar fragmentos en cualquier orden.",
+          "El botón para compartir Listados ahora mantiene el mismo icono de envío que el resto de la app."
         ]
       }
     ]
