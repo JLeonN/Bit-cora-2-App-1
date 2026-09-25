@@ -168,15 +168,48 @@
             toggle-color="primary"
             :disable="exportando"
             :options="OPCIONES_FORMATO_EXPORTACION"
-            aria-label="Formato del archivo"
+            aria-label="Formato de envío del listado"
           />
           <span class="ayuda-formato-listado">
-            {{
-              formatoExportacion === 'excel'
-                ? 'Excel está seleccionado por defecto.'
-                : 'PDF A4 horizontal, listo para imprimir.'
-            }}
+            {{ ayudaFormatoExportacion }}
           </span>
+          <p v-if="formatoExportacion === 'whatsapp' && resultadoPartesWhatsApp.error" class="aviso-whatsapp-listado">
+            {{ resultadoPartesWhatsApp.error }}
+          </p>
+          <div
+            v-else-if="formatoExportacion === 'whatsapp' && resultadoPartesWhatsApp.partes.length > 1"
+            class="partes-whatsapp-listado"
+          >
+            <p v-if="ultimaParteWhatsAppAbierta">
+              Última parte abierta: artículos {{ ultimaParteWhatsAppAbierta.inicio }} al
+              {{ ultimaParteWhatsAppAbierta.fin }}. Último: {{ ultimaParteWhatsAppAbierta.nombreUltimo }}.
+            </p>
+            <p v-if="parteWhatsAppActual">
+              Parte {{ indiceParteWhatsApp + 1 }} de {{ resultadoPartesWhatsApp.partes.length }}:
+              artículos {{ parteWhatsAppActual.inicio }} al {{ parteWhatsAppActual.fin }}.
+              Último: {{ parteWhatsAppActual.nombreUltimo }}.
+            </p>
+            <p v-if="ultimaParteWhatsAppAbierta && parteWhatsAppActual">
+              Enviá la parte anterior en WhatsApp antes de abrir la siguiente.
+            </p>
+            <button
+              v-if="indiceParteWhatsApp > 0 && parteWhatsAppActual"
+              type="button"
+              class="boton-parte-whatsapp"
+              :disabled="exportando"
+              @click="exportarListado"
+            >
+              Abrir siguiente parte en WhatsApp
+            </button>
+            <button
+              v-else-if="!parteWhatsAppActual"
+              type="button"
+              class="boton-parte-whatsapp"
+              @click="indiceParteWhatsApp = 0"
+            >
+              Volver a compartir desde la primera parte
+            </button>
+          </div>
         </div>
       </section>
     </template>
@@ -207,6 +240,7 @@ import { Capacitor } from '@capacitor/core'
 import { Notify } from 'quasar'
 import {
   IconDownload,
+  IconBrandWhatsapp,
   IconMapRoute,
   IconPackages,
   IconTag,
@@ -258,6 +292,11 @@ import {
 } from '../components/Logica/Listados/ServicioIntegracionListados.js'
 import { generarYGuardarExcelListado } from '../components/Logica/Listados/ExportarListadosExcel.js'
 import { generarYGuardarPDFListado } from '../components/Logica/Listados/ExportarListadosPDF.js'
+import { construirPartesWhatsAppListado } from '../components/Logica/Listados/ServicioWhatsAppListados.js'
+import {
+  abrirWhatsAppConMensaje,
+  abrirWhatsAppEnAndroid,
+} from '../components/Logica/Compartidos/CompartirWhatsApp.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   procesarArchivoExcelListado,
@@ -273,6 +312,7 @@ import {
 const OPCIONES_FORMATO_EXPORTACION = [
   { label: 'Excel', value: 'excel' },
   { label: 'PDF A4', value: 'pdf' },
+  { label: 'WhatsApp', value: 'whatsapp' },
 ]
 // Cambiar a true cuando se decida volver a habilitar Capitana Bita en Listados.
 const MOSTRAR_CAPITANA_BITA = false
@@ -288,6 +328,7 @@ const listadoAEliminar = ref(null)
 const eliminarTodosSolicitado = ref(false)
 const exportando = ref(false)
 const formatoExportacion = ref('excel')
+const indiceParteWhatsApp = ref(0)
 const enviandoStock = ref(false)
 const enviandoUbicaciones = ref(false)
 const administrando = ref(false)
@@ -353,20 +394,66 @@ const criteriosOrdenListado = computed(() => {
 })
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const nombreFormatoExportacion = computed(() =>
-  formatoExportacion.value === 'pdf' ? 'PDF A4' : 'Excel',
+  formatoExportacion.value === 'pdf'
+    ? 'PDF A4'
+    : formatoExportacion.value === 'whatsapp'
+      ? 'WhatsApp'
+      : 'Excel',
+)
+const ayudaFormatoExportacion = computed(() => {
+  if (formatoExportacion.value === 'whatsapp') {
+    return 'Se abrirá WhatsApp con los artículos y las columnas visibles.'
+  }
+  return formatoExportacion.value === 'pdf'
+    ? 'PDF A4 horizontal, listo para imprimir.'
+    : 'Excel está seleccionado por defecto.'
+})
+const resultadoPartesWhatsApp = computed(() => {
+  if (!listadoActivo.value || formatoExportacion.value !== 'whatsapp') {
+    return { partes: [], error: '' }
+  }
+  try {
+    return {
+      partes: construirPartesWhatsAppListado(listadoActivo.value, articulosOrdenados.value),
+      error: '',
+    }
+  } catch (error) {
+    return { partes: [], error: error.message }
+  }
+})
+const parteWhatsAppActual = computed(
+  () => resultadoPartesWhatsApp.value.partes[indiceParteWhatsApp.value] || null,
+)
+const ultimaParteWhatsAppAbierta = computed(
+  () => resultadoPartesWhatsApp.value.partes[indiceParteWhatsApp.value - 1] || null,
 )
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
   mostrarEnviar: !esNavegadorWeb.value && articulosOrdenados.value.length > 0,
-  puedeEnviar: articulosOrdenados.value.length > 0 && !exportando.value,
-  tituloEnviar: `Compartir listado como ${nombreFormatoExportacion.value}`,
+  puedeEnviar:
+    articulosOrdenados.value.length > 0 &&
+    !exportando.value &&
+    (formatoExportacion.value !== 'whatsapp' || Boolean(parteWhatsAppActual.value)),
+  iconoEnviar: formatoExportacion.value === 'whatsapp' ? IconBrandWhatsapp : null,
+  tituloEnviar:
+    formatoExportacion.value === 'whatsapp' && parteWhatsAppActual.value
+      ? `Abrir parte ${indiceParteWhatsApp.value + 1} de ${resultadoPartesWhatsApp.value.partes.length} en WhatsApp`
+      : `Compartir listado como ${nombreFormatoExportacion.value}`,
   botonesPersonalizados: esNavegadorWeb.value
     ? [
         {
           accion: 'descargar-listado',
-          icono: IconDownload,
-          titulo: `Descargar ${nombreFormatoExportacion.value} del listado`,
-          desactivado: articulosOrdenados.value.length === 0 || exportando.value,
+          icono: formatoExportacion.value === 'whatsapp' ? IconBrandWhatsapp : IconDownload,
+          titulo:
+            formatoExportacion.value === 'whatsapp'
+              ? parteWhatsAppActual.value
+                ? `Abrir parte ${indiceParteWhatsApp.value + 1} en WhatsApp`
+                : 'Todas las partes de WhatsApp preparadas'
+              : `Descargar ${nombreFormatoExportacion.value} del listado`,
+          desactivado:
+            articulosOrdenados.value.length === 0 ||
+            exportando.value ||
+            (formatoExportacion.value === 'whatsapp' && !parteWhatsAppActual.value),
           claseCSS: '',
         },
       ]
@@ -1176,6 +1263,20 @@ async function exportarListado() {
   if (exportando.value || !listadoActivo.value) return
   exportando.value = true
   try {
+    if (formatoExportacion.value === 'whatsapp') {
+      if (resultadoPartesWhatsApp.value.error) {
+        throw new Error(resultadoPartesWhatsApp.value.error)
+      }
+      const parte = parteWhatsAppActual.value
+      if (!parte) return
+      if (esNavegadorWeb.value) {
+        abrirWhatsAppConMensaje(parte.mensaje)
+      } else {
+        await abrirWhatsAppEnAndroid(parte.mensaje)
+      }
+      indiceParteWhatsApp.value += 1
+      return
+    }
     const generarArchivo =
       formatoExportacion.value === 'pdf' ? generarYGuardarPDFListado : generarYGuardarExcelListado
     const resultado = await generarArchivo(listadoActivo.value, articulosOrdenados.value)
@@ -1191,12 +1292,20 @@ async function exportarListado() {
   } catch (error) {
     notificar(
       'negative',
-      error.message || `No se pudo generar el ${nombreFormatoExportacion.value}`,
+      error.message || `No se pudo preparar ${nombreFormatoExportacion.value}`,
     )
   } finally {
     exportando.value = false
   }
 }
+
+watch(
+  [listadoActivo, formatoExportacion],
+  () => {
+    indiceParteWhatsApp.value = 0
+  },
+  { deep: true },
+)
 
 async function manejarBaseCargada(datos) {
   baseDatosCargada.value = true
@@ -1361,7 +1470,34 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   font-size: 0.82rem;
 }
+.partes-whatsapp-listado,
+.aviso-whatsapp-listado {
+  color: var(--color-texto-secundario);
+  font-size: 0.85rem;
+}
+.partes-whatsapp-listado p,
+.aviso-whatsapp-listado {
+  margin: 0.35rem 0;
+}
+.boton-parte-whatsapp {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  cursor: pointer;
+}
+.boton-parte-whatsapp:hover {
+  border-color: var(--color-primario);
+}
 @media (max-width: 600px) {
+  .selector-formato-listado :deep(.q-btn-toggle .q-btn) {
+    min-width: 0;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+  }
   .encabezado-administrar-listados {
     padding: 16px;
   }

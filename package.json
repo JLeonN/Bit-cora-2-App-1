@@ -13,7 +13,7 @@
         "pregenerar-apk": "node Scripts/GenerarVersionJson.js",
         "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
         "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
-        "test": "node --test Pruebas/CapitanaBita/ResolverSolicitudesImagenCapitanaBita.test.js Pruebas/Compartidos/ServicioBusquedaArticulos.test.js",
+        "test": "node --test Pruebas/CapitanaBita/ResolverSolicitudesImagenCapitanaBita.test.js Pruebas/Compartidos/ServicioBusquedaArticulos.test.js Pruebas/Listados/ServicioWhatsAppListados.test.js",
         "androidReleaseConSimbolos": "npm run build && npx cap sync android && cd android && gradlew.bat :app:bundleRelease",
         "cel": "npm run androidReleaseConSimbolos && npx cap open android",
         "postinstall": "quasar prepare",

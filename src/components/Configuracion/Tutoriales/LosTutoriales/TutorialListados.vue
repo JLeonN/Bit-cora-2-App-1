@@ -2,7 +2,8 @@
   <div class="tutorial-listados">
     <p class="tutorial-descripcion">
       El módulo de <strong>Listados</strong> te permite preparar varias listas de artículos,
-      completar stock y ubicación, enviarlas a otros módulos y exportarlas en Excel o PDF.
+      completar stock y ubicación, enviarlas a otros módulos, exportarlas en Excel o PDF y compartirlas
+      por WhatsApp.
     </p>
     <div class="seccion-pasos">
       <h4 class="subtitulo-tutorial">
@@ -55,8 +56,9 @@
       <div class="paso">
         <div class="numero-paso">6</div>
         <div class="contenido-paso">
-          <strong>Exportar:</strong> Elegí Excel o PDF A4 y usá el botón de envío. En Android podrás
-          compartir el archivo; en web se descargará directamente.
+          <strong>Exportar o compartir:</strong> Elegí Excel, PDF A4 o WhatsApp y usá el botón de envío.
+          Los archivos se comparten en Android y se descargan en web. WhatsApp prepara los artículos
+          y las columnas visibles en partes cuando el listado es largo; abrí cada parte por separado.
         </div>
       </div>
     </div>
