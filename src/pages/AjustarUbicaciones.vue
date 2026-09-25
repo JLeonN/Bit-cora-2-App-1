@@ -101,8 +101,8 @@ import {
 import {
   abrirWhatsAppConMensaje,
   prepararVentanaWhatsApp,
-  compartirArchivo,
-} from '../components/Logica/Pedidos/CompartirExcel.js'
+} from '../components/Logica/Compartidos/CompartirWhatsApp.js'
+import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,

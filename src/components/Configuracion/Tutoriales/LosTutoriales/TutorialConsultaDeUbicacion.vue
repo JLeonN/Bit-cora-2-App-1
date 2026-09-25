@@ -38,13 +38,21 @@
       <div class="paso">
         <div class="numero-paso">4</div>
         <div class="contenido-paso">
+          <strong>Compartir artículo:</strong> Tocá el icono de WhatsApp de la tarjeta para abrir un
+          mensaje con el nombre y el código. Elegí el chat y presioná Enviar.
+        </div>
+      </div>
+
+      <div class="paso">
+        <div class="numero-paso">5</div>
+        <div class="contenido-paso">
           <strong>Actualizar ubicación:</strong> Presioná "Actualizar ubicación", escribí el nuevo
           valor y guardá.
         </div>
       </div>
 
       <div class="paso">
-        <div class="numero-paso">5</div>
+        <div class="numero-paso">6</div>
         <div class="contenido-paso">
           <strong>Impacto del guardado:</strong> Se actualiza la base cargada, se refleja en la
           consulta y también se agrega en Ubicaciones para enviar/exportar.

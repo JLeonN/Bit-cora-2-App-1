@@ -54,7 +54,18 @@
     <transition name="mostrar-resultado">
       <div v-if="articuloConsultado" class="resultado-consulta">
         <div class="tarjeta-resultado" :class="{ 'tarjeta-sl-neon': esUbicacionOriginalSL }">
-          <p class="etiqueta-resultado">Historial de ubicaciones</p>
+          <div class="encabezado-resultado">
+            <p class="etiqueta-resultado">Historial de ubicaciones</p>
+            <button
+              type="button"
+              class="boton-compartir-whatsapp"
+              title="Compartir artículo por WhatsApp"
+              aria-label="Compartir artículo por WhatsApp"
+              @click="compartirArticuloWhatsApp"
+            >
+              <IconBrandWhatsapp :size="23" :stroke="2" aria-hidden="true" />
+            </button>
+          </div>
           <div class="lista-historial-ubicaciones">
             <p
               v-for="(ubicacion, indice) in historialVisual"
@@ -125,7 +136,8 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
-import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
+import { Capacitor } from '@capacitor/core'
+import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
@@ -138,6 +150,10 @@ import {
 import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
 import { obtenerArticuloExacto } from '../components/Logica/Compartidos/ServicioBusquedaArticulos.js'
+import {
+  abrirWhatsAppConMensaje,
+  abrirWhatsAppEnAndroid,
+} from '../components/Logica/Compartidos/CompartirWhatsApp.js'
 import {
   AMBITOS_CONTEXTO_ARTICULO,
   obtenerContextoArticulo,
@@ -178,6 +194,27 @@ const historialVisual = computed(() => {
 const esUbicacionOriginalSL = computed(
   () => (articuloConsultado.value?.ubicacionAntigua || '').trim().toUpperCase() === 'SL',
 )
+
+const compartirArticuloWhatsApp = async () => {
+  const articulo = articuloConsultado.value
+  if (!articulo?.nombre || !articulo?.codigo) return
+
+  const mensaje = `*Artículo:* ${articulo.nombre}\n*Código:* ${articulo.codigo}`
+  try {
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+      await abrirWhatsAppEnAndroid(mensaje)
+    } else {
+      abrirWhatsAppConMensaje(mensaje)
+    }
+  } catch (error) {
+    console.error('[ConsultaDeUbicacion] No se pudo abrir WhatsApp:', error)
+    Notify.create({
+      type: 'negative',
+      message: 'No se pudo abrir WhatsApp. Intentá nuevamente.',
+      position: 'top',
+    })
+  }
+}
 
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
@@ -641,6 +678,31 @@ onUnmounted(() => {
 .tarjeta-sl-neon {
   border-color: var(--color-neon-sl-borde);
   box-shadow: 0 0 12px var(--color-neon-sl-sombra), 0 0 24px var(--color-neon-sl-sombra);
+}
+.encabezado-resultado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.boton-compartir-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  cursor: pointer;
+}
+.boton-compartir-whatsapp:hover,
+.boton-compartir-whatsapp:focus-visible {
+  border-color: var(--color-primario);
+  color: var(--color-primario-claro);
 }
 .etiqueta-resultado {
   margin: 0;
