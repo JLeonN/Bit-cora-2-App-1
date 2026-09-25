@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.43",
+  "versionDisponible": "4.2.44",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,10 +7,8 @@
       {
         "apartado": "Novedades",
         "novedades": [
-          "Ahora podés recorrer los días, meses y años con pedidos guardados usando las flechas de navegación.",
-          "Se agregó un tutorial completo para aprender a crear, importar, organizar y exportar Listados.",
-          "Los tutoriales ahora explican cómo usar el Contexto de búsqueda y combinar fragmentos en cualquier orden.",
-          "El botón para compartir Listados ahora mantiene el mismo icono de envío que el resto de la app."
+          "Ahora podés compartir Listados por WhatsApp con los artículos y las columnas visibles. Si el listado es largo, se divide en partes para enviarlas por separado.",
+          "Desde la consulta de ubicación, podés compartir el nombre y el código de un artículo por WhatsApp."
         ]
       }
     ]

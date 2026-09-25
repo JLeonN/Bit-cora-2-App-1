@@ -428,3 +428,10 @@ src/
 - Se incorporó el tutorial completo de Listados y se actualizó la ayuda del contexto de búsqueda en los módulos que lo utilizan.
 - Listados reutiliza el icono de envío general para mantener la navegación visualmente consistente.
 - Release vigente actualizada: 4.2.43.
+
+### Actualización de release 4.2.44
+
+- Listados permite compartir artículos por WhatsApp respetando el orden y las columnas visibles; divide los listados largos en partes.
+- Consulta De Ubicación permite compartir el nombre y código de un artículo por WhatsApp.
+- Se actualizaron los tutoriales de ambos módulos y se verificó la preparación de mensajes para listados.
+- Release vigente actualizada: 4.2.44.

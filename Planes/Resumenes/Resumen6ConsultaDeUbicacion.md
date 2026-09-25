@@ -4,7 +4,7 @@ Pantalla para buscar artículos y registrar cambios de ubicación sin salir del 
 
 ---
 
-### Estado funcional actual (v4.2.39)
+### Estado funcional actual (v4.2.44)
 
 - La tarjeta principal muestra historial de movimientos en lugar de solo “Ubicación actual”.
 - El historial se presenta con la ubicación más nueva primero.
@@ -16,6 +16,7 @@ Pantalla para buscar artículos y registrar cambios de ubicación sin salir del 
 - Si el código ya existe en Ubicaciones, se permite coexistencia de filas para que el usuario vea duplicados y los resuelva manualmente.
 - El contexto persistente limita búsquedas por descripción sin impedir códigos exactos ni escaneos.
 - En pantallas angostas, el contexto ocupa una fila completa sobre el buscador y la cámara.
+- La tarjeta permite compartir el nombre y código del artículo por WhatsApp.
 
 ---
 
