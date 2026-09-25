@@ -512,13 +512,13 @@ async function ejecutarAdministracion(operacion) {
   }
 }
 
-function crearNuevoListado() {
+function crearNuevoListado(nombrePersonalizado) {
   formularioListadoRef.value?.cerrarInteraccion?.()
   articuloPendienteRepetido.value = null
   limpiarEstadoCapitanaBita()
   limpiarEstadoImportacionExcel()
   ejecutarAdministracion(async () => {
-    const creado = await crearListado()
+    const creado = await crearListado(nombrePersonalizado)
     reemplazarListadoLocal(creado)
     notificar('positive', 'Listado creado')
     await formularioListadoRef.value?.enfocarBusqueda?.()

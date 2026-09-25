@@ -138,12 +138,12 @@ export async function guardarListado(listado) {
   return clonar(normalizado)
 }
 
-export async function crearListado() {
+export async function crearListado(nombrePersonalizado = '') {
   const coleccion = await obtenerColeccionListados()
   const ahora = Date.now()
   const listado = normalizarListado({
     id: crypto.randomUUID(),
-    nombrePersonalizado: '',
+    nombrePersonalizado,
     creadoEn: ahora,
     actualizadoEn: ahora,
     configuracion: CONFIGURACION_INICIAL,
@@ -188,12 +188,15 @@ export async function duplicarListado(id) {
 
 export async function eliminarListado(id) {
   const coleccion = await obtenerColeccionListados()
+  const { value: idActivoAnterior } = await Preferences.get({ key: CLAVE_LISTADO_ACTIVO })
   const cantidadAnterior = coleccion.listados.length
   coleccion.listados = coleccion.listados.filter((listado) => listado.id !== id)
   const eliminado = cantidadAnterior !== coleccion.listados.length
   await persistirColeccion(coleccion)
   let listadoActivo =
-    coleccion.listados.sort((a, b) => b.actualizadoEn - a.actualizadoEn)[0] || null
+    coleccion.listados.find((listado) => listado.id === idActivoAnterior) ||
+    coleccion.listados.sort((a, b) => b.actualizadoEn - a.actualizadoEn)[0] ||
+    null
   if (!listadoActivo) listadoActivo = await crearListado()
   else await guardarListadoActivo(listadoActivo.id)
   return { eliminado, listadoActivo: clonar(listadoActivo) }

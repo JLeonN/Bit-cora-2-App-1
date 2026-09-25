@@ -13,8 +13,9 @@
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Administrar listados:</strong> Creá una lista nueva, asignale un nombre o duplicá
-          una existente. El selector te permite cambiar entre todos tus listados guardados.
+          <strong>Administrar listados:</strong> Tocá “Nuevo” para crear y nombrar una lista. En el
+          selector podés cambiar de listado, duplicarlo o eliminarlo con los botones de cada fila.
+          El lápiz permite cambiar el nombre del listado activo.
         </div>
       </div>
       <div class="paso">
