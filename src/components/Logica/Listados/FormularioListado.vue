@@ -94,15 +94,27 @@
           <div v-if="modoBusqueda === 'coincidencias'" class="resultado-coincidencias-listado" aria-live="polite">
             <p v-if="busquedaArticulo.trim().length < 3">Escribí al menos 3 caracteres para buscar.</p>
             <template v-else>
-              <p>{{ articulosCoincidentes.length }} coincidencias: {{ cantidadNuevos }} para agregar y {{ cantidadExistentes }} ya presentes.</p>
+              <div class="resumen-coincidencias-listado">
+                <strong class="total-coincidencias-listado">
+                  {{ articulosCoincidentes.length }} {{ articulosCoincidentes.length === 1 ? 'artículo encontrado' : 'artículos encontrados' }}
+                </strong>
+                <div v-if="articulosCoincidentes.length" class="detalle-coincidencias-listado">
+                  <span><strong>{{ cantidadNuevos }}</strong> para agregar</span>
+                  <span v-if="cantidadExistentes"><strong>{{ cantidadExistentes }}</strong> ya en el listado</span>
+                </div>
+              </div>
               <button
+                v-if="cantidadNuevos"
                 type="button"
                 class="boton-agregar-coincidencias"
-                :disabled="busquedaDeshabilitada || cantidadNuevos === 0"
+                :disabled="busquedaDeshabilitada"
                 @click="agregarCoincidencias"
               >
                 Agregar {{ cantidadNuevos }} al listado abierto
               </button>
+              <p v-else-if="cantidadExistentes" class="aviso-coincidencias-existentes">
+                Todos los artículos encontrados ya están en este listado.
+              </p>
             </template>
           </div>
           <div v-else class="acciones-entrada-listado">
@@ -465,6 +477,33 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpia
 }
 .resultado-coincidencias-listado p {
   margin: 0 0 0.65rem;
+}
+.resumen-coincidencias-listado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 9px;
+  background: var(--color-superficie);
+}
+.total-coincidencias-listado {
+  color: var(--color-texto-principal);
+}
+.detalle-coincidencias-listado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  color: var(--color-texto-secundario);
+  font-size: 0.85rem;
+}
+.detalle-coincidencias-listado strong {
+  color: var(--color-primario-claro);
+}
+.resultado-coincidencias-listado .aviso-coincidencias-existentes {
+  margin: 0;
+  color: var(--color-texto-secundario);
 }
 .boton-agregar-coincidencias {
   width: 100%;
