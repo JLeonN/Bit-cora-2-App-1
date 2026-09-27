@@ -5,7 +5,7 @@ import { normalizarEntradaBusquedaArticulo } from '../Logica/Compartidos/Servici
 
 export const CLAVE_LISTADOS = 'listados_trabajo'
 export const CLAVE_LISTADO_ACTIVO = 'listado_activo'
-export const VERSION_LISTADOS = '1.5'
+export const VERSION_LISTADOS = '1.6'
 
 const CONFIGURACION_INICIAL = Object.freeze({
   mostrarNumeracion: false,
@@ -71,6 +71,11 @@ function normalizarListado(listado, { actualizar = false } = {}) {
   const ahora = Date.now()
   const creadoEn = normalizarFecha(listado?.creadoEn, ahora)
   const nombrePersonalizado = extraerNombrePersonalizado(listado)
+  const orden = normalizarOrden(listado?.orden)
+  const ordenElegidoPorUsuario =
+    typeof listado?.ordenElegidoPorUsuario === 'boolean'
+      ? listado.ordenElegidoPorUsuario
+      : orden.criterio !== ORDEN_INICIAL.criterio || orden.direccion !== ORDEN_INICIAL.direccion
   return {
     id: normalizarTexto(listado?.id) || crypto.randomUUID(),
     nombre: nombrePersonalizado || 'Listado sin nombre',
@@ -82,7 +87,8 @@ function normalizarListado(listado, { actualizar = false } = {}) {
       mostrarStock: Boolean(listado?.configuracion?.mostrarStock),
       mostrarUbicacion: Boolean(listado?.configuracion?.mostrarUbicacion),
     },
-    orden: normalizarOrden(listado?.orden),
+    orden,
+    ordenElegidoPorUsuario,
     contextoBusqueda: normalizarEntradaBusquedaArticulo(listado?.contextoBusqueda),
     articulos: normalizarArticulos(listado?.articulos),
   }
@@ -148,6 +154,7 @@ export async function crearListado(nombrePersonalizado = '') {
     actualizadoEn: ahora,
     configuracion: CONFIGURACION_INICIAL,
     orden: ORDEN_INICIAL,
+    ordenElegidoPorUsuario: false,
     contextoBusqueda: '',
     articulos: [],
   })

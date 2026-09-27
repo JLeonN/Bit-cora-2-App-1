@@ -31,7 +31,8 @@
         <div class="contenido-paso">
           <strong>Agregar artículos:</strong>
           <ul class="lista-metodos">
-            <li><IconSearch :stroke="2" class="icono-inline" /> Buscá por código o descripción</li>
+            <li><IconSearch :stroke="2" class="icono-inline" /> Con “Búsqueda masiva” apagada, buscá y elegí artículos como siempre</li>
+            <li><IconSearch :stroke="2" class="icono-inline" /> Activá “Búsqueda masiva” para encontrar artículos por varias palabras, en cualquier orden, y agregarlos juntos al listado abierto</li>
             <li><IconCamera :stroke="2" class="icono-inline" /> Escaneá un código con la cámara</li>
             <li>
               <IconFileSpreadsheet :stroke="2" class="icono-inline" /> Usá “Cargar Excel” para
@@ -45,6 +46,7 @@
         <div class="contenido-paso">
           <strong>Personalizar la lista:</strong> Mostrá u ocultá numeración, stock y ubicación.
           También podés editar los valores visibles y ordenar los artículos según tu trabajo.
+          La búsqueda masiva usa A/Z por defecto y conserva el orden que elijas después para ese listado.
         </div>
       </div>
       <div class="paso">
@@ -94,7 +96,8 @@
         <IconCopy :stroke="2" class="icono-tip" />
         <span
           ><strong>Artículos repetidos:</strong> Si un código ya existe, la app te muestra en qué
-          líneas aparece y te permite decidir si querés agregarlo nuevamente.</span
+          líneas aparece y te permite decidir si querés agregarlo nuevamente. En “Búsqueda masiva”
+          los códigos ya presentes se omiten automáticamente.</span
         >
       </div>
     </div>

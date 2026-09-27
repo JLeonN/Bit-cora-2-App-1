@@ -9,6 +9,31 @@
     <div v-else class="formulario formulario-ubicacion">
       <div class="contenedor-principal-formulario">
         <div class="ubicacion-campo ubicacion-campo-con-buscador">
+          <div class="control-autoseleccion-articulo">
+            <q-toggle
+              :model-value="modoBusqueda === 'coincidencias'"
+              color="primary"
+              dense
+              label="Búsqueda masiva"
+              :disable="busquedaDeshabilitada"
+              @update:model-value="cambiarModoBusqueda($event ? 'coincidencias' : 'manual')"
+            />
+            <button
+              type="button"
+              class="boton-info-autoseleccion"
+              :title="mostrarAyudaModo ? 'Ocultar explicación' : 'Ver cómo funciona la búsqueda masiva'"
+              :aria-label="mostrarAyudaModo ? 'Ocultar explicación' : 'Ver cómo funciona la búsqueda masiva'"
+              :aria-expanded="mostrarAyudaModo"
+              @click="mostrarAyudaModo = !mostrarAyudaModo"
+            >
+              <IconInfoCircle :size="18" :stroke="2" />
+            </button>
+          </div>
+          <div v-if="mostrarAyudaModo" class="ayuda-autoseleccion" role="note">
+            <p class="texto-ayuda-autoseleccion">
+              Activala para buscar todos los artículos que coincidan con las palabras escritas, en cualquier orden. Después tocá “Agregar” para incorporarlos al listado abierto. Si un artículo ya está en ese listado, no se agrega otra vez.
+            </p>
+          </div>
           <CampoContextoArticulo
             id-campo="contexto-listado"
             :model-value="contextoBusqueda"
@@ -27,6 +52,7 @@
             @estado-interaccion="estadoInteraccionCapitanaBita = $event"
           />
           <ControlAutoseleccionArticulo
+            v-if="modoBusqueda === 'manual'"
             :model-value="autoseleccionArticuloHabilitada"
             texto-ayuda="Cuando está activada, si la búsqueda encuentra un solo artículo, se agrega automáticamente al listado. Si está desactivada, podrás elegirlo manualmente desde la lista. Se recomienda activarla con lectores de códigos de barras tipo pistola."
             @update:model-value="cambiarAutoseleccionArticulo"
@@ -40,7 +66,7 @@
                 type="text"
                 placeholder="Código o descripción del artículo"
                 :disabled="busquedaDeshabilitada"
-                @focus="mostrarBuscador = true"
+                @focus="mostrarBuscador = modoBusqueda === 'manual'"
                 @blur="ocultarBuscadorConDemora"
                 @input="normalizarBusqueda"
                 @keydown="manejarDobleEspacio"
@@ -57,7 +83,7 @@
                 <IconCopy :size="16" />
               </button>
               <BuscadorArticulos
-                v-if="mostrarBuscador && busquedaArticulo.length >= 3"
+                v-if="modoBusqueda === 'manual' && mostrarBuscador && busquedaArticulo.length >= 3"
                 :busqueda="busquedaArticulo"
                 :contexto-busqueda="contextoBusqueda"
                 @articulo-seleccionado="seleccionarArticulo"
@@ -65,7 +91,21 @@
               />
             </div>
           </div>
-          <div class="acciones-entrada-listado">
+          <div v-if="modoBusqueda === 'coincidencias'" class="resultado-coincidencias-listado" aria-live="polite">
+            <p v-if="busquedaArticulo.trim().length < 3">Escribí al menos 3 caracteres para buscar.</p>
+            <template v-else>
+              <p>{{ articulosCoincidentes.length }} coincidencias: {{ cantidadNuevos }} para agregar y {{ cantidadExistentes }} ya presentes.</p>
+              <button
+                type="button"
+                class="boton-agregar-coincidencias"
+                :disabled="busquedaDeshabilitada || cantidadNuevos === 0"
+                @click="agregarCoincidencias"
+              >
+                Agregar {{ cantidadNuevos }} al listado abierto
+              </button>
+            </template>
+          </div>
+          <div v-else class="acciones-entrada-listado">
             <button
               type="button"
               class="boton-accion-entrada-listado boton-importar-excel-listado"
@@ -141,7 +181,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { IconCamera, IconCopy, IconFileSpreadsheet, IconLoader2 } from '@tabler/icons-vue'
+import { IconCamera, IconCopy, IconFileSpreadsheet, IconInfoCircle, IconLoader2 } from '@tabler/icons-vue'
 import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
@@ -149,11 +189,12 @@ import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
 import ControlAutoseleccionArticulo from '../Compartidos/ControlAutoseleccionArticulo.vue'
 import EntradaCapitanaBita from '../CapitanaBita/EntradaCapitanaBita.vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
+import { normalizarCodigoBusqueda } from '../Compartidos/CodigoEscaner.js'
 import {
   guardarAutoseleccionArticulo,
   obtenerAutoseleccionArticulo,
 } from '../Ubicaciones/recordarUltimaTipografia.js'
-import { obtenerArticuloExacto } from '../Compartidos/ServicioBusquedaArticulos.js'
+import { buscarArticulosParaListado, obtenerArticuloExacto } from '../Compartidos/ServicioBusquedaArticulos.js'
 import { normalizarInputPreservandoCursor } from '../Compartidos/NormalizarInputCursor.js'
 import {
   manejarDobleEspacioInput,
@@ -170,6 +211,7 @@ const props = defineProps({
   lineasRepetidas: { type: Array, default: () => [] },
   identificadorDestino: { type: String, default: '' },
   importandoExcel: { type: Boolean, default: false },
+  codigosListado: { type: Array, default: () => [] },
 })
 const emit = defineEmits([
   'articulo-seleccionado',
@@ -183,8 +225,11 @@ const emit = defineEmits([
   'actualizar-contexto',
   'resultado-capitana-bita',
   'archivo-excel-seleccionado',
+  'agregar-coincidencias',
 ])
 const busquedaArticulo = ref('')
+const modoBusqueda = ref('manual')
+const mostrarAyudaModo = ref(false)
 const mostrarBuscador = ref(false)
 const mostrarCamara = ref(false)
 const estadoBusqueda = ref({ articuloUnico: null })
@@ -203,6 +248,27 @@ const estadoInteraccionCapitanaBita = ref({
 const { copiarTextoActual, limpiarTextoCopiado, obtenerTextoCopiado } =
   usarTextoCopiadoInput('FormularioListado')
 const busquedaDeshabilitada = computed(() => props.deshabilitado || Boolean(props.articuloRepetido))
+const articulosCoincidentes = computed(() => {
+  if (!baseDatosCargada.value || modoBusqueda.value !== 'coincidencias') return []
+  if (busquedaArticulo.value.trim().length < 3) return []
+  return buscarArticulosParaListado(
+    obtenerArticulosCargados(),
+    busquedaArticulo.value,
+    props.contextoBusqueda,
+  )
+})
+const codigosExistentes = computed(() => new Set(props.codigosListado.map(normalizarCodigoBusqueda)))
+const articulosNuevos = computed(() => {
+  const codigosEncontrados = new Set(codigosExistentes.value)
+  return articulosCoincidentes.value.filter((articulo) => {
+    const codigo = normalizarCodigoBusqueda(articulo.codigo)
+    if (!codigo || codigosEncontrados.has(codigo)) return false
+    codigosEncontrados.add(codigo)
+    return true
+  })
+})
+const cantidadNuevos = computed(() => articulosNuevos.value.length)
+const cantidadExistentes = computed(() => articulosCoincidentes.value.length - cantidadNuevos.value)
 const textoLineasRepetidas = computed(() => {
   const lineas = props.lineasRepetidas
   if (lineas.length === 1) return `la línea ${lineas[0]}`
@@ -234,7 +300,24 @@ function normalizarBusqueda(evento) {
     },
     referenciaInput: inputBusquedaRef,
   })
-  mostrarBuscador.value = true
+  mostrarBuscador.value = modoBusqueda.value === 'manual'
+}
+
+function cambiarModoBusqueda(modo) {
+  if (busquedaDeshabilitada.value || modoBusqueda.value === modo) return
+  modoBusqueda.value = modo
+  mostrarBuscador.value = false
+  estadoBusqueda.value = { articuloUnico: null }
+  void enfocarBusqueda()
+}
+
+function agregarCoincidencias() {
+  if (busquedaDeshabilitada.value || cantidadNuevos.value === 0) return
+  emit('agregar-coincidencias', {
+    articulos: articulosNuevos.value,
+    totalCoincidencias: articulosCoincidentes.value.length,
+    identificadorDestino: props.identificadorDestino,
+  })
 }
 
 function manejarDobleEspacio(evento) {
@@ -263,6 +346,7 @@ async function cambiarAutoseleccionArticulo(habilitada) {
 }
 
 function resolverBusqueda(valor = busquedaArticulo.value) {
+  if (modoBusqueda.value !== 'manual') return
   const articuloExacto = obtenerArticuloExacto({
     articulos: obtenerArticulosCargados(),
     busqueda: valor,
@@ -280,6 +364,7 @@ async function copiarBusquedaActual() {
 }
 
 function seleccionarArticulo(articulo) {
+  if (modoBusqueda.value !== 'manual') return
   emit('articulo-seleccionado', articulo)
   busquedaArticulo.value = obtenerTextoCopiado()
   mostrarBuscador.value = false
@@ -368,6 +453,33 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpia
 }
 .formulario-listado :deep(.formulario-ubicacion) {
   padding-bottom: 0;
+}
+.boton-agregar-coincidencias:focus-visible {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 2px;
+}
+.resultado-coincidencias-listado {
+  width: 100%;
+  margin-top: 0.65rem;
+  color: var(--color-texto-principal);
+}
+.resultado-coincidencias-listado p {
+  margin: 0 0 0.65rem;
+}
+.boton-agregar-coincidencias {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 9px;
+  background: var(--color-primario);
+  color: var(--color-texto-principal);
+  font-weight: 700;
+  cursor: pointer;
+}
+.boton-agregar-coincidencias:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .fila-codigo-camara {
   display: block;

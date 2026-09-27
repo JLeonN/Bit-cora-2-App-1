@@ -30,7 +30,9 @@
           :contexto-busqueda="listadoActivo.contextoBusqueda"
           :identificador-destino="listadoActivo.id"
           :importando-excel="importandoExcel"
+          :codigos-listado="codigosListadoActivo"
           @articulo-seleccionado="agregarArticulo"
+          @agregar-coincidencias="agregarArticulosCoincidentes"
           @archivo-excel-seleccionado="importarExcelListado"
           @base-datos-cargada="manejarBaseCargada"
           @base-datos-limpia="baseDatosCargada = false"
@@ -344,6 +346,7 @@ const memoriasPropuestasCapitanaBita = ref([])
 const colaInsercionCapitanaBita = ref([])
 const procesandoColaCapitanaBita = ref(false)
 const importandoExcel = ref(false)
+const agregandoCoincidencias = ref(false)
 const resultadoImportacionExcel = ref(null)
 const esperandoMaestroParaImportar = ref(false)
 const identificadorExcelCompartidoEnProceso = ref('')
@@ -357,7 +360,11 @@ const ocupado = computed(
     enviandoStock.value ||
     enviandoUbicaciones.value ||
     procesandoColaCapitanaBita.value ||
-    importandoExcel.value,
+    importandoExcel.value ||
+    agregandoCoincidencias.value,
+)
+const codigosListadoActivo = computed(() =>
+  (listadoActivo.value?.articulos || []).map((articulo) => articulo.codigo),
 )
 const articulosOrdenados = computed(() =>
   ordenarColeccion(listadoActivo.value?.articulos || [], listadoActivo.value?.orden, {
@@ -799,6 +806,58 @@ async function agregarArticulo(articulo, { desdeCapitanaBita = false } = {}) {
   return true
 }
 
+async function agregarArticulosCoincidentes({ articulos, totalCoincidencias, identificadorDestino }) {
+  if (ocupado.value || !listadoActivo.value || listadoActivo.value.id !== identificadorDestino) return
+  if (!baseDatosCargada.value || !Array.isArray(articulos) || !articulos.length) return
+  agregandoCoincidencias.value = true
+  const articulosAnteriores = [...listadoActivo.value.articulos]
+  const configuracionAnterior = { ...listadoActivo.value.configuracion }
+  const ordenAnterior = { ...listadoActivo.value.orden }
+  try {
+    const codigosExistentes = new Set(
+      articulosAnteriores.map((articulo) => normalizarCodigoBusqueda(articulo.codigo)),
+    )
+    const fechaMayor = articulosAnteriores.reduce(
+      (mayor, articulo) => Math.max(mayor, Number(articulo.fechaIngreso || 0)),
+      0,
+    )
+    const fechaBase = Math.max(Date.now(), fechaMayor)
+    const filasNuevas = []
+    for (const articulo of articulos) {
+      const codigo = normalizarCodigoBusqueda(articulo?.codigo)
+      if (!codigo || codigosExistentes.has(codigo)) continue
+      const fila = crearFilaListado(articulo, fechaBase + filasNuevas.length + 1, fechaMayor)
+      if (!fila) continue
+      filasNuevas.push(fila)
+      codigosExistentes.add(codigo)
+    }
+    if (!filasNuevas.length) {
+      notificar('info', 'Todos los artículos encontrados ya están en el listado.')
+      return
+    }
+    listadoActivo.value.articulos.push(...filasNuevas)
+    listadoActivo.value.configuracion.mostrarStock = true
+    listadoActivo.value.configuracion.mostrarUbicacion = true
+    if (!listadoActivo.value.ordenElegidoPorUsuario) {
+      listadoActivo.value.orden = { criterio: 'alfabetico', direccion: 'ascendente' }
+    }
+    await persistirActivo()
+    const omitidos = totalCoincidencias - filasNuevas.length
+    notificar(
+      'positive',
+      `Se agregaron ${filasNuevas.length} artículos. ${omitidos} ya estaban en el listado.`,
+      4000,
+    )
+  } catch (error) {
+    listadoActivo.value.articulos = articulosAnteriores
+    listadoActivo.value.configuracion = configuracionAnterior
+    listadoActivo.value.orden = ordenAnterior
+    notificar('negative', error.message || 'No se pudieron agregar los artículos.')
+  } finally {
+    agregandoCoincidencias.value = false
+  }
+}
+
 async function insertarArticulo(articulo) {
   const fila = crearFilaListado(articulo)
   if (!fila || !listadoActivo.value) return
@@ -813,13 +872,15 @@ async function insertarArticulo(articulo) {
   }
 }
 
-function crearFilaListado(articulo, fechaMinima = 0) {
+function crearFilaListado(articulo, fechaMinima = 0, fechaMayorPrecalculada = null) {
   const codigo = normalizarCodigoBusqueda(articulo?.codigo)
   if (!codigo || !listadoActivo.value) return null
-  const fechaMayor = listadoActivo.value.articulos.reduce(
-    (mayor, item) => Math.max(mayor, Number(item.fechaIngreso || 0)),
-    0,
-  )
+  const fechaMayor =
+    fechaMayorPrecalculada ??
+    listadoActivo.value.articulos.reduce(
+      (mayor, item) => Math.max(mayor, Number(item.fechaIngreso || 0)),
+      0,
+    )
   const ubicacionOriginal = String(articulo.ubicacionAntigua || '')
     .trim()
     .toUpperCase()
@@ -1183,6 +1244,7 @@ async function actualizarConfiguracion(campo, valor) {
 async function actualizarOrden(nuevoOrden) {
   if (!listadoActivo.value) return
   listadoActivo.value.orden = normalizarOrden(nuevoOrden)
+  listadoActivo.value.ordenElegidoPorUsuario = true
   await persistirActivo()
 }
 

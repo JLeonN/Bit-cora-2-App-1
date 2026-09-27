@@ -219,6 +219,16 @@ export function buscarArticulos({ articulos, busqueda, contextoBusqueda = '', li
   return resultados.slice(0, limiteResultados)
 }
 
+export function buscarArticulosParaListado(articulos, busqueda, contextoBusqueda = '') {
+  if (!Array.isArray(articulos)) return []
+  return buscarArticulos({
+    articulos,
+    busqueda,
+    contextoBusqueda,
+    limiteResultados: articulos.length,
+  }).map((resultado) => resultado.articulo)
+}
+
 // obtenerArticuloExacto es la entrada determinista para Enter y futuras interfaces estructuradas.
 export function obtenerArticuloExacto({ articulos, busqueda, contextoBusqueda = '' }) {
   if (!Array.isArray(articulos) || !String(busqueda || '').trim()) return null
