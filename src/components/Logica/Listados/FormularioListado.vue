@@ -98,9 +98,9 @@
                 <strong class="total-coincidencias-listado">
                   {{ articulosCoincidentes.length }} {{ articulosCoincidentes.length === 1 ? 'artículo encontrado' : 'artículos encontrados' }}
                 </strong>
-                <div v-if="articulosCoincidentes.length" class="detalle-coincidencias-listado">
+                <div v-if="cantidadExistentes" class="detalle-coincidencias-listado">
                   <span><strong>{{ cantidadNuevos }}</strong> para agregar</span>
-                  <span v-if="cantidadExistentes"><strong>{{ cantidadExistentes }}</strong> ya en el listado</span>
+                  <span><strong>{{ cantidadExistentes }}</strong> ya en el listado</span>
                 </div>
               </div>
               <button
@@ -112,9 +112,6 @@
               >
                 Agregar {{ cantidadNuevos }} al listado abierto
               </button>
-              <p v-else-if="cantidadExistentes" class="aviso-coincidencias-existentes">
-                Todos los artículos encontrados ya están en este listado.
-              </p>
             </template>
           </div>
           <div v-else class="acciones-entrada-listado">
@@ -500,10 +497,6 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpia
 }
 .detalle-coincidencias-listado strong {
   color: var(--color-primario-claro);
-}
-.resultado-coincidencias-listado .aviso-coincidencias-existentes {
-  margin: 0;
-  color: var(--color-texto-secundario);
 }
 .boton-agregar-coincidencias {
   width: 100%;
