@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.44",
+  "versionDisponible": "4.2.45",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,8 +7,10 @@
       {
         "apartado": "Novedades",
         "novedades": [
-          "Ahora podés compartir Listados por WhatsApp con los artículos y las columnas visibles. Si el listado es largo, se divide en partes para enviarlas por separado.",
-          "Desde la consulta de ubicación, podés compartir el nombre y el código de un artículo por WhatsApp."
+          "Desde Consulta de ubicación, podés enviar un artículo a Stock como pendiente, al listado que elijas o a Etiquetas sin salir de la pantalla.",
+          "Al enviarlo a Etiquetas, elegís la cantidad de copias. Cada envío queda separado para que puedas detectar artículos repetidos.",
+          "En Listados, la búsqueda masiva encuentra varios artículos con palabras en cualquier orden y permite agregarlos juntos sin repetir los que ya están.",
+          "Ahora podés ponerle nombre a un listado al crearlo y duplicar o eliminar cualquier listado desde el selector."
         ]
       }
     ]

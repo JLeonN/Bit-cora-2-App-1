@@ -9,8 +9,8 @@ Aplicación en **Vue 3 con Quasar** llamada **Bitácora II**, orientada a la ges
 La aplicación se divide en 8 módulos principales:
 - **Preparadores**: Registro diario de pedidos preparados, cantidades de ítems y estadísticas completas (ver `Resumen3Pedidos.md`)
 - **Ubicaciones**: Ajuste de ubicaciones de artículos (ver `Resumen4Ubicaciones.md`)
-- **Consulta De Ubicación**: Búsqueda rápida y actualización de ubicación de artículos (ver `Resumen6ConsultaDeUbicacion.md`)
-- **Listados**: Creación de listas persistentes con edición, ordenamiento, exportación e integración con otros módulos
+- **Consulta De Ubicación**: Búsqueda, actualización de ubicación y envío de artículos a Stock, Listados o Etiquetas (ver `Resumen6ConsultaDeUbicacion.md`)
+- **Listados**: Listas persistentes con búsqueda masiva, edición, ordenamiento, exportación e integración con otros módulos
 - **Stock**: Conteo de artículos, comparación con Excel e integración con Ubicaciones y Etiquetas (ver `Resumen7Stock.md`)
 - **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `Resumen5Etiquetas.md`)
 - **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
@@ -115,6 +115,11 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 - **Consulta exacta**: Busca por código o nombre y muestra ubicación, nombre y código
 - **Edición directa**: Permite actualizar la ubicación desde la misma pantalla
 - **Sincronización total**: Actualiza base cargada, Excel original y lista de Ubicaciones
+- **Envío desde la consulta**: Agrega artículos pendientes a Stock, permite elegir un listado y prepara etiquetas con la cantidad de copias indicada.
+
+#### **Listados**
+- **Búsqueda masiva**: Encuentra coincidencias sin límite, informa cuáles ya están en el listado y agrega solo las nuevas.
+- **Administración**: Permite nombrar un listado al crearlo y duplicar o eliminar cualquiera desde el selector.
 
 #### **Ubicaciones → Etiquetas**
 - **Botón verde IconTag** en cada fila de TablaUbicaciones

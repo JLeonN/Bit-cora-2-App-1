@@ -1,6 +1,6 @@
 {
     "name": "bit-cora-2-app",
-    "version": "4.2.44",
+    "version": "4.2.45",
     "description": "Aplicación móvil para registrar tareas y actividades diarias.",
     "productName": "Bitácora 2",
     "author": "Leonardo",
@@ -14,7 +14,7 @@
         "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
         "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
         "test": "node --test Pruebas/CapitanaBita/ResolverSolicitudesImagenCapitanaBita.test.js Pruebas/Compartidos/ServicioBusquedaArticulos.test.js Pruebas/Listados/ServicioWhatsAppListados.test.js",
-        "androidReleaseConSimbolos": "npm run build && npx cap sync android && cd android && gradlew.bat :app:bundleRelease",
+        "androidReleaseConSimbolos": "npm run build && npx cap sync android && cd android && gradlew.bat :app:bundleRelease && cd .. && node Scripts/EmpaquetarSimbolosNativos.js",
         "cel": "npm run androidReleaseConSimbolos && npx cap open android",
         "postinstall": "quasar prepare",
         "cap:sync": "npx cap sync",
