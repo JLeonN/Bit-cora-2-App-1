@@ -440,3 +440,10 @@ src/
 - Consulta De Ubicación permite compartir el nombre y código de un artículo por WhatsApp.
 - Se actualizaron los tutoriales de ambos módulos y se verificó la preparación de mensajes para listados.
 - Release vigente actualizada: 4.2.44.
+
+### Actualización de release 4.2.46
+
+- Consulta De Ubicación agrupa cada envío con sus opciones y recuerda el último listado elegido.
+- El envío a Etiquetas permite ajustar la cantidad de copias con botones de menos y más, además de escribirla.
+- El contador de pasos comprueba los permisos de actividad y notificaciones antes de iniciar.
+- Release vigente actualizada: 4.2.46.

@@ -4,7 +4,7 @@ Pantalla para buscar artículos y registrar cambios de ubicación sin salir del 
 
 ---
 
-### Estado funcional actual (v4.2.45)
+### Estado funcional actual (v4.2.46)
 
 - La tarjeta principal muestra historial de movimientos en lugar de solo “Ubicación actual”.
 - El historial se presenta con la ubicación más nueva primero.
@@ -18,6 +18,9 @@ Pantalla para buscar artículos y registrar cambios de ubicación sin salir del 
 - En pantallas angostas, el contexto ocupa una fila completa sobre el buscador y la cámara.
 - La tarjeta permite compartir el nombre y código del artículo por WhatsApp.
 - La tarjeta permite enviar el artículo a Stock como pendiente de conteo, a un listado elegido en el selector o a Etiquetas con una cantidad de copias.
+- Los paneles de envío a Listados y Etiquetas se despliegan debajo de su botón; al abrir uno se cierra el otro.
+- El selector de envío recuerda el último listado elegido si todavía existe.
+- La cantidad de copias para Etiquetas se puede escribir o ajustar con botones de menos y más, con mínimo de una copia.
 - No sobrescribe registros existentes de Stock ni agrega dos veces el mismo artículo a un listado. Cada envío a Etiquetas crea una entrada independiente para detectar duplicados.
 - Las acciones se apilan en pantallas angostas.
 

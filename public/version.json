@@ -1,16 +1,21 @@
 {
-  "versionDisponible": "4.2.45",
+  "versionDisponible": "4.2.46",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Novedades",
+        "apartado": "Consulta de ubicación",
         "novedades": [
-          "Desde Consulta de ubicación, podés enviar un artículo a Stock como pendiente, al listado que elijas o a Etiquetas sin salir de la pantalla.",
-          "Al enviarlo a Etiquetas, elegís la cantidad de copias. Cada envío queda separado para que puedas detectar artículos repetidos.",
-          "En Listados, la búsqueda masiva encuentra varios artículos con palabras en cualquier orden y permite agregarlos juntos sin repetir los que ya están.",
-          "Ahora podés ponerle nombre a un listado al crearlo y duplicar o eliminar cualquier listado desde el selector."
+          "Los envíos a Listados y Etiquetas ahora muestran sus opciones junto al botón correspondiente, para que sea más fácil elegir y confirmar el destino.",
+          "Al enviar a un listado, aparece seleccionado el último que elegiste si todavía está disponible.",
+          "Podés ajustar la cantidad de etiquetas con los botones de más y menos, o escribirla directamente."
+        ]
+      },
+      {
+        "apartado": "Contador de pasos",
+        "novedades": [
+          "Se mejoró la comprobación de permisos para registrar la actividad y mostrar notificaciones cuando corresponda."
         ]
       }
     ]
