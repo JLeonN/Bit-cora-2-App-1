@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 
 import androidx.core.content.ContextCompat;
@@ -69,7 +70,7 @@ public class PluginContadorPasos extends Plugin {
             call.resolve(datos);
             return;
         }
-        if (hasRequiredPermissions()) {
+        if (tienePermisosRequeridos()) {
             JSObject datos = new JSObject();
             datos.put("ok", true);
             call.resolve(datos);
@@ -82,8 +83,19 @@ public class PluginContadorPasos extends Plugin {
     @SuppressWarnings("unused")
     private void callbackPermisos(PluginCall call) {
         JSObject datos = new JSObject();
-        datos.put("ok", hasRequiredPermissions());
+        datos.put("ok", tienePermisosRequeridos());
         call.resolve(datos);
+    }
+
+    private boolean tienePermisosRequeridos() {
+        boolean actividadConcedida = ContextCompat.checkSelfPermission(
+            getContext(), Manifest.permission.ACTIVITY_RECOGNITION
+        ) == PackageManager.PERMISSION_GRANTED;
+        boolean notificacionesConcedidas = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+            || ContextCompat.checkSelfPermission(
+                getContext(), Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED;
+        return actividadConcedida && notificacionesConcedidas;
     }
 
     @PluginMethod

@@ -124,34 +124,52 @@
           <button type="button" class="boton-accion-consulta" :disabled="enviandoStock" @click="enviarAStock">
             {{ enviandoStock ? 'Enviando…' : 'Enviar a Stock' }}
           </button>
-          <button type="button" class="boton-accion-consulta" @click="alternarEnvioListado">
-            {{ mostrarEnvioListado ? 'Cancelar envío a Listado' : 'Enviar a Listado' }}
-          </button>
-          <button type="button" class="boton-accion-consulta" @click="alternarEnvioEtiquetas">
-            {{ mostrarEnvioEtiquetas ? 'Cancelar envío a Etiquetas' : 'Enviar a Etiquetas' }}
-          </button>
+          <div class="accion-desplegable-consulta">
+            <button
+              type="button"
+              class="boton-accion-consulta"
+              :aria-expanded="mostrarEnvioListado"
+              aria-controls="panel-envio-listado"
+              @click="alternarEnvioListado"
+            >
+              {{ mostrarEnvioListado ? 'Cerrar envío a Listado' : 'Enviar a Listado' }}
+            </button>
+            <transition name="mostrar-editor">
+              <div v-if="mostrarEnvioListado" id="panel-envio-listado" class="panel-envio-consulta">
+                <GestorListados
+                  :listados="listadosDisponibles"
+                  :listado-activo="listadoSeleccionado"
+                  :ocupado="enviandoListado"
+                  solo-seleccion
+                  @abrir="seleccionarListadoEnvio"
+                />
+                <button type="button" class="boton-confirmar-envio" :disabled="!idListadoSeleccionado || enviandoListado" @click="enviarAListado">
+                  {{ enviandoListado ? 'Enviando…' : 'Enviar al listado elegido' }}
+                </button>
+              </div>
+            </transition>
+          </div>
+          <div class="accion-desplegable-consulta">
+            <button
+              type="button"
+              class="boton-accion-consulta"
+              :aria-expanded="mostrarEnvioEtiquetas"
+              aria-controls="panel-envio-etiquetas"
+              @click="alternarEnvioEtiquetas"
+            >
+              {{ mostrarEnvioEtiquetas ? 'Cerrar envío a Etiquetas' : 'Enviar a Etiquetas' }}
+            </button>
+            <transition name="mostrar-editor">
+              <form v-if="mostrarEnvioEtiquetas" id="panel-envio-etiquetas" class="panel-envio-consulta" @submit.prevent="enviarAEtiquetas">
+                <label for="copias-consulta">Cantidad de copias</label>
+                <input id="copias-consulta" v-model.number="cantidadCopias" type="number" min="1" step="1" inputmode="numeric" class="input-copias-consulta" required />
+                <button type="submit" class="boton-confirmar-envio" :disabled="enviandoEtiquetas">
+                  {{ enviandoEtiquetas ? 'Enviando…' : 'Enviar a Etiquetas' }}
+                </button>
+              </form>
+            </transition>
+          </div>
         </div>
-
-        <div v-if="mostrarEnvioListado" class="panel-envio-consulta">
-          <GestorListados
-            :listados="listadosDisponibles"
-            :listado-activo="listadoSeleccionado"
-            :ocupado="enviandoListado"
-            solo-seleccion
-            @abrir="idListadoSeleccionado = $event"
-          />
-          <button type="button" class="boton-confirmar-envio" :disabled="!idListadoSeleccionado || enviandoListado" @click="enviarAListado">
-            {{ enviandoListado ? 'Enviando…' : 'Enviar al listado elegido' }}
-          </button>
-        </div>
-
-        <form v-if="mostrarEnvioEtiquetas" class="panel-envio-consulta" @submit.prevent="enviarAEtiquetas">
-          <label for="copias-consulta">Cantidad de copias</label>
-          <input id="copias-consulta" v-model.number="cantidadCopias" type="number" min="1" step="1" inputmode="numeric" class="input-copias-consulta" required />
-          <button type="submit" class="boton-confirmar-envio" :disabled="enviandoEtiquetas">
-            {{ enviandoEtiquetas ? 'Enviando…' : 'Enviar a Etiquetas' }}
-          </button>
-        </form>
       </div>
     </transition>
 
@@ -170,6 +188,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
+import { Preferences } from '@capacitor/preferences'
 import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
@@ -202,6 +221,7 @@ import {
 } from '../components/BaseDeDatos/UsoAlmacenamientoContextosArticulo.js'
 
 const emit = defineEmits(['configurar-barra'])
+const CLAVE_ULTIMO_LISTADO_CONSULTA = 'ultimo_listado_consulta_ubicacion'
 
 const busquedaArticulo = ref('')
 const contextoBusqueda = ref('')
@@ -257,16 +277,34 @@ const alternarEnvioListado = async () => {
   mostrarEnvioListado.value = !mostrarEnvioListado.value
   mostrarEnvioEtiquetas.value = false
   if (!mostrarEnvioListado.value) return
+  idListadoSeleccionado.value = ''
+  listadosDisponibles.value = []
   try {
-    listadosDisponibles.value = (await obtenerListados()).sort(
+    const [listados, preferencia] = await Promise.all([
+      obtenerListados(),
+      Preferences.get({ key: CLAVE_ULTIMO_LISTADO_CONSULTA }),
+    ])
+    if (!mostrarEnvioListado.value) return
+    listadosDisponibles.value = listados.sort(
       (primero, segundo) => primero.creadoEn - segundo.creadoEn,
     )
-    idListadoSeleccionado.value = ''
+    idListadoSeleccionado.value = listadosDisponibles.value.some((listado) => listado.id === preferencia.value)
+      ? preferencia.value
+      : ''
     if (listadosDisponibles.value.length === 0) {
       Notify.create({ type: 'warning', message: 'Primero creá un listado', position: 'top' })
     }
   } catch (error) {
     Notify.create({ type: 'negative', message: error.message || 'No se pudieron cargar los listados', position: 'top' })
+  }
+}
+
+const seleccionarListadoEnvio = async (id) => {
+  idListadoSeleccionado.value = id
+  try {
+    await Preferences.set({ key: CLAVE_ULTIMO_LISTADO_CONSULTA, value: id })
+  } catch {
+    Notify.create({ type: 'warning', message: 'No se pudo recordar el listado elegido', position: 'top' })
   }
 }
 
@@ -946,12 +984,17 @@ onUnmounted(() => {
 }
 .acciones-envio-consulta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
   margin-top: 0.7rem;
 }
+.accion-desplegable-consulta {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
 .boton-accion-consulta,
 .boton-confirmar-envio {
+  width: 100%;
   min-height: 44px;
   padding: 0.7rem;
   border: 1px solid var(--color-borde);
@@ -974,7 +1017,6 @@ onUnmounted(() => {
   display: grid;
   gap: 0.65rem;
   min-width: 0;
-  margin-top: 0.7rem;
   padding: 0.8rem;
   border: 1px solid var(--color-borde);
   border-radius: 8px;
@@ -1073,9 +1115,6 @@ onUnmounted(() => {
     font-size: 1.6rem;
   }
   .editor-ubicacion {
-    grid-template-columns: 1fr;
-  }
-  .acciones-envio-consulta {
     grid-template-columns: 1fr;
   }
 }
