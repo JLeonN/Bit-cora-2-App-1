@@ -58,6 +58,14 @@
           consulta y también se agrega en Ubicaciones para enviar/exportar.
         </div>
       </div>
+
+      <div class="paso">
+        <div class="numero-paso">7</div>
+        <div class="contenido-paso">
+          <strong>Enviar artículo:</strong> Podés dejarlo pendiente en Stock, elegir un listado de
+          destino o indicar cuántas copias enviar a Etiquetas. El artículo consultado sigue visible.
+        </div>
+      </div>
     </div>
 
     <div class="seccion-tips">

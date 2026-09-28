@@ -1,8 +1,8 @@
 <template>
   <section class="gestor-listados">
     <div class="encabezado-gestor-listados">
-      <label for="selector-listado">Listado activo</label>
-      <button type="button" class="boton-nuevo-listado" :disabled="ocupado" @click="abrirCreacion">
+      <label for="selector-listado">{{ soloSeleccion ? 'Elegí un listado' : 'Listado activo' }}</label>
+      <button v-if="!soloSeleccion" type="button" class="boton-nuevo-listado" :disabled="ocupado" @click="abrirCreacion">
         <IconPlus :size="18" :stroke="2" />
         Nuevo
       </button>
@@ -31,7 +31,7 @@
             <q-item-section>
               <q-item-label>{{ alcance.opt.nombre }}</q-item-label>
             </q-item-section>
-            <q-item-section side class="acciones-opcion-listado">
+            <q-item-section v-if="!soloSeleccion" side class="acciones-opcion-listado">
               <button
                 type="button"
                 class="boton-opcion-listado"
@@ -59,6 +59,7 @@
         </template>
       </q-select>
       <button
+        v-if="!soloSeleccion"
         type="button"
         class="boton-renombrar-listado"
         :disabled="ocupado || !listadoActivo"
@@ -69,7 +70,7 @@
         <IconPencil :size="19" :stroke="2" />
       </button>
     </div>
-    <q-dialog v-model="mostrarDialogoNombre">
+    <q-dialog v-if="!soloSeleccion" v-model="mostrarDialogoNombre">
       <q-card class="dialogo-nombre-listado">
         <q-card-section>
           <h3>{{ modoNombre === 'crear' ? 'Nuevo listado' : 'Cambiar nombre' }}</h3>
@@ -105,6 +106,7 @@ const props = defineProps({
   listados: { type: Array, default: () => [] },
   listadoActivo: { type: Object, default: null },
   ocupado: { type: Boolean, default: false },
+  soloSeleccion: { type: Boolean, default: false },
 })
 const emit = defineEmits(['crear', 'abrir', 'renombrar', 'duplicar', 'solicitar-eliminar'])
 const selectorListadoRef = ref(null)

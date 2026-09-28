@@ -119,6 +119,39 @@
             <button type="submit" class="boton-guardar-ubicacion">Guardar ubicación</button>
           </form>
         </transition>
+
+        <div class="acciones-envio-consulta">
+          <button type="button" class="boton-accion-consulta" :disabled="enviandoStock" @click="enviarAStock">
+            {{ enviandoStock ? 'Enviando…' : 'Enviar a Stock' }}
+          </button>
+          <button type="button" class="boton-accion-consulta" @click="alternarEnvioListado">
+            {{ mostrarEnvioListado ? 'Cancelar envío a Listado' : 'Enviar a Listado' }}
+          </button>
+          <button type="button" class="boton-accion-consulta" @click="alternarEnvioEtiquetas">
+            {{ mostrarEnvioEtiquetas ? 'Cancelar envío a Etiquetas' : 'Enviar a Etiquetas' }}
+          </button>
+        </div>
+
+        <div v-if="mostrarEnvioListado" class="panel-envio-consulta">
+          <GestorListados
+            :listados="listadosDisponibles"
+            :listado-activo="listadoSeleccionado"
+            :ocupado="enviandoListado"
+            solo-seleccion
+            @abrir="idListadoSeleccionado = $event"
+          />
+          <button type="button" class="boton-confirmar-envio" :disabled="!idListadoSeleccionado || enviandoListado" @click="enviarAListado">
+            {{ enviandoListado ? 'Enviando…' : 'Enviar al listado elegido' }}
+          </button>
+        </div>
+
+        <form v-if="mostrarEnvioEtiquetas" class="panel-envio-consulta" @submit.prevent="enviarAEtiquetas">
+          <label for="copias-consulta">Cantidad de copias</label>
+          <input id="copias-consulta" v-model.number="cantidadCopias" type="number" min="1" step="1" inputmode="numeric" class="input-copias-consulta" required />
+          <button type="submit" class="boton-confirmar-envio" :disabled="enviandoEtiquetas">
+            {{ enviandoEtiquetas ? 'Enviando…' : 'Enviar a Etiquetas' }}
+          </button>
+        </form>
       </div>
     </transition>
 
@@ -142,12 +175,20 @@ import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
+import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import {
+  obtenerInformacionArchivo,
   obtenerArticulosCargados,
   obtenerEstadoCarga,
   obtenerHistorialUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
+import { obtenerUltimaUbicacionRegistrada } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
+import { obtenerUbicaciones } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones.js'
+import { guardarRegistroStock, normalizarCantidadStock, obtenerSesionStock } from '../components/BaseDeDatos/UsoAlmacenamientoStock.js'
+import { guardarListado, obtenerListado, obtenerListados } from '../components/BaseDeDatos/UsoAlmacenamientoListados.js'
+import { cargarDatosLocalesArticulos, resolverDatosArticulo } from '../components/Logica/Compartidos/ServicioDatosLocalesArticulo.js'
+import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
 import { obtenerArticuloExacto } from '../components/Logica/Compartidos/ServicioBusquedaArticulos.js'
 import {
@@ -177,6 +218,16 @@ const inputNuevaUbicacionRef = ref(null)
 const ultimoEspacioTiempo = ref(0)
 const seleccionRecienteDesdeBuscador = ref(false)
 const textoCopiadoBusqueda = ref('')
+const mostrarEnvioListado = ref(false)
+const mostrarEnvioEtiquetas = ref(false)
+const listadosDisponibles = ref([])
+const idListadoSeleccionado = ref('')
+const cantidadCopias = ref(1)
+const enviandoStock = ref(false)
+const enviandoListado = ref(false)
+const enviandoEtiquetas = ref(false)
+
+const listadoSeleccionado = computed(() => listadosDisponibles.value.find((listado) => listado.id === idListadoSeleccionado.value) || null)
 
 let intervaloBaseDatos = null
 
@@ -194,6 +245,128 @@ const historialVisual = computed(() => {
 const esUbicacionOriginalSL = computed(
   () => (articuloConsultado.value?.ubicacionAntigua || '').trim().toUpperCase() === 'SL',
 )
+
+const cerrarPanelesEnvio = () => {
+  mostrarEnvioListado.value = false
+  mostrarEnvioEtiquetas.value = false
+  idListadoSeleccionado.value = ''
+  cantidadCopias.value = 1
+}
+
+const alternarEnvioListado = async () => {
+  mostrarEnvioListado.value = !mostrarEnvioListado.value
+  mostrarEnvioEtiquetas.value = false
+  if (!mostrarEnvioListado.value) return
+  try {
+    listadosDisponibles.value = (await obtenerListados()).sort(
+      (primero, segundo) => primero.creadoEn - segundo.creadoEn,
+    )
+    idListadoSeleccionado.value = ''
+    if (listadosDisponibles.value.length === 0) {
+      Notify.create({ type: 'warning', message: 'Primero creá un listado', position: 'top' })
+    }
+  } catch (error) {
+    Notify.create({ type: 'negative', message: error.message || 'No se pudieron cargar los listados', position: 'top' })
+  }
+}
+
+const alternarEnvioEtiquetas = () => {
+  mostrarEnvioEtiquetas.value = !mostrarEnvioEtiquetas.value
+  mostrarEnvioListado.value = false
+  cantidadCopias.value = 1
+}
+
+const obtenerUbicacionActualConsulta = async (articulo) => {
+  const ubicaciones = await obtenerUbicaciones()
+  return obtenerUltimaUbicacionRegistrada(articulo.codigo, ubicaciones, articulo, articulo.ubicacionAntigua)
+    || articulo.ubicacionAntigua || ''
+}
+
+const enviarAStock = async () => {
+  const articulo = articuloConsultado.value
+  if (!articulo?.codigo || enviandoStock.value) return
+  enviandoStock.value = true
+  try {
+    const fuenteExcel = obtenerInformacionArchivo()
+    if (!fuenteExcel) throw new Error('Cargá el Excel maestro antes de enviar a Stock')
+    const sesion = await obtenerSesionStock()
+    if (sesion.registros.some((registro) => registro.codigo === articulo.codigo)) {
+      Notify.create({ type: 'info', message: 'Este artículo ya está en Stock', position: 'top' })
+      return
+    }
+    const stockExcel = normalizarCantidadStock(articulo.stock, { permitirDecimal: true })
+    const ubicacionActual = await obtenerUbicacionActualConsulta(articulo)
+    await guardarRegistroStock({
+      codigo: articulo.codigo,
+      nombre: articulo.nombre,
+      stockExcel: stockExcel.valor ?? 0,
+      stockContado: stockExcel.valor ?? 0,
+      stockExcelAjustado: stockExcel.ajustado,
+      ubicacionActual,
+      ubicacionOriginalExcel: articulo.ubicacionAntigua,
+      ubicacionOrigen: ubicacionActual === articulo.ubicacionAntigua ? 'excel' : 'usuario',
+      confirmado: false,
+    }, fuenteExcel)
+    Notify.create({ type: 'positive', message: 'Artículo enviado a Stock como pendiente de conteo', position: 'top' })
+  } catch (error) {
+    Notify.create({ type: 'negative', message: error.message || 'No se pudo enviar a Stock', position: 'top' })
+  } finally {
+    enviandoStock.value = false
+  }
+}
+
+const enviarAListado = async () => {
+  const articulo = articuloConsultado.value
+  if (!articulo?.codigo || !idListadoSeleccionado.value || enviandoListado.value) return
+  enviandoListado.value = true
+  try {
+    const listado = await obtenerListado(idListadoSeleccionado.value)
+    if (!listado) throw new Error('El listado elegido ya no existe')
+    if (listado.articulos.some((fila) => fila.codigo === articulo.codigo)) {
+      Notify.create({ type: 'info', message: 'Este artículo ya está en el listado elegido', position: 'top' })
+      return
+    }
+    const datosLocales = await cargarDatosLocalesArticulos()
+    const { stockListado, ubicacionListado } = resolverDatosArticulo(articulo, datosLocales)
+    listado.articulos.push({
+      idFila: crypto.randomUUID(),
+      codigo: articulo.codigo,
+      descripcion: articulo.nombre,
+      stockOriginal: articulo.stock ?? '',
+      stockListado,
+      ubicacionOriginal: articulo.ubicacionAntigua || '',
+      ubicacionListado,
+      fechaIngreso: Date.now(),
+    })
+    await guardarListado(listado)
+    mostrarEnvioListado.value = false
+    Notify.create({ type: 'positive', message: `Artículo enviado a ${listado.nombre}`, position: 'top' })
+  } catch (error) {
+    Notify.create({ type: 'negative', message: error.message || 'No se pudo enviar al listado', position: 'top' })
+  } finally {
+    enviandoListado.value = false
+  }
+}
+
+const enviarAEtiquetas = async () => {
+  const articulo = articuloConsultado.value
+  if (!articulo?.codigo || enviandoEtiquetas.value) return
+  if (!Number.isSafeInteger(cantidadCopias.value) || cantidadCopias.value < 1) {
+    Notify.create({ type: 'warning', message: 'Ingresá una cantidad válida de copias', position: 'top' })
+    return
+  }
+  enviandoEtiquetas.value = true
+  try {
+    const ubicacion = await obtenerUbicacionActualConsulta(articulo)
+    await agregarEtiquetasDesdeArticulos([{ ...articulo, ubicacion }], cantidadCopias.value)
+    mostrarEnvioEtiquetas.value = false
+    Notify.create({ type: 'positive', message: 'Etiqueta agregada', position: 'top' })
+  } catch (error) {
+    Notify.create({ type: 'negative', message: error.message || 'No se pudo enviar a Etiquetas', position: 'top' })
+  } finally {
+    enviandoEtiquetas.value = false
+  }
+}
 
 const compartirArticuloWhatsApp = async () => {
   const articulo = articuloConsultado.value
@@ -349,6 +522,7 @@ const buscarArticuloExacto = () => {
 
   const historial = obtenerHistorialUbicaciones(articulo.codigo)
   articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
+  cerrarPanelesEnvio()
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
 }
@@ -372,6 +546,7 @@ const seleccionarArticulo = (articulo, opciones = {}) => {
   busquedaArticulo.value = articulo.codigo
   seleccionRecienteDesdeBuscador.value = true
   articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
+  cerrarPanelesEnvio()
   mostrarBuscador.value = esAutoseleccionEscaner
   inputEnfocado.value = esAutoseleccionEscaner
   mostrarEditorUbicacion.value = false
@@ -428,6 +603,7 @@ const procesarCodigosEscaneados = (codigos) => {
 
   const historial = obtenerHistorialUbicaciones(articulo.codigo)
   articuloConsultado.value = { ...articulo, historialUbicaciones: historial }
+  cerrarPanelesEnvio()
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
 }
@@ -534,6 +710,10 @@ function cerrarPasoAtrasNativo() {
   if (mostrarEditorUbicacion.value) {
     mostrarEditorUbicacion.value = false
     nuevaUbicacion.value = ''
+    return true
+  }
+  if (mostrarEnvioListado.value || mostrarEnvioEtiquetas.value) {
+    cerrarPanelesEnvio()
     return true
   }
   if (mostrarBuscador.value) {
@@ -764,6 +944,58 @@ onUnmounted(() => {
 .boton-actualizar-ubicacion:hover {
   border-color: var(--color-primario);
 }
+.acciones-envio-consulta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+.boton-accion-consulta,
+.boton-confirmar-envio {
+  min-height: 44px;
+  padding: 0.7rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton-accion-consulta:hover,
+.boton-confirmar-envio:hover {
+  border-color: var(--color-primario);
+}
+.boton-accion-consulta:disabled,
+.boton-confirmar-envio:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.panel-envio-consulta {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  margin-top: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+.panel-envio-consulta label {
+  color: var(--color-texto-secundario);
+  font-weight: 600;
+}
+.input-copias-consulta {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-size: 1rem;
+}
+.boton-confirmar-envio {
+  background: var(--color-primario);
+}
 .editor-ubicacion {
   margin-top: 0.7rem;
   display: grid;
@@ -841,6 +1073,9 @@ onUnmounted(() => {
     font-size: 1.6rem;
   }
   .editor-ubicacion {
+    grid-template-columns: 1fr;
+  }
+  .acciones-envio-consulta {
     grid-template-columns: 1fr;
   }
 }
