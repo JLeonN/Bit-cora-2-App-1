@@ -162,7 +162,38 @@
             <transition name="mostrar-editor">
               <form v-if="mostrarEnvioEtiquetas" id="panel-envio-etiquetas" class="panel-envio-consulta" @submit.prevent="enviarAEtiquetas">
                 <label for="copias-consulta">Cantidad de copias</label>
-                <input id="copias-consulta" v-model.number="cantidadCopias" type="number" min="1" step="1" inputmode="numeric" class="input-copias-consulta" required />
+                <div class="controles-copias-consulta">
+                  <button
+                    type="button"
+                    class="boton-cantidad-consulta"
+                    aria-label="Quitar una copia"
+                    :disabled="enviandoEtiquetas || cantidadCopias <= 1"
+                    @click="ajustarCantidadCopias(-1)"
+                  >
+                    <IconMinus :size="18" :stroke="2" aria-hidden="true" />
+                  </button>
+                  <input
+                    id="copias-consulta"
+                    v-model.number="cantidadCopias"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    class="input-copias-consulta"
+                    :disabled="enviandoEtiquetas"
+                    required
+                    @blur="normalizarCantidadCopias"
+                  />
+                  <button
+                    type="button"
+                    class="boton-cantidad-consulta"
+                    aria-label="Agregar una copia"
+                    :disabled="enviandoEtiquetas || cantidadCopias >= Number.MAX_SAFE_INTEGER"
+                    @click="ajustarCantidadCopias(1)"
+                  >
+                    <IconPlus :size="18" :stroke="2" aria-hidden="true" />
+                  </button>
+                </div>
                 <button type="submit" class="boton-confirmar-envio" :disabled="enviandoEtiquetas">
                   {{ enviandoEtiquetas ? 'Enviando…' : 'Enviar a Etiquetas' }}
                 </button>
@@ -189,7 +220,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
-import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp, IconMinus, IconPlus } from '@tabler/icons-vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
@@ -312,6 +343,20 @@ const alternarEnvioEtiquetas = () => {
   mostrarEnvioEtiquetas.value = !mostrarEnvioEtiquetas.value
   mostrarEnvioListado.value = false
   cantidadCopias.value = 1
+}
+
+const normalizarCantidadCopias = () => {
+  const cantidad = Number(cantidadCopias.value)
+  cantidadCopias.value = Number.isFinite(cantidad) && cantidad >= 1
+    ? Math.min(Math.trunc(cantidad), Number.MAX_SAFE_INTEGER)
+    : 1
+}
+
+const ajustarCantidadCopias = (cambio) => {
+  const cantidad = Number.isSafeInteger(cantidadCopias.value) && cantidadCopias.value >= 1
+    ? cantidadCopias.value
+    : cambio > 0 ? 0 : 1
+  cantidadCopias.value = Math.max(1, Math.min(cantidad + cambio, Number.MAX_SAFE_INTEGER))
 }
 
 const obtenerUbicacionActualConsulta = async (articulo) => {
@@ -1025,6 +1070,30 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   font-weight: 600;
 }
+.controles-copias-consulta {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 0.5rem;
+}
+.boton-cantidad-consulta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  cursor: pointer;
+}
+.boton-cantidad-consulta:hover:not(:disabled) {
+  border-color: var(--color-primario);
+}
+.boton-cantidad-consulta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .input-copias-consulta {
   width: 100%;
   min-height: 44px;
@@ -1034,6 +1103,14 @@ onUnmounted(() => {
   background: var(--color-fondo);
   color: var(--color-texto-principal);
   font-size: 1rem;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.input-copias-consulta::-webkit-outer-spin-button,
+.input-copias-consulta::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .boton-confirmar-envio {
   background: var(--color-primario);
