@@ -33,7 +33,7 @@ Agregar una segunda presentación de la lista de etiquetas mediante pestañas. L
 - Pestañas simples en el encabezado de Etiquetas, con 10 × 15 seleccionado al abrir.
 - Lista, códigos, ubicaciones, cantidades y orden compartidos entre pestañas; descripciones y memorias independientes por tamaño.
 - Adaptación inicial bidireccional desde la otra memoria o descripción disponible, sin guardar una copia nueva por el solo hecho de cambiar de pestaña.
-- Vista chica y PDF chico ajustables en una implementación separada, con reducción de texto hasta un mínimo inicial de 4 pt. Si aun así el contenido excede el área, debe verse el corte en el límite de la tarjeta y del PDF; no se eliminan renglones del dato ni se informa falsamente que cabe.
+- Vista chica y PDF chico ajustables en una implementación separada, con reducción de texto hasta un mínimo inicial de 4 pt. Según el ajuste posterior de Leo, la etiqueta chica muestra como máximo cuatro renglones. El dato original no se modifica por cambiar de pestaña ni por abrir y cerrar la edición sin cambios.
 - Exportación, importación y respaldo de ambas memorias, con compatibilidad para JSON antiguos como memorias de 10 × 15.
 
 ### No incluye
@@ -118,12 +118,12 @@ Mostrar una tarjeta visualmente menor y generar un PDF de 67 × 25 mm con el mis
 - [ ] Crear `UsoLayoutEtiquetaChica.js` con `calcularLayoutEtiquetaChica({ etiqueta, configuracion, anchoReferenciaPx })`, que devuelva la misma estructura de layout que `calcularLayoutEtiquetaPreview`.
   - Usar `ConfiguracionEtiqueta2.5x6.7.js` como fuente de página de 67 × 25 mm, márgenes y parámetros chicos. Ajustar solo ese archivo y el layout nuevo al afinar; no modificar `ConfiguracionEtiqueta10x15.js` ni la configuración 5 × 10.
   - Duplicar las operaciones de medición y distribución necesarias para experimentar sin tocar el algoritmo grande. Entregar el contrato `{ codigo, codigoBarra, descripcion, ubicacion }` con las mismas propiedades y unidades que `calcularLayoutEtiquetaPreview`, para reutilizar `convertirLayoutPreviewAPixeles` y el generador PDF.
-  - Limitar barra y texto a 67 mm menos márgenes. Conservar saltos `\n` explícitos, renglones vacíos y espacios internos al medir, dividir y devolver `descripcion.lineas`; una línea manual no se fusiona con otra. Puede mantenerse la presentación en mayúsculas actual sin alterar el `String` guardado. Reducir letra por ancho y alto disponibles hasta un mínimo inicial de 4 pt, configurable solo en la rama chica. No usar `slice` para quitar líneas.
-  - Si aun al mínimo no entra todo, devolver todas las líneas: el límite físico de la tarjeta y de la página PDF hará visible el corte. No alterar el texto persistido ni afirmar que la etiqueta cabe. Ajustar durante revisión visual hasta que vista y PDF representen el mismo límite.
+  - Limitar barra y texto a 67 mm menos márgenes. Conservar saltos `\n` explícitos, renglones vacíos y espacios internos dentro de los primeros cuatro renglones visibles; una línea manual no se fusiona con otra. Puede mantenerse la presentación en mayúsculas actual sin alterar el `String` guardado. Reducir letra por ancho y alto disponibles hasta un mínimo inicial de 4 pt, configurable solo en la rama chica.
+  - Mostrar como máximo cuatro renglones en la tarjeta y el PDF. No alterar el texto persistido por cambiar de pestaña ni por abrir y cerrar la edición sin cambios. Ajustar durante revisión visual hasta que vista y PDF representen el mismo límite.
 - [ ] En `UsoLayoutEtiquetaPreview.js`, despachar a `calcularLayoutEtiquetaChica` solo cuando `configuracion.id === TAMANO_ETIQUETA_CHICA`. Conservar el cuerpo y valores del cálculo 10 × 15 sin cambios; el punto de despacho debe ser la única diferencia en esa rama. `GeneradorEtiquetasPDF.js` ya consume layout y dimensiones de la configuración: tocarlo solo para corregir una diferencia observada entre vista y PDF chico.
 - [ ] En `TarjetaPreviewEtiquetaMovil.vue`, aplicar tamaño máximo `6.7cm × 2.5cm` y proporción `67 / 25` solo a la pestaña chica. Conservar las reglas existentes de 10 × 15 para esa pestaña.
   - Añadir prop obligatoria `configuracion` y pasarla a `usarLayoutEtiquetaPreview({ anchoBase: 360, configuracion, alCambiarEscala })`. Aplicar la clase/estilo chico según `configuracion.id`, sin sobreescribir el CSS base de 10 × 15. En teléfono, usar `width: min(100%, 6.7cm)` y mantener controles fuera del rectángulo de impresión.
-  - En `iniciarEdicion('descripcion')` de la rama chica, iniciar `borradorDescripcion` desde `props.etiqueta.descripcion` literal; no desde `lineasDescripcion.value.join('\n')`. Mantener el inicio actual para 10 × 15. En la chica, renderizar líneas con `white-space: pre` para que los espacios internos no se colapsen y mostrar renglones vacíos con su altura. El `textarea` debe conservar el texto literal al confirmar.
+  - En `iniciarEdicion('descripcion')` de la rama chica, iniciar `borradorDescripcion` desde los primeros cuatro renglones de `props.etiqueta.descripcion` literal; no desde `lineasDescripcion.value.join('\n')`. Mantener el inicio actual para 10 × 15. En la chica, renderizar líneas con `white-space: pre` para que los espacios internos no se colapsen y mostrar renglones vacíos con su altura. Al editar, limitar a cuatro renglones; abrir y cerrar sin cambios no debe truncar el dato persistido.
   - Verificar código, barras, líneas, ubicación y edición en teléfono y escritorio. Mantener la misma descripción visible en tarjeta y PDF, incluidos espacios y saltos manuales; comprobar que `UsoCodigoBarraEtiqueta.js` y el canvas PDF siguen mostrando CODE39 legible en la barra chica sin modificar la barra grande.
 
 ## FASE 4: Compartir memorias sin mezclar tamaños
@@ -148,7 +148,7 @@ Respaldar e intercambiar memorias de los dos tamaños sin perder la compatibilid
 
 - [ ] Crear y ejecutar `node --test Pruebas/Etiquetas/ResolverDescripcionEtiqueta.test.js Pruebas/Etiquetas/UsoLayoutEtiquetaChica.test.js Pruebas/Etiquetas/MemoriaEtiquetasPorTamano.test.js`.
   - Cubrir etiqueta histórica grande, etiqueta nacida chica, ida y vuelta sin edición, edición aislada, memoria propia frente a memoria prestada, dos filas con el mismo código, cuatro `\n`, renglón vacío y espacios internos. Verificar que la lista canónica no cambie al alternar.
-  - Cubrir layout chico: página 67 × 25 mm, ancho de barra dentro de márgenes, líneas manuales completas y mínimo de 4 pt sin `slice`. Una prueba de texto demasiado largo debe mantener la cantidad de líneas devueltas, aunque visualmente excedan la página.
+  - Cubrir layout chico: página 67 × 25 mm, ancho de barra dentro de márgenes, máximo de cuatro líneas visibles con saltos y espacios conservados, y mínimo de 4 pt para texto largo. El texto original debe quedar intacto.
   - Cubrir JSON v1 como memoria grande, JSON v2 con el mismo código en ambos tamaños, tamaño inválido, límite de entradas y exportación/reimportación sin mezcla. Usar un doble de Preferences o funciones puras extraídas para probar almacenamiento sin acceder a datos reales.
 - [ ] Ejecutar `npm run lint`, `npm test` y `npm run build`; corregir todos los errores nuevos.
 
@@ -175,6 +175,8 @@ Respaldar e intercambiar memorias de los dos tamaños sin perder la compatibilid
 - [ ] Fase Testing: pruebas de código y navegador realizadas; falta instalación Android e impresión física.
 
 Validación realizada el 9 de octubre de 2026: las pruebas nuevas, `npm run lint`, `npm test` y `npm run build` pasan. En navegador local se comprobaron pestañas, teclado, tamaños responsivos, edición aislada tras recargar, JSON v1/v2 y PDF de 150 × 100 y 67 × 25 mm; dos copias chicas generaron dos páginas. La referencia previa de una etiqueta real y la impresión a escala quedan pendientes porque no hay dispositivo conectado a ADB ni impresora de Leo en este entorno.
+
+Ajuste posterior del 9 de octubre de 2026: la descripción chica muestra un máximo de cuatro renglones y su editor ocupa solo el espacio entre descripción y ubicación. Se comprobó en navegador a ancho de escritorio y a 360 px que el editor no invade la ubicación; al pegar cinco renglones, quedan cuatro. Pasaron la prueba del layout chico, `npm run lint`, `npm test` y `npm run build`. Sigue pendiente la impresión real.
 
 Fecha de creación: 9 de octubre de 2026
 Fecha de última actualización: 9 de octubre de 2026

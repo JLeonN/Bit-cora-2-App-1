@@ -51,6 +51,7 @@
       :style="estiloTextareaDescripcion"
       @input="actualizarDescripcion"
       @blur="confirmarEdicion"
+      @keydown.enter="manejarEnterDescripcion"
       @keydown.esc.prevent="cancelarEdicion()"
       :rows="filasDescripcionEdicion"
       wrap="off"
@@ -128,6 +129,7 @@ const inputUbicacionRef = ref(null)
 const campoEditando = ref('')
 const borradorCodigo = ref('')
 const borradorDescripcion = ref('')
+const descripcionModificada = ref(false)
 const borradorUbicacion = ref('')
 const lineasDescripcionEdicion = ref([])
 const lineasDescripcionEdicionConEstilos = ref([])
@@ -176,15 +178,25 @@ const lineasDescripcionConEstilos = computed(() => {
       {},
   }))
 })
-const filasDescripcionEdicion = computed(() => Math.max(3, lineasDescripcionEdicion.value.length || lineasDescripcion.value.length))
-const estiloTextareaDescripcion = computed(() => ({
-  ...obtenerEstiloDescripcionParaEdicion(),
-  left: '4%',
-  width: '92%',
-  height: '55%',
-}))
+const maximoRenglonesChica = computed(() => props.configuracion.descripcion?.maximoLineas || 4)
+const filasDescripcionEdicion = computed(() => esChica.value
+  ? maximoRenglonesChica.value
+  : Math.max(3, lineasDescripcionEdicion.value.length || lineasDescripcion.value.length))
+const estiloTextareaDescripcion = computed(() => {
+  const estilo = {
+    ...obtenerEstiloDescripcionParaEdicion(),
+    left: '4%',
+    width: '92%',
+  }
+  if (!esChica.value) return { ...estilo, height: '55%' }
+  const inicio = obtenerNumeroDesdePx(layoutPreview.value.estilos.descripcion.top, 0)
+  const ubicacion = obtenerNumeroDesdePx(layoutPreview.value.estilos.ubicacion.top, 0)
+  const separacion = anchoPreview.value * 0.012
+  return { ...estilo, height: `${Math.max(0, ubicacion - inicio - separacion).toFixed(2)}px` }
+})
 const normalizarCodigo = (valor) => String(valor || '').trim().toUpperCase()
 const normalizarSaltosLocales = (valor) => String(valor || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+const limitarRenglonesChica = (valor) => normalizarSaltosLocales(valor).split('\n').slice(0, maximoRenglonesChica.value).join('\n')
 const normalizarUbicacion = (valor) => {
   const normalizado = String(valor || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
   return normalizado || 'Sin ubicación'
@@ -211,6 +223,7 @@ function obtenerFontSizeMinimoDescripcion() {
 }
 
 function obtenerEstiloDescripcionParaEdicion() {
+  if (esChica.value) return layoutPreview.value.estilos.descripcion
   const estiloBase = campoEditando.value === 'descripcion' && estiloDescripcionEdicion.value
     ? estiloDescripcionEdicion.value
     : layoutPreview.value.estilos.descripcion
@@ -244,8 +257,9 @@ function iniciarEdicion(campo) {
     estiloDescripcionEdicion.value = { ...layoutPreview.value.estilos.descripcion }
     fontSizeDescripcionEdicionPx.value = obtenerFontSizeMinimoDescripcion()
     borradorDescripcion.value = esChica.value
-      ? String(props.etiqueta.descripcion || '')
+      ? limitarRenglonesChica(props.etiqueta.descripcion || '')
       : lineasDescripcionEdicion.value.join('\n')
+    descripcionModificada.value = false
     campoEditando.value = campo
     nextTick(() => textareaDescripcionRef.value?.focus())
     return
@@ -261,9 +275,22 @@ function actualizarCodigo(evento) {
 }
 
 function actualizarDescripcion(evento) {
-  borradorDescripcion.value = evento.target.value
+  const valor = esChica.value ? limitarRenglonesChica(evento.target.value) : evento.target.value
+  if (esChica.value && valor !== evento.target.value) evento.target.value = valor
+  borradorDescripcion.value = valor
+  descripcionModificada.value = true
   lineasDescripcionEdicion.value = normalizarSaltosLocales(borradorDescripcion.value).split('\n')
   emitirActualizacion('descripcion', String(borradorDescripcion.value))
+}
+
+function manejarEnterDescripcion(evento) {
+  if (!esChica.value) return
+  const campo = evento.target
+  const texto = String(campo.value || '')
+  const candidato = `${texto.slice(0, campo.selectionStart)}\n${texto.slice(campo.selectionEnd)}`
+  if (normalizarSaltosLocales(candidato).split('\n').length > maximoRenglonesChica.value) {
+    evento.preventDefault()
+  }
 }
 
 function actualizarUbicacion(evento) {
@@ -278,6 +305,10 @@ function confirmarEdicion() {
     emitirActualizacion('codigo', normalizarCodigo(borradorCodigo.value))
   }
   if (campoActual === 'descripcion') {
+    if (esChica.value && !descripcionModificada.value) {
+      cancelarEdicion()
+      return
+    }
     emitirActualizacion('descripcion', String(borradorDescripcion.value))
   }
   if (campoActual === 'ubicacion') {
@@ -296,6 +327,7 @@ function cancelarEdicion() {
   lineasDescripcionEdicionConEstilos.value = []
   estiloDescripcionEdicion.value = null
   fontSizeDescripcionEdicionPx.value = null
+  descripcionModificada.value = false
   campoEditando.value = ''
 }
 
@@ -334,6 +366,7 @@ watch(
       lineasDescripcionEdicionConEstilos.value = []
       estiloDescripcionEdicion.value = null
       fontSizeDescripcionEdicionPx.value = null
+      descripcionModificada.value = false
     }
   },
 )
