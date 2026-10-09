@@ -14,6 +14,20 @@
       <IconChevronLeft size="20" stroke="2" />
     </button>
 
+    <!-- Botón Ir al final -->
+    <button
+      v-if="mostrarIrAlFinal"
+      type="button"
+      class="boton-barra"
+      :title="tituloSalto"
+      :aria-label="tituloSalto"
+      @click="manejarSalto"
+    >
+      <span class="icono-salto" :class="{ 'apunta-arriba': estaAlFinal }">
+        <IconChevronsDown size="20" stroke="2" />
+      </span>
+    </button>
+
     <!-- Botón Inicio -->
     <button v-if="mostrarInicio" class="boton-barra" @click="irAlInicio" title="Ir al inicio">
       <IconHome size="20" stroke="2" />
@@ -57,9 +71,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { IconHome, IconChevronLeft, IconSend, IconPlus } from '@tabler/icons-vue'
+import { IconChevronsDown, IconHome, IconChevronLeft, IconSend, IconPlus } from '@tabler/icons-vue'
+import { desplazarAlInicioDePagina } from './ConfiguracionBarraInferior.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -74,6 +89,14 @@ const props = defineProps({
   mostrarInicio: {
     type: Boolean,
     default: true,
+  },
+  mostrarIrAlFinal: {
+    type: Boolean,
+    default: false,
+  },
+  tituloIrAlFinal: {
+    type: String,
+    default: 'Ir al final',
   },
   mostrarAgregar: {
     type: Boolean,
@@ -112,7 +135,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['enviar', 'agregar', 'accion-personalizada'])
+const emit = defineEmits(['enviar', 'agregar', 'ir-al-final', 'accion-personalizada'])
 
 // Lógica para ocultar "Atrás" en el inicio
 const esPaginaInicio = computed(() => {
@@ -124,6 +147,41 @@ const mostrarAtrasCalculado = computed(() => {
 })
 
 const iconoEnviarCalculado = computed(() => props.iconoEnviar || IconSend)
+const estaAlFinal = ref(false)
+const tituloSalto = computed(() =>
+  estaAlFinal.value ? 'Volver arriba de esta página' : props.tituloIrAlFinal,
+)
+
+function actualizarPosicion() {
+  const altoPagina = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+  estaAlFinal.value =
+    altoPagina > window.innerHeight &&
+    altoPagina - window.innerHeight - window.scrollY <= 24
+}
+
+function manejarSalto() {
+  if (estaAlFinal.value) {
+    desplazarAlInicioDePagina()
+    return
+  }
+  emit('ir-al-final')
+}
+
+watch(() => route.fullPath, () => {
+  estaAlFinal.value = false
+  void nextTick(actualizarPosicion)
+})
+watch(() => props.mostrarIrAlFinal, () => void nextTick(actualizarPosicion))
+
+onMounted(() => {
+  window.addEventListener('scroll', actualizarPosicion, { passive: true })
+  window.addEventListener('resize', actualizarPosicion)
+  void nextTick(actualizarPosicion)
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', actualizarPosicion)
+  window.removeEventListener('resize', actualizarPosicion)
+})
 
 // Métodos de navegación
 const volverAtras = () => {
@@ -191,6 +249,13 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 .boton-barra:active:not(:disabled) {
   transform: translateY(0);
 }
+.icono-salto {
+  display: inline-flex;
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icono-salto.apunta-arriba {
+  transform: rotate(180deg);
+}
 .boton-agregar {
   background-color: var(--color-acento);
   transform: scale(1.1);
@@ -216,6 +281,11 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
 @keyframes girar-icono-compartir {
   to {
     transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .icono-salto {
+    transition: none;
   }
 }
 @media (max-width: 480px) {

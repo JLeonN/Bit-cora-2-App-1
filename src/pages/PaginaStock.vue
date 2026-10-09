@@ -304,6 +304,10 @@ import {
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import { generarYGuardarExcelStock } from '../components/Logica/Stock/ExportarStockExcel.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import {
+  UMBRAL_IR_AL_FINAL,
+  desplazarAlFinalDePagina,
+} from '../components/Botones/ConfiguracionBarraInferior.js'
 
 const emit = defineEmits(['configurar-barra'])
 
@@ -448,6 +452,8 @@ const confirmados = computed(() =>
 const esNavegadorWeb = computed(() => Capacitor.getPlatform() === 'web')
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
+  mostrarIrAlFinal: registrosVisuales.value.length > UMBRAL_IR_AL_FINAL,
+  tituloIrAlFinal: 'Ir al final del Stock',
   mostrarEnviar: !esNavegadorWeb.value && confirmados.value.length > 0 && !hayConflictoFuente.value,
   puedeEnviar: confirmados.value.length > 0 && !hayConflictoFuente.value,
   botonesPersonalizados: esNavegadorWeb.value
@@ -465,6 +471,7 @@ const configuracionBarra = computed(() => ({
 }))
 const metodosParaBarra = {
   onAgregar: () => {},
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onEnviar: () => exportarStock(),
   onAccionPersonalizada: (accion) => {
     if (accion === 'descargar-stock') exportarStock()

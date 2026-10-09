@@ -120,6 +120,10 @@ import {
   publicarUbicacionesCompartidas,
 } from '../components/Logica/Ubicaciones/ServicioCompartirUbicacionesFirestore.js'
 import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  UMBRAL_IR_AL_FINAL,
+  desplazarAlFinalDePagina,
+} from '../components/Botones/ConfiguracionBarraInferior.js'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
@@ -191,6 +195,8 @@ const excelCompartibleListo = computed(
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
+  mostrarIrAlFinal: ubicacionesArray.value.length > UMBRAL_IR_AL_FINAL,
+  tituloIrAlFinal: 'Ir al final de las ubicaciones',
   mostrarEnviar: ubicacionesArray.value.length > 0,
   puedeEnviar: puedeExportarUbicaciones.value && excelCompartibleListo.value,
   iconoEnviar:
@@ -225,6 +231,7 @@ const configuracionBarra = computed(() => ({
 // Métodos que la barra inferior va a llamar
 const metodosParaBarra = {
   onAgregar: () => {},
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onEnviar: () => {
     enviarUbicacionesExcel()
   },

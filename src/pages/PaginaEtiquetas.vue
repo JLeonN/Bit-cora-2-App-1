@@ -80,6 +80,10 @@ import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import {
+  UMBRAL_IR_AL_FINAL,
+  desplazarAlFinalDePagina,
+} from '../components/Botones/ConfiguracionBarraInferior.js'
+import {
   generarDocumentoEtiquetas,
   esPlataformaWeb,
 } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
@@ -428,6 +432,8 @@ const configuracionBarra = computed(() => ({
   mostrarAtras: true,
   mostrarInicio: true,
   mostrarAgregar: false,
+  mostrarIrAlFinal: listaEtiquetas.value.length > UMBRAL_IR_AL_FINAL,
+  tituloIrAlFinal: 'Ir al final de las etiquetas',
   mostrarEnviar: !esPlataformaWeb() && listaEtiquetas.value.length > 0,
   puedeEnviar: listaEtiquetas.value.length > 0,
   botonesPersonalizados: esPlataformaWeb()
@@ -447,6 +453,7 @@ const configuracionBarra = computed(() => ({
 const metodosParaBarra = {
   onEnviar: () => generarPDF(),
   onAgregar: () => {},
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onAccionPersonalizada: (accion) => {
     if (accion === 'descargar-pdf-etiquetas') {
       generarPDF()

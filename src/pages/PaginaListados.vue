@@ -251,6 +251,10 @@ import {
 import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
+import {
+  UMBRAL_IR_AL_FINAL,
+  desplazarAlFinalDePagina,
+} from '../components/Botones/ConfiguracionBarraInferior.js'
 import PanelResultadosCapitanaBita from '../components/Logica/CapitanaBita/PanelResultadosCapitanaBita.vue'
 import PanelResultadoImportacionExcel from '../components/Logica/Listados/PanelResultadoImportacionExcel.vue'
 import SelectorOrdenamiento from '../components/Logica/Compartidos/SelectorOrdenamiento.vue'
@@ -436,6 +440,8 @@ const ultimaParteWhatsAppAbierta = computed(
 )
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
+  mostrarIrAlFinal: articulosOrdenados.value.length > UMBRAL_IR_AL_FINAL,
+  tituloIrAlFinal: 'Ir al final del listado',
   mostrarEnviar: !esNavegadorWeb.value && articulosOrdenados.value.length > 0,
   puedeEnviar:
     articulosOrdenados.value.length > 0 &&
@@ -469,6 +475,7 @@ const configuracionBarra = computed(() => ({
 }))
 const metodosParaBarra = {
   onAgregar: () => {},
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onEnviar: () => exportarListado(),
   onAccionPersonalizada: (accion) => {
     if (accion === 'descargar-listado') exportarListado()

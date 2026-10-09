@@ -110,6 +110,10 @@ import ModalEditarPedido from 'src/components/Modales/ModalEditarPedido.vue'
 import ModalEliminar from 'src/components/Modales/ModalEliminar.vue'
 import NavegadorPeriodo from '../Compartidos/NavegadorPeriodo.vue'
 import ResumenMensual from './Estadisticas/ResumenMensual.vue'
+import {
+  UMBRAL_IR_AL_FINAL,
+  desplazarAlFinalDePagina,
+} from '../../Botones/ConfiguracionBarraInferior.js'
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra', 'modal-abierto', 'modal-cerrado'])
@@ -366,6 +370,8 @@ function cambiarMes(direccion) {
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
+  mostrarIrAlFinal: pedidosRealizados.value.length > UMBRAL_IR_AL_FINAL,
+  tituloIrAlFinal: 'Ir al final de los pedidos',
   mostrarEnviar: pedidosRealizados.value.length > 0,
   puedeEnviar: pedidosRealizados.value.length > 0,
   iconoEnviar: esNavegadorWeb.value ? IconDownload : null,
@@ -377,6 +383,7 @@ const configuracionBarra = computed(() => ({
 // Métodos que la barra inferior va a llamar
 const metodosParaBarra = {
   onAgregar: () => {},
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onEnviar: () => {
     enviarPedidos()
   },

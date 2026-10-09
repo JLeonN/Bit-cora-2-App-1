@@ -92,6 +92,10 @@ import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import CamaraPedidos from '../components/Logica/Pedidos/CamaraPedidos.vue'
 import HistorialPedidos from '../components/Logica/Pedidos/HistorialPedidos.vue'
 import ContadorPedidosDiarios from '../components/Logica/Pedidos/ContadorPedidosDiarios.vue'
+import {
+  UMBRAL_IR_AL_FINAL,
+  desplazarAlFinalDePagina,
+} from '../components/Botones/ConfiguracionBarraInferior.js'
 
 const router = useRouter()
 
@@ -127,6 +131,8 @@ const ultimosTresPedidos = computed(() => {
 // Configuración dinámica de la barra inferior
 const configuracionBarra = computed(() => ({
   mostrarAgregar: true,
+  mostrarIrAlFinal: pedidos.value.length > UMBRAL_IR_AL_FINAL,
+  tituloIrAlFinal: 'Ir al final de Preparadores',
   mostrarEnviar: false,
   puedeEnviar: false,
   botonesPersonalizados: [],
@@ -138,6 +144,7 @@ const metodosParaBarra = {
   onAgregar: () => {
     abrirModalAgregar()
   },
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onEnviar: () => {
     console.log('Enviar no implementado en TablaPedidos')
   },

@@ -266,11 +266,16 @@ label {
 .menu-selector-listados {
   max-height: min(60vh, 360px);
   overflow: hidden auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   color: var(--color-texto-principal) !important;
   background: var(--color-superficie) !important;
   border: 1px solid var(--color-borde);
   border-radius: 10px;
   box-shadow: 0 12px 28px var(--sombra-boton);
+}
+.menu-selector-listados::-webkit-scrollbar {
+  display: none;
 }
 .menu-selector-listados .q-item {
   min-height: 52px;

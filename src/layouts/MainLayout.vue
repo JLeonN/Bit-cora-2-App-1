@@ -147,6 +147,8 @@
       </q-page-container>
       <BarraBotonesInferior
         :mostrar-agregar="configuracionBarra.mostrarAgregar"
+        :mostrar-ir-al-final="configuracionBarra.mostrarIrAlFinal"
+        :titulo-ir-al-final="configuracionBarra.tituloIrAlFinal"
         :mostrar-enviar="configuracionBarra.mostrarEnviar"
         :puede-enviar="configuracionBarra.puedeEnviar"
         :icono-enviar="configuracionBarra.iconoEnviar"
@@ -156,6 +158,7 @@
         :modal-activo="hayModalGlobalActivo"
         :style="estiloBarraInferior"
         @agregar="manejarAgregar"
+        @ir-al-final="manejarIrAlFinal"
         @enviar="manejarEnviar"
         @accion-personalizada="manejarAccionPersonalizada"
       />
@@ -282,6 +285,8 @@ const SEPARACION_BARRA_BANNER = 1
 const ESPACIO_EXTRA_CONTENIDO = 16
 const configuracionBarra = reactive({
   mostrarAgregar: false,
+  mostrarIrAlFinal: false,
+  tituloIrAlFinal: 'Ir al final',
   mostrarEnviar: false,
   puedeEnviar: true,
   iconoEnviar: null,
@@ -545,6 +550,8 @@ const manejarConfiguracionBarra = (configuracion, refPagina) => {
     {
       iconoEnviar: null,
       tituloEnviar: 'Enviar datos',
+      mostrarIrAlFinal: false,
+      tituloIrAlFinal: 'Ir al final',
     },
     configuracion,
   )
@@ -558,6 +565,10 @@ const manejarAgregar = () => {
   if (paginaActivaRef?.onAgregar) {
     paginaActivaRef.onAgregar()
   }
+}
+
+const manejarIrAlFinal = () => {
+  paginaActivaRef?.onIrAlFinal?.()
 }
 
 const manejarEnviar = () => {
