@@ -5,6 +5,12 @@
 - No omitir ninguna regla por resumen, memoria parcial o límite de contexto sin avisar explícitamente.
 - Si en otro archivo aparecen instrucciones adicionales, este archivo tiene prioridad en caso de conflicto.
 
+## Memoria del proyecto
+
+- `Memory.md` contiene decisiones y aprendizajes reutilizables de trabajos anteriores. Consúltalo cuando una tarea necesite ese contexto; este `AGENTS.md` conserva la prioridad.
+- Al terminar un trabajo, actualiza `Memory.md` solo si apareció información útil para tareas futuras. Corrige o elimina entradas obsoletas y verifica los hechos contra el código y los documentos vigentes.
+- Mantén la memoria breve, idealmente por debajo de 100 líneas. Evita duplicar historiales, planes, reglas de este archivo, datos temporales y secretos.
+
 # Reglas del Proyecto
 
 ## Comunicación con Leo
