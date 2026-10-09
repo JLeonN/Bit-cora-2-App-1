@@ -31,7 +31,13 @@
     <TarjetaSeccion titulo="Resumen de memoria" :expandida-por-defecto="false">
       <div class="bloque-resumen-memorias">
         <p class="texto-secundario linea-resumen-memorias">
-          <strong>Memorias guardadas:</strong> {{ cantidadMemorias }}
+          <strong>Memorias 10 × 15:</strong> {{ cantidadMemoriasGrandes }}
+        </p>
+        <p class="texto-secundario linea-resumen-memorias">
+          <strong>Memorias 2,5 × 6,7:</strong> {{ cantidadMemoriasChicas }}
+        </p>
+        <p class="texto-secundario linea-resumen-memorias">
+          <strong>Total:</strong> {{ cantidadMemorias }}
         </p>
         <p class="texto-secundario linea-resumen-memorias">
           <strong>Última exportación:</strong> {{ ultimaExportacionTexto }}
@@ -50,7 +56,8 @@ import { Loading, Notify } from 'quasar'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import { esPlataformaWeb } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
-import { obtenerTodasLasMemoriasEtiquetas } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
+import { obtenerTodasLasMemoriasPorTamano } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import { obtenerMetadatosMemoriaEtiquetas } from '../components/BaseDeDatos/usoAlmacenamientoMetadatosMemoriaEtiquetas.js'
 import {
   exportarMemoriasEtiquetas,
@@ -63,7 +70,9 @@ const emit = defineEmits(['configurar-barra'])
 
 const importandoMemorias = ref(false)
 const exportandoMemorias = ref(false)
-const cantidadMemorias = ref(0)
+const cantidadMemoriasGrandes = ref(0)
+const cantidadMemoriasChicas = ref(0)
+const cantidadMemorias = computed(() => cantidadMemoriasGrandes.value + cantidadMemoriasChicas.value)
 const ultimaExportacionMemoriasEn = ref(null)
 const ultimaImportacionMemoriasEn = ref(null)
 
@@ -75,8 +84,9 @@ const ultimaImportacionTexto = computed(() =>
 )
 
 async function refrescarDatosMemorias() {
-  const memorias = await obtenerTodasLasMemoriasEtiquetas()
-  cantidadMemorias.value = Array.isArray(memorias) ? memorias.length : 0
+  const memorias = await obtenerTodasLasMemoriasPorTamano()
+  cantidadMemoriasGrandes.value = memorias[TAMANO_ETIQUETA_GRANDE].length
+  cantidadMemoriasChicas.value = memorias[TAMANO_ETIQUETA_CHICA].length
 
   const metadatos = await obtenerMetadatosMemoriaEtiquetas()
   ultimaExportacionMemoriasEn.value = metadatos.ultimaExportacionMemoriasEn

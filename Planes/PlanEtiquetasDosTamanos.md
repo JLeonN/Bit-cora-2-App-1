@@ -168,12 +168,14 @@ Respaldar e intercambiar memorias de los dos tamaños sin perder la compatibilid
 
 ## Progreso del plan
 
-- [ ] Fase 1: Separar datos y memoria por tamaño
-- [ ] Fase 2: Pestañas e integración de edición
-- [ ] Fase 3: Vista y PDF de la etiqueta chica
-- [ ] Fase 4: Compartir memorias sin mezclar tamaños
-- [ ] Fase Testing
+- [x] Fase 1: Separar datos y memoria por tamaño
+- [x] Fase 2: Pestañas e integración de edición
+- [x] Fase 3: Vista y PDF de la etiqueta chica
+- [x] Fase 4: Compartir memorias sin mezclar tamaños
+- [ ] Fase Testing: pruebas de código y navegador realizadas; falta instalación Android e impresión física.
+
+Validación realizada el 9 de octubre de 2026: las pruebas nuevas, `npm run lint`, `npm test` y `npm run build` pasan. En navegador local se comprobaron pestañas, teclado, tamaños responsivos, edición aislada tras recargar, JSON v1/v2 y PDF de 150 × 100 y 67 × 25 mm; dos copias chicas generaron dos páginas. La referencia previa de una etiqueta real y la impresión a escala quedan pendientes porque no hay dispositivo conectado a ADB ni impresora de Leo en este entorno.
 
 Fecha de creación: 9 de octubre de 2026
 Fecha de última actualización: 9 de octubre de 2026
-Estado: BORRADOR
+Estado: IMPLEMENTADO EN RAMA; VALIDACIÓN FÍSICA PENDIENTE

@@ -1,12 +1,13 @@
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
-  obtenerTodasLasMemoriasEtiquetas,
+  obtenerTodasLasMemoriasPorTamano,
   construirJsonCompartirMemorias,
   parsearJsonCompartirMemorias,
   fusionarMemoriasDesdeJsonPayload,
   crearRespaldoMemoriaEtiquetas,
 } from '../../BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import {
   guardarUltimaExportacionMemorias,
   guardarUltimaImportacionMemorias,
@@ -41,7 +42,11 @@ function descargarJsonEnWeb(nombreArchivo, contenidoJson) {
 }
 
 export async function exportarMemoriasEtiquetas({ esPlataformaWeb, compartirArchivo }) {
-  const entradas = await obtenerTodasLasMemoriasEtiquetas()
+  const memorias = await obtenerTodasLasMemoriasPorTamano()
+  const entradas = [
+    ...memorias[TAMANO_ETIQUETA_GRANDE].map((entrada) => ({ ...entrada, tamano: TAMANO_ETIQUETA_GRANDE })),
+    ...memorias[TAMANO_ETIQUETA_CHICA].map((entrada) => ({ ...entrada, tamano: TAMANO_ETIQUETA_CHICA })),
+  ]
   if (!Array.isArray(entradas) || entradas.length === 0) {
     return { exito: false, sinDatos: true }
   }
@@ -112,17 +117,20 @@ export async function importarMemoriasDesdeTexto({ textoJson, alAplicarCambios }
   }
 
   const payload = parseado.payload
-  await crearRespaldoMemoriaEtiquetas()
-  const resultadoFusion = await fusionarMemoriasDesdeJsonPayload(payload)
-  const cantidadCambiosPantalla = await alAplicarCambios()
-  await guardarUltimaImportacionMemorias(Date.now())
-
-  return {
-    exito: true,
-    payload,
-    entradasInvalidas: parseado.entradasInvalidas,
-    resumen: resultadoFusion.resumen,
-    cantidadCambiosPantalla,
+  try {
+    await crearRespaldoMemoriaEtiquetas()
+    const resultadoFusion = await fusionarMemoriasDesdeJsonPayload(payload)
+    const cantidadCambiosPantalla = await alAplicarCambios()
+    await guardarUltimaImportacionMemorias(Date.now())
+    return {
+      exito: true,
+      payload,
+      entradasInvalidas: parseado.entradasInvalidas,
+      resumen: resultadoFusion.resumen,
+      cantidadCambiosPantalla,
+    }
+  } catch (error) {
+    return { exito: false, mensaje: `No se pudo importar las memorias: ${error.message}` }
   }
 }
 

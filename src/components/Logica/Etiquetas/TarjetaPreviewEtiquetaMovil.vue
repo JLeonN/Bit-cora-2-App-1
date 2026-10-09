@@ -1,5 +1,5 @@
 <template>
-  <div class="preview-etiqueta-movil" :class="`densidad-${densidad}`" ref="contenedorPreview">
+  <div class="preview-etiqueta-movil" :class="[`densidad-${densidad}`, { 'preview-etiqueta-chica': esChica }]" ref="contenedorPreview">
     <p
       v-if="campoEditando !== 'codigo'"
       class="preview-codigo-movil editable-preview"
@@ -29,6 +29,7 @@
     <p
       v-if="campoEditando !== 'descripcion'"
       class="preview-descripcion-movil editable-preview"
+      :class="{ 'descripcion-chica': esChica }"
       :style="layoutPreview.estilos.descripcion"
       tabindex="0"
       @click="iniciarEdicion('descripcion')"
@@ -84,12 +85,14 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usarLayoutEtiquetaPreview } from './UsoLayoutEtiquetaPreview.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
+import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 
 const props = defineProps({
   etiqueta: {
     type: Object,
     required: true,
   },
+  configuracion: { type: Object, required: true },
   indice: {
     type: Number,
     required: true,
@@ -138,19 +141,23 @@ const {
   desconectarObservador,
 } = usarLayoutEtiquetaPreview({
   anchoBase: 360,
+  configuracion: props.configuracion,
   alCambiarEscala: () => {
     renderizarBarra()
   },
 })
 
 const { renderizarCodigoBarraSvg } = usarCodigoBarraEtiqueta()
+const esChica = computed(() => props.configuracion.id === TAMANO_ETIQUETA_CHICA)
 const esCodigoValido = computed(() => props.codigoBarraValido(props.etiqueta?.codigo))
 const densidad = computed(() => {
   if (anchoPreview.value >= 500) return 'amplia'
   if (anchoPreview.value >= 360) return 'media'
   return 'compacta'
 })
-const descripcionParaLayout = computed(() => (campoEditando.value === 'descripcion' ? borradorDescripcion.value : props.nombreArticulo))
+const descripcionParaLayout = computed(() => (campoEditando.value === 'descripcion'
+  ? borradorDescripcion.value
+  : esChica.value ? props.etiqueta.descripcion : props.nombreArticulo))
 const etiquetaParaLayout = computed(() => ({
   ...props.etiqueta,
   descripcion: descripcionParaLayout.value,
@@ -236,7 +243,9 @@ function iniciarEdicion(campo) {
     }))
     estiloDescripcionEdicion.value = { ...layoutPreview.value.estilos.descripcion }
     fontSizeDescripcionEdicionPx.value = obtenerFontSizeMinimoDescripcion()
-    borradorDescripcion.value = lineasDescripcionEdicion.value.join('\n')
+    borradorDescripcion.value = esChica.value
+      ? String(props.etiqueta.descripcion || '')
+      : lineasDescripcionEdicion.value.join('\n')
     campoEditando.value = campo
     nextTick(() => textareaDescripcionRef.value?.focus())
     return
@@ -270,16 +279,11 @@ function confirmarEdicion() {
   }
   if (campoActual === 'descripcion') {
     emitirActualizacion('descripcion', String(borradorDescripcion.value))
-    lineasDescripcionEdicion.value = []
-    lineasDescripcionEdicionConEstilos.value = []
-    estiloDescripcionEdicion.value = null
-    fontSizeDescripcionEdicionPx.value = null
   }
   if (campoActual === 'ubicacion') {
     emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
   }
   emit('confirmar-edicion', props.indice)
-  campoEditando.value = ''
 }
 
 function cancelarEdicion() {
@@ -359,6 +363,12 @@ onBeforeUnmount(() => {
   position: relative;
   overflow: hidden;
 }
+.preview-etiqueta-chica {
+  width: min(100%, 12cm);
+  max-width: 12cm;
+  max-height: none;
+  aspect-ratio: 67 / 25;
+}
 .editable-preview {
   user-select: none;
   -webkit-user-select: none;
@@ -415,6 +425,10 @@ onBeforeUnmount(() => {
   font-weight: inherit;
   letter-spacing: inherit;
   white-space: nowrap;
+}
+.descripcion-chica span {
+  white-space: pre;
+  min-height: 1em;
 }
 .preview-ubicacion-movil {
   position: absolute;

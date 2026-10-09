@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 import { configuracionEtiqueta10x15 } from './ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
+import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { calcularLayoutEtiquetaChica } from './UsoLayoutEtiquetaChica.js'
 
 const FAMILIA_FUENTE_ETIQUETA = "'Arial Black', Arial, Helvetica, sans-serif"
 const ANCHO_REFERENCIA_PREVIEW = 1500
@@ -111,6 +113,9 @@ export const calcularLayoutEtiquetaPreview = ({
   configuracion = configuracionEtiqueta10x15,
   anchoReferenciaPx = ANCHO_REFERENCIA_PREVIEW,
 }) => {
+  if (configuracion.id === TAMANO_ETIQUETA_CHICA) {
+    return calcularLayoutEtiquetaChica({ etiqueta, configuracion, anchoReferenciaPx })
+  }
   const { pagina } = configuracion
   const altoReferenciaPx = anchoReferenciaPx / (pagina.ancho / pagina.alto)
   const codigoNormalizado = String(etiqueta.codigo || '').trim().toUpperCase()

@@ -2,7 +2,20 @@
   <div class="contenedor-tabla">
     <div class="header-etiquetas">
       <h2 class="titulo-tabla">Etiquetas</h2>
-      <p class="texto-info-tamano">Las etiquetas se generan en formato <strong>10x15 cm</strong></p>
+      <div class="pestanas-etiquetas" role="tablist" aria-label="Tamaño de etiqueta" @keydown="manejarTeclaPestanas">
+        <button
+          v-for="opcion in OPCIONES_TAMANOS_ETIQUETA"
+          :key="opcion.id"
+          :ref="(elemento) => registrarPestana(opcion.id, elemento)"
+          type="button"
+          role="tab"
+          class="pestana-etiqueta"
+          :class="{ 'pestana-activa': tamanoSeleccionado === opcion.id }"
+          :aria-selected="tamanoSeleccionado === opcion.id"
+          :tabindex="tamanoSeleccionado === opcion.id ? 0 : -1"
+          @click="tamanoSeleccionado = opcion.id"
+        >{{ opcion.nombre }}</button>
+      </div>
     </div>
 
     <TarjetaSeccion
@@ -41,9 +54,10 @@
 
     <TablaEtiquetas
       ref="tablaEtiquetasRef"
-      :etiquetas="listaEtiquetas"
+      :etiquetas="etiquetasVisibles"
+      :configuracion="configuracionActiva"
       @editar-etiqueta="editarEtiqueta"
-      @guardar-memoria-etiqueta="guardarMemoriaEtiquetaDesdeTabla"
+      @confirmar-etiqueta="confirmarEtiquetaEditada"
       @eliminar-etiqueta="eliminarEtiqueta"
       @limpiar-todo="limpiarTodo"
       @modal-abierto="manejarModalAbierto"
@@ -90,6 +104,8 @@ import {
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
 import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, OPCIONES_TAMANOS_ETIQUETA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { resolverDescripcionEtiqueta, guardarDescripcionDeTamano } from '../components/Logica/Etiquetas/ResolverDescripcionEtiqueta.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import {
   obtenerArchivoCompartidoPendiente,
@@ -106,13 +122,15 @@ import {
 } from '../components/BaseDeDatos/usoAlmacenamientoEtiquetas.js'
 import {
   upsertMemoriaEtiqueta,
-  obtenerMemoriaEtiquetaPorCodigo,
+  obtenerTodasLasMemoriasPorTamano,
 } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
 
 const router = useRouter()
 
-const tamanoSeleccionado = ref('10x15cm')
+const tamanoSeleccionado = ref(TAMANO_ETIQUETA_GRANDE)
 const listaEtiquetas = ref([])
+const memoriasPorTamano = ref({ [TAMANO_ETIQUETA_GRANDE]: {}, [TAMANO_ETIQUETA_CHICA]: {} })
+const pestanas = {}
 const formularioEtiquetaRef = ref(null)
 const tablaEtiquetasRef = ref(null)
 const mostrarModalEliminar = ref(false)
@@ -136,6 +154,48 @@ function obtenerConfiguracionPorTamano(tamano) {
   return configuraciones[tamano] || configuracionEtiqueta10x15
 }
 
+const configuracionActiva = computed(() => obtenerConfiguracionPorTamano(tamanoSeleccionado.value))
+const etiquetasVisibles = computed(() => listaEtiquetas.value.map((etiqueta) => {
+  const codigo = String(etiqueta.codigo || '').trim().toUpperCase()
+  const alterno = tamanoSeleccionado.value === TAMANO_ETIQUETA_GRANDE ? TAMANO_ETIQUETA_CHICA : TAMANO_ETIQUETA_GRANDE
+  return {
+    ...etiqueta,
+    ...resolverDescripcionEtiqueta({
+      etiqueta,
+      tamano: tamanoSeleccionado.value,
+      memoriaPropia: memoriasPorTamano.value[tamanoSeleccionado.value]?.[codigo],
+      memoriaAlterna: memoriasPorTamano.value[alterno]?.[codigo],
+    }),
+  }
+}))
+
+function registrarPestana(tamano, elemento) {
+  if (elemento) pestanas[tamano] = elemento
+}
+
+function manejarTeclaPestanas(evento) {
+  const indice = OPCIONES_TAMANOS_ETIQUETA.findIndex((opcion) => opcion.id === tamanoSeleccionado.value)
+  let siguiente = indice
+  if (evento.key === 'ArrowRight') siguiente = (indice + 1) % OPCIONES_TAMANOS_ETIQUETA.length
+  else if (evento.key === 'ArrowLeft') siguiente = (indice - 1 + OPCIONES_TAMANOS_ETIQUETA.length) % OPCIONES_TAMANOS_ETIQUETA.length
+  else if (evento.key === 'Home') siguiente = 0
+  else if (evento.key === 'End') siguiente = OPCIONES_TAMANOS_ETIQUETA.length - 1
+  else return
+  evento.preventDefault()
+  tamanoSeleccionado.value = OPCIONES_TAMANOS_ETIQUETA[siguiente].id
+  pestanas[tamanoSeleccionado.value]?.focus()
+}
+
+async function cargarMemoriasPorTamano() {
+  const memorias = await obtenerTodasLasMemoriasPorTamano()
+  memoriasPorTamano.value = Object.fromEntries(
+    Object.entries(memorias).map(([tamano, entradas]) => [
+      tamano,
+      Object.fromEntries(entradas.map((entrada) => [entrada.codigo, entrada])),
+    ]),
+  )
+}
+
 async function cargarEtiquetasGuardadas() {
   try {
     const etiquetasGuardadas = await obtenerEtiquetas()
@@ -154,6 +214,7 @@ async function persistirEtiquetas() {
     console.log('[PaginaEtiquetas] Etiquetas persistidas:', listaEtiquetas.value.length)
   } catch (error) {
     console.error('[PaginaEtiquetas] Error persistiendo etiquetas:', error)
+    throw error
   }
 }
 
@@ -162,62 +223,40 @@ async function verificarNuevasEtiquetas() {
     const etiquetasActuales = await obtenerEtiquetas()
     if (!etiquetasActuales) return
 
-    if (etiquetasActuales.length !== listaEtiquetas.value.length) {
-      listaEtiquetas.value = await Promise.all(
-        etiquetasActuales.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)),
-      )
-      console.log('[PaginaEtiquetas] Etiquetas actualizadas desde almacenamiento:', etiquetasActuales.length)
+    const idsActuales = new Set(listaEtiquetas.value.map((etiqueta) => etiqueta.id))
+    const nuevas = etiquetasActuales.filter((etiqueta) => !idsActuales.has(etiqueta.id))
+    if (nuevas.length) {
+      listaEtiquetas.value.push(...nuevas)
+      console.log('[PaginaEtiquetas] Etiquetas nuevas desde almacenamiento:', nuevas.length)
     }
   } catch (error) {
     console.error('[PaginaEtiquetas] Error en polling:', error)
   }
 }
 
-async function aplicarMemoriaEtiqueta(etiquetaBase) {
-  const etiqueta = {
-    ...etiquetaBase,
-    codigo: String(etiquetaBase?.codigo || '')
-      .trim()
-      .toUpperCase(),
-  }
-  if (!etiqueta.descripcionOriginal) {
-    etiqueta.descripcionOriginal = String(etiqueta.descripcion || '')
-  }
-  const memoria = await obtenerMemoriaEtiquetaPorCodigo(etiqueta.codigo)
-  if (!memoria) {
-    return {
-      ...etiqueta,
-      memoriaActiva: false,
-    }
-  }
-  return {
-    ...etiqueta,
-    descripcion: String(memoria.descripcionFormateada || etiqueta.descripcion || ''),
-    memoriaActiva: true,
-    memoriaActualizadaEn: memoria.actualizadoEn || null,
-  }
-}
-
-async function guardarMemoriaDesdeEtiqueta(etiqueta) {
+async function guardarMemoriaDesdeEtiqueta(etiqueta, tamano = tamanoSeleccionado.value) {
   if (!etiqueta?.codigo) return
   const codigo = String(etiqueta.codigo || '').trim().toUpperCase()
   const descripcionFormateada = String(etiqueta.descripcion || '')
-  await upsertMemoriaEtiqueta({ codigo, descripcionFormateada })
+  const resultado = await upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano })
+  if (!resultado.exito) throw new Error(resultado.mensaje)
+  memoriasPorTamano.value[tamano] = { ...memoriasPorTamano.value[tamano], [codigo]: resultado.entrada }
 }
 
 async function agregarEtiqueta(etiqueta) {
   const etiquetaConIdBase = {
     ...etiqueta,
     id: Date.now(),
+    tamano: tamanoSeleccionado.value,
     descripcionOriginal: String(etiqueta?.descripcion || ''),
+    descripcionesPorTamano: { [tamanoSeleccionado.value]: String(etiqueta?.descripcion || '') },
   }
-  const etiquetaConId = await aplicarMemoriaEtiqueta(etiquetaConIdBase)
-
-  listaEtiquetas.value.push(etiquetaConId)
-  if (etiquetaConId.memoriaActiva) {
+  listaEtiquetas.value.push(etiquetaConIdBase)
+  const codigo = String(etiquetaConIdBase.codigo || '').trim().toUpperCase()
+  if (memoriasPorTamano.value[tamanoSeleccionado.value]?.[codigo]) {
     Notify.create({
       type: 'info',
-      message: `Memoria aplicada para ${etiquetaConId.codigo}`,
+      message: `Memoria aplicada para ${etiquetaConIdBase.codigo}`,
       position: 'top',
       timeout: 1300,
     })
@@ -228,28 +267,44 @@ async function agregarEtiqueta(etiqueta) {
 async function editarEtiqueta(etiquetaEditada) {
   const indice = listaEtiquetas.value.findIndex((e) => e.id === etiquetaEditada.id)
   if (indice !== -1) {
-    listaEtiquetas.value[indice] = etiquetaEditada
+    const anterior = listaEtiquetas.value[indice]
+    listaEtiquetas.value[indice] = {
+      ...anterior,
+      codigo: etiquetaEditada.codigo,
+      cantidad: etiquetaEditada.cantidad,
+      ubicacion: etiquetaEditada.ubicacion,
+    }
     await persistirEtiquetas()
   }
 }
 
-async function guardarMemoriaEtiquetaDesdeTabla(etiquetaEditada) {
-  if (!etiquetaEditada?.codigo) return
-  await guardarMemoriaDesdeEtiqueta(etiquetaEditada)
+async function confirmarEtiquetaEditada({ etiqueta, tamano, alTerminar }) {
+  const etiquetaEditada = etiqueta
   const indice = listaEtiquetas.value.findIndex((e) => e.id === etiquetaEditada.id)
-  if (indice !== -1) {
-    listaEtiquetas.value[indice] = {
-      ...listaEtiquetas.value[indice],
-      memoriaActiva: true,
-      memoriaActualizadaEn: Date.now(),
-    }
+  if (indice < 0) {
+    alTerminar(false)
+    return
   }
-  Notify.create({
-    type: 'positive',
-    message: `Memoria guardada para ${etiquetaEditada.codigo}`,
-    position: 'top',
-    timeout: 1300,
-  })
+  try {
+    if (!String(etiquetaEditada.codigo || '').trim()) throw new Error('El código no puede estar vacío.')
+    await guardarMemoriaDesdeEtiqueta(etiquetaEditada, tamano)
+    const anterior = listaEtiquetas.value[indice]
+    listaEtiquetas.value[indice] = guardarDescripcionDeTamano({
+      etiqueta: {
+        ...anterior,
+        codigo: etiquetaEditada.codigo,
+        ubicacion: etiquetaEditada.ubicacion,
+      },
+      tamano,
+      descripcion: etiquetaEditada.descripcion,
+    })
+    await persistirEtiquetas()
+    Notify.create({ type: 'positive', message: `Memoria guardada para ${etiquetaEditada.codigo}`, position: 'top', timeout: 1300 })
+    alTerminar(true)
+  } catch (error) {
+    Notify.create({ type: 'negative', message: `No se guardó la memoria: ${error.message}`, position: 'top', timeout: 3000 })
+    alTerminar(false)
+  }
 }
 
 function eliminarEtiqueta(indice) {
@@ -290,22 +345,9 @@ function abrirApartadoMemorias() {
 }
 
 async function reaplicarMemoriasEnPantalla() {
-  let cambios = 0
-  const listaActualizada = await Promise.all(
-    listaEtiquetas.value.map(async (etiqueta) => {
-      const descripcionPrev = String(etiqueta?.descripcion || '')
-      const etiquetaActualizada = await aplicarMemoriaEtiqueta(etiqueta)
-      if (String(etiquetaActualizada?.descripcion || '') !== descripcionPrev) {
-        cambios += 1
-      }
-      return etiquetaActualizada
-    }),
-  )
-  listaEtiquetas.value = listaActualizada
-  if (cambios > 0) {
-    await persistirEtiquetas()
-  }
-  return cambios
+  const anteriores = etiquetasVisibles.value.map((etiqueta) => etiqueta.descripcion)
+  await cargarMemoriasPorTamano()
+  return etiquetasVisibles.value.filter((etiqueta, indice) => etiqueta.descripcion !== anteriores[indice]).length
 }
 
 async function importarMemoriasDesdeTexto(textoJson, origenImportacion = '') {
@@ -380,10 +422,14 @@ async function generarPDF() {
       spinnerColor: 'primary',
     })
 
-    const configuracion = obtenerConfiguracionPorTamano(tamanoSeleccionado.value)
+    const configuracion = configuracionActiva.value
     const etiquetasParaPDF =
-      tablaEtiquetasRef.value?.obtenerEtiquetasOrdenadas?.() || [...listaEtiquetas.value]
-    await Promise.all(etiquetasParaPDF.map((etiqueta) => guardarMemoriaDesdeEtiqueta(etiqueta)))
+      tablaEtiquetasRef.value?.obtenerEtiquetasOrdenadas?.() || [...etiquetasVisibles.value]
+    for (const etiqueta of etiquetasParaPDF) {
+      if (tamanoSeleccionado.value === TAMANO_ETIQUETA_GRANDE || etiqueta.memoriaActiva) {
+        await guardarMemoriaDesdeEtiqueta(etiqueta)
+      }
+    }
     const resultado = await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion)
 
     Loading.hide()
@@ -494,7 +540,7 @@ function cerrarPasoAtrasNativo() {
 
 onMounted(async () => {
   await cargarEtiquetasGuardadas()
-  listaEtiquetas.value = await Promise.all(listaEtiquetas.value.map((etiqueta) => aplicarMemoriaEtiqueta(etiqueta)))
+  await cargarMemoriasPorTamano()
   await procesarArchivoCompartidoPendiente()
 
   emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
@@ -562,18 +608,31 @@ watch(
   font-weight: bold;
   margin: 0;
 }
-.texto-info-tamano {
-  text-align: center;
-  color: var(--color-texto-secundario);
-  font-size: 0.95rem;
-  margin: 0;
-  padding: 0.5rem;
-  background: var(--color-fondo);
-  border-radius: 6px;
+.pestanas-etiquetas {
+  display: flex;
+  width: 100%;
+  border-bottom: 2px solid var(--color-borde);
 }
-.texto-info-tamano strong {
-  color: var(--color-primario);
+.pestana-etiqueta {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.35rem;
+  border: 1px solid var(--color-borde);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--color-fondo);
+  color: var(--color-texto-secundario);
+  cursor: pointer;
   font-weight: 600;
+}
+.pestana-activa {
+  background: var(--color-superficie);
+  color: var(--color-primario);
+  border-color: var(--color-primario);
+}
+.pestana-etiqueta:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
 }
 .boton-abrir-memorias {
   border: 1px solid var(--color-borde);

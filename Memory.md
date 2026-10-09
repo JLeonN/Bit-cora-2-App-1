@@ -20,3 +20,4 @@ Este archivo conserva decisiones y aprendizajes útiles para trabajos futuros en
 ## Decisiones y aprendizajes
 
 - 2026-10-09: Se adopta una memoria curada para conservar contexto reutilizable entre trabajos. Las tareas terminadas se reflejan en sus archivos, planes y Git; aquí se registra solo lo que resulte útil para decisiones posteriores.
+- 2026-10-09: Etiquetas: la lista de `historial_etiquetas` es canónica y compartida; las descripciones visibles se proyectan por tamaño sin persistir préstamos. Las memorias grandes conservan `memoria_etiquetas_v1` y las chicas usan `memoria_etiquetas_2_5x6_7_v1`. El layout 10 × 15 permanece en `UsoLayoutEtiquetaPreview.js` y el de 67 × 25 mm vive en `UsoLayoutEtiquetaChica.js`. Ver `Planes/PlanEtiquetasDosTamanos.md`.

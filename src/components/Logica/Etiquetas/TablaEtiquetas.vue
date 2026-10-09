@@ -40,10 +40,13 @@
           'tarjeta-etiqueta-duplicada': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
           'tarjeta-etiqueta-inexistente': esArticuloInexistente(etiqueta.codigo),
           'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
+          'tarjeta-etiqueta-chica': configuracion.id === TAMANO_ETIQUETA_CHICA,
         }"
       >
         <TarjetaPreviewEtiquetaMovil
+          :key="`${etiqueta.id}-${configuracion.id}`"
           :etiqueta="etiqueta"
+          :configuracion="configuracion"
           :indice="indiceOriginal"
           :nombre-articulo="obtenerNombreArticulo(etiqueta)"
           :es-ubicacion-sl="esUbicacionSL"
@@ -108,6 +111,7 @@ import {
 } from '../Compartidos/OrdenarColeccion.js'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
+import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import {
   guardarPreferenciaOrdenEtiquetas,
   obtenerPreferenciaOrdenEtiquetas,
@@ -115,11 +119,12 @@ import {
 
 const props = defineProps({
   etiquetas: { type: Array, required: true },
+  configuracion: { type: Object, required: true },
 })
 
 const emit = defineEmits([
   'editar-etiqueta',
-  'guardar-memoria-etiqueta',
+  'confirmar-etiqueta',
   'eliminar-etiqueta',
   'limpiar-todo',
   'modal-abierto',
@@ -128,6 +133,7 @@ const emit = defineEmits([
 const mostrarModalLimpiarTodo = ref(false)
 const informacionExpandida = ref(false)
 const borradoresEdicion = ref({})
+const indicesGuardando = new Set()
 const indiceAccionEdicion = ref(-1)
 const versionAccionEdicion = ref(0)
 const ordenSeleccionado = ref(normalizarOrden())
@@ -182,7 +188,8 @@ function tieneBorrador(indice) {
   return !!(borrador && Object.keys(borrador).length)
 }
 
-function confirmarEdicionInline(indice) {
+async function confirmarEdicionInline(indice) {
+  if (indicesGuardando.has(indice)) return
   const etiquetaBase = props.etiquetas[indice]
   const borrador = borradoresEdicion.value[indice]
   if (!etiquetaBase || !borrador) {
@@ -199,8 +206,12 @@ function confirmarEdicionInline(indice) {
     const ubicacionNormalizada = String(borrador.ubicacion || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
     etiquetaActualizada.ubicacion = ubicacionNormalizada || 'Sin ubicación'
   }
-  emit('editar-etiqueta', etiquetaActualizada)
-  emit('guardar-memoria-etiqueta', etiquetaActualizada)
+  indicesGuardando.add(indice)
+  const guardado = await new Promise((resolve) => {
+    emit('confirmar-etiqueta', { etiqueta: etiquetaActualizada, tamano: props.configuracion.id, alTerminar: resolve })
+  })
+  indicesGuardando.delete(indice)
+  if (!guardado) return
   delete borradoresEdicion.value[indice]
   indiceAccionEdicion.value = indice
   versionAccionEdicion.value += 1
@@ -214,7 +225,8 @@ function cancelarEdicionInline(indice) {
   versionAccionEdicion.value += 1
 }
 
-function restablecerEtiquetaDesdeMaestro(indice) {
+async function restablecerEtiquetaDesdeMaestro(indice) {
+  if (indicesGuardando.has(indice)) return
   const etiquetaBase = props.etiquetas[indice]
   if (!etiquetaBase) {
     return
@@ -239,8 +251,12 @@ function restablecerEtiquetaDesdeMaestro(indice) {
     memoriaActiva: false,
     memoriaActualizadaEn: null,
   }
-  emit('editar-etiqueta', etiquetaRestablecida)
-  emit('guardar-memoria-etiqueta', etiquetaRestablecida)
+  indicesGuardando.add(indice)
+  const guardado = await new Promise((resolve) => {
+    emit('confirmar-etiqueta', { etiqueta: etiquetaRestablecida, tamano: props.configuracion.id, alTerminar: resolve })
+  })
+  indicesGuardando.delete(indice)
+  if (!guardado) return
   if (borradoresEdicion.value[indice]) {
     delete borradoresEdicion.value[indice]
   }
@@ -400,6 +416,15 @@ const cantidadMemoriasActivas = computed(() => {
 const firmaAlertas = computed(() => `${cantidadCodigosRepetidos.value}|${cantidadArticulosInexistentes.value}`)
 
 watch(
+  () => props.configuracion.id,
+  () => {
+    borradoresEdicion.value = {}
+    indiceAccionEdicion.value = -1
+    versionAccionEdicion.value += 1
+  },
+)
+
+watch(
   () => firmaAlertas.value,
   (firmaNueva, firmaAnterior) => {
     if (firmaNueva !== firmaAnterior && (cantidadCodigosRepetidos.value > 0 || cantidadArticulosInexistentes.value > 0)) {
@@ -500,6 +525,33 @@ defineExpose({
   width: min(100%, 15.9cm);
   justify-self: center;
 }
+.tarjeta-etiqueta-chica {
+  width: min(100%, 13cm);
+}
+.tarjeta-etiqueta-chica .franja-controles-tarjeta {
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+}
+.tarjeta-etiqueta-chica .columna-confirmar {
+  min-width: 0;
+}
+.tarjeta-etiqueta-chica .boton-confirmar,
+.tarjeta-etiqueta-chica :deep(.boton-cantidad) {
+  width: 36px;
+  height: 36px;
+}
+.tarjeta-etiqueta-chica :deep(.input-cantidad) {
+  width: 52px;
+  height: 36px;
+  box-sizing: border-box;
+}
+.tarjeta-etiqueta-chica :deep(.control-cantidad) {
+  gap: 0.3rem;
+}
+.tarjeta-etiqueta-chica :deep(.acciones-ubicacion) {
+  justify-content: flex-end;
+}
 .tarjeta-etiqueta-duplicada {
   background: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
@@ -551,6 +603,24 @@ defineExpose({
 @media (max-width: 600px) {
   .tarjeta-resumen-etiquetas {
     padding: 0.65rem 0.72rem;
+  }
+}
+@media (max-width: 340px) {
+  .tarjeta-etiqueta-chica .franja-controles-tarjeta {
+    gap: 0.25rem;
+  }
+  .tarjeta-etiqueta-chica .acciones-confirmar,
+  .tarjeta-etiqueta-chica :deep(.control-cantidad) {
+    gap: 0.2rem;
+  }
+  .tarjeta-etiqueta-chica .boton-confirmar,
+  .tarjeta-etiqueta-chica :deep(.boton-cantidad) {
+    width: 32px;
+    height: 32px;
+  }
+  .tarjeta-etiqueta-chica :deep(.input-cantidad) {
+    width: 45px;
+    height: 32px;
   }
 }
 @media (min-width: 601px) and (max-width: 1024px) {
