@@ -4,7 +4,7 @@
 
     <div class="tarjeta-administrar-listados">
       <div class="encabezado-administrar-listados">
-        <h3>Administrar listados</h3>
+        <h3>Administrar listado</h3>
       </div>
       <div class="contenido-administrar-listados">
         <GestorListados
@@ -13,7 +13,7 @@
           :ocupado="ocupado"
           @crear="crearNuevoListado"
           @abrir="abrirListado"
-          @renombrar="renombrarListadoActivo"
+          @renombrar="renombrarListadoSeleccionado"
           @duplicar="duplicarListadoActivo"
           @solicitar-eliminar="solicitarEliminarListado"
         />
@@ -545,9 +545,13 @@ function abrirListado(id) {
   })
 }
 
-function renombrarListadoActivo({ id, nombrePersonalizado }) {
+function renombrarListadoSeleccionado({ id, nombrePersonalizado }) {
   ejecutarAdministracion(async () => {
-    reemplazarListadoLocal(await renombrarListado(id, nombrePersonalizado))
+    const guardado = await renombrarListado(id, nombrePersonalizado)
+    if (listadoActivo.value?.id === id) listadoActivo.value = guardado
+    listados.value = [guardado, ...listados.value.filter((listado) => listado.id !== id)].sort(
+      (a, b) => b.actualizadoEn - a.actualizadoEn,
+    )
   })
 }
 
@@ -1460,7 +1464,8 @@ onUnmounted(() => {
   padding-bottom: var(--espacio-inferior-contenido, 120px);
 }
 .tarjeta-administrar-listados {
-  margin-bottom: 20px;
+  max-width: 560px;
+  margin: 0 auto 20px;
   overflow: hidden;
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);

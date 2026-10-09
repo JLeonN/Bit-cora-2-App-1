@@ -1,12 +1,6 @@
 <template>
   <section class="gestor-listados">
-    <div class="encabezado-gestor-listados">
-      <label for="selector-listado">{{ soloSeleccion ? 'Elegí un listado' : 'Listado activo' }}</label>
-      <button v-if="!soloSeleccion" type="button" class="boton-nuevo-listado" :disabled="ocupado" @click="abrirCreacion">
-        <IconPlus :size="18" :stroke="2" />
-        Nuevo
-      </button>
-    </div>
+    <label v-if="soloSeleccion" for="selector-listado">Elegí un listado</label>
     <div class="fila-selector-listado">
       <q-select
         id="selector-listado"
@@ -23,6 +17,7 @@
         options-dark
         popup-content-class="menu-selector-listados"
         class="selector-listado"
+        :aria-label="soloSeleccion ? 'Elegí un listado' : 'Seleccionar listado'"
         :disable="ocupado"
         @update:model-value="abrirListado"
       >
@@ -32,6 +27,17 @@
               <q-item-label>{{ alcance.opt.nombre }}</q-item-label>
             </q-item-section>
             <q-item-section v-if="!soloSeleccion" side class="acciones-opcion-listado">
+              <button
+                type="button"
+                class="boton-opcion-listado"
+                :aria-label="`Editar nombre de ${alcance.opt.nombre}`"
+                :title="`Editar nombre de ${alcance.opt.nombre}`"
+                @click.stop.prevent="abrirCambioNombre(alcance.opt)"
+                @keydown.stop
+                @keyup.stop
+              >
+                <IconPencil :size="19" :stroke="2" />
+              </button>
               <button
                 type="button"
                 class="boton-opcion-listado"
@@ -58,16 +64,9 @@
           </q-item>
         </template>
       </q-select>
-      <button
-        v-if="!soloSeleccion"
-        type="button"
-        class="boton-renombrar-listado"
-        :disabled="ocupado || !listadoActivo"
-        :aria-label="`Cambiar nombre de ${listadoActivo?.nombre || 'listado'}`"
-        title="Cambiar nombre"
-        @click="abrirCambioNombre"
-      >
-        <IconPencil :size="19" :stroke="2" />
+      <button v-if="!soloSeleccion" type="button" class="boton-nuevo-listado" :disabled="ocupado" @click="abrirCreacion">
+        <IconPlus :size="18" :stroke="2" />
+        Nuevo
       </button>
     </div>
     <q-dialog v-if="!soloSeleccion" v-model="mostrarDialogoNombre">
@@ -113,17 +112,21 @@ const selectorListadoRef = ref(null)
 const mostrarDialogoNombre = ref(false)
 const modoNombre = ref('crear')
 const nombreBorrador = ref('')
+const listadoAEditar = ref(null)
 
 function abrirCreacion() {
   modoNombre.value = 'crear'
   nombreBorrador.value = ''
+  listadoAEditar.value = null
   mostrarDialogoNombre.value = true
 }
 
-function abrirCambioNombre() {
-  if (!props.listadoActivo) return
+function abrirCambioNombre(listado) {
+  if (props.ocupado) return
+  selectorListadoRef.value?.hidePopup()
   modoNombre.value = 'renombrar'
-  nombreBorrador.value = props.listadoActivo.nombrePersonalizado || ''
+  listadoAEditar.value = listado
+  nombreBorrador.value = listado.nombrePersonalizado || ''
   mostrarDialogoNombre.value = true
 }
 
@@ -134,8 +137,8 @@ function confirmarNombre() {
     emit('crear', nombre)
     return
   }
-  if (!props.listadoActivo || nombre === props.listadoActivo.nombrePersonalizado) return
-  emit('renombrar', { id: props.listadoActivo.id, nombrePersonalizado: nombre })
+  if (!listadoAEditar.value || nombre === listadoAEditar.value.nombrePersonalizado) return
+  emit('renombrar', { id: listadoAEditar.value.id, nombrePersonalizado: nombre })
 }
 
 function abrirListado(id) {
@@ -162,22 +165,17 @@ function solicitarEliminarListado(listado) {
   flex-direction: column;
   gap: 8px;
 }
-.encabezado-gestor-listados,
 .fila-selector-listado {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.encabezado-gestor-listados {
-  justify-content: space-between;
 }
 label {
   color: var(--color-texto-secundario);
   font-size: 0.82rem;
   font-weight: 600;
 }
-.boton-nuevo-listado,
-.boton-renombrar-listado {
+.boton-nuevo-listado {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -190,13 +188,7 @@ label {
   border-radius: 8px;
   cursor: pointer;
 }
-.boton-renombrar-listado {
-  width: 42px;
-  padding: 8px;
-  background: var(--color-superficie);
-}
-.boton-nuevo-listado:disabled,
-.boton-renombrar-listado:disabled {
+.boton-nuevo-listado:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
