@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { jsPDF } from 'jspdf'
 import { imprimirPDFEnNavegador } from '../Compartidos/ImprimirPDFEnNavegador.js'
+import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 const ANCHO_PAGINA = 297
 const ALTO_PAGINA = 210
@@ -10,20 +11,25 @@ const ALTO_ENCABEZADO = 8
 const ALTO_MINIMO_FILA = 7
 const TAMANO_TEXTO = 8
 const INTERLINEADO = 3.6
+const rellenarNumero = (valor) => String(valor).padStart(2, '0')
 
 function sanitizarNombreArchivo(nombre) {
   return String(nombre || '').replace(/[<>:"/\\|?*]/g, '').trim()
 }
 
-function crearNombreArchivoListado(nombrePersonalizado) {
-  const ahora = new Date()
-  const rellenar = (valor) => String(valor).padStart(2, '0')
-  const fecha = `${rellenar(ahora.getDate())}-${rellenar(ahora.getMonth() + 1)}-${ahora.getFullYear()}`
-  const hora = `${rellenar(ahora.getHours())}-${rellenar(ahora.getMinutes())}`
+function crearNombreArchivoListado(nombrePersonalizado, fechaGeneracion) {
+  const fecha = `${rellenarNumero(fechaGeneracion.getDate())}-${rellenarNumero(fechaGeneracion.getMonth() + 1)}-${fechaGeneracion.getFullYear()}`
+  const hora = `${rellenarNumero(fechaGeneracion.getHours())}-${rellenarNumero(fechaGeneracion.getMinutes())}`
   const nombre = sanitizarNombreArchivo(nombrePersonalizado)
   return nombre
     ? `Listado _ ${nombre} _ ${fecha} ${hora}.pdf`
     : `Listado ${fecha} ${hora}.pdf`
+}
+
+function crearSubtitulo(nombreUsuario, fechaGeneracion) {
+  const fecha = `${rellenarNumero(fechaGeneracion.getDate())}/${rellenarNumero(fechaGeneracion.getMonth() + 1)}/${fechaGeneracion.getFullYear()}`
+  const hora = `${rellenarNumero(fechaGeneracion.getHours())}:${rellenarNumero(fechaGeneracion.getMinutes())}`
+  return `${nombreUsuario} · ${fecha} ${hora}`
 }
 
 function obtenerColumnas(configuracion) {
@@ -71,14 +77,14 @@ function prepararFila(pdf, articulo, indice, columnas) {
   return { celdas, alto: Math.max(ALTO_MINIMO_FILA, cantidadLineas * INTERLINEADO + 3) }
 }
 
-function dibujarTitulo(pdf, nombreListado) {
+function dibujarTitulo(pdf, nombreListado, subtitulo) {
   pdf.setTextColor(0)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(15)
   pdf.text(String(nombreListado || 'Listado sin nombre'), MARGEN, 13)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8)
-  pdf.text('Listado de artículos · Formato A4', MARGEN, 18)
+  pdf.text(subtitulo, MARGEN, 18)
   return 23
 }
 
@@ -132,18 +138,19 @@ function agregarPiePaginas(pdf) {
   }
 }
 
-export function construirDocumentoPDFListado(articulosOrdenados, configuracion, nombreListado) {
+export function construirDocumentoPDFListado(articulosOrdenados, configuracion, nombreListado, nombreUsuario, fechaGeneracion) {
   if (!Array.isArray(articulosOrdenados) || articulosOrdenados.length === 0) {
     throw new Error('No hay artículos para generar el archivo')
   }
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true })
   const columnas = obtenerColumnas(configuracion)
-  let posicionY = dibujarEncabezado(pdf, columnas, dibujarTitulo(pdf, nombreListado))
+  const subtitulo = crearSubtitulo(nombreUsuario, fechaGeneracion)
+  let posicionY = dibujarEncabezado(pdf, columnas, dibujarTitulo(pdf, nombreListado, subtitulo))
   articulosOrdenados.forEach((articulo, indice) => {
     const fila = prepararFila(pdf, articulo, indice, columnas)
     if (posicionY + fila.alto > ALTO_PAGINA - MARGEN) {
       pdf.addPage()
-      posicionY = dibujarEncabezado(pdf, columnas, dibujarTitulo(pdf, nombreListado))
+      posicionY = dibujarEncabezado(pdf, columnas, dibujarTitulo(pdf, nombreListado, subtitulo))
     }
     dibujarFila(pdf, fila, posicionY)
     posicionY += fila.alto
@@ -157,6 +164,19 @@ export function construirDocumentoPDFListado(articulosOrdenados, configuracion, 
   return pdf
 }
 
+async function prepararDocumentoPDFListado(listado, articulosOrdenados) {
+  const fechaGeneracion = new Date()
+  const nombreUsuario = await obtenerNombreUsuario()
+  const pdf = construirDocumentoPDFListado(
+    articulosOrdenados,
+    listado.configuracion,
+    listado.nombre,
+    nombreUsuario,
+    fechaGeneracion,
+  )
+  return { pdf, fechaGeneracion }
+}
+
 function descargarPDFEnNavegador(pdf, nombreArchivo) {
   const url = URL.createObjectURL(pdf.output('blob'))
   const enlace = document.createElement('a')
@@ -167,12 +187,8 @@ function descargarPDFEnNavegador(pdf, nombreArchivo) {
 }
 
 export async function generarYGuardarPDFListado(listado, articulosOrdenados) {
-  const pdf = construirDocumentoPDFListado(
-    articulosOrdenados,
-    listado.configuracion,
-    listado.nombre,
-  )
-  const nombreArchivo = crearNombreArchivoListado(listado.nombrePersonalizado)
+  const { pdf, fechaGeneracion } = await prepararDocumentoPDFListado(listado, articulosOrdenados)
+  const nombreArchivo = crearNombreArchivoListado(listado.nombrePersonalizado, fechaGeneracion)
   if (Capacitor.getPlatform() === 'web') {
     descargarPDFEnNavegador(pdf, nombreArchivo)
     return { uri: null, nombreArchivo }
@@ -187,10 +203,6 @@ export async function generarYGuardarPDFListado(listado, articulosOrdenados) {
 }
 
 export async function imprimirListadoPDF(listado, articulosOrdenados) {
-  const pdf = construirDocumentoPDFListado(
-    articulosOrdenados,
-    listado.configuracion,
-    listado.nombre,
-  )
+  const { pdf } = await prepararDocumentoPDFListado(listado, articulosOrdenados)
   await imprimirPDFEnNavegador(pdf)
 }
