@@ -1,12 +1,9 @@
 <template>
   <div class="contenedor-stock">
-    <h2 class="titulo-tabla">Stock</h2>
-
-    <SelectorExcel
-      v-if="!baseDatosCargada"
-      @base-datos-cargada="manejarBaseCargada"
-      @error-carga="manejarErrorCarga"
-    />
+    <div class="encabezado-con-base-datos">
+      <h2 class="titulo-tabla">Stock</h2>
+      <BotonBaseDatosFaltante />
+    </div>
 
     <div v-if="hayConflictoFuente" class="alerta-fuente-stock">
       <strong>La sesión pertenece a otro Excel.</strong>
@@ -15,15 +12,10 @@
     </div>
 
     <TarjetaSeccion
-      titulo="Base e importación"
+      titulo="Importación desde Ubicaciones"
       :expandida-por-defecto="false"
-      descripcion-resumen="Cargá el Excel o prepará artículos desde la tabla de Ubicaciones."
+      descripcion-resumen="Prepará artículos desde la tabla de Ubicaciones."
     >
-      <SelectorExcel
-        v-if="baseDatosCargada"
-        @base-datos-cargada="manejarBaseCargada"
-        @error-carga="manejarErrorCarga"
-      />
       <button
         type="button"
         class="boton-importar"
@@ -258,7 +250,7 @@ import {
   IconDownload,
   IconTrash,
 } from '@tabler/icons-vue'
-import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
+import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
@@ -900,15 +892,6 @@ function procesarEscaneo(codigos) {
   if (!Array.isArray(codigos) || !codigos[0]) return
   busquedaArticulo.value = codigos[0]
   buscarArticuloExacto()
-}
-
-function manejarBaseCargada() {
-  actualizarEstadoBase()
-}
-
-function manejarErrorCarga(mensaje) {
-  notificar('negative', mensaje || 'No se pudo cargar el Excel')
-  actualizarEstadoBase()
 }
 
 function cerrarPasoAtrasNativo() {

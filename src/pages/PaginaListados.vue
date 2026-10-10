@@ -1,6 +1,9 @@
 <template>
   <div class="contenedor-tabla pagina-listados">
-    <h2 class="titulo-tabla">Listados</h2>
+    <div class="encabezado-con-base-datos">
+      <h2 class="titulo-tabla">Listados</h2>
+      <BotonBaseDatosFaltante />
+    </div>
 
     <div class="tarjeta-administrar-listados">
       <div class="encabezado-administrar-listados">
@@ -34,9 +37,6 @@
           @articulo-seleccionado="agregarArticulo"
           @agregar-coincidencias="agregarArticulosCoincidentes"
           @archivo-excel-seleccionado="importarExcelListado"
-          @base-datos-cargada="manejarBaseCargada"
-          @base-datos-limpia="baseDatosCargada = false"
-          @error-carga="manejarErrorCarga"
           @modal-abierto="modalActivo = true"
           @modal-cerrado="modalActivo = false"
           @confirmar-repetido="confirmarArticuloRepetido"
@@ -146,6 +146,7 @@
 
       <TablaListados
         :articulos="articulosOrdenados"
+        :base-datos-cargada="baseDatosCargada"
         :mostrar-numeracion="listadoActivo.configuracion.mostrarNumeracion"
         :mostrar-stock="listadoActivo.configuracion.mostrarStock"
         :mostrar-ubicacion="listadoActivo.configuracion.mostrarUbicacion"
@@ -251,6 +252,7 @@ import {
 } from '@tabler/icons-vue'
 import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import FormularioListado from '../components/Logica/Listados/FormularioListado.vue'
+import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import TablaListados from '../components/Logica/Listados/TablaListados.vue'
 import {
   UMBRAL_IR_AL_FINAL,
@@ -354,7 +356,6 @@ const procesandoColaCapitanaBita = ref(false)
 const importandoExcel = ref(false)
 const agregandoCoincidencias = ref(false)
 const resultadoImportacionExcel = ref(null)
-const esperandoMaestroParaImportar = ref(false)
 const identificadorExcelCompartidoEnProceso = ref('')
 const paginaInicializada = ref(false)
 const identificadorAvisoMaestro = ref('')
@@ -774,18 +775,16 @@ async function procesarExcelCompartidoPendiente() {
     return
   }
   if (!baseDatosCargada.value || !obtenerArticulosCargados().length) {
-    esperandoMaestroParaImportar.value = true
     if (identificadorAvisoMaestro.value !== identificador) {
       identificadorAvisoMaestro.value = identificador
       notificar(
         'warning',
-        'Cargá primero el Excel maestro; después importaremos el listado recibido.',
+        'Tocá el ícono junto a Listados para cargar el Excel maestro; después importaremos el listado recibido.',
         4000,
       )
     }
     return
   }
-  esperandoMaestroParaImportar.value = false
   await ejecutarImportacionExcel({
     identificadorCompartido: identificador,
     obtenerResultado: async () => {
@@ -1395,23 +1394,6 @@ watch(
   },
   { deep: true },
 )
-
-async function manejarBaseCargada(datos) {
-  baseDatosCargada.value = true
-  try {
-    await cargarDatosLocales()
-  } catch (error) {
-    notificar('negative', error.message || 'No se pudieron cargar los datos guardados')
-  }
-  if (datos?.mensaje) notificar('positive', datos.mensaje)
-  if (esperandoMaestroParaImportar.value) await procesarExcelCompartidoPendiente()
-  if (!datos?.cargaAutomatica) await formularioListadoRef.value?.enfocarBusqueda?.()
-}
-
-function manejarErrorCarga(mensaje) {
-  baseDatosCargada.value = obtenerEstadoCarga().cargado
-  notificar('negative', mensaje || 'No se pudo cargar el Excel')
-}
 
 function cerrarPasoAtrasNativo() {
   if (formularioListadoRef.value?.cerrarInteraccion?.()) return true

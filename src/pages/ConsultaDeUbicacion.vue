@@ -1,12 +1,9 @@
 <template>
   <div class="contenedor-consulta">
-    <h2 class="titulo-consulta">Consulta de ubicación</h2>
-
-    <SelectorExcel
-      v-if="!baseDatosCargada"
-      @base-datos-cargada="manejarBaseCargada"
-      @error-carga="manejarErrorCarga"
-    />
+    <div class="encabezado-con-base-datos">
+      <h2 class="titulo-consulta">Consulta de ubicación</h2>
+      <BotonBaseDatosFaltante />
+    </div>
 
     <div class="bloque-buscador" :class="{ 'bloque-buscador-con-resultado': articuloConsultado }">
       <CampoContextoArticulo
@@ -221,7 +218,7 @@ import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp, IconMinus, IconPlus } from '@tabler/icons-vue'
-import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
+import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../components/Logica/Ubicaciones/CamaraEscaneo.vue'
@@ -766,14 +763,6 @@ const guardarNuevaUbicacion = async () => {
     position: 'top',
     timeout: 2600,
   })
-}
-
-const manejarBaseCargada = () => {
-  actualizarEstadoBaseDatos()
-}
-
-const manejarErrorCarga = () => {
-  actualizarEstadoBaseDatos()
 }
 
 const manejarModalAbierto = () => {

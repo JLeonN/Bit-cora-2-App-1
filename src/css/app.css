@@ -39,6 +39,53 @@ body {
 .resaltado-atencion {
   animation: resaltar-atencion 800ms ease-in-out 3;
 }
+.encabezado-con-base-datos {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  margin-bottom: 1.5rem;
+}
+.encabezado-con-base-datos::before {
+  content: '';
+  width: 40px;
+}
+.encabezado-con-base-datos > h2 {
+  min-width: 0;
+  margin: 0;
+  line-height: 1.2;
+}
+.boton-base-datos-faltante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid var(--color-acento);
+  background: var(--color-superficie);
+  color: var(--color-acento);
+  cursor: pointer;
+  animation: pulsar-base-datos-faltante 2s ease-in-out infinite;
+}
+.boton-base-datos-faltante:focus-visible {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 3px;
+}
+@keyframes pulsar-base-datos-faltante {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    opacity: 0.65;
+    box-shadow: 0 0 12px var(--color-acento);
+  }
+}
 @keyframes resaltar-atencion {
   0%,
   100% {
@@ -55,6 +102,9 @@ body {
     animation: none;
     border-color: var(--color-acento);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-acento) 30%, transparent);
+  }
+  .boton-base-datos-faltante {
+    animation: none;
   }
 }
 button {

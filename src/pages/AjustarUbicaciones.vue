@@ -1,24 +1,9 @@
 <template>
   <div class="contenedor-tabla">
-    <h2 class="titulo-tabla">Ubicaciones</h2>
-
-    <TarjetaSeccion
-      titulo="Base de datos para búsqueda"
-      :expandida-por-defecto="baseDatosExpandida"
-      descripcion-resumen="Cargá o recargá el Excel con artículos para habilitar búsqueda, validaciones y alertas."
-      :ocultar-resumen-al-expandir="true"
-    >
-      <p class="texto-secundario texto-explicacion-base">
-        Cargá el archivo Excel de artículos para actualizar la base de búsqueda y validar códigos en tiempo real.
-      </p>
-      <SelectorExcel
-        :identificador-archivo-compartido="identificadorExcelMaestroCompartido"
-        @base-datos-cargada="manejarBaseDatosCargada"
-        @base-datos-limpia="manejarBaseDatosLimpia"
-        @error-carga="manejarErrorCarga"
-        @archivo-compartido-finalizado="finalizarExcelMaestroCompartido"
-      />
-    </TarjetaSeccion>
+    <div class="encabezado-con-base-datos">
+      <h2 class="titulo-tabla">Ubicaciones</h2>
+      <BotonBaseDatosFaltante />
+    </div>
 
     <InformacionUbicaciones :ubicaciones="ubicacionesArray" />
 
@@ -79,7 +64,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { IconClock, IconDownload, IconLink, IconLoader2, IconSend } from '@tabler/icons-vue'
@@ -88,8 +72,7 @@ import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue
 import FormularioUbicacion from '../components/Logica/Ubicaciones/FormularioUbicacion.vue'
 import InformacionUbicaciones from '../components/Logica/Ubicaciones/InformacionUbicaciones.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
-import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
-import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
+import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import { generarYGuardarExcelUbicaciones } from '../components/Logica/Ubicaciones/ExportarUbicacionesExcel'
 import {
   descargarArchivoExcelEnNavegador,
@@ -111,7 +94,6 @@ import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/S
 import {
   obtenerArticuloPorCodigo,
   inicializarBaseDatos,
-  obtenerEstadoCarga,
   reconstruirUbicacionesDesdeLista,
   validarCodigosDuplicadosEnUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
@@ -127,13 +109,10 @@ import {
 
 // Emit para configurar la barra inferior
 const emit = defineEmits(['configurar-barra'])
-const route = useRoute()
-const router = useRouter()
 
 // --- ESTADO PRINCIPAL ---
 const ubicaciones = ref([])
 const formularioUbicacionRef = ref(null)
-const baseDatosExpandida = ref(false)
 const estadoPreparacionExcel = ref('pendiente')
 const compartiendoEnlace = ref(false)
 let temporizadorPreparacionExcel = null
@@ -142,11 +121,6 @@ let componenteUbicacionesActivo = true
 
 // Estado para controlar si algún modal está activo
 const modalActivo = ref(false)
-const identificadorExcelMaestroCompartido = computed(() => {
-  if (route.query.destinoExcel !== 'maestro') return ''
-  const identificador = route.query.archivoCompartido
-  return Array.isArray(identificador) ? String(identificador[0] || '') : String(identificador || '')
-})
 
 // Computed para garantizar que siempre sea array
 const ubicacionesArray = computed(() => {
@@ -283,35 +257,6 @@ const manejarModalAbierto = () => {
 
 const manejarModalCerrado = () => {
   modalActivo.value = false
-}
-
-// --- MANEJO DE EVENTOS DEL SELECTOR DE EXCEL ---
-function manejarBaseDatosCargada(evento) {
-  console.log('Base de datos cargada:', evento)
-  baseDatosExpandida.value = false
-  mensajeExito.value = 'Base de datos cargada correctamente'
-  setTimeout(() => (mensajeExito.value = ''), 3000)
-  programarPreparacionExcelCompartible({ debeInvalidar: false })
-}
-
-function manejarBaseDatosLimpia() {
-  baseDatosExpandida.value = true
-  programarPreparacionExcelCompartible()
-}
-
-function manejarErrorCarga(mensaje) {
-  console.error('Error cargando base de datos:', mensaje)
-  baseDatosExpandida.value = !obtenerEstadoCarga().cargado
-  mensajeError.value = `Error al cargar archivo: ${mensaje}`
-  setTimeout(() => (mensajeError.value = ''), 3000)
-}
-
-async function finalizarExcelMaestroCompartido({ identificador }) {
-  if (!identificador || identificador !== identificadorExcelMaestroCompartido.value) return
-  const consulta = { ...route.query }
-  delete consulta.destinoExcel
-  delete consulta.archivoCompartido
-  await router.replace({ path: route.path, query: consulta })
 }
 
 function programarPreparacionExcelCompartible({ debeInvalidar = true, esperar = true } = {}) {
@@ -824,8 +769,6 @@ onMounted(async () => {
     console.log('[AjustarUbicaciones] Montando componente...')
 
     await inicializarBaseDatos()
-    baseDatosExpandida.value = !obtenerEstadoCarga().cargado
-
     const ubicacionesCargadas = await obtenerUbicaciones()
 
     if (Array.isArray(ubicacionesCargadas)) {

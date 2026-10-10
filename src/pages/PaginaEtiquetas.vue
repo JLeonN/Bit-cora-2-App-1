@@ -1,7 +1,10 @@
 ﻿<template>
   <div class="contenedor-tabla">
     <div class="header-etiquetas">
-      <h2 class="titulo-tabla">Etiquetas</h2>
+      <div class="encabezado-con-base-datos">
+        <h2 class="titulo-tabla">Etiquetas</h2>
+        <BotonBaseDatosFaltante />
+      </div>
       <div class="pestanas-etiquetas" role="tablist" aria-label="Tamaño de etiqueta" @keydown="manejarTeclaPestanas">
         <button
           v-for="opcion in OPCIONES_TAMANOS_ETIQUETA"
@@ -90,6 +93,7 @@ import { useRouter } from 'vue-router'
 import { Loading, Notify } from 'quasar'
 import { IconDownload, IconPrinter } from '@tabler/icons-vue'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
+import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
@@ -107,6 +111,7 @@ import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/Con
 import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, OPCIONES_TAMANOS_ETIQUETA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import { resolverDescripcionEtiqueta, guardarDescripcionDeTamano } from '../components/Logica/Etiquetas/ResolverDescripcionEtiqueta.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import { inicializarBaseDatos } from '../components/BaseDeDatos/LectorExcel.js'
 import { esNavegadorDeEscritorio } from '../components/Logica/Compartidos/EsNavegadorDeEscritorio.js'
 import {
   obtenerArchivoCompartidoPendiente,
@@ -551,6 +556,7 @@ function cerrarPasoAtrasNativo() {
 }
 
 onMounted(async () => {
+  await inicializarBaseDatos()
   await cargarEtiquetasGuardadas()
   await cargarMemoriasPorTamano()
   await procesarArchivoCompartidoPendiente()
@@ -612,6 +618,9 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+.header-etiquetas .encabezado-con-base-datos {
+  margin-bottom: 0;
 }
 .titulo-tabla {
   text-align: center;

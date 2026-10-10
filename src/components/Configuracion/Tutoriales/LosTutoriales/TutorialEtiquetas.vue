@@ -40,8 +40,10 @@
       <div class="paso">
         <div class="numero-paso">3</div>
         <div class="contenido-paso">
-          <strong>Autocompletado inteligente:</strong> Si tenés la base de datos cargada, la
-          descripción y ubicación se completan automáticamente al seleccionar un artículo.
+          <strong>Autocompletado inteligente:</strong> Si tenés el Excel maestro cargado en
+          Configuración, la descripción y ubicación se completan automáticamente al seleccionar un
+          artículo. Si falta, el ícono junto al título te lleva a cargarlo; también podés crear
+          etiquetas manualmente.
         </div>
       </div>
 

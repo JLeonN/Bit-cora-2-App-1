@@ -460,10 +460,14 @@ function rutaPoseeDestinoPendiente(pendiente) {
   const rutaActual = router.currentRoute.value
   const destino = obtenerValorConsulta(rutaActual.query.destinoExcel)
   const identificador = obtenerValorConsulta(rutaActual.query.archivoCompartido)
-  const rutaDestino = destino === 'maestro' ? '/AjustarUbicaciones' : '/listados'
+  const esDestinoMaestro = destino === 'maestro' && rutaActual.path === '/configuracion'
+  const esDestinoListado = destino === 'listado' && rutaActual.path === '/listados'
+  const esCargaPreviaMaestro =
+    destino === 'listado' &&
+    rutaActual.path === '/configuracion' &&
+    Boolean(obtenerValorConsulta(rutaActual.query.baseDatos))
   return (
-    ['maestro', 'listado'].includes(destino) &&
-    rutaActual.path === rutaDestino &&
+    (esDestinoMaestro || esDestinoListado || esCargaPreviaMaestro) &&
     identificador === pendiente.identificador
   )
 }
@@ -492,7 +496,7 @@ async function navegarADestinoExcel(destino) {
   const identificador = excelCompartidoPendiente.value.identificador
   try {
     await router.replace({
-      path: destino === 'maestro' ? '/AjustarUbicaciones' : '/listados',
+      path: destino === 'maestro' ? '/configuracion' : '/listados',
       query: { destinoExcel: destino, archivoCompartido: identificador },
     })
     if (excelCompartidoPendiente.value?.identificador === identificador) {

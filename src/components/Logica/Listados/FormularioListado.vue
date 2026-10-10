@@ -1,12 +1,6 @@
 <template>
   <section class="formulario-listado">
-    <SelectorExcel
-      v-if="!baseDatosCargada"
-      @base-datos-cargada="manejarBaseCargada"
-      @error-carga="emit('error-carga', $event)"
-      @base-datos-limpia="manejarBaseLimpia"
-    />
-    <div v-else class="formulario formulario-ubicacion">
+    <div v-if="baseDatosCargada" class="formulario formulario-ubicacion">
       <div class="contenedor-principal-formulario">
         <div class="ubicacion-campo ubicacion-campo-con-buscador">
           <div class="control-autoseleccion-articulo">
@@ -191,7 +185,6 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { IconCamera, IconCopy, IconFileSpreadsheet, IconInfoCircle, IconLoader2 } from '@tabler/icons-vue'
-import SelectorExcel from '../Ubicaciones/SelectorExcel.vue'
 import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
@@ -224,9 +217,6 @@ const props = defineProps({
 })
 const emit = defineEmits([
   'articulo-seleccionado',
-  'base-datos-cargada',
-  'base-datos-limpia',
-  'error-carga',
   'modal-abierto',
   'modal-cerrado',
   'confirmar-repetido',
@@ -284,17 +274,6 @@ const textoLineasRepetidas = computed(() => {
   const ultimaLinea = lineas.at(-1)
   return `las líneas ${lineas.slice(0, -1).join(', ')} y ${ultimaLinea}`
 })
-
-function manejarBaseCargada(datos) {
-  baseDatosCargada.value = true
-  emit('base-datos-cargada', datos)
-  if (!datos?.cargaAutomatica) enfocarBusqueda()
-}
-
-function manejarBaseLimpia() {
-  baseDatosCargada.value = false
-  emit('base-datos-limpia')
-}
 
 function establecerBaseCargada(cargada) {
   baseDatosCargada.value = Boolean(cargada)

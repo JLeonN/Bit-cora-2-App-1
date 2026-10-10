@@ -1,6 +1,9 @@
 <template>
   <div class="contenedor-tabla contenedor-recibir-ubicaciones">
-    <h2 class="titulo-tabla">Ubicaciones compartidas</h2>
+    <div class="encabezado-con-base-datos">
+      <h2 class="titulo-tabla">Ubicaciones compartidas</h2>
+      <BotonBaseDatosFaltante />
+    </div>
 
     <div v-if="cargando" class="tarjeta-recibir-ubicaciones">
       <IconLoader2 class="icono-cargando" :size="28" />
@@ -23,22 +26,7 @@
         </div>
       </section>
 
-      <TarjetaSeccion
-        v-if="!baseDatosLista"
-        titulo="Cargá tu Excel base"
-        :expandida-por-defecto="true"
-        descripcion-resumen="Necesitás tu Excel base para completar y descargar el archivo final."
-        :ocultar-resumen-al-expandir="true"
-      >
-        <p class="texto-explicacion-recibir">
-          El enlace trae los códigos y las nuevas ubicaciones. Tu Excel base completa la descripción,
-          la ubicación anterior y el historial antes de descargar.
-        </p>
-        <SelectorExcel @base-datos-cargada="manejarBaseDatosCargada" @error-carga="manejarErrorCarga" />
-        <p v-if="mensajeErrorBase" class="texto-error-base">{{ mensajeErrorBase }}</p>
-      </TarjetaSeccion>
-
-      <template v-else>
+      <template v-if="baseDatosLista">
         <InformacionUbicaciones :ubicaciones="ubicacionesEditables" />
 
         <div class="bloque-buscador-recibidas">
@@ -109,8 +97,7 @@ import {
   IconLoader2,
   IconSearch,
 } from '@tabler/icons-vue'
-import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
-import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
+import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import InformacionUbicaciones from '../components/Logica/Ubicaciones/InformacionUbicaciones.vue'
 import TablaUbicaciones from '../components/Logica/Ubicaciones/TablaUbicaciones.vue'
 import ModalEditarUbicacion from '../components/Modales/ModalEditarUbicacion.vue'
@@ -124,7 +111,6 @@ const route = useRoute()
 const cargando = ref(true)
 const descargando = ref(false)
 const mensajeError = ref('')
-const mensajeErrorBase = ref('')
 const ubicacionesCompartidas = ref(null)
 const baseDatosLista = ref(false)
 const ubicacionesEditables = ref([])
@@ -160,15 +146,6 @@ function configurarBarra() {
     },
     null,
   )
-}
-
-function manejarBaseDatosCargada() {
-  mensajeErrorBase.value = ''
-  actualizarBaseDatosLista()
-}
-
-function manejarErrorCarga(mensaje) {
-  mensajeErrorBase.value = mensaje || 'No se pudo cargar el Excel base.'
 }
 
 function abrirModalEditar(indice) {
@@ -263,14 +240,6 @@ onUnmounted(configurarBarra)
   flex-shrink: 0;
 }
 .tarjeta-error-recibir {
-  color: var(--color-error);
-}
-.texto-explicacion-recibir {
-  margin: 0 0 0.9rem;
-  color: var(--color-texto-secundario);
-}
-.texto-error-base {
-  margin: 0.75rem 0 0;
   color: var(--color-error);
 }
 .tarjeta-descarga-recibir {

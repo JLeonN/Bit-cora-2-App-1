@@ -1,8 +1,8 @@
 <template>
   <div class="tutorial-stock">
     <p class="tutorial-descripcion">
-      El módulo de <strong>Stock</strong> te permite contar artículos usando la misma base Excel de
-      Ubicaciones, comparar el resultado y exportar únicamente los conteos confirmados.
+      El módulo de <strong>Stock</strong> te permite contar artículos usando el Excel maestro cargado
+      en Configuración, comparar el resultado y exportar únicamente los conteos confirmados.
     </p>
     <div class="seccion-pasos">
       <h4 class="subtitulo-tutorial">
@@ -12,8 +12,9 @@
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Cargar la base de datos:</strong> Usá el mismo Excel de Ubicaciones con las
-          columnas Código, Descripción, Ubicación y Stock.
+          <strong>Cargar la base de datos:</strong> Abrí «Base de datos para búsqueda» en
+          Configuración, o tocá el ícono junto al título de Stock si falta el maestro. El Excel lleva
+          las columnas Código, Descripción, Ubicación y Stock.
         </div>
       </div>
       <div class="paso">

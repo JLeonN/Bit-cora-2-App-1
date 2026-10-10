@@ -14,8 +14,9 @@
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Cargar Excel:</strong> Si no hay base cargada, el módulo muestra el selector para
-          cargar el archivo con columnas A Código, B Descripción, C Ubicación y D Stock.
+          <strong>Cargar Excel:</strong> Si no hay base cargada, tocá el ícono junto al título para
+          abrir «Base de datos para búsqueda» en Configuración. El archivo lleva las columnas A
+          Código, B Descripción, C Ubicación y D Stock.
         </div>
       </div>
 

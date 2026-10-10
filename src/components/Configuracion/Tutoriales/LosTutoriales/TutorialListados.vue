@@ -21,9 +21,10 @@
       <div class="paso">
         <div class="numero-paso">2</div>
         <div class="contenido-paso">
-          <strong>Cargar la base maestra:</strong> Seleccioná el Excel de artículos con las columnas
-          Código, Descripción, Ubicación y Stock. Esta base permite identificar y completar los
-          artículos del listado.
+          <strong>Cargar la base maestra:</strong> Seleccioná el Excel de artículos en Configuración,
+          dentro de «Base de datos para búsqueda». Si falta, el ícono junto al título de Listados te
+          lleva allí. Esta base identifica y completa artículos; el botón «Cargar Excel» de Listados
+          importa filas de otro listado.
         </div>
       </div>
       <div class="paso">

@@ -2,8 +2,8 @@
   <div class="tutorial-ubicaciones">
     <p class="tutorial-descripcion">
       El módulo de <strong>Ubicaciones</strong> te ayuda a gestionar dónde están ubicados los
-      artículos físicamente. Podés cargar una base de datos Excel y ajustar ubicaciones de forma
-      rápida.
+      artículos físicamente. Podés cargar la base de datos Excel desde Configuración y ajustar
+      ubicaciones de forma rápida.
     </p>
 
     <div class="seccion-pasos">
@@ -15,8 +15,9 @@
       <div class="paso">
         <div class="numero-paso">1</div>
         <div class="contenido-paso">
-          <strong>Cargar base de datos:</strong> Primero, seleccioná tu archivo Excel con los
-          artículos. Estructura exacta: columna A Código, columna B Descripción, columna C Ubicación
+          <strong>Cargar base de datos:</strong> En Configuración, abrí «Base de datos para búsqueda»
+          y seleccioná tu archivo Excel. Si falta la base, el ícono junto al título de Ubicaciones te
+          lleva allí. Estructura exacta: columna A Código, columna B Descripción, columna C Ubicación
           y columna D Stock.
         </div>
       </div>

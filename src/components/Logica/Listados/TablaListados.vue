@@ -3,7 +3,8 @@
     <div v-if="articulos.length === 0" class="estado-vacio-listado">
       <IconListDetails :size="42" />
       <strong>Este listado está vacío</strong>
-      <span>Buscá o escaneá un artículo para agregarlo.</span>
+      <span v-if="baseDatosCargada">Buscá o escaneá un artículo para agregarlo.</span>
+      <span v-else>Tocá el ícono junto a Listados para cargar el Excel maestro.</span>
     </div>
     <div
       v-else
@@ -170,6 +171,7 @@ import { IconListDetails, IconTag, IconTrash } from '@tabler/icons-vue'
 import TarjetaArticulo from '../Compartidos/TarjetaArticulo.vue'
 
 const props = defineProps({
+  baseDatosCargada: { type: Boolean, required: true },
   articulos: { type: Array, default: () => [] },
   mostrarNumeracion: { type: Boolean, required: true },
   mostrarStock: { type: Boolean, required: true },
