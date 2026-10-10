@@ -199,7 +199,7 @@
               type="button"
               class="boton-parte-whatsapp"
               :disabled="exportando"
-              @click="exportarListado"
+              @click="exportarListado()"
             >
               Abrir siguiente parte en WhatsApp
             </button>
@@ -242,6 +242,7 @@ import { Capacitor } from '@capacitor/core'
 import { Notify } from 'quasar'
 import {
   IconDownload,
+  IconPrinter,
   IconBrandWhatsapp,
   IconMapRoute,
   IconPackages,
@@ -297,7 +298,7 @@ import {
   enviarTodosAUbicaciones as enviarTodosAUbicacionesServicio,
 } from '../components/Logica/Listados/ServicioIntegracionListados.js'
 import { generarYGuardarExcelListado } from '../components/Logica/Listados/ExportarListadosExcel.js'
-import { generarYGuardarPDFListado } from '../components/Logica/Listados/ExportarListadosPDF.js'
+import { generarYGuardarPDFListado, imprimirListadoPDF } from '../components/Logica/Listados/ExportarListadosPDF.js'
 import { construirPartesWhatsAppListado } from '../components/Logica/Listados/ServicioWhatsAppListados.js'
 import {
   abrirWhatsAppConMensaje,
@@ -416,7 +417,7 @@ const ayudaFormatoExportacion = computed(() => {
     return 'Se abrirá WhatsApp con los artículos y las columnas visibles.'
   }
   return formatoExportacion.value === 'pdf'
-    ? 'PDF A4 horizontal, listo para imprimir.'
+    ? 'PDF A4 horizontal, listo para descargar o imprimir.'
     : 'Excel está seleccionado por defecto.'
 })
 const resultadoPartesWhatsApp = computed(() => {
@@ -469,6 +470,13 @@ const configuracionBarra = computed(() => ({
             (formatoExportacion.value === 'whatsapp' && !parteWhatsAppActual.value),
           claseCSS: '',
         },
+        ...(formatoExportacion.value === 'pdf' ? [{
+          accion: 'imprimir-listado',
+          icono: IconPrinter,
+          titulo: 'Imprimir PDF A4 del listado',
+          desactivado: articulosOrdenados.value.length === 0 || exportando.value,
+          claseCSS: '',
+        }] : []),
       ]
     : [],
   modalActivo: modalActivo.value,
@@ -479,6 +487,7 @@ const metodosParaBarra = {
   onEnviar: () => exportarListado(),
   onAccionPersonalizada: (accion) => {
     if (accion === 'descargar-listado') exportarListado()
+    else if (accion === 'imprimir-listado') exportarListado('imprimir')
   },
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
 }
@@ -1332,10 +1341,16 @@ async function enviarTodosAEtiquetas() {
     notificar('warning', `${resultado.omitidos} artículos inexistentes fueron omitidos`)
 }
 
-async function exportarListado() {
+async function exportarListado(destino = 'descargar') {
   if (exportando.value || !listadoActivo.value) return
+  if (destino === 'imprimir' && (!esNavegadorWeb.value || formatoExportacion.value !== 'pdf')) return
   exportando.value = true
   try {
+    if (destino === 'imprimir') {
+      await imprimirListadoPDF(listadoActivo.value, articulosOrdenados.value)
+      notificar('positive', 'Diálogo de impresión abierto')
+      return
+    }
     if (formatoExportacion.value === 'whatsapp') {
       if (resultadoPartesWhatsApp.value.error) {
         throw new Error(resultadoPartesWhatsApp.value.error)

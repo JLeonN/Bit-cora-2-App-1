@@ -3,12 +3,13 @@ const MARGEN_DESCRIPCION_MM = 1.5
 const TAMANO_MINIMO_PT = 4
 const TAMANO_MAXIMO_AUTOMATICO_PT = 24
 const FAMILIA_FUENTE = "'Arial Black', Arial, Helvetica, sans-serif"
+let contextoMedicion = null
 
 function medirAnchoMm(texto, tamanoPt) {
   if (typeof document === 'undefined') return texto.length * tamanoPt * MM_POR_PT * 0.58
-  const contexto = document.createElement('canvas').getContext('2d')
-  contexto.font = `800 ${tamanoPt * 96 / 72}px ${FAMILIA_FUENTE}`
-  return contexto.measureText(texto).width * 25.4 / 96
+  if (!contextoMedicion) contextoMedicion = document.createElement('canvas').getContext('2d')
+  contextoMedicion.font = `800 ${tamanoPt * 96 / 72}px ${FAMILIA_FUENTE}`
+  return contextoMedicion.measureText(texto).width * 25.4 / 96
 }
 
 export function calcularLayoutEtiquetaChica({ etiqueta = {}, configuracion, anchoReferenciaPx = 1500 }) {

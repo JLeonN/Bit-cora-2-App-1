@@ -88,7 +88,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Loading, Notify } from 'quasar'
-import { IconDownload } from '@tabler/icons-vue'
+import { IconDownload, IconPrinter } from '@tabler/icons-vue'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
@@ -413,13 +413,13 @@ async function procesarArchivoCompartidoPendiente() {
   }
 }
 
-async function generarPDF() {
-  if (listaEtiquetas.value.length === 0) return
+async function generarPDF(destino = 'descargar') {
+  if (listaEtiquetas.value.length === 0 || generandoDocumento.value) return
 
   try {
     generandoDocumento.value = true
     Loading.show({
-      message: 'Generando documento PDF...',
+      message: destino === 'imprimir' ? 'Preparando etiquetas para imprimir...' : 'Generando documento PDF...',
       spinnerColor: 'primary',
     })
 
@@ -431,7 +431,7 @@ async function generarPDF() {
         await guardarMemoriaDesdeEtiqueta(etiqueta)
       }
     }
-    const resultado = await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion)
+    const resultado = await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
 
     Loading.hide()
     if (!resultado.exito) {
@@ -441,7 +441,7 @@ async function generarPDF() {
     if (esPlataformaWeb()) {
       Notify.create({
         type: 'positive',
-        message: 'Documento PDF descargado correctamente',
+        message: destino === 'imprimir' ? 'Diálogo de impresión abierto' : 'Documento PDF descargado correctamente',
         position: 'top',
         timeout: 2000,
       })
@@ -489,9 +489,16 @@ const configuracionBarra = computed(() => ({
           accion: 'descargar-pdf-etiquetas',
           icono: IconDownload,
           titulo: 'Descargar PDF',
-          desactivado: listaEtiquetas.value.length === 0,
+          desactivado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
           claseCSS: '',
         },
+        ...(listaEtiquetas.value.length > 0 ? [{
+          accion: 'imprimir-etiquetas',
+          icono: IconPrinter,
+          titulo: 'Imprimir etiquetas',
+          desactivado: generandoDocumento.value,
+          claseCSS: '',
+        }] : []),
       ]
     : [],
   modalActivo: modalActivo.value,
@@ -504,6 +511,8 @@ const metodosParaBarra = {
   onAccionPersonalizada: (accion) => {
     if (accion === 'descargar-pdf-etiquetas') {
       generarPDF()
+    } else if (accion === 'imprimir-etiquetas') {
+      generarPDF('imprimir')
     }
   },
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
@@ -572,7 +581,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => listaEtiquetas.value.length,
+  () => [listaEtiquetas.value.length, generandoDocumento.value],
   () => {
     emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
   },

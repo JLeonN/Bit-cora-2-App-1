@@ -35,3 +35,25 @@ test('respeta el tamaño manual aunque exceda el espacio automático', () => {
   assert.equal(layout.descripcion.tamanoPt, 32)
   assert.equal(layout.descripcion.lineas[0].tamanoPt, 32)
 })
+
+test('reutiliza el lienzo de medición al calcular varias etiquetas chicas', () => {
+  const documentoAnterior = globalThis.document
+  let lienzosCreados = 0
+  globalThis.document = {
+    createElement: () => {
+      lienzosCreados += 1
+      return { getContext: () => ({ measureText: (texto) => ({ width: texto.length * 10 }) }) }
+    },
+  }
+  try {
+    for (let indice = 0; indice < 3; indice += 1) {
+      calcularLayoutEtiquetaChica({
+        etiqueta: { codigo: '123456789', descripcion: 'UNA DESCRIPCIÓN LARGA PARA ETIQUETA CHICA' },
+        configuracion,
+      })
+    }
+    assert.equal(lienzosCreados, 1)
+  } finally {
+    globalThis.document = documentoAnterior
+  }
+})

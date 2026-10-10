@@ -4,6 +4,8 @@ import JsBarcode from 'jsbarcode'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { limpiarCodigoParaBarra, validarCodigoParaBarra } from './GeneradorCodigoBarra.js'
 import { calcularLayoutEtiquetaPreview, convertirLayoutPreviewAPixeles } from './UsoLayoutEtiquetaPreview.js'
+import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { imprimirPDFEnNavegador } from '../Compartidos/ImprimirPDFEnNavegador.js'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 
 const PERFIL_RENDER_WEB = { anchoRenderPx: 1200, escalaCanvas: 1.35, calidadJpeg: 0.82 }
@@ -135,7 +137,7 @@ const crearPaginaEtiqueta = async (pdf, etiqueta, configuracion) => {
   }
 }
 
-export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) => {
+export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion, destino = 'descargar') => {
   try {
     console.log(
       '[GeneradorEtiquetasPDF] Generando documento con',
@@ -172,12 +174,31 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
     let esPrimeraPagina = true
     for (const etiqueta of listaEtiquetas) {
       const cantidadCopias = etiqueta.cantidad || 1
+      let imagenEtiquetaChica = null
+      if (configuracion.id === TAMANO_ETIQUETA_CHICA) {
+        // La chica reutiliza la misma imagen para todas sus copias y evita recalcular el layout por página.
+        const { canvas, canvasBarra } = await generarCanvasEtiquetaDesdePreview(etiqueta, configuracion)
+        try {
+          imagenEtiquetaChica = canvas.toDataURL('image/jpeg', obtenerPerfilRender().calidadJpeg)
+        } finally {
+          canvas.width = 0
+          canvas.height = 0
+          if (canvasBarra) {
+            canvasBarra.width = 0
+            canvasBarra.height = 0
+          }
+        }
+      }
       for (let i = 0; i < cantidadCopias; i += 1) {
         if (!esPrimeraPagina) {
           pdf.addPage([pagina.alto, pagina.ancho])
         }
         esPrimeraPagina = false
-        await crearPaginaEtiqueta(pdf, etiqueta, configuracion)
+        if (imagenEtiquetaChica) {
+          pdf.addImage(imagenEtiquetaChica, 'JPEG', 0, 0, pagina.ancho, pagina.alto, undefined, 'FAST')
+        } else {
+          await crearPaginaEtiqueta(pdf, etiqueta, configuracion)
+        }
         paginasGeneradas += 1
         if (paginasGeneradas % PAUSAR_CADA_PAGINAS === 0) {
           await pausarRenderCooperativo()
@@ -191,17 +212,21 @@ export const generarDocumentoEtiquetas = async (listaEtiquetas, configuracion) =
     const nombreArchivo = `Etiquetas - ${nombreUsuario} - ${idConfiguracionFormateado} ${marcaFechaHora}.pdf`
 
     if (esPlataformaWeb()) {
-      descargarPDFEnNavegador(pdf, nombreArchivo)
-      console.log('[GeneradorEtiquetasPDF] PDF descargado en navegador')
+      if (destino === 'imprimir') {
+        await imprimirPDFEnNavegador(pdf)
+      } else {
+        descargarPDFEnNavegador(pdf, nombreArchivo)
+      }
+      console.log('[GeneradorEtiquetasPDF] PDF preparado en navegador:', destino)
       console.log('[GeneradorEtiquetasPDF] Telemetría:', {
         tiempoMs: Date.now() - inicioGeneracion,
         paginasGeneradas,
         plataforma: 'web',
-        ruta: 'descarga',
+        ruta: destino,
       })
       return {
         exito: true,
-        mensaje: 'PDF descargado correctamente',
+        mensaje: destino === 'imprimir' ? 'Diálogo de impresión abierto' : 'PDF descargado correctamente',
         rutaArchivo: null,
         nombreArchivo,
       }

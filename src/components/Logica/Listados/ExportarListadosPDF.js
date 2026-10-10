@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { jsPDF } from 'jspdf'
+import { imprimirPDFEnNavegador } from '../Compartidos/ImprimirPDFEnNavegador.js'
 
 const ANCHO_PAGINA = 297
 const ALTO_PAGINA = 210
@@ -183,4 +184,13 @@ export async function generarYGuardarPDFListado(listado, articulosOrdenados) {
     directory: Directory.Cache,
   })
   return { uri: resultado.uri, nombreArchivo }
+}
+
+export async function imprimirListadoPDF(listado, articulosOrdenados) {
+  const pdf = construirDocumentoPDFListado(
+    articulosOrdenados,
+    listado.configuracion,
+    listado.nombre,
+  )
+  await imprimirPDFEnNavegador(pdf)
 }
