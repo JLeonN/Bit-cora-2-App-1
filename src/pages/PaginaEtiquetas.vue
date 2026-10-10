@@ -107,6 +107,7 @@ import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/Con
 import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, OPCIONES_TAMANOS_ETIQUETA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import { resolverDescripcionEtiqueta, guardarDescripcionDeTamano } from '../components/Logica/Etiquetas/ResolverDescripcionEtiqueta.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import { esNavegadorDeEscritorio } from '../components/Logica/Compartidos/EsNavegadorDeEscritorio.js'
 import {
   obtenerArchivoCompartidoPendiente,
   limpiarArchivoCompartidoPendiente,
@@ -415,6 +416,7 @@ async function procesarArchivoCompartidoPendiente() {
 
 async function generarPDF(destino = 'descargar') {
   if (listaEtiquetas.value.length === 0 || generandoDocumento.value) return
+  if (destino === 'imprimir' && !esNavegadorDeEscritorio()) return
 
   try {
     generandoDocumento.value = true
@@ -492,7 +494,7 @@ const configuracionBarra = computed(() => ({
           desactivado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
           claseCSS: '',
         },
-        ...(listaEtiquetas.value.length > 0 ? [{
+        ...(listaEtiquetas.value.length > 0 && esNavegadorDeEscritorio() ? [{
           accion: 'imprimir-etiquetas',
           icono: IconPrinter,
           titulo: 'Imprimir etiquetas',

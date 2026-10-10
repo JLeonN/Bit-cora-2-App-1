@@ -305,6 +305,7 @@ import {
   abrirWhatsAppEnAndroid,
 } from '../components/Logica/Compartidos/CompartirWhatsApp.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
+import { esNavegadorDeEscritorio } from '../components/Logica/Compartidos/EsNavegadorDeEscritorio.js'
 import {
   procesarArchivoExcelListado,
   procesarExcelCompartidoListado,
@@ -470,7 +471,7 @@ const configuracionBarra = computed(() => ({
             (formatoExportacion.value === 'whatsapp' && !parteWhatsAppActual.value),
           claseCSS: '',
         },
-        ...(formatoExportacion.value === 'pdf' ? [{
+        ...(formatoExportacion.value === 'pdf' && esNavegadorDeEscritorio() ? [{
           accion: 'imprimir-listado',
           icono: IconPrinter,
           titulo: 'Imprimir PDF A4 del listado',
@@ -1343,7 +1344,7 @@ async function enviarTodosAEtiquetas() {
 
 async function exportarListado(destino = 'descargar') {
   if (exportando.value || !listadoActivo.value) return
-  if (destino === 'imprimir' && (!esNavegadorWeb.value || formatoExportacion.value !== 'pdf')) return
+  if (destino === 'imprimir' && (!esNavegadorDeEscritorio() || formatoExportacion.value !== 'pdf')) return
   exportando.value = true
   try {
     if (destino === 'imprimir') {
