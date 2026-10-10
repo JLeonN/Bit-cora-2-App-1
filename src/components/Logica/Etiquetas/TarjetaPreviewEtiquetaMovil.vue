@@ -81,12 +81,14 @@
       @keydown.esc.prevent="cancelarEdicion()"
     />
   </div>
-  <div v-if="esChica && campoEditando === 'descripcion'" class="controles-tamano-descripcion">
-    <button type="button" class="boton-tamano-descripcion" aria-label="Reducir tamaño del texto" title="Reducir tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(-0.5)">−</button>
-    <span class="valor-tamano-descripcion">{{ tamanoDescripcionVisible }} pt</span>
-    <button type="button" class="boton-tamano-descripcion" aria-label="Aumentar tamaño del texto" title="Aumentar tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(0.5)">+</button>
-    <button type="button" class="boton-tamano-automatico" title="Volver al tamaño automático" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="restablecerTamanoAutomatico">Auto</button>
-  </div>
+  <Transition name="deslizar-controles">
+    <div v-if="esChica && campoEditando === 'descripcion'" class="controles-tamano-descripcion">
+      <button type="button" class="boton-tamano-descripcion" aria-label="Reducir tamaño del texto" title="Reducir tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(-0.5)">−</button>
+      <span class="valor-tamano-descripcion">{{ tamanoDescripcionVisible }} pt</span>
+      <button type="button" class="boton-tamano-descripcion" aria-label="Aumentar tamaño del texto" title="Aumentar tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(0.5)">+</button>
+      <button type="button" class="boton-tamano-automatico" title="Volver al tamaño automático" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="restablecerTamanoAutomatico">Auto</button>
+    </div>
+  </Transition>
   </div>
 </template>
 
@@ -616,5 +618,30 @@ onBeforeUnmount(() => {
   min-width: 3rem;
   text-align: center;
   font-size: 0.85rem;
+}
+.deslizar-controles-enter-active,
+.deslizar-controles-leave-active {
+  transition: opacity 220ms ease, transform 220ms ease, max-height 220ms ease, margin-top 220ms ease;
+  overflow: hidden;
+}
+.deslizar-controles-leave-active {
+  pointer-events: none;
+}
+.deslizar-controles-enter-from,
+.deslizar-controles-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+  margin-top: 0;
+}
+.deslizar-controles-enter-to,
+.deslizar-controles-leave-from {
+  max-height: 40px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .deslizar-controles-enter-active,
+  .deslizar-controles-leave-active {
+    transition-duration: 0.01ms;
+  }
 }
 </style>
