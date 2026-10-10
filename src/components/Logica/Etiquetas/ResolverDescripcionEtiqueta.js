@@ -22,21 +22,33 @@ export function resolverDescripcionEtiqueta({ etiqueta = {}, tamano, memoriaProp
     [etiqueta.descripcionOriginal, 'origen'],
   ]
   const encontrado = candidatos.find(([descripcion]) => tieneTexto(descripcion))
-  return {
+  const resultado = {
     descripcion: encontrado?.[0] || '',
     origen: encontrado?.[1] || 'origen',
     memoriaActiva: encontrado?.[1] === 'memoriaPropia',
     memoriaActualizadaEn: encontrado?.[1] === 'memoriaPropia' ? memoriaPropia.actualizadoEn || null : null,
   }
+  if (tamano === TAMANO_ETIQUETA_CHICA) {
+    resultado.tamanoDescripcionPt = memoriaPropia && Object.hasOwn(memoriaPropia, 'tamanoDescripcionPt')
+      ? memoriaPropia.tamanoDescripcionPt
+      : etiqueta.tamanosDescripcionPorTamano?.[tamano] ?? null
+  }
+  return resultado
 }
 
-export function guardarDescripcionDeTamano({ etiqueta, tamano, descripcion }) {
+export function guardarDescripcionDeTamano({ etiqueta, tamano, descripcion, tamanoDescripcionPt }) {
   const actualizada = {
     ...etiqueta,
     descripcionesPorTamano: {
       ...(etiqueta.descripcionesPorTamano || {}),
       [tamano]: String(descripcion ?? ''),
     },
+  }
+  if (tamano === TAMANO_ETIQUETA_CHICA) {
+    actualizada.tamanosDescripcionPorTamano = {
+      ...(etiqueta.tamanosDescripcionPorTamano || {}),
+      [tamano]: tamanoDescripcionPt ?? null,
+    }
   }
   if (tamanoDeCreacion(etiqueta) === tamano) actualizada.descripcion = String(descripcion ?? '')
   return actualizada

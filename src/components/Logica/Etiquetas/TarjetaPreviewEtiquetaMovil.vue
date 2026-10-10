@@ -1,4 +1,5 @@
 <template>
+  <div class="envoltura-preview-etiqueta" :class="{ 'envoltura-preview-chica': esChica }">
   <div class="preview-etiqueta-movil" :class="[`densidad-${densidad}`, { 'preview-etiqueta-chica': esChica }]" ref="contenedorPreview">
     <p
       v-if="campoEditando !== 'codigo'"
@@ -50,7 +51,7 @@
       :value="borradorDescripcion"
       :style="estiloTextareaDescripcion"
       @input="actualizarDescripcion"
-      @blur="confirmarEdicion"
+      @blur="confirmarEdicionSiSaleDeControles"
       @keydown.enter="manejarEnterDescripcion"
       @keydown.esc.prevent="cancelarEdicion()"
       :rows="filasDescripcionEdicion"
@@ -61,7 +62,7 @@
       class="preview-ubicacion-movil editable-preview"
       :class="{ 'texto-sl-neon': esUbicacionSl(etiqueta?.ubicacion) }"
       :style="layoutPreview.estilos.ubicacion"
-      tabindex="0"
+      :tabindex="esChica && campoEditando === 'descripcion' ? -1 : 0"
       @click="iniciarEdicion('ubicacion')"
       @keydown.enter.prevent="iniciarEdicion('ubicacion')"
     >
@@ -79,6 +80,13 @@
       @keydown.enter.prevent
       @keydown.esc.prevent="cancelarEdicion()"
     />
+  </div>
+  <div v-if="esChica && campoEditando === 'descripcion'" class="controles-tamano-descripcion">
+    <button type="button" class="boton-tamano-descripcion" aria-label="Reducir tamaño del texto" title="Reducir tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(-0.5)">−</button>
+    <span class="valor-tamano-descripcion">{{ tamanoDescripcionVisible }} pt</span>
+    <button type="button" class="boton-tamano-descripcion" aria-label="Aumentar tamaño del texto" title="Aumentar tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(0.5)">+</button>
+    <button type="button" class="boton-tamano-automatico" title="Volver al tamaño automático" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="restablecerTamanoAutomatico">Auto</button>
+  </div>
   </div>
 </template>
 
@@ -130,6 +138,8 @@ const campoEditando = ref('')
 const borradorCodigo = ref('')
 const borradorDescripcion = ref('')
 const descripcionModificada = ref(false)
+const borradorTamanoDescripcionPt = ref(null)
+const tamanoDescripcionModificado = ref(false)
 const borradorUbicacion = ref('')
 const lineasDescripcionEdicion = ref([])
 const lineasDescripcionEdicionConEstilos = ref([])
@@ -163,8 +173,14 @@ const descripcionParaLayout = computed(() => (campoEditando.value === 'descripci
 const etiquetaParaLayout = computed(() => ({
   ...props.etiqueta,
   descripcion: descripcionParaLayout.value,
+  ...(esChica.value && campoEditando.value === 'descripcion' ? { tamanoDescripcionPt: borradorTamanoDescripcionPt.value } : {}),
 }))
 const layoutPreview = computed(() => obtenerLayoutPixeles(etiquetaParaLayout.value))
+const tamanoDescripcionVisible = computed(() => {
+  const tamanoPx = obtenerNumeroDesdePx(layoutPreview.value.estilos.descripcion.fontSize, 0)
+  const escala = anchoPreview.value / props.configuracion.pagina.ancho
+  return (tamanoPx / (0.352777778 * escala)).toFixed(1)
+})
 const lineasDescripcion = computed(() => layoutPreview.value.lineasDescripcion)
 const lineasDescripcionConEstilos = computed(() => {
   if (campoEditando.value !== 'descripcion') {
@@ -192,7 +208,10 @@ const estiloTextareaDescripcion = computed(() => {
   const inicio = obtenerNumeroDesdePx(layoutPreview.value.estilos.descripcion.top, 0)
   const ubicacion = obtenerNumeroDesdePx(layoutPreview.value.estilos.ubicacion.top, 0)
   const separacion = anchoPreview.value * 0.012
-  return { ...estilo, height: `${Math.max(0, ubicacion - inicio - separacion).toFixed(2)}px` }
+  const altoDisponible = Math.max(0, ubicacion - inicio - separacion)
+  const altoManual = borradorTamanoDescripcionPt.value === null ? 0 :
+    normalizarSaltosLocales(borradorDescripcion.value).split('\n').length * obtenerNumeroDesdePx(estilo.lineHeight, 0) + 4
+  return { ...estilo, height: `${Math.max(altoDisponible, altoManual).toFixed(2)}px` }
 })
 const normalizarCodigo = (valor) => String(valor || '').trim().toUpperCase()
 const normalizarSaltosLocales = (valor) => String(valor || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
@@ -260,6 +279,8 @@ function iniciarEdicion(campo) {
       ? limitarRenglonesChica(props.etiqueta.descripcion || '')
       : lineasDescripcionEdicion.value.join('\n')
     descripcionModificada.value = false
+    borradorTamanoDescripcionPt.value = esChica.value ? props.etiqueta.tamanoDescripcionPt ?? null : null
+    tamanoDescripcionModificado.value = false
     campoEditando.value = campo
     nextTick(() => textareaDescripcionRef.value?.focus())
     return
@@ -293,6 +314,27 @@ function manejarEnterDescripcion(evento) {
   }
 }
 
+function ajustarTamanoDescripcion(cambio) {
+  const actual = borradorTamanoDescripcionPt.value ?? Number(tamanoDescripcionVisible.value)
+  borradorTamanoDescripcionPt.value = Math.min(40, Math.max(2, Math.round((actual + cambio) * 2) / 2))
+  tamanoDescripcionModificado.value = true
+  emitirActualizacion('tamanoDescripcionPt', borradorTamanoDescripcionPt.value)
+}
+
+function restablecerTamanoAutomatico() {
+  borradorTamanoDescripcionPt.value = null
+  tamanoDescripcionModificado.value = true
+  emitirActualizacion('tamanoDescripcionPt', null)
+}
+
+function confirmarEdicionSiSaleDeControles(evento) {
+  const siguiente = evento.relatedTarget
+  if (esChica.value && campoEditando.value === 'descripcion' && (
+    siguiente === textareaDescripcionRef.value || siguiente?.closest?.('.controles-tamano-descripcion')
+  )) return
+  confirmarEdicion()
+}
+
 function actualizarUbicacion(evento) {
   borradorUbicacion.value = evento.target.value
   emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
@@ -305,11 +347,12 @@ function confirmarEdicion() {
     emitirActualizacion('codigo', normalizarCodigo(borradorCodigo.value))
   }
   if (campoActual === 'descripcion') {
-    if (esChica.value && !descripcionModificada.value) {
+    if (esChica.value && !descripcionModificada.value && !tamanoDescripcionModificado.value) {
       cancelarEdicion()
       return
     }
-    emitirActualizacion('descripcion', String(borradorDescripcion.value))
+    if (!esChica.value || descripcionModificada.value) emitirActualizacion('descripcion', String(borradorDescripcion.value))
+    if (esChica.value && tamanoDescripcionModificado.value) emitirActualizacion('tamanoDescripcionPt', borradorTamanoDescripcionPt.value)
   }
   if (campoActual === 'ubicacion') {
     emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))
@@ -328,6 +371,8 @@ function cancelarEdicion() {
   estiloDescripcionEdicion.value = null
   fontSizeDescripcionEdicionPx.value = null
   descripcionModificada.value = false
+  borradorTamanoDescripcionPt.value = null
+  tamanoDescripcionModificado.value = false
   campoEditando.value = ''
 }
 
@@ -367,6 +412,8 @@ watch(
       estiloDescripcionEdicion.value = null
       fontSizeDescripcionEdicionPx.value = null
       descripcionModificada.value = false
+      borradorTamanoDescripcionPt.value = null
+      tamanoDescripcionModificado.value = false
     }
   },
 )
@@ -383,6 +430,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.envoltura-preview-etiqueta {
+  width: min(100%, 15cm);
+}
+.envoltura-preview-chica {
+  width: min(100%, 12cm);
+}
 .preview-etiqueta-movil {
   width: min(100%, 15cm);
   max-width: 15cm;
@@ -534,5 +587,34 @@ onBeforeUnmount(() => {
 .texto-sl-neon {
   color: var(--color-neon-sl-texto);
   text-shadow: 0 0 8px var(--color-neon-sl-sombra), 0 0 16px var(--color-neon-sl-sombra);
+}
+.controles-tamano-descripcion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  color: var(--color-texto-principal);
+}
+.boton-tamano-descripcion,
+.boton-tamano-automatico {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  cursor: pointer;
+}
+.boton-tamano-descripcion {
+  font-size: 1.3rem;
+}
+.boton-tamano-automatico {
+  padding: 0 0.5rem;
+}
+.valor-tamano-descripcion {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 0.85rem;
 }
 </style>

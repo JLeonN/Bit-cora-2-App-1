@@ -21,3 +21,17 @@ test('reduce la letra chica hasta 4 pt ante una línea muy larga', () => {
   const layout = calcularLayoutEtiquetaChica({ etiqueta: { descripcion: 'A'.repeat(120) }, configuracion })
   assert.equal(layout.descripcion.tamanoPt, 4)
 })
+
+test('agranda automáticamente el texto corto y reajusta al agregar renglones', () => {
+  const unaLinea = calcularLayoutEtiquetaChica({ etiqueta: { descripcion: 'ALARMA NEXT 450' }, configuracion })
+  const dosLineas = calcularLayoutEtiquetaChica({ etiqueta: { descripcion: 'ALARMA\nNEXT 450' }, configuracion })
+  assert.ok(unaLinea.descripcion.tamanoPt > 10)
+  assert.ok(dosLineas.descripcion.tamanoPt < unaLinea.descripcion.tamanoPt)
+  assert.ok(dosLineas.descripcion.tamanoPt > 4)
+})
+
+test('respeta el tamaño manual aunque exceda el espacio automático', () => {
+  const layout = calcularLayoutEtiquetaChica({ etiqueta: { descripcion: 'ALARMA NEXT 450', tamanoDescripcionPt: 32 }, configuracion })
+  assert.equal(layout.descripcion.tamanoPt, 32)
+  assert.equal(layout.descripcion.lineas[0].tamanoPt, 32)
+})

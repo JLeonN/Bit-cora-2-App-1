@@ -25,6 +25,17 @@ test('rechaza más de 3000 entradas sin recorte silencioso', () => {
   assert.equal(parsearJsonCompartirMemorias(JSON.stringify(json)).exito, false)
 })
 
+test('exporta e importa el tamaño manual de la memoria chica', () => {
+  const json = construirJsonCompartirMemorias({ entradas: [{ ...entrada('2.5x6.7cm'), tamanoDescripcionPt: 18.5 }] })
+  const parseado = parsearJsonCompartirMemorias(JSON.stringify(json))
+  assert.equal(parseado.payload.entradas[0].tamanoDescripcionPt, 18.5)
+  const invalido = parsearJsonCompartirMemorias(JSON.stringify({
+    ...json,
+    entradas: [{ ...entrada('2.5x6.7cm'), tamanoDescripcionPt: 80 }],
+  }))
+  assert.equal(invalido.entradasInvalidas, 1)
+})
+
 test('almacenamiento separado y respaldo de ambas memorias', async () => {
   const datos = new Map()
   globalThis.window = {
@@ -36,9 +47,10 @@ test('almacenamiento separado y respaldo de ambas memorias', async () => {
   }
   try {
     await upsertMemoriaEtiqueta({ codigo: 'a', descripcionFormateada: 'Grande' })
-    await upsertMemoriaEtiqueta({ codigo: 'a', descripcionFormateada: 'Chica', tamano: '2.5x6.7cm' })
+    await upsertMemoriaEtiqueta({ codigo: 'a', descripcionFormateada: 'Chica', tamano: '2.5x6.7cm', tamanoDescripcionPt: 16 })
     assert.equal((await obtenerMemoriaEtiquetaPorCodigo('A')).descripcionFormateada, 'Grande')
     assert.equal((await obtenerMemoriaEtiquetaPorCodigo('A', '2.5x6.7cm')).descripcionFormateada, 'Chica')
+    assert.equal((await obtenerMemoriaEtiquetaPorCodigo('A', '2.5x6.7cm')).tamanoDescripcionPt, 16)
     assert.equal((await obtenerTodasLasMemoriasPorTamano())['2.5x6.7cm'].length, 1)
     assert.equal((await upsertMemoriaEtiqueta({ codigo: 'A', descripcionFormateada: 'X', tamano: '5x10cm' })).exito, false)
     await crearRespaldoMemoriaEtiquetas()

@@ -11,11 +11,18 @@ export const MAXIMO_ENTRADAS_COMPARTIR = 3000
 const normalizarCodigo = (codigo) => String(codigo || '').trim().toUpperCase()
 const esTamanoValido = (tamano) => Object.hasOwn(CLAVES, tamano)
 const estructuraVacia = () => ({ version: '1.0', actualizadoEn: Date.now(), entradas: {} })
-const clonarEntrada = (entrada) => ({
-  codigo: normalizarCodigo(entrada.codigo),
-  descripcionFormateada: String(entrada.descripcionFormateada ?? ''),
-  actualizadoEn: Number(entrada.actualizadoEn || Date.now()),
-})
+const clonarEntrada = (entrada) => {
+  const copia = {
+    codigo: normalizarCodigo(entrada.codigo),
+    descripcionFormateada: String(entrada.descripcionFormateada ?? ''),
+    actualizadoEn: Number(entrada.actualizadoEn || Date.now()),
+  }
+  if (Object.hasOwn(entrada, 'tamanoDescripcionPt')) {
+    const tamano = entrada.tamanoDescripcionPt
+    copia.tamanoDescripcionPt = tamano === null ? null : Number(tamano)
+  }
+  return copia
+}
 
 function normalizarMemoria(cruda) {
   const memoria = estructuraVacia()
@@ -46,12 +53,14 @@ function recortarMemoria(memoria) {
   return { ...memoria, entradas: Object.fromEntries(recientes.map((entrada) => [entrada.codigo, entrada])) }
 }
 
-export async function upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano = TAMANO_ETIQUETA_GRANDE }) {
+export async function upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano = TAMANO_ETIQUETA_GRANDE, tamanoDescripcionPt }) {
   if (!esTamanoValido(tamano)) return { exito: false, mensaje: 'Tamaño de etiqueta desconocido.' }
   const clave = normalizarCodigo(codigo)
   if (!clave) return { exito: false, mensaje: 'Código inválido para memoria de etiqueta.' }
   const memoria = await leerMemoria(tamano)
-  memoria.entradas[clave] = clonarEntrada({ codigo: clave, descripcionFormateada, actualizadoEn: Date.now() })
+  const datos = { codigo: clave, descripcionFormateada, actualizadoEn: Date.now() }
+  if (tamano === TAMANO_ETIQUETA_CHICA) datos.tamanoDescripcionPt = tamanoDescripcionPt ?? null
+  memoria.entradas[clave] = clonarEntrada(datos)
   memoria.actualizadoEn = Date.now()
   const final = recortarMemoria(memoria)
   await escribirMemoria(tamano, final)
@@ -122,7 +131,12 @@ export function parsearJsonCompartirMemorias(textoJson = '') {
   let entradasInvalidas = 0
   for (const entrada of json.entradas) {
     const tamano = json.version === '1.0' ? TAMANO_ETIQUETA_GRANDE : entrada?.tamano
-    if (!esTamanoValido(tamano) || !normalizarCodigo(entrada?.codigo) || typeof entrada?.descripcionFormateada !== 'string' || !entrada.descripcionFormateada || !Number.isFinite(Number(entrada?.actualizadoEn))) {
+    const tamanoDescripcionValido = !Object.hasOwn(entrada || {}, 'tamanoDescripcionPt') || (
+      tamano === TAMANO_ETIQUETA_CHICA && (entrada.tamanoDescripcionPt === null || (
+        typeof entrada.tamanoDescripcionPt === 'number' && Number.isFinite(entrada.tamanoDescripcionPt) && entrada.tamanoDescripcionPt >= 2 && entrada.tamanoDescripcionPt <= 40
+      ))
+    )
+    if (!esTamanoValido(tamano) || !normalizarCodigo(entrada?.codigo) || typeof entrada?.descripcionFormateada !== 'string' || !entrada.descripcionFormateada || !Number.isFinite(Number(entrada?.actualizadoEn)) || !tamanoDescripcionValido) {
       entradasInvalidas += 1
       continue
     }

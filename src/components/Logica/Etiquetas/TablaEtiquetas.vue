@@ -202,6 +202,9 @@ async function confirmarEdicionInline(indice) {
   if (Object.prototype.hasOwnProperty.call(borrador, 'descripcion')) {
     etiquetaActualizada.descripcion = String(borrador.descripcion || '')
   }
+  if (props.configuracion.id === TAMANO_ETIQUETA_CHICA && Object.prototype.hasOwnProperty.call(borrador, 'tamanoDescripcionPt')) {
+    etiquetaActualizada.tamanoDescripcionPt = borrador.tamanoDescripcionPt
+  }
   if (Object.prototype.hasOwnProperty.call(borrador, 'ubicacion')) {
     const ubicacionNormalizada = String(borrador.ubicacion || '').toUpperCase().replace(/\s+/g, '-').replace(/^-+|-+$/g, '')
     etiquetaActualizada.ubicacion = ubicacionNormalizada || 'Sin ubicación'
@@ -250,6 +253,7 @@ async function restablecerEtiquetaDesdeMaestro(indice) {
     descripcion: articuloMaestro?.nombre || etiquetaBase.descripcion || '',
     memoriaActiva: false,
     memoriaActualizadaEn: null,
+    ...(props.configuracion.id === TAMANO_ETIQUETA_CHICA ? { tamanoDescripcionPt: null } : {}),
   }
   indicesGuardando.add(indice)
   const guardado = await new Promise((resolve) => {

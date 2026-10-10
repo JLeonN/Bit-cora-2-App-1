@@ -55,3 +55,16 @@ test('35 etiquetas conservan identidad, orden y cantidad al proyectar ambos tama
   }
   assert.deepEqual(lista, original)
 })
+
+test('el tamaño manual chico se conserva sin afectar la etiqueta grande', () => {
+  const etiqueta = guardarDescripcionDeTamano({
+    etiqueta: { codigo: 'A', descripcion: 'Grande' },
+    tamano: CHICA,
+    descripcion: 'Chica',
+    tamanoDescripcionPt: 18.5,
+  })
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA }).tamanoDescripcionPt, 18.5)
+  assert.equal(Object.hasOwn(resolverDescripcionEtiqueta({ etiqueta, tamano: GRANDE }), 'tamanoDescripcionPt'), false)
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA, memoriaPropia: { descripcionFormateada: 'Memoria', tamanoDescripcionPt: null } }).tamanoDescripcionPt, null)
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA, memoriaPropia: { descripcionFormateada: 'Memoria', tamanoDescripcionPt: 22 } }).tamanoDescripcionPt, 22)
+})

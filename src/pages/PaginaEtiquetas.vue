@@ -238,7 +238,7 @@ async function guardarMemoriaDesdeEtiqueta(etiqueta, tamano = tamanoSeleccionado
   if (!etiqueta?.codigo) return
   const codigo = String(etiqueta.codigo || '').trim().toUpperCase()
   const descripcionFormateada = String(etiqueta.descripcion || '')
-  const resultado = await upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano })
+  const resultado = await upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano, tamanoDescripcionPt: etiqueta.tamanoDescripcionPt })
   if (!resultado.exito) throw new Error(resultado.mensaje)
   memoriasPorTamano.value[tamano] = { ...memoriasPorTamano.value[tamano], [codigo]: resultado.entrada }
 }
@@ -297,6 +297,7 @@ async function confirmarEtiquetaEditada({ etiqueta, tamano, alTerminar }) {
       },
       tamano,
       descripcion: etiquetaEditada.descripcion,
+      tamanoDescripcionPt: etiquetaEditada.tamanoDescripcionPt,
     })
     await persistirEtiquetas()
     Notify.create({ type: 'positive', message: `Memoria guardada para ${etiquetaEditada.codigo}`, position: 'top', timeout: 1300 })

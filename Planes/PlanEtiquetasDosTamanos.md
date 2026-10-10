@@ -178,6 +178,8 @@ Validación realizada el 9 de octubre de 2026: las pruebas nuevas, `npm run lint
 
 Ajuste posterior del 9 de octubre de 2026: la descripción chica muestra un máximo de cuatro renglones y su editor ocupa solo el espacio entre descripción y ubicación. Se comprobó en navegador a ancho de escritorio y a 360 px que el editor no invade la ubicación; al pegar cinco renglones, quedan cuatro. Pasaron la prueba del layout chico, `npm run lint`, `npm test` y `npm run build`. Sigue pendiente la impresión real.
 
+Ajuste posterior del 10 de octubre de 2026: el tamaño de letra chico busca el mayor valor que cabe en el ancho y alto disponibles, y se recalcula al agregar renglones. Durante la edición aparecen controles de tamaño fuera de la tarjeta; un tamaño manual puede exceder el área visible. El modo automático o el valor manual se guardan en la memoria chica y se transportan en su JSON, sin alterar el formato grande. Se verificaron edición, controles con teclado, móvil a 360 px y persistencia tras recargar; queda pendiente comprobar la impresión física.
+
 Fecha de creación: 9 de octubre de 2026
-Fecha de última actualización: 9 de octubre de 2026
+Fecha de última actualización: 10 de octubre de 2026
 Estado: IMPLEMENTADO EN RAMA; VALIDACIÓN FÍSICA PENDIENTE
