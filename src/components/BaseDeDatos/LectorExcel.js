@@ -8,6 +8,11 @@ let informacionArchivo = null
 
 const CLAVE_BASE_DATOS_PERSISTENTE = 'base_datos_excel_persistente'
 
+function restaurarEstadoTrasError(informacionArchivoAnterior) {
+  informacionArchivo = informacionArchivoAnterior
+  estadoCarga = articulosDelExcel.length > 0 ? 'cargado' : 'error'
+}
+
 function normalizarTexto(valor) {
   return String(valor || '')
     .trim()
@@ -192,6 +197,7 @@ export async function cargarArticulosDesdeExcel() {
     return { exito: false, mensaje: 'Ya está cargando...' }
   }
 
+  const informacionArchivoAnterior = informacionArchivo
   estadoCarga = 'cargando'
 
   try {
@@ -224,7 +230,7 @@ export async function cargarArticulosDesdeExcel() {
     const articulosProcesados = procesarDatosExcel(datosJson)
 
     if (articulosProcesados.length === 0) {
-      estadoCarga = 'error'
+      restaurarEstadoTrasError(informacionArchivoAnterior)
       return {
         exito: false,
         mensaje:
@@ -244,7 +250,7 @@ export async function cargarArticulosDesdeExcel() {
       archivo: informacionArchivo,
     }
   } catch (error) {
-    estadoCarga = 'error'
+    restaurarEstadoTrasError(informacionArchivoAnterior)
     let mensajeError = 'Error desconocido al procesar el archivo.'
     if (error.message?.includes('No se seleccionó')) {
       mensajeError = 'No se seleccionó ningún archivo.'
@@ -267,8 +273,9 @@ export async function cargarArticulosDesdeExcelCompartido({ nombre, tipo, base64
   if (estadoCarga === 'cargando') {
     return { exito: false, mensaje: 'Ya está cargando...' }
   }
+  const informacionArchivoAnterior = informacionArchivo
   if (!base64) {
-    estadoCarga = 'error'
+    restaurarEstadoTrasError(informacionArchivoAnterior)
     return { exito: false, mensaje: 'No se pudo leer el Excel compartido.' }
   }
 
@@ -311,7 +318,7 @@ export async function cargarArticulosDesdeExcelCompartido({ nombre, tipo, base64
       archivo: informacionArchivo,
     }
   } catch (error) {
-    estadoCarga = 'error'
+    restaurarEstadoTrasError(informacionArchivoAnterior)
     return { exito: false, mensaje: `Error al procesar el Excel compartido: ${error.message}` }
   }
 }

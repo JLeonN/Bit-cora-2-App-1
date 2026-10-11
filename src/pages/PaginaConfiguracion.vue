@@ -33,9 +33,11 @@
         />
       </TarjetaSeccion>
 
+      <!-- Memorias de Capitana Bita ocultas para los usuarios hasta su próxima habilitación.
       <TarjetaSeccion titulo="Memorias de Capitana Bita" :icono="IconBrain">
         <GestionMemoriasCapitanaBita ref="gestionMemoriasRef" />
       </TarjetaSeccion>
+      -->
 
       <!-- SECCIÓN: Tutoriales y Ayuda -->
       <TarjetaSeccion
@@ -53,11 +55,12 @@
 <script setup>
 import { getCurrentInstance, computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IconBook, IconBrain, IconDatabase, IconUser } from '@tabler/icons-vue'
+import { IconBook, IconDatabase, IconUser } from '@tabler/icons-vue'
+// import { IconBrain } from '@tabler/icons-vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import SelectorExcel from '../components/Logica/Ubicaciones/SelectorExcel.vue'
 import ConfiguracionUsuario from '../components/Configuracion/ConfiguracionUsuario.vue'
-import GestionMemoriasCapitanaBita from '../components/Configuracion/GestionMemoriasCapitanaBita.vue'
+// import GestionMemoriasCapitanaBita from '../components/Configuracion/GestionMemoriasCapitanaBita.vue'
 import SeccionTutoriales from '../components/Configuracion/Tutoriales/SeccionTutoriales.vue'
 import { inicializarBaseDatos, obtenerEstadoCarga } from '../components/BaseDeDatos/LectorExcel.js'
 
@@ -86,7 +89,7 @@ const solicitudEnfoqueNombre = computed(() => String(route.query.enfocarNombre |
 const tutorialesExpandidos = computed(() => route.query.tutoriales === '1')
 const solicitudResaltadoTutoriales = computed(() => String(route.query.tutoriales || ''))
 const configuracionUsuarioRef = ref(null)
-const gestionMemoriasRef = ref(null)
+// const gestionMemoriasRef = ref(null)
 
 function manejarBaseDatosCargada(datos) {
   if (!datos?.cargaAutomatica) baseDatosExpandida.value = false
@@ -134,10 +137,9 @@ const configurarBarraBotones = () => {
 }
 
 function cerrarPasoAtrasNativo() {
-  return (
-    !!gestionMemoriasRef.value?.cerrarPasoAtrasNativo?.() ||
-    !!configuracionUsuarioRef.value?.cerrarPasoAtrasNativo?.()
-  )
+  // Restaurar el cierre de Memorias de Capitana Bita cuando vuelva a mostrarse la tarjeta.
+  // return !!gestionMemoriasRef.value?.cerrarPasoAtrasNativo?.() ||
+  return !!configuracionUsuarioRef.value?.cerrarPasoAtrasNativo?.()
 }
 
 // Manejar actualización de nombre

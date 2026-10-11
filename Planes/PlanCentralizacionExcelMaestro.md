@@ -44,6 +44,7 @@ Bitácora 2 carga un único catálogo de artículos mediante `SelectorExcel.vue`
 | --- | --- | --- | --- |
 | `src/components/Logica/Compartidos/BotonBaseDatosFaltante.vue` | Crear | `BotonBaseDatosFaltante`, `actualizarEstadoBase`, `abrirConfiguracion` | Botón común, estado y navegación |
 | `src/pages/PaginaConfiguracion.vue` | Modificar | `TarjetaSeccion`, `SelectorExcel`, `identificadorExcelMaestroCompartido`, `finalizarExcelMaestroCompartido` | Único sitio de carga, cambio y limpieza |
+| `src/components/BaseDeDatos/LectorExcel.js` | Corregir durante pruebas | `restaurarEstadoTrasError` | Conservar el maestro anterior si falla un reemplazo |
 | `src/pages/AjustarUbicaciones.vue` | Modificar | encabezado, `SelectorExcel`, `baseDatosExpandida`, manejadores del selector | Quitar carga local y mostrar aviso |
 | `src/pages/ConsultaDeUbicacion.vue` | Modificar | encabezado, `SelectorExcel`, manejadores del selector | Quitar carga local y mostrar aviso |
 | `src/pages/PaginaStock.vue` | Modificar | encabezado, tarjeta «Base e importación», `SelectorExcel`, manejadores del selector | Conservar importación desde Ubicaciones y conflicto de fuente |
@@ -147,20 +148,30 @@ Comprobar que cambió solo el lugar de administración del maestro y que los dat
 - [x] En navegador, comprobar sin maestro el ícono en Ubicaciones, Consulta, Stock, Listados y Etiquetas; comprobar en teléfono que el ícono no tapa títulos ni pestañas.
 - [x] En navegador, tocar el ícono desde Ubicaciones y Consulta, cargar un `.xlsx` válido en Configuración, verificar nombre/cantidad, volver y comprobar que desaparece; limpiar la base y comprobar que reaparece.
 - [x] En navegador, abrir Etiquetas primero tras recargar con la base persistida y comprobar que no muestra el aviso.
-- [ ] Sin maestro persistido, abrir directamente Ubicaciones, Consulta de ubicación, Listados, Stock, Etiquetas y Ubicaciones compartidas. Confirmar botón pequeño animado a la derecha del título de cada pantalla; en Etiquetas debe funcionar la carga manual de etiquetas, y el formulario de Listados debe esperar al maestro.
-- [ ] Pulsar el botón desde cada pantalla: Configuración abre la primera tarjeta y la resalta, con el mismo texto y selector que tenía Ubicaciones. Repetir la pulsación para comprobar que vuelve a resaltarse.
-- [ ] Cargar un `.xlsx` maestro válido desde Configuración: comprobar nombre, cantidad, búsqueda/autocompletado y que los botones desaparecen al volver a los módulos. Reiniciar la app y abrir Etiquetas primero para comprobar recuperación del maestro guardado.
-- [ ] Cambiar el maestro y luego limpiarlo en Configuración: comprobar actualización de las búsquedas y reaparición de los botones. En Stock, comprobar el aviso de conflicto si una sesión existente pertenece al Excel anterior.
+- [x] Sin maestro persistido, abrir directamente Ubicaciones, Consulta de ubicación, Listados, Stock, Etiquetas y Ubicaciones compartidas. Confirmar botón pequeño animado a la derecha del título de cada pantalla; en Etiquetas debe funcionar la carga manual de etiquetas, y el formulario de Listados debe esperar al maestro.
+- [x] Pulsar el botón desde cada pantalla: Configuración abre la primera tarjeta y la resalta, con el mismo texto y selector que tenía Ubicaciones. Repetir la pulsación para comprobar que vuelve a resaltarse.
+- [x] Cargar un `.xlsx` maestro válido desde Configuración: comprobar nombre, cantidad, búsqueda/autocompletado y que los botones desaparecen al volver a los módulos. Reiniciar la app y abrir Etiquetas primero para comprobar recuperación del maestro guardado.
+- [x] Cambiar el maestro y luego limpiarlo en Configuración: comprobar actualización de las búsquedas y reaparición de los botones. En Stock, comprobar el aviso de conflicto si una sesión existente pertenece al Excel anterior.
 - [ ] En Android, abrir un Excel recibido desde WhatsApp con Bitácora: comprobar que aparece el modal maestro/listado. Elegir maestro: abre Configuración, despliega la primera tarjeta y carga el archivo; probar también error, reintento y descarte sin perder el archivo antes de una decisión final.
-- [ ] En Android, elegir «listado» con el maestro ya cargado: comprobar la importación existente. Repetir sin maestro: conservar el listado pendiente, pulsar el botón del encabezado, cargar el maestro en Configuración, volver a Listados y comprobar importación única del pendiente.
+- [x] En Android, elegir «listado» con el maestro ya cargado: comprobar la importación existente. Repetir sin maestro: conservar el listado pendiente, pulsar el botón del encabezado, cargar el maestro en Configuración, volver a Listados y comprobar importación única del pendiente.
 - [ ] Abrir un enlace de Ubicaciones compartidas sin maestro: conservar la lista y su `id` al ir a Configuración y volver; cargar el maestro y descargar el Excel final.
-- [ ] Confirmar que «Cargar Excel» en Listados sigue importando otro listado y que los datos guardados de Ubicaciones, Etiquetas, Listados y Stock no se borran al trasladar el selector.
+- [x] Confirmar que «Cargar Excel» en Listados sigue importando otro listado y que los datos guardados de Ubicaciones, Etiquetas, Listados y Stock no se borran al trasladar el selector.
 
 ### Casos responsivos
 
 - [x] En navegador a 390 px, comprobar Ubicaciones, Consulta, Stock, Listados, Etiquetas y la tarjeta de Configuración; con movimiento reducido, la animación del botón queda desactivada y su nombre accesible permanece.
-- [ ] Revisar encabezados en teléfono estrecho y web/escritorio: el botón queda contra el borde derecho, el título conserva legibilidad y las pestañas de Etiquetas no se superponen.
+- [x] Revisar encabezados en teléfono estrecho y web/escritorio: el botón queda contra el borde derecho, el título conserva legibilidad y las pestañas de Etiquetas no se superponen.
 - [ ] Verificar teclado y lector de pantalla mediante `title`, `aria-label` y foco visible; con movimiento reducido, el ícono permanece visible sin parpadeo.
+
+### Resultado de pruebas en Android
+
+- APK de prueba instalado en el teléfono USB con publicidad de prueba; la configuración fuente de publicidad quedó restaurada. Se comprobó que los avisos no aparecen con el maestro original de 15.382 artículos y sí aparecen en los cinco módulos al faltar la base. También se probó la carga de un maestro de prueba, su cambio y su limpieza.
+- Se simuló la recepción de Excel mediante `ACTION_SEND` y un URI con permiso de lectura, que recorre el mismo receptor Android que usa WhatsApp. El modal maestro/listado apareció. El maestro válido se cargó en Configuración; un archivo inválido mostró error, permitió reintentar y descartar. Se corrigió un fallo detectado: el error de reemplazo ya no desactiva el maestro válido anterior. La carga manual se probó entregando un `File` al selector desde la WebView; no se operó el selector de archivos nativo.
+- Un listado recibido se importó con maestro cargado. Sin maestro, conservó el identificador al ir a Configuración; tras cargar un maestro y volver, agregó la fila una sola vez y limpió la consulta al cerrar el resumen. El formulario de Listados permaneció inactivo sin maestro y Etiquetas permitió una etiqueta manual.
+- El botón manual «Cargar Excel» de Listados abrió su selector y procesó otro `.xlsx` con una fila del maestro original. La app conservó los datos anteriores; el respaldo de Preferences se restauró tras la prueba y se verificó con hash.
+- El enlace de Ubicaciones compartidas conservó su `id` al ir y volver de Configuración. En Android, ese módulo informa que compartir por enlace solo está disponible en web; por eso no se pudo probar la descarga final con un enlace válido en el teléfono.
+- Se restauró el almacenamiento original del teléfono y se verificó su integridad por hash. Tras reiniciar, Etiquetas recuperó el maestro sin aviso y Configuración volvió a mostrar `GENERAL.xls` con 15.382 artículos. Se retiraron los archivos de prueba.
+- Pendientes específicos: abrir el archivo desde la interfaz real de WhatsApp y elegir Bitácora en el selector de Android; probar la descarga final de un enlace válido en web; y probar lector de pantalla/teclado físico. MIUI bloqueó la inyección de toques ADB, por lo que la interfaz de Bitácora se verificó mediante la WebView de depuración.
 
 ## Progreso del plan
 
