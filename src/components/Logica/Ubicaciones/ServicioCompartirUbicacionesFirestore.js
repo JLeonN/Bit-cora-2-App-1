@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core'
+import { NOMBRE_USUARIO_PREDETERMINADO } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import { obtenerAplicacionFirebase } from '../Compartidos/ServicioFirebase.js'
 
 const COLECCION_UBICACIONES_COMPARTIDAS = 'ubicacionesCompartidas'
@@ -91,7 +92,7 @@ function validarDocumentoCompartido(datos) {
   }
 
   return {
-    usuario: String(datos.usuario || 'Sin usuario')
+    usuario: String(datos.usuario || NOMBRE_USUARIO_PREDETERMINADO)
       .trim()
       .slice(0, MAXIMO_CARACTERES_USUARIO),
     cantidadUbicaciones: datos.cantidadUbicaciones,
@@ -104,12 +105,12 @@ export async function publicarUbicacionesCompartidas(ubicaciones, nombreUsuario)
   const ubicacionesNormalizadas = normalizarUbicaciones(ubicaciones)
   const firestore = await obtenerFirestore()
   const { addDoc, collection, serverTimestamp } = await obtenerDependenciasFirebase()
-  const usuario = String(nombreUsuario || 'Sin usuario')
+  const usuario = String(nombreUsuario || NOMBRE_USUARIO_PREDETERMINADO)
     .trim()
     .slice(0, MAXIMO_CARACTERES_USUARIO)
   const documento = await addDoc(collection(firestore, COLECCION_UBICACIONES_COMPARTIDAS), {
     version: 1,
-    usuario: usuario || 'Sin usuario',
+    usuario: usuario || NOMBRE_USUARIO_PREDETERMINADO,
     cantidadUbicaciones: ubicacionesNormalizadas.length,
     fechaCreacion: serverTimestamp(),
     ubicaciones: ubicacionesNormalizadas,

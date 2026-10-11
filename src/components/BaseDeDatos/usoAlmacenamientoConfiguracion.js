@@ -1,6 +1,7 @@
 import { Preferences } from '@capacitor/preferences'
 
 const CLAVE_CONFIGURACION_USUARIO = 'configuracion_usuario'
+export const NOMBRE_USUARIO_PREDETERMINADO = 'Bitácora'
 
 export async function guardarNombreUsuario(nombre) {
   try {
@@ -28,13 +29,13 @@ export async function obtenerNombreUsuario() {
 
     if (value) {
       const configuracion = JSON.parse(value)
-      return configuracion.nombreUsuario || 'Usua desconocido'
+      return configuracion.nombreUsuario?.trim() || NOMBRE_USUARIO_PREDETERMINADO
     }
 
-    return 'Usua desconocido'
+    return NOMBRE_USUARIO_PREDETERMINADO
   } catch (error) {
     console.error('Error al obtener nombre de usuario:', error)
-    return 'Usua desconocido'
+    return NOMBRE_USUARIO_PREDETERMINADO
   }
 }
 
@@ -58,13 +59,13 @@ export async function obtenerConfiguracionCompleta() {
     }
 
     return {
-      nombreUsuario: 'Usua desconocido',
+      nombreUsuario: NOMBRE_USUARIO_PREDETERMINADO,
       fechaActualizacion: null,
     }
   } catch (error) {
     console.error('Error al obtener configuración completa:', error)
     return {
-      nombreUsuario: 'Usua desconocido',
+      nombreUsuario: NOMBRE_USUARIO_PREDETERMINADO,
       fechaActualizacion: null,
     }
   }

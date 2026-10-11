@@ -1,4 +1,5 @@
 import { Preferences } from '@capacitor/preferences'
+import { NOMBRE_USUARIO_PREDETERMINADO } from './usoAlmacenamientoConfiguracion.js'
 import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from '../Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 
 const CLAVES = {
@@ -112,11 +113,11 @@ export async function crearRespaldoMemoriaEtiquetas() {
   return { exito: true, creadoEn: respaldo.creadoEn, cantidad: Object.values(memorias).reduce((total, memoria) => total + Object.keys(memoria.entradas).length, 0) }
 }
 
-export function construirJsonCompartirMemorias({ entradas = [], exportadoPor = 'Usuario desconocido', exportadoEn = Date.now() }) {
+export function construirJsonCompartirMemorias({ entradas = [], exportadoPor = NOMBRE_USUARIO_PREDETERMINADO, exportadoEn = Date.now() }) {
   if (entradas.length > MAXIMO_ENTRADAS_COMPARTIR) throw new Error('Se superó el límite de 3000 memorias.')
   const validas = entradas.filter((entrada) => esTamanoValido(entrada.tamano) && entrada.codigo && entrada.descripcionFormateada)
     .map((entrada) => ({ ...clonarEntrada(entrada), tamano: entrada.tamano }))
-  return { version: '2.0', exportadoEn: Number(exportadoEn), exportadoPor: String(exportadoPor || 'Usuario desconocido'), cantidad: validas.length, entradas: validas }
+  return { version: '2.0', exportadoEn: Number(exportadoEn), exportadoPor: String(exportadoPor || NOMBRE_USUARIO_PREDETERMINADO), cantidad: validas.length, entradas: validas }
 }
 
 export function parsearJsonCompartirMemorias(textoJson = '') {
@@ -142,7 +143,7 @@ export function parsearJsonCompartirMemorias(textoJson = '') {
     }
     entradas.push({ ...clonarEntrada(entrada), tamano })
   }
-  return { exito: true, payload: { version: json.version, exportadoEn: Number(json.exportadoEn), exportadoPor: String(json.exportadoPor || 'usuario desconocido'), cantidad: entradas.length, entradas }, entradasInvalidas }
+  return { exito: true, payload: { version: json.version, exportadoEn: Number(json.exportadoEn), exportadoPor: String(json.exportadoPor || NOMBRE_USUARIO_PREDETERMINADO), cantidad: entradas.length, entradas }, entradasInvalidas }
 }
 
 export async function fusionarMemoriasDesdeJsonPayload(payload) {

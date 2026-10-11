@@ -9,7 +9,7 @@
             id="nombreUsuario"
             type="text"
             v-model="nombreEditado"
-            :placeholder="nombreActual === 'Usua desconocido' ? 'Ingresa tu nombre' : nombreActual"
+            :placeholder="nombreActual"
             :maxlength="50"
             @focus="mostrarMensajeAyuda = true"
             @blur="mostrarMensajeAyuda = false"
@@ -23,11 +23,11 @@
         <!-- Botones -->
         <div class="contenedor-botones-config">
           <button type="submit" class="boton-guardar" :disabled="!puedeGuardar">
-            {{ nombreActual === 'Usua desconocido' ? 'Guardar' : 'Actualizar' }}
+            {{ tieneNombrePersonalizado ? 'Actualizar' : 'Guardar' }}
           </button>
 
           <button
-            v-if="nombreActual !== 'Usua desconocido'"
+            v-if="tieneNombrePersonalizado"
             type="button"
             class="boton-limpiar"
             @click="mostrarModalConfirmacion"
@@ -153,7 +153,8 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import {
   guardarNombreUsuario,
-  obtenerNombreUsuario,
+  NOMBRE_USUARIO_PREDETERMINADO,
+  obtenerConfiguracionCompleta,
   limpiarConfiguracionUsuario,
 } from '../BaseDeDatos/usoAlmacenamientoConfiguracion'
 import {
@@ -173,7 +174,8 @@ import {
 } from '@tabler/icons-vue'
 
 const nombreEditado = ref('')
-const nombreActual = ref('Usua desconocido')
+const nombreActual = ref(NOMBRE_USUARIO_PREDETERMINADO)
+const tieneNombrePersonalizado = ref(false)
 const mostrarMensajeAyuda = ref(false)
 const mostrarModal = ref(false)
 
@@ -206,7 +208,11 @@ const puedeGuardar = computed(() => {
 
 // Métodos
 const cargarNombreActual = async () => {
-  nombreActual.value = await obtenerNombreUsuario()
+  const configuracion = await obtenerConfiguracionCompleta()
+  nombreActual.value = configuracion.nombreUsuario?.trim() || NOMBRE_USUARIO_PREDETERMINADO
+  tieneNombrePersonalizado.value = Boolean(
+    configuracion.fechaActualizacion && configuracion.nombreUsuario?.trim(),
+  )
   nombreEditado.value = ''
 }
 
@@ -217,6 +223,7 @@ const guardarNombre = async () => {
 
   if (exito) {
     nombreActual.value = nombreEditado.value.trim()
+    tieneNombrePersonalizado.value = true
     nombreEditado.value = ''
     mostrarMensaje('exito', '¡Nombre guardado correctamente!')
     emit('nombre-actualizado', nombreActual.value)
@@ -237,7 +244,8 @@ const confirmarLimpieza = async () => {
   const exito = await limpiarConfiguracionUsuario()
 
   if (exito) {
-    nombreActual.value = 'Usua desconocido'
+    nombreActual.value = NOMBRE_USUARIO_PREDETERMINADO
+    tieneNombrePersonalizado.value = false
     nombreEditado.value = ''
     mostrarMensaje('exito', 'Nombre reseteado correctamente')
     emit('nombre-actualizado', nombreActual.value)

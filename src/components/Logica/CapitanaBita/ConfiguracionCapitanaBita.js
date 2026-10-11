@@ -68,7 +68,7 @@ function obtenerNombreValido(nombreUsuario) {
   const nombre = String(nombreUsuario || '')
     .trim()
     .slice(0, 60)
-  return nombre && nombre !== 'Usua desconocido' ? nombre : ''
+  return nombre
 }
 
 export function crearInstruccionSistemaCapitanaBita(nombreUsuario) {

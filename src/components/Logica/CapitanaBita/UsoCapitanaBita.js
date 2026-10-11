@@ -38,10 +38,7 @@ function elegirMensajeAleatorio(mensajes) {
 }
 
 function crearMensajesSaludo(nombreUsuario) {
-  const nombre =
-    String(nombreUsuario || '').trim() && nombreUsuario !== 'Usua desconocido'
-      ? String(nombreUsuario).trim()
-      : 'tripulante'
+  const nombre = String(nombreUsuario || '').trim() || 'tripulante'
   const tratamiento = `amo ${nombre}`
   return [
     `Hola, ${tratamiento}. Capitana Bita lista para zarpar.`,

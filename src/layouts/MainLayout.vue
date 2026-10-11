@@ -240,7 +240,10 @@ import BarraBotonesInferior from 'components/Botones/BarraBotonesInferior.vue'
 import BannerAdMob from 'components/AdMob/BannerAdMob.vue'
 import ModalDestinoExcelCompartido from 'components/Modales/ModalDestinoExcelCompartido.vue'
 import { esModoPruebaPublicidad } from 'components/Configuracion/ConfiguracionPublicidad.js'
-import { obtenerNombreUsuario } from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  NOMBRE_USUARIO_PREDETERMINADO,
+  obtenerNombreUsuario,
+} from 'components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
   obtenerEstadoActualizacion,
   abrirActualizacionEnTienda,
@@ -264,7 +267,7 @@ import {
 const drawer = ref(false)
 const router = useRouter()
 let contadorSolicitudEnfoqueNombre = 0
-const nombreUsuario = ref('Usuario desconocido')
+const nombreUsuario = ref(NOMBRE_USUARIO_PREDETERMINADO)
 const hayBannerVisible = ref(false)
 const modalActivo = ref(false)
 const hayActualizacionDisponible = ref(false)
@@ -398,7 +401,7 @@ const cargarNombreUsuario = async () => {
     nombreUsuario.value = nombre
   } catch (error) {
     console.error('Error al cargar nombre de usuario:', error)
-    nombreUsuario.value = 'Usuario desconocido'
+    nombreUsuario.value = NOMBRE_USUARIO_PREDETERMINADO
   }
 }
 

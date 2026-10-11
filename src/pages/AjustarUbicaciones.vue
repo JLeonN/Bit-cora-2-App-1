@@ -101,7 +101,10 @@ import {
   MAXIMO_UBICACIONES_COMPARTIDAS,
   publicarUbicacionesCompartidas,
 } from '../components/Logica/Ubicaciones/ServicioCompartirUbicacionesFirestore.js'
-import { obtenerNombreUsuario } from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  NOMBRE_USUARIO_PREDETERMINADO,
+  obtenerNombreUsuario,
+} from '../components/BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import {
   UMBRAL_IR_AL_FINAL,
   desplazarAlFinalDePagina,
@@ -661,7 +664,7 @@ async function enviarUbicacionesExcel() {
 }
 
 function construirMensajeWhatsAppUbicaciones(nombreUsuario, cantidadUbicaciones, nombreArchivo) {
-  const usuario = nombreUsuario || 'Sin usuario'
+  const usuario = nombreUsuario || NOMBRE_USUARIO_PREDETERMINADO
   const cantidad = cantidadUbicaciones === 1 ? '1 ubicación' : `${cantidadUbicaciones} ubicaciones`
   const nombreArchivoSeguro = String(nombreArchivo || '').replaceAll('`', "'")
 
@@ -714,7 +717,7 @@ function construirEnlaceUbicacionesCompartidas(idDocumento) {
 }
 
 function construirMensajeWhatsAppEnlaceUbicaciones(nombreUsuario, cantidadUbicaciones, enlace) {
-  const usuario = nombreUsuario || 'Sin usuario'
+  const usuario = nombreUsuario || NOMBRE_USUARIO_PREDETERMINADO
   const cantidad = cantidadUbicaciones === 1 ? '1 ubicación' : `${cantidadUbicaciones} ubicaciones`
   return [
     '*Ubicaciones compartidas*',
