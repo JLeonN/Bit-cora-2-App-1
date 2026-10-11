@@ -1,6 +1,10 @@
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
-import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  normalizarNombreUsuario,
+  obtenerNombreUsuario,
+} from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import { crearNombreHojaBitacora } from '../Compartidos/IdentificacionBitacora.js'
 
 const ANCHOS_COLUMNAS = [
   { wch: 18 },
@@ -43,7 +47,11 @@ function construirLibro(registros, nombreUsuario) {
   ])
   hoja['!cols'] = ANCHOS_COLUMNAS
   const libro = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(libro, hoja, nombreUsuario)
+  XLSX.utils.book_append_sheet(
+    libro,
+    hoja,
+    crearNombreHojaBitacora(normalizarNombreUsuario(nombreUsuario)),
+  )
   return libro
 }
 

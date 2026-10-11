@@ -1,6 +1,10 @@
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import * as XLSX from 'xlsx'
-import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  normalizarNombreUsuario,
+  obtenerNombreUsuario,
+} from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import { crearNombreHojaBitacora } from '../Compartidos/IdentificacionBitacora.js'
 
 // --- CONFIGURACIÓN DE ANCHOS DE COLUMNAS ---
 const ANCHOS_COLUMNAS = [
@@ -65,7 +69,11 @@ async function prepararExcelPedidos(pedidos) {
   hojaDeTrabajo['!cols'] = ANCHOS_COLUMNAS
 
   const libroDeTrabajo = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
+  XLSX.utils.book_append_sheet(
+    libroDeTrabajo,
+    hojaDeTrabajo,
+    crearNombreHojaBitacora(normalizarNombreUsuario(nombreUsuario)),
+  )
   return { libroDeTrabajo, nombreArchivo, nombreUsuario }
 }
 

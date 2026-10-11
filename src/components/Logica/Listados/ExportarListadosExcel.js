@@ -1,6 +1,9 @@
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core'
 import * as XLSX from 'xlsx'
+import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import { crearNombreHojaBitacora } from '../Compartidos/IdentificacionBitacora.js'
+import { crearNombreArchivoListado } from './NombreArchivoListado.js'
 
 export function calcularAnchoColumna(valores, minimo, maximo) {
   const mayorLongitud = valores.reduce(
@@ -8,10 +11,6 @@ export function calcularAnchoColumna(valores, minimo, maximo) {
     0,
   )
   return Math.min(maximo, Math.max(minimo, mayorLongitud + 2))
-}
-
-function sanitizarNombreHoja(nombre) {
-  return String(nombre || '').replace(/[\\/?*[\]:]/g, '').trim().slice(0, 31) || 'Listado'
 }
 
 export function construirLibroListado(articulosOrdenados, configuracion, nombreListado) {
@@ -39,23 +38,8 @@ export function construirLibroListado(articulosOrdenados, configuracion, nombreL
     wch: calcularAnchoColumna(datos.map((fila) => fila[indice]), minimo, maximo),
   }))
   const libro = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(libro, hoja, sanitizarNombreHoja(nombreListado))
+  XLSX.utils.book_append_sheet(libro, hoja, crearNombreHojaBitacora(nombreListado))
   return libro
-}
-
-function sanitizarNombreArchivo(nombre) {
-  return String(nombre || '').replace(/[<>:"/\\|?*]/g, '').trim()
-}
-
-function crearNombreArchivoListado(nombrePersonalizado) {
-  const ahora = new Date()
-  const rellenar = (valor) => String(valor).padStart(2, '0')
-  const fecha = `${rellenar(ahora.getDate())}-${rellenar(ahora.getMonth() + 1)}-${ahora.getFullYear()}`
-  const hora = `${rellenar(ahora.getHours())}-${rellenar(ahora.getMinutes())}`
-  const nombre = sanitizarNombreArchivo(nombrePersonalizado)
-  return nombre
-    ? `Listado _ ${nombre} _ ${fecha} ${hora}.xlsx`
-    : `Listado ${fecha} ${hora}.xlsx`
 }
 
 export async function generarYGuardarExcelListado(listado, articulosOrdenados) {
@@ -67,7 +51,8 @@ export async function generarYGuardarExcelListado(listado, articulosOrdenados) {
     listado.configuracion,
     listado.nombre,
   )
-  const nombreArchivo = crearNombreArchivoListado(listado.nombrePersonalizado)
+  const nombreUsuario = await obtenerNombreUsuario()
+  const nombreArchivo = crearNombreArchivoListado(listado, nombreUsuario, new Date(), 'xlsx')
   if (Capacitor.getPlatform() === 'web') {
     XLSX.writeFile(libro, nombreArchivo)
     return { uri: null, nombreArchivo }

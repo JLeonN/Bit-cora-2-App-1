@@ -209,9 +209,10 @@ const puedeGuardar = computed(() => {
 // Métodos
 const cargarNombreActual = async () => {
   const configuracion = await obtenerConfiguracionCompleta()
-  nombreActual.value = configuracion.nombreUsuario?.trim() || NOMBRE_USUARIO_PREDETERMINADO
+  nombreActual.value = configuracion.nombreUsuario
   tieneNombrePersonalizado.value = Boolean(
-    configuracion.fechaActualizacion && configuracion.nombreUsuario?.trim(),
+    configuracion.fechaActualizacion &&
+      configuracion.nombreUsuario !== NOMBRE_USUARIO_PREDETERMINADO,
   )
   nombreEditado.value = ''
 }

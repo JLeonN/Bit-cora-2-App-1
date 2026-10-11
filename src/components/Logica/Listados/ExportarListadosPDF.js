@@ -3,6 +3,8 @@ import { Directory, Filesystem } from '@capacitor/filesystem'
 import { jsPDF } from 'jspdf'
 import { imprimirPDFEnNavegador } from '../Compartidos/ImprimirPDFEnNavegador.js'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import { crearFirmaBitacora } from '../Compartidos/IdentificacionBitacora.js'
+import { crearNombreArchivoListado } from './NombreArchivoListado.js'
 
 const ANCHO_PAGINA = 297
 const ALTO_PAGINA = 210
@@ -13,23 +15,10 @@ const TAMANO_TEXTO = 8
 const INTERLINEADO = 3.6
 const rellenarNumero = (valor) => String(valor).padStart(2, '0')
 
-function sanitizarNombreArchivo(nombre) {
-  return String(nombre || '').replace(/[<>:"/\\|?*]/g, '').trim()
-}
-
-function crearNombreArchivoListado(nombrePersonalizado, fechaGeneracion) {
-  const fecha = `${rellenarNumero(fechaGeneracion.getDate())}-${rellenarNumero(fechaGeneracion.getMonth() + 1)}-${fechaGeneracion.getFullYear()}`
-  const hora = `${rellenarNumero(fechaGeneracion.getHours())}-${rellenarNumero(fechaGeneracion.getMinutes())}`
-  const nombre = sanitizarNombreArchivo(nombrePersonalizado)
-  return nombre
-    ? `Listado _ ${nombre} _ ${fecha} ${hora}.pdf`
-    : `Listado ${fecha} ${hora}.pdf`
-}
-
 function crearSubtitulo(nombreUsuario, fechaGeneracion) {
   const fecha = `${rellenarNumero(fechaGeneracion.getDate())}/${rellenarNumero(fechaGeneracion.getMonth() + 1)}/${fechaGeneracion.getFullYear()}`
   const hora = `${rellenarNumero(fechaGeneracion.getHours())}:${rellenarNumero(fechaGeneracion.getMinutes())}`
-  return `${nombreUsuario} · ${fecha} ${hora}`
+  return `${crearFirmaBitacora(nombreUsuario)} · ${fecha} ${hora}`
 }
 
 function obtenerColumnas(configuracion) {
@@ -174,7 +163,7 @@ async function prepararDocumentoPDFListado(listado, articulosOrdenados) {
     nombreUsuario,
     fechaGeneracion,
   )
-  return { pdf, fechaGeneracion }
+  return { pdf, fechaGeneracion, nombreUsuario }
 }
 
 function descargarPDFEnNavegador(pdf, nombreArchivo) {
@@ -187,8 +176,8 @@ function descargarPDFEnNavegador(pdf, nombreArchivo) {
 }
 
 export async function generarYGuardarPDFListado(listado, articulosOrdenados) {
-  const { pdf, fechaGeneracion } = await prepararDocumentoPDFListado(listado, articulosOrdenados)
-  const nombreArchivo = crearNombreArchivoListado(listado.nombrePersonalizado, fechaGeneracion)
+  const { pdf, fechaGeneracion, nombreUsuario } = await prepararDocumentoPDFListado(listado, articulosOrdenados)
+  const nombreArchivo = crearNombreArchivoListado(listado, nombreUsuario, fechaGeneracion, 'pdf')
   if (Capacitor.getPlatform() === 'web') {
     descargarPDFEnNavegador(pdf, nombreArchivo)
     return { uri: null, nombreArchivo }

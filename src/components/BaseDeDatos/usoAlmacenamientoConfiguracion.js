@@ -2,6 +2,24 @@ import { Preferences } from '@capacitor/preferences'
 
 const CLAVE_CONFIGURACION_USUARIO = 'configuracion_usuario'
 export const NOMBRE_USUARIO_PREDETERMINADO = 'Bitácora'
+const NOMBRES_USUARIO_ANTERIORES = new Set([
+  'usua desconocido',
+  'usuario desconocido',
+  'sin usuario',
+])
+
+export function normalizarNombreUsuario(nombre) {
+  const nombreNormalizado = String(nombre ?? '').trim()
+  if (
+    !nombreNormalizado ||
+    nombreNormalizado.toLocaleLowerCase('es') ===
+      NOMBRE_USUARIO_PREDETERMINADO.toLocaleLowerCase('es') ||
+    NOMBRES_USUARIO_ANTERIORES.has(nombreNormalizado.toLocaleLowerCase('es'))
+  ) {
+    return NOMBRE_USUARIO_PREDETERMINADO
+  }
+  return nombreNormalizado
+}
 
 export async function guardarNombreUsuario(nombre) {
   try {
@@ -29,7 +47,7 @@ export async function obtenerNombreUsuario() {
 
     if (value) {
       const configuracion = JSON.parse(value)
-      return configuracion.nombreUsuario?.trim() || NOMBRE_USUARIO_PREDETERMINADO
+      return normalizarNombreUsuario(configuracion.nombreUsuario)
     }
 
     return NOMBRE_USUARIO_PREDETERMINADO
@@ -55,7 +73,11 @@ export async function obtenerConfiguracionCompleta() {
     const { value } = await Preferences.get({ key: CLAVE_CONFIGURACION_USUARIO })
 
     if (value) {
-      return JSON.parse(value)
+      const configuracion = JSON.parse(value)
+      return {
+        ...configuracion,
+        nombreUsuario: normalizarNombreUsuario(configuracion.nombreUsuario),
+      }
     }
 
     return {

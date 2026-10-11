@@ -6,7 +6,11 @@ import {
   obtenerUbicacionAntigua,
   validarCodigosDuplicadosEnUbicaciones,
 } from '../../BaseDeDatos/LectorExcel.js'
-import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import {
+  normalizarNombreUsuario,
+  obtenerNombreUsuario,
+} from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
+import { crearNombreHojaBitacora } from '../Compartidos/IdentificacionBitacora.js'
 
 const ANCHOS_BASE_COLUMNAS = [
   { wch: 18 }, // A - articulo
@@ -109,7 +113,11 @@ function construirLibroUbicaciones(ubicaciones, nombreUsuario) {
   hojaDeTrabajo['!cols'] = [...ANCHOS_BASE_COLUMNAS, ...columnasHistorial]
 
   const libroDeTrabajo = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(libroDeTrabajo, hojaDeTrabajo, nombreUsuario)
+  XLSX.utils.book_append_sheet(
+    libroDeTrabajo,
+    hojaDeTrabajo,
+    crearNombreHojaBitacora(normalizarNombreUsuario(nombreUsuario)),
+  )
   return libroDeTrabajo
 }
 
