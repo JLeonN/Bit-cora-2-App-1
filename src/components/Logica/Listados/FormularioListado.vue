@@ -57,6 +57,7 @@
                 ref="inputBusquedaRef"
                 v-model="busquedaArticulo"
                 class="campo-entrada-formulario"
+                :class="{ 'campo-agregado-listado': mostrarPulsoAgregado }"
                 type="text"
                 placeholder="Código o descripción del artículo"
                 :disabled="busquedaDeshabilitada"
@@ -138,6 +139,14 @@
             :disabled="busquedaDeshabilitada || importandoExcel"
             @change="manejarArchivoExcelSeleccionado"
           />
+          <div v-if="confirmacionAgregado" class="aviso-articulo-agregado" role="status" aria-live="polite">
+            <IconCheck :size="21" :stroke="2.5" />
+            <div class="datos-articulo-agregado">
+              <strong>Agregado al listado</strong>
+              <span>{{ confirmacionAgregado.nombre }}</span>
+              <small>{{ confirmacionAgregado.codigo }}</small>
+            </div>
+          </div>
           <div
             v-if="articuloRepetido"
             class="aviso-articulo-repetido"
@@ -183,8 +192,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
-import { IconCamera, IconCopy, IconFileSpreadsheet, IconInfoCircle, IconLoader2 } from '@tabler/icons-vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { IconCamera, IconCheck, IconCopy, IconFileSpreadsheet, IconInfoCircle, IconLoader2 } from '@tabler/icons-vue'
 import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'
 import CamaraEscaneo from '../Ubicaciones/CamaraEscaneo.vue'
@@ -238,6 +247,9 @@ const autoseleccionArticuloHabilitada = ref(false)
 const ultimoEspacioTiempo = ref(0)
 const entradaCapitanaBitaRef = ref(null)
 const inputExcelListadoRef = ref(null)
+const confirmacionAgregado = ref(null)
+const mostrarPulsoAgregado = ref(false)
+let temporizadorConfirmacion = null
 const estadoInteraccionCapitanaBita = ref({
   grabando: false,
   procesando: false,
@@ -353,6 +365,9 @@ async function copiarBusquedaActual() {
 
 function seleccionarArticulo(articulo) {
   if (modoBusqueda.value !== 'manual') return
+  window.clearTimeout(temporizadorConfirmacion)
+  confirmacionAgregado.value = null
+  mostrarPulsoAgregado.value = false
   emit('articulo-seleccionado', articulo)
   busquedaArticulo.value = obtenerTextoCopiado()
   mostrarBuscador.value = false
@@ -396,6 +411,21 @@ async function enfocarBusqueda() {
   inputBusquedaRef.value?.focus()
 }
 
+async function mostrarConfirmacionAgregado(articulo) {
+  window.clearTimeout(temporizadorConfirmacion)
+  mostrarPulsoAgregado.value = false
+  confirmacionAgregado.value = {
+    nombre: String(articulo.nombre || articulo.descripcion || 'Artículo sin nombre').trim(),
+    codigo: String(articulo.codigo || '').trim(),
+  }
+  await nextTick()
+  mostrarPulsoAgregado.value = true
+  temporizadorConfirmacion = window.setTimeout(() => {
+    confirmacionAgregado.value = null
+    mostrarPulsoAgregado.value = false
+  }, 3000)
+}
+
 async function limpiarBusqueda({ descartarTextoCopiado = false } = {}) {
   busquedaArticulo.value = ''
   mostrarBuscador.value = false
@@ -431,8 +461,9 @@ function cerrarInteraccion() {
 onMounted(async () => {
   autoseleccionArticuloHabilitada.value = await obtenerAutoseleccionArticulo()
 })
+onUnmounted(() => window.clearTimeout(temporizadorConfirmacion))
 
-defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpiarBusqueda })
+defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpiarBusqueda, mostrarConfirmacionAgregado })
 </script>
 
 <style scoped>
@@ -497,6 +528,47 @@ defineExpose({ cerrarInteraccion, enfocarBusqueda, establecerBaseCargada, limpia
 }
 .contenedor-input-codigo {
   width: 100%;
+}
+.campo-entrada-formulario.campo-agregado-listado {
+  border-color: var(--color-exito);
+  animation: pulso-campo-agregado 0.8s ease-out;
+}
+@keyframes pulso-campo-agregado {
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  35% {
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-exito) 35%, transparent);
+  }
+}
+.aviso-articulo-agregado {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-exito);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--color-exito) 10%, var(--color-superficie));
+  color: var(--color-exito);
+}
+.datos-articulo-agregado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.datos-articulo-agregado span {
+  color: var(--color-texto-principal);
+  overflow-wrap: anywhere;
+}
+.datos-articulo-agregado small {
+  color: var(--color-texto-secundario);
+}
+@media (prefers-reduced-motion: reduce) {
+  .campo-entrada-formulario.campo-agregado-listado {
+    animation: none;
+  }
 }
 .acciones-entrada-listado {
   display: grid;

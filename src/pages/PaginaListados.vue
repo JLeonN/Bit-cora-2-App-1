@@ -822,8 +822,15 @@ async function agregarArticulo(articulo, { desdeCapitanaBita = false } = {}) {
     }
     return false
   }
-  await insertarArticulo(articulo)
-  return true
+  try {
+    const fila = await insertarArticulo(articulo)
+    if (!fila) return false
+    if (!desdeCapitanaBita) void formularioListadoRef.value?.mostrarConfirmacionAgregado?.(fila)
+    return true
+  } catch (error) {
+    notificar('negative', error.message || 'No se pudo guardar el artículo.')
+    return false
+  }
 }
 
 async function agregarArticulosCoincidentes({ articulos, totalCoincidencias, identificadorDestino }) {
@@ -880,7 +887,7 @@ async function agregarArticulosCoincidentes({ articulos, totalCoincidencias, ide
 
 async function insertarArticulo(articulo) {
   const fila = crearFilaListado(articulo)
-  if (!fila || !listadoActivo.value) return
+  if (!fila || !listadoActivo.value) return null
   listadoActivo.value.articulos.push(fila)
   try {
     await persistirActivo()
@@ -890,6 +897,7 @@ async function insertarArticulo(articulo) {
     )
     throw error
   }
+  return fila
 }
 
 function crearFilaListado(articulo, fechaMinima = 0, fechaMayorPrecalculada = null) {
@@ -925,7 +933,9 @@ async function confirmarArticuloRepetido() {
   if (!articulo) return
   articuloPendienteRepetido.value = null
   try {
-    await insertarArticulo(articulo)
+    const fila = await insertarArticulo(articulo)
+    if (!fila) return
+    if (!articulo.desdeCapitanaBita) void formularioListadoRef.value?.mostrarConfirmacionAgregado?.(fila)
     await formularioListadoRef.value?.enfocarBusqueda?.()
     void procesarColaCapitanaBita()
   } catch (error) {
