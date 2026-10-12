@@ -182,4 +182,4 @@ Ajuste posterior del 10 de octubre de 2026: el tamaño de letra chico busca el m
 
 Fecha de creación: 9 de octubre de 2026
 Fecha de última actualización: 10 de octubre de 2026
-Estado: IMPLEMENTADO EN RAMA; VALIDACIÓN FÍSICA PENDIENTE
+Estado: INTEGRADO EN MAIN; VALIDACIÓN FÍSICA PENDIENTE
