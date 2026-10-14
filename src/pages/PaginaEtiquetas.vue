@@ -3,7 +3,12 @@
     <div class="header-etiquetas">
       <div class="encabezado-con-base-datos">
         <h2 class="titulo-tabla">Etiquetas</h2>
-        <BotonBaseDatosFaltante />
+        <div class="acciones-encabezado-etiquetas">
+          <BotonBaseDatosFaltante />
+          <button type="button" class="boton-abrir-memorias" @click="abrirApartadoMemorias">
+            Memorias
+          </button>
+        </div>
       </div>
       <div class="pestanas-etiquetas" role="tablist" aria-label="Tamaño de etiqueta" @keydown="manejarTeclaPestanas">
         <button
@@ -20,22 +25,6 @@
         >{{ opcion.nombre }}</button>
       </div>
     </div>
-
-    <TarjetaSeccion
-      titulo="Memoria compartida"
-      :expandida-por-defecto="false"
-      descripcion-resumen="Accedé al apartado de memorias para importar, exportar y ver estado de sincronización."
-      :ocultar-resumen-al-expandir="true"
-    >
-      <p class="texto-memoria-completa">
-        Accedé al apartado de memorias para importar, exportar y ver estado de sincronización.
-      </p>
-      <template #accionFija>
-        <button type="button" class="boton-abrir-memorias" @click.stop="abrirApartadoMemorias">
-          Abrir memorias
-        </button>
-      </template>
-    </TarjetaSeccion>
 
     <TarjetaSeccion
       titulo="Agregar etiquetas"
@@ -625,7 +614,20 @@ watch(
   gap: 1rem;
 }
 .header-etiquetas .encabezado-con-base-datos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.5rem;
   margin-bottom: 0;
+}
+.header-etiquetas .encabezado-con-base-datos::before {
+  width: 0;
+}
+.acciones-encabezado-etiquetas {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 .titulo-tabla {
   text-align: center;
@@ -671,17 +673,16 @@ watch(
   background: var(--color-fondo);
   color: var(--color-texto-principal);
   border-radius: 8px;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.9rem;
+  min-height: 36px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: filter 0.2s ease;
 }
-.texto-memoria-completa {
-  margin: 0;
-  color: var(--color-texto-secundario);
-  font-size: 0.92rem;
-  line-height: 1.4;
+.boton-abrir-memorias:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
 }
 .texto-agregar-etiquetas-completo {
   margin: 0 0 0.8rem 0;
@@ -701,6 +702,18 @@ watch(
   }
   .titulo-tabla {
     font-size: 1.5rem;
+  }
+}
+@media (max-width: 520px) {
+  .header-etiquetas .encabezado-con-base-datos {
+    display: flex;
+    justify-content: space-between;
+  }
+  .header-etiquetas .encabezado-con-base-datos::before {
+    display: none;
+  }
+  .header-etiquetas .titulo-tabla {
+    text-align: left;
   }
 }
 </style>

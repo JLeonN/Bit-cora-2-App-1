@@ -3,7 +3,8 @@
     <h2 class="titulo-tabla titulo-memorias">Memorias de etiquetas</h2>
 
     <p class="texto-secundario texto-introduccion-memorias">
-      Compartí e importá memorias para reutilizar descripciones editadas entre dispositivos.
+      Las memorias recuerdan los textos y tamaños de letra que editás para cada código y medida.
+      Se recuperan al volver a usar esa etiqueta y podés llevarlas a otro dispositivo con Exportar e Importar.
     </p>
 
     <div class="tarjeta-acciones-fija">
@@ -28,7 +29,7 @@
       </div>
     </div>
 
-    <TarjetaSeccion titulo="Resumen de memoria" :expandida-por-defecto="false">
+    <TarjetaSeccion titulo="Resumen de memoria" :expandida-por-defecto="true">
       <div class="bloque-resumen-memorias">
         <p class="texto-secundario linea-resumen-memorias">
           <strong>Memorias 10 × 15:</strong> {{ cantidadMemoriasGrandes }}
