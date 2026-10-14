@@ -110,10 +110,12 @@ import {
   generarDocumentoEtiquetas,
   esPlataformaWeb,
 } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
+import { generarDocumentoEtiquetas5x2p5 } from '../components/Logica/Etiquetas/GeneradorEtiquetas5x2p5PDF.js'
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
 import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
-import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, OPCIONES_TAMANOS_ETIQUETA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { configuracionEtiqueta5x2p5 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x2p5.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5, OPCIONES_TAMANOS_ETIQUETA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import { resolverDescripcionEtiqueta, guardarDescripcionDeTamano } from '../components/Logica/Etiquetas/ResolverDescripcionEtiqueta.js'
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import { inicializarBaseDatos } from '../components/BaseDeDatos/LectorExcel.js'
@@ -140,7 +142,7 @@ const router = useRouter()
 
 const tamanoSeleccionado = ref(TAMANO_ETIQUETA_GRANDE)
 const listaEtiquetas = ref([])
-const memoriasPorTamano = ref({ [TAMANO_ETIQUETA_GRANDE]: {}, [TAMANO_ETIQUETA_CHICA]: {} })
+const memoriasPorTamano = ref({ [TAMANO_ETIQUETA_GRANDE]: {}, [TAMANO_ETIQUETA_CHICA]: {}, [TAMANO_ETIQUETA_5X2P5]: {} })
 const pestanas = {}
 const formularioEtiquetaRef = ref(null)
 const tablaEtiquetasRef = ref(null)
@@ -161,6 +163,7 @@ function obtenerConfiguracionPorTamano(tamano) {
     '10x15cm': configuracionEtiqueta10x15,
     '5x10cm': configuracionEtiqueta5x10,
     '2.5x6.7cm': configuracionEtiqueta2_5x6_7,
+    [TAMANO_ETIQUETA_5X2P5]: configuracionEtiqueta5x2p5,
   }
   return configuraciones[tamano] || configuracionEtiqueta10x15
 }
@@ -443,7 +446,9 @@ async function generarPDF(destino = 'descargar') {
         await guardarMemoriaDesdeEtiqueta(etiqueta)
       }
     }
-    const resultado = await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
+    const resultado = tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5
+      ? await generarDocumentoEtiquetas5x2p5(etiquetasParaPDF, configuracion, destino)
+      : await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
 
     Loading.hide()
     if (!resultado.exito) {
@@ -638,10 +643,16 @@ watch(
   display: flex;
   width: 100%;
   border-bottom: 2px solid var(--color-borde);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.pestanas-etiquetas::-webkit-scrollbar {
+  display: none;
 }
 .pestana-etiqueta {
   flex: 1;
-  min-width: 0;
+  min-width: 100px;
   padding: 0.65rem 0.35rem;
   border: 1px solid var(--color-borde);
   border-bottom: 0;

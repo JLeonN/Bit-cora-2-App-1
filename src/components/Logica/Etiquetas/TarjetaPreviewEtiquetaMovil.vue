@@ -1,6 +1,6 @@
 <template>
-  <div class="envoltura-preview-etiqueta" :class="{ 'envoltura-preview-chica': esChica }">
-  <div class="preview-etiqueta-movil" :class="[`densidad-${densidad}`, { 'preview-etiqueta-chica': esChica }]" ref="contenedorPreview">
+  <div class="envoltura-preview-etiqueta" :class="{ 'envoltura-preview-chica': esChica, 'envoltura-preview-5x2p5': esEtiqueta5x2p5 }">
+  <div class="preview-etiqueta-movil" :class="[`densidad-${densidad}`, { 'preview-etiqueta-chica': esChica, 'preview-etiqueta-5x2p5': esEtiqueta5x2p5 }]" ref="contenedorPreview">
     <p
       v-if="campoEditando !== 'codigo'"
       class="preview-codigo-movil editable-preview"
@@ -96,7 +96,7 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { usarLayoutEtiquetaPreview } from './UsoLayoutEtiquetaPreview.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
-import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 
 const props = defineProps({
   etiqueta: {
@@ -162,7 +162,8 @@ const {
 })
 
 const { renderizarCodigoBarraSvg } = usarCodigoBarraEtiqueta()
-const esChica = computed(() => props.configuracion.id === TAMANO_ETIQUETA_CHICA)
+const esEtiqueta5x2p5 = computed(() => props.configuracion.id === TAMANO_ETIQUETA_5X2P5)
+const esChica = computed(() => props.configuracion.id === TAMANO_ETIQUETA_CHICA || esEtiqueta5x2p5.value)
 const esCodigoValido = computed(() => props.codigoBarraValido(props.etiqueta?.codigo))
 const densidad = computed(() => {
   if (anchoPreview.value >= 500) return 'amplia'
@@ -438,6 +439,9 @@ onBeforeUnmount(() => {
 .envoltura-preview-chica {
   width: min(100%, 12cm);
 }
+.envoltura-preview-5x2p5 {
+  width: min(100%, 12cm);
+}
 .preview-etiqueta-movil {
   width: min(100%, 15cm);
   max-width: 15cm;
@@ -456,6 +460,10 @@ onBeforeUnmount(() => {
   max-width: 12cm;
   max-height: none;
   aspect-ratio: 67 / 25;
+}
+.preview-etiqueta-5x2p5 {
+  width: min(100%, 12cm);
+  aspect-ratio: 50 / 25;
 }
 .editable-preview {
   user-select: none;

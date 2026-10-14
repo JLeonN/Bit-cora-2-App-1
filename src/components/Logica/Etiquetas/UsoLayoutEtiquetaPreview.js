@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 import { configuracionEtiqueta10x15 } from './ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
-import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import { calcularLayoutEtiquetaChica } from './UsoLayoutEtiquetaChica.js'
+import { calcularLayoutEtiqueta5x2p5 } from './UsoLayoutEtiqueta5x2p5.js'
 
 const FAMILIA_FUENTE_ETIQUETA = "'Arial Black', Arial, Helvetica, sans-serif"
 const ANCHO_REFERENCIA_PREVIEW = 1500
@@ -113,6 +114,9 @@ export const calcularLayoutEtiquetaPreview = ({
   configuracion = configuracionEtiqueta10x15,
   anchoReferenciaPx = ANCHO_REFERENCIA_PREVIEW,
 }) => {
+  if (configuracion.id === TAMANO_ETIQUETA_5X2P5) {
+    return calcularLayoutEtiqueta5x2p5({ etiqueta, configuracion, anchoReferenciaPx })
+  }
   if (configuracion.id === TAMANO_ETIQUETA_CHICA) {
     return calcularLayoutEtiquetaChica({ etiqueta, configuracion, anchoReferenciaPx })
   }

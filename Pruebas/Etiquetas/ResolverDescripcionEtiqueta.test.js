@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { resolverDescripcionEtiqueta, guardarDescripcionDeTamano } from '../../src/components/Logica/Etiquetas/ResolverDescripcionEtiqueta.js'
-import { TAMANO_ETIQUETA_GRANDE as GRANDE, TAMANO_ETIQUETA_CHICA as CHICA } from '../../src/components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_GRANDE as GRANDE, TAMANO_ETIQUETA_CHICA as CHICA, TAMANO_ETIQUETA_5X2P5 as NUEVA } from '../../src/components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 
 test('una etiqueta histórica conserva su descripción grande al alternar', () => {
   const etiqueta = { id: 1, codigo: 'A', descripcion: 'Uno  dos\n\nTres' }
@@ -67,4 +67,35 @@ test('el tamaño manual chico se conserva sin afectar la etiqueta grande', () =>
   assert.equal(Object.hasOwn(resolverDescripcionEtiqueta({ etiqueta, tamano: GRANDE }), 'tamanoDescripcionPt'), false)
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA, memoriaPropia: { descripcionFormateada: 'Memoria', tamanoDescripcionPt: null } }).tamanoDescripcionPt, null)
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA, memoriaPropia: { descripcionFormateada: 'Memoria', tamanoDescripcionPt: 22 } }).tamanoDescripcionPt, 22)
+})
+
+test('alternar tres tamaños conserva identidad, cantidad y origen sin crear memorias', () => {
+  const etiqueta = { id: 7, codigo: 'A', cantidad: 3, descripcion: 'Grande', descripcionesPorTamano: { [GRANDE]: 'Grande' } }
+  const original = structuredClone(etiqueta)
+  for (const tamano of [GRANDE, CHICA, NUEVA, GRANDE]) {
+    const visible = { ...etiqueta, ...resolverDescripcionEtiqueta({ etiqueta, tamano }) }
+    assert.equal(visible.id, 7)
+    assert.equal(visible.cantidad, 3)
+    assert.equal(visible.memoriaActiva, false)
+  }
+  assert.deepEqual(etiqueta, original)
+})
+
+test('memoria nueva propia gana al texto grande y su tamaño manual queda aislado', () => {
+  const etiqueta = { codigo: 'A', descripcion: 'Grande', cantidad: 2 }
+  const grande = { descripcionFormateada: 'Memoria grande' }
+  const prestada = resolverDescripcionEtiqueta({ etiqueta, tamano: NUEVA, memoriaAlterna: grande })
+  assert.equal(prestada.descripcion, 'Memoria grande')
+  assert.equal(prestada.memoriaActiva, false)
+  const propia = { descripcionFormateada: 'Nueva', tamanoDescripcionPt: 19, actualizadoEn: 5 }
+  const visible = resolverDescripcionEtiqueta({ etiqueta, tamano: NUEVA, memoriaPropia: propia, memoriaAlterna: grande })
+  assert.equal(visible.descripcion, 'Nueva')
+  assert.equal(visible.tamanoDescripcionPt, 19)
+  assert.equal(visible.memoriaActiva, true)
+  const editada = guardarDescripcionDeTamano({ etiqueta, tamano: NUEVA, descripcion: 'Editada', tamanoDescripcionPt: 24 })
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta: editada, tamano: NUEVA }).tamanoDescripcionPt, 24)
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta: editada, tamano: CHICA }).tamanoDescripcionPt, null)
+  const auto = guardarDescripcionDeTamano({ etiqueta: editada, tamano: NUEVA, descripcion: 'Editada', tamanoDescripcionPt: null })
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta: auto, tamano: NUEVA }).tamanoDescripcionPt, null)
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta: auto, tamano: GRANDE }).descripcion, 'Grande')
 })

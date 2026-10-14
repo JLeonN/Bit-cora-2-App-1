@@ -37,6 +37,9 @@
           <strong>Memorias 2,5 × 6,7:</strong> {{ cantidadMemoriasChicas }}
         </p>
         <p class="texto-secundario linea-resumen-memorias">
+          <strong>Memorias 5 × 2,5:</strong> {{ cantidadMemorias5x2p5 }}
+        </p>
+        <p class="texto-secundario linea-resumen-memorias">
           <strong>Total:</strong> {{ cantidadMemorias }}
         </p>
         <p class="texto-secundario linea-resumen-memorias">
@@ -57,7 +60,7 @@ import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccio
 import { compartirArchivo } from '../components/Logica/Pedidos/CompartirExcel.js'
 import { esPlataformaWeb } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
 import { obtenerTodasLasMemoriasPorTamano } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
-import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import { obtenerMetadatosMemoriaEtiquetas } from '../components/BaseDeDatos/usoAlmacenamientoMetadatosMemoriaEtiquetas.js'
 import {
   exportarMemoriasEtiquetas,
@@ -72,7 +75,8 @@ const importandoMemorias = ref(false)
 const exportandoMemorias = ref(false)
 const cantidadMemoriasGrandes = ref(0)
 const cantidadMemoriasChicas = ref(0)
-const cantidadMemorias = computed(() => cantidadMemoriasGrandes.value + cantidadMemoriasChicas.value)
+const cantidadMemorias5x2p5 = ref(0)
+const cantidadMemorias = computed(() => cantidadMemoriasGrandes.value + cantidadMemoriasChicas.value + cantidadMemorias5x2p5.value)
 const ultimaExportacionMemoriasEn = ref(null)
 const ultimaImportacionMemoriasEn = ref(null)
 
@@ -87,6 +91,7 @@ async function refrescarDatosMemorias() {
   const memorias = await obtenerTodasLasMemoriasPorTamano()
   cantidadMemoriasGrandes.value = memorias[TAMANO_ETIQUETA_GRANDE].length
   cantidadMemoriasChicas.value = memorias[TAMANO_ETIQUETA_CHICA].length
+  cantidadMemorias5x2p5.value = memorias[TAMANO_ETIQUETA_5X2P5].length
 
   const metadatos = await obtenerMetadatosMemoriaEtiquetas()
   ultimaExportacionMemoriasEn.value = metadatos.ultimaExportacionMemoriasEn

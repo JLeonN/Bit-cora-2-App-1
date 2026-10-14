@@ -40,7 +40,7 @@
           'tarjeta-etiqueta-duplicada': codigosDuplicados.has(normalizarCodigo(etiqueta.codigo)),
           'tarjeta-etiqueta-inexistente': esArticuloInexistente(etiqueta.codigo),
           'fila-ubicacion-sl': esUbicacionSL(etiqueta.ubicacion),
-          'tarjeta-etiqueta-chica': configuracion.id === TAMANO_ETIQUETA_CHICA,
+          'tarjeta-etiqueta-chica': esTamanoChico,
         }"
       >
         <TarjetaPreviewEtiquetaMovil
@@ -111,7 +111,7 @@ import {
 } from '../Compartidos/OrdenarColeccion.js'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 import { usarCodigoBarraEtiqueta } from './UsoCodigoBarraEtiqueta.js'
-import { TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import {
   guardarPreferenciaOrdenEtiquetas,
   obtenerPreferenciaOrdenEtiquetas,
@@ -121,6 +121,7 @@ const props = defineProps({
   etiquetas: { type: Array, required: true },
   configuracion: { type: Object, required: true },
 })
+const esTamanoChico = computed(() => props.configuracion.id === TAMANO_ETIQUETA_CHICA || props.configuracion.id === TAMANO_ETIQUETA_5X2P5)
 
 const emit = defineEmits([
   'editar-etiqueta',
@@ -202,7 +203,7 @@ async function confirmarEdicionInline(indice) {
   if (Object.prototype.hasOwnProperty.call(borrador, 'descripcion')) {
     etiquetaActualizada.descripcion = String(borrador.descripcion || '')
   }
-  if (props.configuracion.id === TAMANO_ETIQUETA_CHICA && Object.prototype.hasOwnProperty.call(borrador, 'tamanoDescripcionPt')) {
+  if (esTamanoChico.value && Object.prototype.hasOwnProperty.call(borrador, 'tamanoDescripcionPt')) {
     etiquetaActualizada.tamanoDescripcionPt = borrador.tamanoDescripcionPt
   }
   if (Object.prototype.hasOwnProperty.call(borrador, 'ubicacion')) {
@@ -253,7 +254,7 @@ async function restablecerEtiquetaDesdeMaestro(indice) {
     descripcion: articuloMaestro?.nombre || etiquetaBase.descripcion || '',
     memoriaActiva: false,
     memoriaActualizadaEn: null,
-    ...(props.configuracion.id === TAMANO_ETIQUETA_CHICA ? { tamanoDescripcionPt: null } : {}),
+    ...(esTamanoChico.value ? { tamanoDescripcionPt: null } : {}),
   }
   indicesGuardando.add(indice)
   const guardado = await new Promise((resolve) => {

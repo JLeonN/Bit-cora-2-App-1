@@ -7,7 +7,7 @@ import {
   fusionarMemoriasDesdeJsonPayload,
   crearRespaldoMemoriaEtiquetas,
 } from '../../BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
-import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 import {
   guardarUltimaExportacionMemorias,
   guardarUltimaImportacionMemorias,
@@ -46,6 +46,7 @@ export async function exportarMemoriasEtiquetas({ esPlataformaWeb, compartirArch
   const entradas = [
     ...memorias[TAMANO_ETIQUETA_GRANDE].map((entrada) => ({ ...entrada, tamano: TAMANO_ETIQUETA_GRANDE })),
     ...memorias[TAMANO_ETIQUETA_CHICA].map((entrada) => ({ ...entrada, tamano: TAMANO_ETIQUETA_CHICA })),
+    ...memorias[TAMANO_ETIQUETA_5X2P5].map((entrada) => ({ ...entrada, tamano: TAMANO_ETIQUETA_5X2P5 })),
   ]
   if (!Array.isArray(entradas) || entradas.length === 0) {
     return { exito: false, sinDatos: true }

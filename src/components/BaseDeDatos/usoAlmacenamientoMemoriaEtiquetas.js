@@ -1,16 +1,21 @@
 import { Preferences } from '@capacitor/preferences'
 import { NOMBRE_USUARIO_PREDETERMINADO } from './usoAlmacenamientoConfiguracion.js'
-import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from '../Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from '../Logica/Etiquetas/ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 
 const CLAVES = {
   [TAMANO_ETIQUETA_GRANDE]: 'memoria_etiquetas_v1',
   [TAMANO_ETIQUETA_CHICA]: 'memoria_etiquetas_2_5x6_7_v1',
+  [TAMANO_ETIQUETA_5X2P5]: 'memoria_etiquetas_5x2_5_v1',
 }
 const CLAVE_RESPALDO = 'respaldo_memorias_etiquetas_v2'
 const LIMITE_MEMORIA = 1500
-export const MAXIMO_ENTRADAS_COMPARTIR = 3000
+export const MAXIMO_ENTRADAS_COMPARTIR = 4500
 const normalizarCodigo = (codigo) => String(codigo || '').trim().toUpperCase()
 const esTamanoValido = (tamano) => Object.hasOwn(CLAVES, tamano)
+const esTamanoChico = (tamano) => tamano === TAMANO_ETIQUETA_CHICA || tamano === TAMANO_ETIQUETA_5X2P5
+const esTamanoDescripcionValido = (valor) => valor === null || (
+  typeof valor === 'number' && Number.isFinite(valor) && valor >= 2 && valor <= 40
+)
 const estructuraVacia = () => ({ version: '1.0', actualizadoEn: Date.now(), entradas: {} })
 const clonarEntrada = (entrada) => {
   const copia = {
@@ -56,11 +61,14 @@ function recortarMemoria(memoria) {
 
 export async function upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano = TAMANO_ETIQUETA_GRANDE, tamanoDescripcionPt }) {
   if (!esTamanoValido(tamano)) return { exito: false, mensaje: 'Tamaño de etiqueta desconocido.' }
+  if (esTamanoChico(tamano) && tamanoDescripcionPt !== undefined && !esTamanoDescripcionValido(tamanoDescripcionPt)) {
+    return { exito: false, mensaje: 'El tamaño manual debe estar entre 2 y 40 pt.' }
+  }
   const clave = normalizarCodigo(codigo)
   if (!clave) return { exito: false, mensaje: 'Código inválido para memoria de etiqueta.' }
   const memoria = await leerMemoria(tamano)
   const datos = { codigo: clave, descripcionFormateada, actualizadoEn: Date.now() }
-  if (tamano === TAMANO_ETIQUETA_CHICA) datos.tamanoDescripcionPt = tamanoDescripcionPt ?? null
+  if (esTamanoChico(tamano)) datos.tamanoDescripcionPt = tamanoDescripcionPt ?? null
   memoria.entradas[clave] = clonarEntrada(datos)
   memoria.actualizadoEn = Date.now()
   const final = recortarMemoria(memoria)
@@ -82,6 +90,7 @@ export async function obtenerTodasLasMemoriasPorTamano() {
   return {
     [TAMANO_ETIQUETA_GRANDE]: await obtenerTodasLasMemoriasEtiquetas(TAMANO_ETIQUETA_GRANDE),
     [TAMANO_ETIQUETA_CHICA]: await obtenerTodasLasMemoriasEtiquetas(TAMANO_ETIQUETA_CHICA),
+    [TAMANO_ETIQUETA_5X2P5]: await obtenerTodasLasMemoriasEtiquetas(TAMANO_ETIQUETA_5X2P5),
   }
 }
 
@@ -114,7 +123,7 @@ export async function crearRespaldoMemoriaEtiquetas() {
 }
 
 export function construirJsonCompartirMemorias({ entradas = [], exportadoPor = NOMBRE_USUARIO_PREDETERMINADO, exportadoEn = Date.now() }) {
-  if (entradas.length > MAXIMO_ENTRADAS_COMPARTIR) throw new Error('Se superó el límite de 3000 memorias.')
+  if (entradas.length > MAXIMO_ENTRADAS_COMPARTIR) throw new Error(`Se superó el límite de ${MAXIMO_ENTRADAS_COMPARTIR} memorias.`)
   const validas = entradas.filter((entrada) => esTamanoValido(entrada.tamano) && entrada.codigo && entrada.descripcionFormateada)
     .map((entrada) => ({ ...clonarEntrada(entrada), tamano: entrada.tamano }))
   return { version: '2.0', exportadoEn: Number(exportadoEn), exportadoPor: String(exportadoPor || NOMBRE_USUARIO_PREDETERMINADO), cantidad: validas.length, entradas: validas }
@@ -133,9 +142,7 @@ export function parsearJsonCompartirMemorias(textoJson = '') {
   for (const entrada of json.entradas) {
     const tamano = json.version === '1.0' ? TAMANO_ETIQUETA_GRANDE : entrada?.tamano
     const tamanoDescripcionValido = !Object.hasOwn(entrada || {}, 'tamanoDescripcionPt') || (
-      tamano === TAMANO_ETIQUETA_CHICA && (entrada.tamanoDescripcionPt === null || (
-        typeof entrada.tamanoDescripcionPt === 'number' && Number.isFinite(entrada.tamanoDescripcionPt) && entrada.tamanoDescripcionPt >= 2 && entrada.tamanoDescripcionPt <= 40
-      ))
+      esTamanoChico(tamano) && esTamanoDescripcionValido(entrada.tamanoDescripcionPt)
     )
     if (!esTamanoValido(tamano) || !normalizarCodigo(entrada?.codigo) || typeof entrada?.descripcionFormateada !== 'string' || !entrada.descripcionFormateada || !Number.isFinite(Number(entrada?.actualizadoEn)) || !tamanoDescripcionValido) {
       entradasInvalidas += 1
