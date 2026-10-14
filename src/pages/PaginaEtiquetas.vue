@@ -19,11 +19,6 @@
           @click="tamanoSeleccionado = opcion.id"
         >{{ opcion.nombre }}</button>
       </div>
-      <p v-if="listaEtiquetas.length > 0 && esPlataformaWeb() && esNavegadorDeEscritorio()" class="aviso-impresion-etiquetas">
-        Al imprimir, elegí la impresora física de etiquetas (no OneNote), papel de
-        {{ configuracionActiva.pagina.ancho }} × {{ configuracionActiva.pagina.alto }} mm y tamaño real (100 %).
-        Revisá la vista previa antes de confirmar.
-      </p>
     </div>
 
     <TarjetaSeccion
@@ -670,12 +665,6 @@ watch(
 .pestana-etiqueta:focus-visible {
   outline: 2px solid var(--color-primario);
   outline-offset: 2px;
-}
-.aviso-impresion-etiquetas {
-  margin: 0;
-  color: var(--color-texto-secundario);
-  font-size: 0.92rem;
-  line-height: 1.4;
 }
 .boton-abrir-memorias {
   border: 1px solid var(--color-borde);
