@@ -2,7 +2,7 @@
   <div
     v-if="!modalActivo"
     class="barra-botones-inferior"
-    :class="{ 'con-banner': hayBannerVisible }"
+    :class="{ 'con-banner': hayBannerVisible, 'barra-con-pruebas-impresion': botonesPersonalizados.some((boton) => boton.claseCSS === 'boton-prueba-impresion') }"
   >
     <!-- Botón Atrás -->
     <button
@@ -64,8 +64,10 @@
       :disabled="botonPersonalizado.desactivado"
       @click="ejecutarAccionPersonalizada(botonPersonalizado.accion)"
       :title="botonPersonalizado.titulo"
+      :aria-label="botonPersonalizado.titulo"
     >
-      <component :is="botonPersonalizado.icono" size="20" stroke="2" />
+      <span v-if="botonPersonalizado.texto" class="texto-boton-barra">{{ botonPersonalizado.texto }}</span>
+      <component v-else :is="botonPersonalizado.icono" size="20" stroke="2" />
     </button>
   </div>
 </template>
@@ -226,6 +228,18 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   box-sizing: border-box;
   transition: bottom 0.3s ease;
 }
+.barra-con-pruebas-impresion {
+  gap: 12px;
+  padding: 0 8px;
+}
+.barra-con-pruebas-impresion .boton-barra {
+  width: 44px;
+  height: 44px;
+}
+.texto-boton-barra {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
 .boton-barra {
   width: 48px;
   height: 48px;
@@ -305,6 +319,13 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   .boton-agregar:hover:not(:disabled) {
     transform: scale(1.1) translateY(-2px);
   }
+  .barra-con-pruebas-impresion {
+    gap: 7px;
+  }
+  .barra-con-pruebas-impresion .boton-barra {
+    width: 40px;
+    height: 40px;
+  }
 }
 @media (max-width: 360px) {
   .barra-botones-inferior {
@@ -314,6 +335,14 @@ const ejecutarAccionPersonalizada = (nombreAccion) => {
   .boton-barra {
     width: 40px;
     height: 40px;
+  }
+  .barra-con-pruebas-impresion {
+    gap: 5px;
+    padding: 0 6px;
+  }
+  .barra-con-pruebas-impresion .boton-barra {
+    width: 38px;
+    height: 38px;
   }
 }
 </style>

@@ -411,7 +411,7 @@ async function procesarArchivoCompartidoPendiente() {
   }
 }
 
-async function generarPDF(destino = 'descargar') {
+async function generarPDF(destino = 'descargar', opcionImpresion = 1) {
   if (listaEtiquetas.value.length === 0 || generandoDocumento.value) return
   if (destino === 'imprimir' && !esNavegadorDeEscritorio()) return
 
@@ -431,7 +431,7 @@ async function generarPDF(destino = 'descargar') {
       }
     }
     const resultado = tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5
-      ? await generarDocumentoEtiquetas5x2p5(etiquetasParaPDF, configuracion, destino)
+      ? await generarDocumentoEtiquetas5x2p5(etiquetasParaPDF, configuracion, destino, opcionImpresion)
       : await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
 
     Loading.hide()
@@ -493,13 +493,23 @@ const configuracionBarra = computed(() => ({
           desactivado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
           claseCSS: '',
         },
-        ...(listaEtiquetas.value.length > 0 && esNavegadorDeEscritorio() ? [{
-          accion: 'imprimir-etiquetas',
-          icono: IconPrinter,
-          titulo: 'Imprimir etiquetas',
-          desactivado: generandoDocumento.value,
-          claseCSS: '',
-        }] : []),
+        ...(listaEtiquetas.value.length > 0 && esNavegadorDeEscritorio()
+          ? tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5
+            ? [1, 2, 3].map((numero) => ({
+                accion: `imprimir-etiquetas-${numero}`,
+                texto: String(numero),
+                titulo: `Imprimir etiquetas 5 × 2,5 · opción ${numero}: ${['PNG', 'PNG con barras directas', 'PDF vectorial'][numero - 1]}`,
+                desactivado: generandoDocumento.value,
+                claseCSS: 'boton-prueba-impresion',
+              }))
+            : [{
+                accion: 'imprimir-etiquetas',
+                icono: IconPrinter,
+                titulo: 'Imprimir etiquetas',
+                desactivado: generandoDocumento.value,
+                claseCSS: '',
+              }]
+          : []),
       ]
     : [],
   modalActivo: modalActivo.value,
@@ -514,6 +524,8 @@ const metodosParaBarra = {
       generarPDF()
     } else if (accion === 'imprimir-etiquetas') {
       generarPDF('imprimir')
+    } else if (tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5 && /^imprimir-etiquetas-[123]$/.test(accion)) {
+      generarPDF('imprimir', Number(accion.at(-1)))
     }
   },
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
@@ -583,7 +595,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => [listaEtiquetas.value.length, generandoDocumento.value],
+  () => [listaEtiquetas.value.length, generandoDocumento.value, tamanoSeleccionado.value],
   () => {
     emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
   },
