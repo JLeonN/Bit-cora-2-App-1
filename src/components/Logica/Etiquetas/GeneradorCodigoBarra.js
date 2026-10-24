@@ -87,3 +87,35 @@ export const limpiarCodigoParaBarra = (codigo) => {
     .replace(/[^A-Z0-9\-.$/+%\s]/g, '')
     .trim()
 }
+
+export const obtenerTramosCodigoBarra = (codigo) => {
+  const codigoLimpio = limpiarCodigoParaBarra(String(codigo || ''))
+  if (!codigoLimpio || !validarCodigoParaBarra(codigoLimpio)) return []
+  const lienzo = document.createElement('canvas')
+  try {
+    JsBarcode(lienzo, codigoLimpio, {
+      format: 'CODE39',
+      displayValue: false,
+      background: '#ffffff',
+      lineColor: '#000000',
+      margin: 0,
+      width: 3,
+      height: 42,
+    })
+    const pixeles = lienzo.getContext('2d').getImageData(0, Math.floor(lienzo.height / 2), lienzo.width, 1).data
+    const tramos = []
+    let inicio = -1
+    for (let x = 0; x <= lienzo.width; x += 1) {
+      const esNegro = x < lienzo.width && pixeles[x * 4] < 128
+      if (esNegro && inicio < 0) inicio = x
+      if (!esNegro && inicio >= 0) {
+        tramos.push({ inicio: inicio / lienzo.width, ancho: (x - inicio) / lienzo.width })
+        inicio = -1
+      }
+    }
+    return tramos
+  } finally {
+    lienzo.width = 0
+    lienzo.height = 0
+  }
+}

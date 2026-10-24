@@ -21,13 +21,14 @@ export const configuracionEtiqueta5x2p5 = {
     posicionY: 4,
   },
   codigoBarra: {
-    ancho: 38,
-    alto: 4,
-    posicionY: 7.5,
+    ancho: 40,
+    alto: 6,
+    posicionY: 6.5,
     centrado: true,
     tamanoBarras: 'chico',
   },
   descripcion: {
+    inicioY: 13.5,
     tamanosAutomaticos: {
       muyCorta: { hasta: 15, tamano: 15 },
       corta: { hasta: 25, tamano: 13 },

@@ -30,15 +30,16 @@ export const configuracionEtiqueta2_5x6_7 = {
 
   // ===== DIV 2: CÓDIGO DE BARRAS (centro) =====
   codigoBarra: {
-    ancho: 50, // proporcional: 110 * 0.45
-    alto: 6, // proporcional: 17 * 0.35
-    posicionY: 5.5, // proporcional: 16 * 0.35
+    ancho: 52,
+    alto: 8,
+    posicionY: 5,
     centrado: true,
     tamanoBarras: 'chico',
   },
 
   // ===== DIV 3: DESCRIPCIÓN (centrada, tamaño y posición adaptativa) =====
   descripcion: {
+    inicioY: 14,
     // Tamaños automáticos según longitud del texto
     tamanosAutomaticos: {
       muyCorta: { hasta: 15, tamano: 15 }, // <= 15 chars → 15pt

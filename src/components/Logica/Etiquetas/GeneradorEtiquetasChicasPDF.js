@@ -1,9 +1,8 @@
 import { jsPDF } from 'jspdf'
-import JsBarcode from 'jsbarcode'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import { imprimirPDFEnNavegador } from '../Compartidos/ImprimirPDFEnNavegador.js'
-import { limpiarCodigoParaBarra, validarCodigoParaBarra } from './GeneradorCodigoBarra.js'
+import { obtenerTramosCodigoBarra } from './GeneradorCodigoBarra.js'
 import { calcularLayoutEtiquetaChica } from './UsoLayoutEtiquetaChica.js'
 import { calcularLayoutEtiqueta5x2p5 } from './UsoLayoutEtiqueta5x2p5.js'
 import { TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
@@ -29,38 +28,6 @@ function descargarPDFEnNavegador(pdf, nombreArchivo) {
   enlace.download = nombreArchivo
   enlace.click()
   URL.revokeObjectURL(url)
-}
-
-function obtenerTramosCodigoBarra(codigo) {
-  const codigoLimpio = limpiarCodigoParaBarra(String(codigo || ''))
-  if (!codigoLimpio || !validarCodigoParaBarra(codigoLimpio)) return []
-  const canvas = document.createElement('canvas')
-  try {
-    JsBarcode(canvas, codigoLimpio, {
-      format: 'CODE39',
-      displayValue: false,
-      background: '#ffffff',
-      lineColor: '#000000',
-      margin: 0,
-      width: 3,
-      height: 42,
-    })
-    const pixeles = canvas.getContext('2d').getImageData(0, Math.floor(canvas.height / 2), canvas.width, 1).data
-    const tramos = []
-    let inicio = -1
-    for (let x = 0; x <= canvas.width; x += 1) {
-      const esNegro = x < canvas.width && pixeles[x * 4] < 128
-      if (esNegro && inicio < 0) inicio = x
-      if (!esNegro && inicio >= 0) {
-        tramos.push({ inicio: inicio / canvas.width, ancho: (x - inicio) / canvas.width })
-        inicio = -1
-      }
-    }
-    return tramos
-  } finally {
-    canvas.width = 0
-    canvas.height = 0
-  }
 }
 
 function dibujarEtiquetaVectorial(pdf, etiquetaPreparada, configuracion) {

@@ -1,3 +1,5 @@
+import { calcularLayoutCodigoBarraChica } from './CalcularLayoutCodigoBarraChica.js'
+
 const MM_POR_PT = 0.352777778
 const MARGEN_DESCRIPCION_MM = 1.5
 const TAMANO_MINIMO_PT = 4
@@ -20,10 +22,9 @@ export function calcularLayoutEtiquetaChica({ etiqueta = {}, configuracion, anch
   const descripcion = String(etiqueta.descripcion || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').toUpperCase()
   const lineas = descripcion.split('\n').slice(0, configuracion.descripcion.maximoLineas)
   const ubicacion = String(etiqueta.ubicacion || 'Sin ubicación').trim() || 'Sin ubicación'
-  const anchoBarra = Math.min(configuracion.codigoBarra.ancho, anchoDisponible)
   let tamanoCodigo = Math.min(9, configuracion.codigoArticulo.tamanosAutomaticos.corto.tamano)
   while (tamanoCodigo > TAMANO_MINIMO_PT && medirAnchoMm(codigo, tamanoCodigo) > anchoDisponible) tamanoCodigo -= 0.25
-  const inicioDescripcion = 12.7
+  const inicioDescripcion = configuracion.descripcion.inicioY
   const altoDisponible = pagina.alto - margen - inicioDescripcion - 3
   let tamanoDescripcion = TAMANO_MAXIMO_AUTOMATICO_PT
   while (tamanoDescripcion > TAMANO_MINIMO_PT && (
@@ -37,12 +38,7 @@ export function calcularLayoutEtiquetaChica({ etiqueta = {}, configuracion, anch
     : tamanoAutomatico
   return {
     codigo: { texto: codigo, tamanoPt: tamanoCodigo, posicionY: 1.2 + tamanoCodigo * MM_POR_PT * 0.79 },
-    codigoBarra: {
-      ancho: anchoBarra,
-      alto: configuracion.codigoBarra.alto,
-      posicionX: (pagina.ancho - anchoBarra) / 2,
-      posicionY: configuracion.codigoBarra.posicionY,
-    },
+    codigoBarra: calcularLayoutCodigoBarraChica(configuracion),
     descripcion: {
       lineas: lineas.map((texto) => ({ texto, tamanoPt: tamanoFinal })),
       tamanoPt: tamanoFinal,

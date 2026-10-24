@@ -1,5 +1,5 @@
 import JsBarcode from 'jsbarcode'
-import { validarCodigoParaBarra, limpiarCodigoParaBarra } from './GeneradorCodigoBarra.js'
+import { validarCodigoParaBarra, limpiarCodigoParaBarra, obtenerTramosCodigoBarra } from './GeneradorCodigoBarra.js'
 
 export const usarCodigoBarraEtiqueta = () => {
   const cacheConfigBarra = new Map()
@@ -65,9 +65,38 @@ export const usarCodigoBarraEtiqueta = () => {
       return false
     }
   }
+  const renderizarCodigoBarraSvgVectorial = (destinoSvg, codigo) => {
+    const codigoLimpio = normalizarCodigoBarra(codigo)
+    limpiarSvgBarra(destinoSvg)
+    if (!codigoBarraValido(codigoLimpio)) return false
+    try {
+      const tramos = obtenerTramosCodigoBarra(codigoLimpio)
+      destinoSvg.setAttribute('viewBox', '0 0 1 1')
+      destinoSvg.setAttribute('preserveAspectRatio', 'none')
+      const fondo = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+      fondo.setAttribute('width', '1')
+      fondo.setAttribute('height', '1')
+      fondo.setAttribute('fill', '#ffffff')
+      destinoSvg.appendChild(fondo)
+      for (const tramo of tramos) {
+        const barra = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        barra.setAttribute('x', String(tramo.inicio))
+        barra.setAttribute('width', String(tramo.ancho))
+        barra.setAttribute('height', '1')
+        barra.setAttribute('fill', '#000000')
+        destinoSvg.appendChild(barra)
+      }
+      return true
+    } catch (error) {
+      console.error('[UsoCodigoBarraEtiqueta] Error renderizando barra vectorial:', error)
+      limpiarSvgBarra(destinoSvg)
+      return false
+    }
+  }
   return {
     normalizarCodigoBarra,
     codigoBarraValido,
     renderizarCodigoBarraSvg,
+    renderizarCodigoBarraSvgVectorial,
   }
 }

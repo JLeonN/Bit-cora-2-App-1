@@ -6,8 +6,21 @@ import { configuracionEtiqueta2_5x6_7 as configuracion } from '../../src/compone
 test('la etiqueta chica usa página 67 × 25 y barra dentro de márgenes', () => {
   const layout = calcularLayoutEtiquetaChica({ etiqueta: { codigo: 'A123', descripcion: 'Texto' }, configuracion })
   assert.deepEqual([configuracion.pagina.ancho, configuracion.pagina.alto], [67, 25])
+  assert.equal(layout.codigoBarra.ancho, 52)
+  assert.equal(layout.codigoBarra.alto, 8)
+  assert.ok(layout.codigoBarra.posicionY + layout.codigoBarra.alto < configuracion.descripcion.inicioY)
   assert.ok(layout.codigoBarra.posicionX >= configuracion.pagina.margenes.todos)
   assert.ok(layout.codigoBarra.posicionX + layout.codigoBarra.ancho <= 67 - configuracion.pagina.margenes.todos)
+})
+
+test('la barra conserva al menos 3 mm libres por lado aunque se solicite más ancho', () => {
+  const configuracionAmpliada = {
+    ...configuracion,
+    codigoBarra: { ...configuracion.codigoBarra, ancho: 67 },
+  }
+  const layout = calcularLayoutEtiquetaChica({ etiqueta: { codigo: 'A1' }, configuracion: configuracionAmpliada })
+  assert.equal(layout.codigoBarra.ancho, 61)
+  assert.equal(layout.codigoBarra.posicionX, 3)
 })
 
 test('muestra como máximo cuatro renglones sin alterar el texto original', () => {

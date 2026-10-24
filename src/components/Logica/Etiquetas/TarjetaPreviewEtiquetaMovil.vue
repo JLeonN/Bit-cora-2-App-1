@@ -161,7 +161,7 @@ const {
   },
 })
 
-const { renderizarCodigoBarraSvg } = usarCodigoBarraEtiqueta()
+const { renderizarCodigoBarraSvg, renderizarCodigoBarraSvgVectorial } = usarCodigoBarraEtiqueta()
 const esEtiqueta5x2p5 = computed(() => props.configuracion.id === TAMANO_ETIQUETA_5X2P5)
 const esChica = computed(() => props.configuracion.id === TAMANO_ETIQUETA_CHICA || esEtiqueta5x2p5.value)
 const esCodigoValido = computed(() => props.codigoBarraValido(props.etiqueta?.codigo))
@@ -388,7 +388,8 @@ function renderizarBarra() {
   if (!esCodigoValido.value || !svgBarra.value) {
     return
   }
-  renderizarCodigoBarraSvg(svgBarra.value, props.etiqueta?.codigo, obtenerEscala())
+  if (esChica.value) renderizarCodigoBarraSvgVectorial(svgBarra.value, props.etiqueta?.codigo)
+  else renderizarCodigoBarraSvg(svgBarra.value, props.etiqueta?.codigo, obtenerEscala())
 }
 
 watch(

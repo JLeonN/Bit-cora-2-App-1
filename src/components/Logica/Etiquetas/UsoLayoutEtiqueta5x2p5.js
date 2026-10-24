@@ -1,7 +1,8 @@
+import { calcularLayoutCodigoBarraChica } from './CalcularLayoutCodigoBarraChica.js'
+
 const MM_POR_PT = 0.352777778
 const TAMANO_MINIMO_PT = 4
 const TAMANO_MAXIMO_AUTOMATICO_PT = 18
-const INICIO_DESCRIPCION_MM = 12.5
 const RESERVA_INFERIOR_MM = 3
 const FAMILIA_FUENTE = "'Arial Black', Arial, Helvetica, sans-serif"
 let contextoMedicion = null
@@ -17,12 +18,12 @@ export function calcularLayoutEtiqueta5x2p5({ etiqueta = {}, configuracion, anch
   const { pagina } = configuracion
   const margen = pagina.margenes.todos
   const anchoDisponible = pagina.ancho - 2 * margen
-  const altoDisponible = pagina.alto - margen - INICIO_DESCRIPCION_MM - RESERVA_INFERIOR_MM
+  const inicioDescripcion = configuracion.descripcion.inicioY
+  const altoDisponible = pagina.alto - margen - inicioDescripcion - RESERVA_INFERIOR_MM
   const codigo = String(etiqueta.codigo || '').trim().toUpperCase()
   const descripcion = String(etiqueta.descripcion || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').toUpperCase()
   const lineas = descripcion.split('\n').slice(0, configuracion.descripcion.maximoLineas)
   const ubicacion = String(etiqueta.ubicacion || 'Sin ubicación').trim() || 'Sin ubicación'
-  const anchoBarra = Math.min(configuracion.codigoBarra.ancho, anchoDisponible)
   let tamanoCodigo = Math.min(9, configuracion.codigoArticulo.tamanosAutomaticos.corto.tamano)
   while (tamanoCodigo > TAMANO_MINIMO_PT && medirAnchoMm(codigo, tamanoCodigo) > anchoDisponible) tamanoCodigo -= 0.25
   let tamanoDescripcion = TAMANO_MAXIMO_AUTOMATICO_PT
@@ -37,16 +38,11 @@ export function calcularLayoutEtiqueta5x2p5({ etiqueta = {}, configuracion, anch
     : tamanoAutomatico
   return {
     codigo: { texto: codigo, tamanoPt: tamanoCodigo, posicionY: margen + tamanoCodigo * MM_POR_PT * 0.79 },
-    codigoBarra: {
-      ancho: anchoBarra,
-      alto: configuracion.codigoBarra.alto,
-      posicionX: (pagina.ancho - anchoBarra) / 2,
-      posicionY: configuracion.codigoBarra.posicionY,
-    },
+    codigoBarra: calcularLayoutCodigoBarraChica(configuracion),
     descripcion: {
       lineas: lineas.map((texto) => ({ texto, tamanoPt: tamanoFinal })),
       tamanoPt: tamanoFinal,
-      posicionY: INICIO_DESCRIPCION_MM + tamanoFinal * MM_POR_PT * 0.79,
+      posicionY: inicioDescripcion + tamanoFinal * MM_POR_PT * 0.79,
       interlineadoPt: tamanoFinal * 0.95,
     },
     ubicacion: {
