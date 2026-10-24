@@ -94,7 +94,7 @@ import {
   generarDocumentoEtiquetas,
   esPlataformaWeb,
 } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
-import { generarDocumentoEtiquetas5x2p5 } from '../components/Logica/Etiquetas/GeneradorEtiquetas5x2p5PDF.js'
+import { generarDocumentoEtiquetasChicas } from '../components/Logica/Etiquetas/GeneradorEtiquetasChicasPDF.js'
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
 import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
@@ -411,7 +411,7 @@ async function procesarArchivoCompartidoPendiente() {
   }
 }
 
-async function generarPDF(destino = 'descargar', opcionImpresion = 1) {
+async function generarPDF(destino = 'descargar') {
   if (listaEtiquetas.value.length === 0 || generandoDocumento.value) return
   if (destino === 'imprimir' && !esNavegadorDeEscritorio()) return
 
@@ -430,8 +430,8 @@ async function generarPDF(destino = 'descargar', opcionImpresion = 1) {
         await guardarMemoriaDesdeEtiqueta(etiqueta)
       }
     }
-    const resultado = tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5
-      ? await generarDocumentoEtiquetas5x2p5(etiquetasParaPDF, configuracion, destino, opcionImpresion)
+    const resultado = tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5 || tamanoSeleccionado.value === TAMANO_ETIQUETA_CHICA
+      ? await generarDocumentoEtiquetasChicas(etiquetasParaPDF, configuracion, destino)
       : await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
 
     Loading.hide()
@@ -493,23 +493,13 @@ const configuracionBarra = computed(() => ({
           desactivado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
           claseCSS: '',
         },
-        ...(listaEtiquetas.value.length > 0 && esNavegadorDeEscritorio()
-          ? tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5
-            ? [1, 2, 3].map((numero) => ({
-                accion: `imprimir-etiquetas-${numero}`,
-                texto: String(numero),
-                titulo: `Imprimir etiquetas 5 × 2,5 · opción ${numero}: ${['PNG', 'PNG con barras directas', 'PDF vectorial'][numero - 1]}`,
-                desactivado: generandoDocumento.value,
-                claseCSS: 'boton-prueba-impresion',
-              }))
-            : [{
-                accion: 'imprimir-etiquetas',
-                icono: IconPrinter,
-                titulo: 'Imprimir etiquetas',
-                desactivado: generandoDocumento.value,
-                claseCSS: '',
-              }]
-          : []),
+        ...(listaEtiquetas.value.length > 0 && esNavegadorDeEscritorio() ? [{
+          accion: 'imprimir-etiquetas',
+          icono: IconPrinter,
+          titulo: 'Imprimir etiquetas',
+          desactivado: generandoDocumento.value,
+          claseCSS: '',
+        }] : []),
       ]
     : [],
   modalActivo: modalActivo.value,
@@ -524,8 +514,6 @@ const metodosParaBarra = {
       generarPDF()
     } else if (accion === 'imprimir-etiquetas') {
       generarPDF('imprimir')
-    } else if (tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5 && /^imprimir-etiquetas-[123]$/.test(accion)) {
-      generarPDF('imprimir', Number(accion.at(-1)))
     }
   },
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
