@@ -32,6 +32,7 @@ test('memoria propia gana frente a prestada y solo ella figura activa', () => {
     origen: 'memoriaAlterna',
     memoriaActiva: false,
     memoriaActualizadaEn: null,
+    tamanoDescripcionPt: null,
   })
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: GRANDE, memoriaPropia: prestada }).descripcion, 'Grande')
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: GRANDE, memoriaPropia: prestada }).memoriaActiva, true)
@@ -64,7 +65,7 @@ test('el tamaño manual chico se conserva sin afectar la etiqueta grande', () =>
     tamanoDescripcionPt: 18.5,
   })
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA }).tamanoDescripcionPt, 18.5)
-  assert.equal(Object.hasOwn(resolverDescripcionEtiqueta({ etiqueta, tamano: GRANDE }), 'tamanoDescripcionPt'), false)
+  assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: GRANDE }).tamanoDescripcionPt, null)
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA, memoriaPropia: { descripcionFormateada: 'Memoria', tamanoDescripcionPt: null } }).tamanoDescripcionPt, null)
   assert.equal(resolverDescripcionEtiqueta({ etiqueta, tamano: CHICA, memoriaPropia: { descripcionFormateada: 'Memoria', tamanoDescripcionPt: 22 } }).tamanoDescripcionPt, 22)
 })

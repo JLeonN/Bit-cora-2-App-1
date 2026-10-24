@@ -1,21 +1,40 @@
 {
-  "versionDisponible": "4.2.46",
+  "versionDisponible": "4.2.47",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Consulta de ubicación",
+        "apartado": "Etiquetas",
         "novedades": [
-          "Los envíos a Listados y Etiquetas ahora muestran sus opciones junto al botón correspondiente, para que sea más fácil elegir y confirmar el destino.",
-          "Al enviar a un listado, aparece seleccionado el último que elegiste si todavía está disponible.",
-          "Podés ajustar la cantidad de etiquetas con los botones de más y menos, o escribirla directamente."
+          "Ahora podés elegir etiquetas de 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm, con memorias separadas para cada tamaño.",
+          "Las pestañas de tamaños quedan visibles al desplazarte y el acceso a Memorias está junto al título.",
+          "Podés ajustar la letra de la descripción desde la vista previa; en los tamaños chicos también se adapta al espacio disponible.",
+          "Se mejoraron los documentos de las etiquetas chicas y podés imprimirlas directamente desde un navegador de escritorio."
         ]
       },
       {
-        "apartado": "Contador de pasos",
+        "apartado": "Ubicaciones",
         "novedades": [
-          "Se mejoró la comprobación de permisos para registrar la actividad y mostrar notificaciones cuando corresponda."
+          "En pantallas pequeñas, las acciones para enviar o eliminar todas las ubicaciones quedan ocultas hasta que las despliegues."
+        ]
+      },
+      {
+        "apartado": "Búsqueda de artículos",
+        "novedades": [
+          "La búsqueda encuentra nombres exactos y códigos completos o por sus primeros caracteres aunque el contexto seleccionado sea distinto."
+        ]
+      },
+      {
+        "apartado": "Configuración",
+        "novedades": [
+          "La base de artículos se carga desde Configuración y las secciones que la necesitan muestran un aviso para acceder a ella."
+        ]
+      },
+      {
+        "apartado": "Listados",
+        "novedades": [
+          "Al agregar un artículo a un listado, aparece una confirmación visual con su nombre y código."
         ]
       }
     ]

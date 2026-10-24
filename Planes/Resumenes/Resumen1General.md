@@ -12,7 +12,7 @@ La aplicación se divide en 8 módulos principales:
 - **Consulta De Ubicación**: Búsqueda, actualización de ubicación y envío de artículos a Stock, Listados o Etiquetas (ver `Resumen6ConsultaDeUbicacion.md`)
 - **Listados**: Listas persistentes con búsqueda masiva, edición, ordenamiento, exportación e integración con otros módulos
 - **Stock**: Conteo de artículos, comparación con Excel e integración con Ubicaciones y Etiquetas (ver `Resumen7Stock.md`)
-- **Etiquetas**: Generación de etiquetas con códigos de barras en PDF (ver `Resumen5Etiquetas.md`)
+- **Etiquetas**: Generación de etiquetas en PDF de 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm, con pestañas visibles al desplazarse (ver `Resumen5Etiquetas.md`)
 - **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
 - **Inicio**: Pantalla principal de navegación
 
@@ -79,7 +79,7 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 
 **Sistema compartido** usado en Ubicaciones, Consulta De Ubicación y Etiquetas.
 
-- **SelectorExcel.vue**: Componente para cargar archivos Excel
+- **Carga del Excel maestro**: Se administra desde Configuración; los módulos muestran un aviso cuando falta
 - **LectorExcel.js**: Procesa y persiste artículos automáticamente
 - **Persistencia automática**: Los datos se guardan en `@capacitor/preferences`
 - **Inicialización automática**: Se carga al iniciar la aplicación
@@ -102,7 +102,7 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 - **CampoContextoArticulo.vue**: Contexto opcional y persistente para limitar búsquedas por descripción
 - **Búsqueda en tiempo real** con resaltado de coincidencias
 - **Máximo 50 resultados** por búsqueda
-- **Códigos exactos y escaneos**: Ignoran el contexto para conservar el flujo operativo
+- **Nombres exactos y códigos completos o por prefijo**: Ignoran el contexto para conservar el flujo operativo
 - **Compatible con persistencia automática**
 
 **Ver detalle completo en:** `Resumen4Ubicaciones.md`

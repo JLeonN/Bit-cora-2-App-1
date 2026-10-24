@@ -4,7 +4,7 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 
 ---
 
-### Estado funcional actual (v4.2.35)
+### Estado funcional actual (v4.2.47)
 
 - En web se muestra botón específico de descarga PDF y se oculta el botón enviar.
 - En móvil se mantiene compartir nativo del PDF generado.
@@ -13,6 +13,9 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - Se corrigió la configuración de plugins Quasar para notificaciones y loading en runtime.
 - La lista de etiquetas puede ordenarse por las más recientes, las más antiguas o alfabéticamente por descripción.
 - La preferencia de orden se conserva entre sesiones sin alterar el orden guardado ni el PDF.
+- Los tamaños visibles son 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm; sus pestañas permanecen a la vista durante el desplazamiento.
+- Las etiquetas chicas usan PDF vectorial y los tres tamaños conservan sus descripciones y ajustes de letra por separado.
+- En navegadores de escritorio se puede imprimir directamente; en móvil se comparte el PDF.
 
 ---
 
@@ -21,11 +24,11 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 #### **PaginaEtiquetas.vue**
 - **Página principal** del módulo de etiquetas
 - **Ruta**: `/etiquetas`
-- **Header con título** y selector de tamaño
+- **Header con título** y botón de Memorias; el selector de tamaño se fija debajo del encabezado al desplazarse
 - **Selector de tamaño**: 
-  - **10x15 cm** (por defecto)
-  - **5x10 cm**
-  - **2.5x6.7 cm**
+  - **10 × 15 cm** (por defecto)
+  - **2,5 × 6,7 cm**
+  - **5 × 2,5 cm**
 - **FormularioEtiqueta** para agregar etiquetas
 - **TablaEtiquetas** con lista de etiquetas
 - **Integración con BarraBotonesInferior** para navegación
@@ -147,7 +150,7 @@ El sistema es **totalmente modular** y soporta múltiples tamaños de etiquetas.
 - **Descripción**: Tamaños: 60pt → 24pt (7 niveles), Ancho máximo: 140mm, Máximo líneas: 7
 - **Ubicación**: 10pt, esquina inferior izquierda
 
-#### **ConfiguracionEtiqueta5x10.js**
+#### **ConfiguracionEtiqueta5x10.js** (configuración heredada, no visible en las pestañas)
 - **Tamaño**: 5x10 cm (50mm x 100mm)
 - **Orientación**: Horizontal (landscape)
 - **Márgenes**: 2.5mm
