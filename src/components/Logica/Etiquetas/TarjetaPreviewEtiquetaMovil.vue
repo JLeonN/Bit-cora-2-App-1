@@ -82,7 +82,7 @@
     />
   </div>
   <Transition name="deslizar-controles">
-    <div v-if="esChica && campoEditando === 'descripcion'" class="controles-tamano-descripcion">
+    <div v-if="campoEditando === 'descripcion'" class="controles-tamano-descripcion">
       <button type="button" class="boton-tamano-descripcion" aria-label="Reducir tamaño del texto" title="Reducir tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(-0.5)">−</button>
       <span class="valor-tamano-descripcion">{{ tamanoDescripcionVisible }} pt</span>
       <button type="button" class="boton-tamano-descripcion" aria-label="Aumentar tamaño del texto" title="Aumentar tamaño del texto" @pointerdown.prevent @blur="confirmarEdicionSiSaleDeControles" @click="ajustarTamanoDescripcion(0.5)">+</button>
@@ -176,7 +176,7 @@ const descripcionParaLayout = computed(() => (campoEditando.value === 'descripci
 const etiquetaParaLayout = computed(() => ({
   ...props.etiqueta,
   descripcion: descripcionParaLayout.value,
-  ...(esChica.value && campoEditando.value === 'descripcion' ? { tamanoDescripcionPt: borradorTamanoDescripcionPt.value } : {}),
+  ...(campoEditando.value === 'descripcion' ? { tamanoDescripcionPt: borradorTamanoDescripcionPt.value } : {}),
 }))
 const layoutPreview = computed(() => obtenerLayoutPixeles(etiquetaParaLayout.value))
 const tamanoDescripcionVisible = computed(() => {
@@ -207,7 +207,11 @@ const estiloTextareaDescripcion = computed(() => {
     left: '4%',
     width: '92%',
   }
-  if (!esChica.value) return { ...estilo, height: '55%' }
+  if (!esChica.value) {
+    const altoPreview = anchoPreview.value * props.configuracion.pagina.alto / props.configuracion.pagina.ancho
+    const altoTexto = normalizarSaltosLocales(borradorDescripcion.value).split('\n').length * obtenerNumeroDesdePx(estilo.lineHeight, 0) + 4
+    return { ...estilo, height: `${Math.max(altoPreview * 0.55, altoTexto).toFixed(2)}px` }
+  }
   const inicio = obtenerNumeroDesdePx(layoutPreview.value.estilos.descripcion.top, 0)
   const ubicacion = obtenerNumeroDesdePx(layoutPreview.value.estilos.ubicacion.top, 0)
   const separacion = anchoPreview.value * 0.012
@@ -245,7 +249,7 @@ function obtenerFontSizeMinimoDescripcion() {
 }
 
 function obtenerEstiloDescripcionParaEdicion() {
-  if (esChica.value) return layoutPreview.value.estilos.descripcion
+  if (esChica.value || tamanoDescripcionModificado.value) return layoutPreview.value.estilos.descripcion
   const estiloBase = campoEditando.value === 'descripcion' && estiloDescripcionEdicion.value
     ? estiloDescripcionEdicion.value
     : layoutPreview.value.estilos.descripcion
@@ -282,7 +286,7 @@ function iniciarEdicion(campo) {
       ? limitarRenglonesChica(props.etiqueta.descripcion || '')
       : lineasDescripcionEdicion.value.join('\n')
     descripcionModificada.value = false
-    borradorTamanoDescripcionPt.value = esChica.value ? props.etiqueta.tamanoDescripcionPt ?? null : null
+    borradorTamanoDescripcionPt.value = props.etiqueta.tamanoDescripcionPt ?? null
     tamanoDescripcionModificado.value = false
     campoEditando.value = campo
     nextTick(() => textareaDescripcionRef.value?.focus())
@@ -319,7 +323,8 @@ function manejarEnterDescripcion(evento) {
 
 function ajustarTamanoDescripcion(cambio) {
   const actual = borradorTamanoDescripcionPt.value ?? Number(tamanoDescripcionVisible.value)
-  borradorTamanoDescripcionPt.value = Math.min(40, Math.max(2, Math.round((actual + cambio) * 2) / 2))
+  const tamanoMaximo = esChica.value ? 40 : 80
+  borradorTamanoDescripcionPt.value = Math.min(tamanoMaximo, Math.max(2, Math.round((actual + cambio) * 2) / 2))
   tamanoDescripcionModificado.value = true
   emitirActualizacion('tamanoDescripcionPt', borradorTamanoDescripcionPt.value)
 }
@@ -332,7 +337,7 @@ function restablecerTamanoAutomatico() {
 
 function confirmarEdicionSiSaleDeControles(evento) {
   const siguiente = evento.relatedTarget
-  if (esChica.value && campoEditando.value === 'descripcion' && (
+  if (campoEditando.value === 'descripcion' && (
     siguiente === textareaDescripcionRef.value || siguiente?.closest?.('.controles-tamano-descripcion')
   )) return
   confirmarEdicion()
@@ -350,12 +355,12 @@ function confirmarEdicion() {
     emitirActualizacion('codigo', normalizarCodigo(borradorCodigo.value))
   }
   if (campoActual === 'descripcion') {
-    if (esChica.value && !descripcionModificada.value && !tamanoDescripcionModificado.value) {
+    if (!descripcionModificada.value && !tamanoDescripcionModificado.value) {
       cancelarEdicion()
       return
     }
-    if (!esChica.value || descripcionModificada.value) emitirActualizacion('descripcion', String(borradorDescripcion.value))
-    if (esChica.value && tamanoDescripcionModificado.value) emitirActualizacion('tamanoDescripcionPt', borradorTamanoDescripcionPt.value)
+    if (descripcionModificada.value) emitirActualizacion('descripcion', String(borradorDescripcion.value))
+    if (tamanoDescripcionModificado.value) emitirActualizacion('tamanoDescripcionPt', borradorTamanoDescripcionPt.value)
   }
   if (campoActual === 'ubicacion') {
     emitirActualizacion('ubicacion', normalizarUbicacion(borradorUbicacion.value))

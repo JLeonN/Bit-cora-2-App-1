@@ -165,11 +165,15 @@ export const calcularLayoutEtiquetaPreview = ({
   if (lineasDescripcion.length > maximoLineasDescripcion) {
     lineasDescripcion = lineasDescripcion.slice(0, maximoLineasDescripcion)
   }
-  const lineasDescripcionConTamanos = calcularLineasDescripcion(
-    lineasDescripcion,
-    tamanoDescripcionPx,
-    tamanoDescripcionMinimoPx,
-    anchoMaximoDescripcionPx,
+  const tamanoManual = Number(etiqueta.tamanoDescripcionPt)
+  const tieneTamanoManual = etiqueta.tamanoDescripcionPt !== null && etiqueta.tamanoDescripcionPt !== undefined && Number.isFinite(tamanoManual)
+  if (tieneTamanoManual) {
+    tamanoDescripcionPx = Math.min(80, Math.max(2, tamanoManual)) * MM_POR_PT * altoReferenciaPx / pagina.alto
+    lineasDescripcion = dividirTextoEnLineas(descripcionConSaltos, anchoMaximoDescripcionPx, tamanoDescripcionPx).slice(0, maximoLineasDescripcion)
+  }
+  const lineasDescripcionConTamanos = (tieneTamanoManual
+    ? lineasDescripcion.map((texto) => ({ texto, tamanoPx: tamanoDescripcionPx }))
+    : calcularLineasDescripcion(lineasDescripcion, tamanoDescripcionPx, tamanoDescripcionMinimoPx, anchoMaximoDescripcionPx)
   ).map((linea) => ({
     ...linea,
     tamanoPt: pxAPt(linea.tamanoPx, altoReferenciaPx, pagina.alto),

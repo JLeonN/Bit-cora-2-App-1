@@ -1,4 +1,4 @@
-import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA, TAMANO_ETIQUETA_5X2P5 } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
+import { TAMANO_ETIQUETA_GRANDE, TAMANO_ETIQUETA_CHICA } from './ConfiguracionesDeEtiquetas/TamanosEtiqueta.js'
 
 const tieneTexto = (valor) => typeof valor === 'string' && valor.length > 0
 const tamanoDeCreacion = (etiqueta) => etiqueta?.tamano || TAMANO_ETIQUETA_GRANDE
@@ -28,11 +28,9 @@ export function resolverDescripcionEtiqueta({ etiqueta = {}, tamano, memoriaProp
     memoriaActiva: encontrado?.[1] === 'memoriaPropia',
     memoriaActualizadaEn: encontrado?.[1] === 'memoriaPropia' ? memoriaPropia.actualizadoEn || null : null,
   }
-  if (tamano === TAMANO_ETIQUETA_CHICA || tamano === TAMANO_ETIQUETA_5X2P5) {
-    resultado.tamanoDescripcionPt = memoriaPropia && Object.hasOwn(memoriaPropia, 'tamanoDescripcionPt')
-      ? memoriaPropia.tamanoDescripcionPt
-      : etiqueta.tamanosDescripcionPorTamano?.[tamano] ?? null
-  }
+  resultado.tamanoDescripcionPt = memoriaPropia && Object.hasOwn(memoriaPropia, 'tamanoDescripcionPt')
+    ? memoriaPropia.tamanoDescripcionPt
+    : etiqueta.tamanosDescripcionPorTamano?.[tamano] ?? null
   return resultado
 }
 
@@ -44,11 +42,9 @@ export function guardarDescripcionDeTamano({ etiqueta, tamano, descripcion, tama
       [tamano]: String(descripcion ?? ''),
     },
   }
-  if (tamano === TAMANO_ETIQUETA_CHICA || tamano === TAMANO_ETIQUETA_5X2P5) {
-    actualizada.tamanosDescripcionPorTamano = {
-      ...(etiqueta.tamanosDescripcionPorTamano || {}),
-      [tamano]: tamanoDescripcionPt ?? null,
-    }
+  actualizada.tamanosDescripcionPorTamano = {
+    ...(etiqueta.tamanosDescripcionPorTamano || {}),
+    [tamano]: tamanoDescripcionPt ?? null,
   }
   if (tamanoDeCreacion(etiqueta) === tamano) actualizada.descripcion = String(descripcion ?? '')
   return actualizada

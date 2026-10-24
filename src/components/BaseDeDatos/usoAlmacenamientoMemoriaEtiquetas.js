@@ -12,9 +12,8 @@ const LIMITE_MEMORIA = 1500
 export const MAXIMO_ENTRADAS_COMPARTIR = 4500
 const normalizarCodigo = (codigo) => String(codigo || '').trim().toUpperCase()
 const esTamanoValido = (tamano) => Object.hasOwn(CLAVES, tamano)
-const esTamanoChico = (tamano) => tamano === TAMANO_ETIQUETA_CHICA || tamano === TAMANO_ETIQUETA_5X2P5
-const esTamanoDescripcionValido = (valor) => valor === null || (
-  typeof valor === 'number' && Number.isFinite(valor) && valor >= 2 && valor <= 40
+const esTamanoDescripcionValido = (valor, tamano) => valor === null || (
+  typeof valor === 'number' && Number.isFinite(valor) && valor >= 2 && valor <= (tamano === TAMANO_ETIQUETA_GRANDE ? 80 : 40)
 )
 const estructuraVacia = () => ({ version: '1.0', actualizadoEn: Date.now(), entradas: {} })
 const clonarEntrada = (entrada) => {
@@ -61,14 +60,14 @@ function recortarMemoria(memoria) {
 
 export async function upsertMemoriaEtiqueta({ codigo, descripcionFormateada, tamano = TAMANO_ETIQUETA_GRANDE, tamanoDescripcionPt }) {
   if (!esTamanoValido(tamano)) return { exito: false, mensaje: 'Tamaño de etiqueta desconocido.' }
-  if (esTamanoChico(tamano) && tamanoDescripcionPt !== undefined && !esTamanoDescripcionValido(tamanoDescripcionPt)) {
-    return { exito: false, mensaje: 'El tamaño manual debe estar entre 2 y 40 pt.' }
+  if (tamanoDescripcionPt !== undefined && !esTamanoDescripcionValido(tamanoDescripcionPt, tamano)) {
+    return { exito: false, mensaje: `El tamaño manual debe estar entre 2 y ${tamano === TAMANO_ETIQUETA_GRANDE ? 80 : 40} pt.` }
   }
   const clave = normalizarCodigo(codigo)
   if (!clave) return { exito: false, mensaje: 'Código inválido para memoria de etiqueta.' }
   const memoria = await leerMemoria(tamano)
   const datos = { codigo: clave, descripcionFormateada, actualizadoEn: Date.now() }
-  if (esTamanoChico(tamano)) datos.tamanoDescripcionPt = tamanoDescripcionPt ?? null
+  datos.tamanoDescripcionPt = tamanoDescripcionPt ?? null
   memoria.entradas[clave] = clonarEntrada(datos)
   memoria.actualizadoEn = Date.now()
   const final = recortarMemoria(memoria)
@@ -142,7 +141,7 @@ export function parsearJsonCompartirMemorias(textoJson = '') {
   for (const entrada of json.entradas) {
     const tamano = json.version === '1.0' ? TAMANO_ETIQUETA_GRANDE : entrada?.tamano
     const tamanoDescripcionValido = !Object.hasOwn(entrada || {}, 'tamanoDescripcionPt') || (
-      esTamanoChico(tamano) && esTamanoDescripcionValido(entrada.tamanoDescripcionPt)
+      esTamanoDescripcionValido(entrada.tamanoDescripcionPt, tamano)
     )
     if (!esTamanoValido(tamano) || !normalizarCodigo(entrada?.codigo) || typeof entrada?.descripcionFormateada !== 'string' || !entrada.descripcionFormateada || !Number.isFinite(Number(entrada?.actualizadoEn)) || !tamanoDescripcionValido) {
       entradasInvalidas += 1
