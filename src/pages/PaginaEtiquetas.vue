@@ -10,6 +10,13 @@
           </button>
         </div>
       </div>
+    </div>
+    <div ref="referenciaInicioPestanas" class="referencia-inicio-pestanas" aria-hidden="true"></div>
+    <div
+      class="contenedor-pestanas-etiquetas"
+      :class="{ 'pestanas-fijas': pestanasFijas }"
+      :style="{ top: `${alturaEncabezado + SEPARACION_ENCABEZADO}px` }"
+    >
       <div class="pestanas-etiquetas" role="tablist" aria-label="Tamaño de etiqueta" @keydown="manejarTeclaPestanas">
         <button
           v-for="opcion in OPCIONES_TAMANOS_ETIQUETA"
@@ -123,11 +130,15 @@ import {
 } from '../components/BaseDeDatos/usoAlmacenamientoMemoriaEtiquetas.js'
 
 const router = useRouter()
+const SEPARACION_ENCABEZADO = 6
 
 const tamanoSeleccionado = ref(TAMANO_ETIQUETA_GRANDE)
 const listaEtiquetas = ref([])
 const memoriasPorTamano = ref({ [TAMANO_ETIQUETA_GRANDE]: {}, [TAMANO_ETIQUETA_CHICA]: {}, [TAMANO_ETIQUETA_5X2P5]: {} })
 const pestanas = {}
+const referenciaInicioPestanas = ref(null)
+const alturaEncabezado = ref(72)
+const pestanasFijas = ref(false)
 const formularioEtiquetaRef = ref(null)
 const tablaEtiquetasRef = ref(null)
 const mostrarModalEliminar = ref(false)
@@ -139,6 +150,7 @@ const importandoMemorias = ref(false)
 const modalActivo = ref(false)
 
 let intervaloPolling = null
+let observadorEncabezado = null
 
 const emit = defineEmits(['configurar-barra'])
 
@@ -169,6 +181,21 @@ const etiquetasVisibles = computed(() => listaEtiquetas.value.map((etiqueta) => 
 
 function registrarPestana(tamano, elemento) {
   if (elemento) pestanas[tamano] = elemento
+}
+
+function actualizarEstadoPestanas() {
+  const inicioPestanas = referenciaInicioPestanas.value?.getBoundingClientRect().top
+  pestanasFijas.value =
+    inicioPestanas !== undefined &&
+    inicioPestanas <= alturaEncabezado.value + SEPARACION_ENCABEZADO
+}
+
+function actualizarAlturaEncabezado() {
+  const encabezado = document.querySelector('.q-header')
+  if (encabezado) {
+    alturaEncabezado.value = Math.max(0, Math.ceil(encabezado.getBoundingClientRect().bottom))
+  }
+  actualizarEstadoPestanas()
 }
 
 function manejarTeclaPestanas(evento) {
@@ -550,6 +577,15 @@ function cerrarPasoAtrasNativo() {
 }
 
 onMounted(async () => {
+  actualizarAlturaEncabezado()
+  const encabezado = document.querySelector('.q-header')
+  if (encabezado && typeof ResizeObserver !== 'undefined') {
+    observadorEncabezado = new ResizeObserver(actualizarAlturaEncabezado)
+    observadorEncabezado.observe(encabezado)
+  }
+  window.addEventListener('scroll', actualizarEstadoPestanas, { passive: true })
+  window.addEventListener('resize', actualizarAlturaEncabezado)
+
   await inicializarBaseDatos()
   await cargarEtiquetasGuardadas()
   await cargarMemoriasPorTamano()
@@ -563,6 +599,9 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  observadorEncabezado?.disconnect()
+  window.removeEventListener('scroll', actualizarEstadoPestanas)
+  window.removeEventListener('resize', actualizarAlturaEncabezado)
   if (intervaloPolling) {
     clearInterval(intervaloPolling)
   }
@@ -606,12 +645,33 @@ watch(
 .header-etiquetas {
   background-color: var(--color-superficie);
   padding: 1.5rem;
-  border-radius: 12px;
+  padding-bottom: 0;
+  border-radius: 12px 12px 0 0;
   border: 1px solid var(--color-borde);
-  margin-bottom: 1.5rem;
+  border-bottom: 0;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+.referencia-inicio-pestanas {
+  height: 0;
+}
+.contenedor-pestanas-etiquetas {
+  position: sticky;
+  z-index: 10;
+  padding: 1rem 1.5rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-top-color: transparent;
+  border-radius: 0 0 12px 12px;
+  transition: padding 240ms ease, border-color 240ms ease, border-radius 240ms ease, box-shadow 240ms ease;
+}
+.contenedor-pestanas-etiquetas.pestanas-fijas {
+  padding: 0.35rem;
+  border-color: var(--color-acento);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-acento) 35%, transparent), 0 4px 18px color-mix(in srgb, var(--color-acento) 30%, transparent);
 }
 .header-etiquetas .encabezado-con-base-datos {
   display: grid;
@@ -699,6 +759,10 @@ watch(
   }
   .header-etiquetas {
     padding: 1rem;
+    padding-bottom: 0;
+  }
+  .contenedor-pestanas-etiquetas {
+    padding: 1rem;
   }
   .titulo-tabla {
     font-size: 1.5rem;
@@ -714,6 +778,11 @@ watch(
   }
   .header-etiquetas .titulo-tabla {
     text-align: left;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contenedor-pestanas-etiquetas {
+    transition: none;
   }
 }
 </style>
