@@ -4,25 +4,43 @@
       v-if="ubicacionesArray.length > 0 && (mostrarEtiquetas || mostrarEliminarTodas)"
       class="acciones-generales-tabla"
     >
-      <button
-        v-if="mostrarEtiquetas"
-        type="button"
-        class="boton-accion-general boton-enviar-etiquetas"
-        title="Enviar todos a Etiquetas"
-        @click="enviarTodasEtiquetas"
+      <div
+        id="grupo-acciones-generales-ubicaciones"
+        class="grupo-acciones-generales-ubicaciones"
+        :class="{ 'acciones-generales-abiertas': accionesGeneralesAbiertas }"
       >
-        <IconTag :size="20" />
-        <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
-      </button>
+        <button
+          v-if="mostrarEtiquetas"
+          type="button"
+          class="boton-accion-general boton-enviar-etiquetas"
+          title="Enviar todos a Etiquetas"
+          @click="enviarTodasEtiquetas"
+        >
+          <IconTag :size="20" />
+          <span class="texto-boton-accion">Enviar todos a Etiquetas</span>
+        </button>
+        <button
+          v-if="mostrarEliminarTodas"
+          type="button"
+          class="boton-accion-general boton-eliminar-todos"
+          title="Eliminar todos"
+          @click="$emit('abrirModalEliminarTodas')"
+        >
+          <IconTrash :size="20" />
+          <span class="texto-boton-accion">Eliminar todos</span>
+        </button>
+      </div>
       <button
-        v-if="mostrarEliminarTodas"
         type="button"
-        class="boton-accion-general boton-eliminar-todos"
-        title="Eliminar todos"
-        @click="$emit('abrirModalEliminarTodas')"
+        class="boton-accion-general boton-alternar-acciones-ubicaciones"
+        :title="accionesGeneralesAbiertas ? 'Ocultar acciones generales' : 'Mostrar acciones generales'"
+        :aria-label="accionesGeneralesAbiertas ? 'Ocultar acciones generales' : 'Mostrar acciones generales'"
+        :aria-expanded="accionesGeneralesAbiertas"
+        aria-controls="grupo-acciones-generales-ubicaciones"
+        @click="accionesGeneralesAbiertas = !accionesGeneralesAbiertas"
       >
-        <IconTrash :size="20" />
-        <span class="texto-boton-accion">Eliminar todos</span>
+        <IconChevronsRight v-if="accionesGeneralesAbiertas" :size="20" />
+        <IconChevronsLeft v-else :size="20" />
       </button>
     </div>
 
@@ -108,7 +126,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { IconPencil, IconTrash, IconTag } from '@tabler/icons-vue'
+import { IconPencil, IconTrash, IconTag, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
 import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
@@ -134,6 +152,7 @@ const props = defineProps({
 // Refs para controlar animaciones
 const filaAnimandose = ref(null)
 const todasAnimandose = ref(false)
+const accionesGeneralesAbiertas = ref(false)
 
 // Computed para asegurar que siempre sea un array válido
 const ubicacionesArray = computed(() => {

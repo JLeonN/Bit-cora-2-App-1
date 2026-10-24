@@ -1314,6 +1314,10 @@ button {
   margin: 1rem 0;
   flex-wrap: wrap;
 }
+.grupo-acciones-generales-ubicaciones {
+  display: flex;
+  gap: 0.6rem;
+}
 .boton-accion-general {
   border: 1px solid var(--color-borde);
   background: var(--color-superficie);
@@ -1331,8 +1335,14 @@ button {
 .boton-enviar-etiquetas {
   color: var(--color-exito);
 }
+.boton-alternar-acciones-ubicaciones {
+  display: none;
+}
 @media (max-width: 560px) {
   .acciones-generales-tabla {
+    gap: 0.45rem;
+  }
+  .grupo-acciones-generales-ubicaciones {
     gap: 0.45rem;
   }
   .boton-accion-general {
@@ -1341,14 +1351,45 @@ button {
   }
 }
 @media (max-width: 400px) {
+  .acciones-generales-tabla {
+    flex-wrap: nowrap;
+  }
+  .grupo-acciones-generales-ubicaciones {
+    max-width: 0;
+    min-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(10px);
+    transition: max-width 280ms ease, opacity 220ms ease, transform 280ms ease, visibility 0s linear 280ms;
+  }
+  .grupo-acciones-generales-ubicaciones.acciones-generales-abiertas {
+    max-width: 100px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition: max-width 280ms ease, opacity 220ms ease, transform 280ms ease, visibility 0s;
+  }
   .boton-accion-general {
     width: 44px;
     height: 44px;
+    flex-shrink: 0;
     justify-content: center;
     padding: 0;
   }
+  .boton-alternar-acciones-ubicaciones {
+    display: flex;
+  }
   .texto-boton-accion {
     display: none;
+  }
+}
+@media (max-width: 400px) and (prefers-reduced-motion: reduce) {
+  .grupo-acciones-generales-ubicaciones,
+  .grupo-acciones-generales-ubicaciones.acciones-generales-abiertas {
+    transition: none;
   }
 }
 .contenedor-boton-borrar-todo {
