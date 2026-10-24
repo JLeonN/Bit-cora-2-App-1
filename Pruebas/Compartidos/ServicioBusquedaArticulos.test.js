@@ -40,6 +40,23 @@ test('mantiene el filtro por contexto', () => {
   assert.deepEqual(obtenerCodigos('TAB', 'TRAS'), ['MAX-200'])
 })
 
+test('encuentra la descripción exacta y el prefijo del código aunque el contexto sea distinto', () => {
+  const amortiguador = {
+    codigo: 'PX1103211',
+    nombre: 'AMORTIGUADOR DEL. IZQ. PX110 125F',
+  }
+  const catalogo = [amortiguador, { codigo: 'PX1103210', nombre: 'RETEN HORQUILLA PX110' }]
+  const buscar = (busqueda) => buscarArticulos({
+    articulos: catalogo,
+    busqueda,
+    contextoBusqueda: 'YAMAHA',
+  }).map(({ articulo }) => articulo.codigo)
+  assert.deepEqual(buscar(amortiguador.nombre), ['PX1103211'])
+  assert.deepEqual(buscar('PX110321'), ['PX1103211', 'PX1103210'])
+  assert.deepEqual(buscar('AMORTIGUADOR DELANTERO'), [])
+  assert.equal(obtenerArticuloExacto({ articulos: catalogo, busqueda: amortiguador.nombre, contextoBusqueda: 'YAMAHA' }), amortiguador)
+})
+
 test('mantiene prioridad y reconocimiento de código exacto', () => {
   const resultados = buscarArticulos({ articulos, busqueda: 'MAX-100' })
   assert.equal(resultados.length, 1)

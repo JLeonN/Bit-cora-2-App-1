@@ -160,11 +160,21 @@ export function buscarArticulos({ articulos, busqueda, contextoBusqueda = '', li
     palabras,
     permitirPrefijoCorto: String(busqueda).trim().length >= 3,
   }
+  const datosArticulos = articulos.map(prepararDatosArticulo)
+  const nombreExacto = normalizarTextoComparacionArticulo(busqueda)
+  const nombresExactos = datosArticulos.filter((datosArticulo) =>
+    datosArticulo.nombreComparacion === nombreExacto,
+  )
+  if (nombresExactos.length > 0) {
+    return nombresExactos.slice(0, limiteResultados).map(({ articulo }) => ({
+      articulo,
+      tipoCoincidencia: 'nombre-completo',
+    }))
+  }
   const terminosContexto = tokenizarConsulta(contextoBusqueda)
-  const candidatos = articulos
-    .map(prepararDatosArticulo)
+  const candidatos = datosArticulos
     .filter((datosArticulo) => coincideTerminosContexto(datosArticulo, terminosContexto))
-  const codigosEmpiezan = candidatos.filter((datosArticulo) =>
+  const codigosEmpiezan = datosArticulos.filter((datosArticulo) =>
     datosArticulo.codigoComparacion.startsWith(termino),
   )
   const codigosEmpiezanSet = new Set(codigosEmpiezan)
@@ -236,6 +246,10 @@ export function obtenerArticuloExacto({ articulos, busqueda, contextoBusqueda = 
   if (escaneado) return escaneado
 
   const termino = normalizarTextoComparacionArticulo(busqueda)
+  const nombresExactos = articulos.map(prepararDatosArticulo).filter(
+    (datosArticulo) => datosArticulo.nombreComparacion === termino,
+  )
+  if (nombresExactos.length === 1) return nombresExactos[0].articulo
   const terminosContexto = tokenizarConsulta(contextoBusqueda)
   const coincidencias = articulos
     .map(prepararDatosArticulo)

@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { jsPDF } from 'jspdf'
 import { calcularLayoutEtiqueta5x2p5 } from '../../src/components/Logica/Etiquetas/UsoLayoutEtiqueta5x2p5.js'
 import { configuracionEtiqueta5x2p5 as configuracion } from '../../src/components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x2p5.js'
 
@@ -33,7 +34,27 @@ test('ajusta letra automáticamente por ancho y cantidad de renglones', () => {
   const muyLarga = calcularLayoutEtiqueta5x2p5({ etiqueta: { codigo: 'A'.repeat(100), descripcion: 'A'.repeat(120) }, configuracion })
   assert.ok(unaLinea.descripcion.tamanoPt > cuatroLineas.descripcion.tamanoPt)
   assert.equal(muyLarga.descripcion.tamanoPt, 4)
-  assert.equal(muyLarga.codigo.tamanoPt, 4)
+  assert.ok(muyLarga.codigo.tamanoPt < 4)
+})
+
+test('el código largo cabe en una línea del PDF sin invadir las barras', () => {
+  const codigo = 'AMORTIGUADORPX125DELANTERO'
+  const layout = calcularLayoutEtiqueta5x2p5({ etiqueta: { codigo }, configuracion })
+  const pdf = new jsPDF({ unit: 'mm' })
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(layout.codigo.tamanoPt)
+  assert.ok(pdf.getTextWidth(codigo) < 44)
+  assert.ok(layout.codigo.posicionY < layout.codigoBarra.posicionY)
+})
+
+test('una descripción corta no se divide en líneas inesperadas en el PDF', () => {
+  const descripcion = 'PRUEBA LARGA'
+  const layout = calcularLayoutEtiqueta5x2p5({ etiqueta: { descripcion }, configuracion })
+  const pdf = new jsPDF({ unit: 'mm' })
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(layout.descripcion.tamanoPt)
+  assert.equal(layout.descripcion.lineas.length, 1)
+  assert.ok(pdf.getTextWidth(descripcion) < 44)
 })
 
 test('tamaño manual y Auto quedan independientes', () => {

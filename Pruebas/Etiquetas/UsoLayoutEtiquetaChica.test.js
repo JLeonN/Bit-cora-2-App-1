@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { jsPDF } from 'jspdf'
 import { calcularLayoutEtiquetaChica } from '../../src/components/Logica/Etiquetas/UsoLayoutEtiquetaChica.js'
 import { configuracionEtiqueta2_5x6_7 as configuracion } from '../../src/components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
 
@@ -21,6 +22,16 @@ test('la barra conserva al menos 3 mm libres por lado aunque se solicite más an
   const layout = calcularLayoutEtiquetaChica({ etiqueta: { codigo: 'A1' }, configuracion: configuracionAmpliada })
   assert.equal(layout.codigoBarra.ancho, 61)
   assert.equal(layout.codigoBarra.posicionX, 3)
+})
+
+test('el código largo cabe en una línea del PDF', () => {
+  const codigo = 'AMORTIGUADORPX125DELANTERO'
+  const layout = calcularLayoutEtiquetaChica({ etiqueta: { codigo }, configuracion })
+  const pdf = new jsPDF({ unit: 'mm' })
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(layout.codigo.tamanoPt)
+  assert.ok(pdf.getTextWidth(codigo) < 64)
+  assert.ok(layout.codigo.posicionY < layout.codigoBarra.posicionY)
 })
 
 test('muestra como máximo cuatro renglones sin alterar el texto original', () => {
