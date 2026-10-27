@@ -557,47 +557,6 @@ onUnmounted(() => {
   color: var(--color-texto-secundario);
   margin-bottom: 0.5rem;
 }
-.contenedor-items-botones {
-  display: flex;
-  gap: 0.5rem;
-  align-items: stretch;
-}
-.contenedor-items-botones input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
-  background: var(--color-fondo);
-  color: var(--color-texto-principal);
-  font-size: 1rem;
-  text-align: center;
-  min-width: 0;
-}
-.contenedor-items-botones input:focus {
-  outline: none;
-  border-color: var(--color-acento);
-}
-.boton-items {
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: 8px;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--color-acento);
-  flex-shrink: 0;
-}
-.boton-items:hover {
-  transform: scale(1.05);
-  background: var(--color-fondo);
-}
-.boton-items:active {
-  transform: scale(0.95);
-}
 .contenedor-mini-lista {
   margin-bottom: 0.75rem;
 }

@@ -4,8 +4,8 @@
       <div class="encabezado-con-base-datos">
         <h2 class="titulo-tabla">Etiquetas</h2>
         <div class="acciones-encabezado-etiquetas">
-          <BotonBaseDatosFaltante />
-          <button type="button" class="boton-abrir-memorias" @click="abrirApartadoMemorias">
+          <BotonBaseDatosFaltante v-if="modoEtiquetas === 'articulos'" />
+          <button v-if="modoEtiquetas === 'articulos'" type="button" class="boton-abrir-memorias" @click="abrirApartadoMemorias">
             Memorias
           </button>
         </div>
@@ -34,24 +34,42 @@
     </div>
 
     <TarjetaSeccion
-      titulo="Agregar etiquetas"
+      :titulo="modoEtiquetas === 'articulos' ? 'Agregar etiquetas' : 'Agregar estantes'"
       :expandida-por-defecto="false"
-      descripcion-resumen="Ingresá código, descripción, ubicación y cantidad para crear etiquetas."
+      :descripcion-resumen="modoEtiquetas === 'articulos' ? 'Ingresá código, descripción, ubicación y cantidad para crear etiquetas.' : 'Generá ubicaciones ordenadas por columna y nivel.'"
       :ocultar-resumen-al-expandir="true"
     >
-      <p class="texto-agregar-etiquetas-completo">
+      <template #accionEncabezado>
+        <button
+          type="button"
+          class="interruptor-modo-etiquetas"
+          :class="{ 'modo-estantes': modoEtiquetas === 'estantes' }"
+          role="switch"
+          :aria-checked="modoEtiquetas === 'estantes'"
+          :aria-label="`Modo de etiquetas: ${modoEtiquetas === 'articulos' ? 'artículos' : 'estantes'}. Cambiar modo`"
+          :disabled="generandoDocumento"
+          @click="alternarModoEtiquetas"
+        >
+          <span class="texto-interruptor">{{ modoEtiquetas === 'articulos' ? 'Artículos' : 'Estantes' }}</span>
+          <span class="circulo-interruptor" aria-hidden="true"></span>
+        </button>
+      </template>
+      <p v-if="modoEtiquetas === 'articulos'" class="texto-agregar-etiquetas-completo">
         Ingresá código, descripción, ubicación y cantidad para crear etiquetas. También podés escanear el
         código para cargar más rápido y luego ajustar la descripción antes de guardar.
       </p>
       <FormularioEtiqueta
+        v-if="modoEtiquetas === 'articulos'"
         ref="formularioEtiquetaRef"
         @agregar-etiqueta="agregarEtiqueta"
         @modal-abierto="manejarModalAbierto"
         @modal-cerrado="manejarModalCerrado"
       />
+      <FormularioEstantes v-else @agregar-estantes="agregarEstantes" />
     </TarjetaSeccion>
 
     <TablaEtiquetas
+      v-if="modoEtiquetas === 'articulos'"
       ref="tablaEtiquetasRef"
       :etiquetas="etiquetasVisibles"
       :configuracion="configuracionActiva"
@@ -61,6 +79,13 @@
       @limpiar-todo="limpiarTodo"
       @modal-abierto="manejarModalAbierto"
       @modal-cerrado="manejarModalCerrado"
+    />
+    <ListaEtiquetasEstantes
+      v-else
+      :etiquetas="listaEtiquetasEstantes"
+      :configuracion="configuracionActiva"
+      @eliminar-estante="eliminarEstante"
+      @limpiar-estantes="limpiarEstantes"
     />
 
     <ModalEliminar
@@ -80,6 +105,22 @@
       @modal-abierto="manejarModalAbierto"
       @modal-cerrado="manejarModalCerrado"
     />
+    <ModalEliminar
+      v-if="codigoEstanteAEliminar"
+      :texto="`la etiqueta ${codigoEstanteAEliminar}`"
+      @confirmar="confirmarEliminarEstante"
+      @cerrar="codigoEstanteAEliminar = ''"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
+    />
+    <ModalEliminar
+      v-if="mostrarModalLimpiarEstantes"
+      texto="todas las etiquetas de estantes"
+      @confirmar="confirmarLimpiarEstantes"
+      @cerrar="mostrarModalLimpiarEstantes = false"
+      @modal-abierto="manejarModalAbierto"
+      @modal-cerrado="manejarModalCerrado"
+    />
   </div>
 </template>
 
@@ -89,8 +130,10 @@ import { useRouter } from 'vue-router'
 import { Loading, Notify } from 'quasar'
 import { IconDownload, IconPrinter } from '@tabler/icons-vue'
 import FormularioEtiqueta from '../components/Logica/Etiquetas/FormularioEtiqueta.vue'
+import FormularioEstantes from '../components/Logica/Etiquetas/FormularioEstantes.vue'
 import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import TablaEtiquetas from '../components/Logica/Etiquetas/TablaEtiquetas.vue'
+import ListaEtiquetasEstantes from '../components/Logica/Etiquetas/ListaEtiquetasEstantes.vue'
 import ModalEliminar from '../components/Modales/ModalEliminar.vue'
 import TarjetaSeccion from '../components/Configuracion/Tutoriales/TarjetaSeccion.vue'
 import {
@@ -102,6 +145,8 @@ import {
   esPlataformaWeb,
 } from '../components/Logica/Etiquetas/GeneradorEtiquetasPDF.js'
 import { generarDocumentoEtiquetasChicas } from '../components/Logica/Etiquetas/GeneradorEtiquetasChicasPDF.js'
+import { generarDocumentoEtiquetasEstantes } from '../components/Logica/Etiquetas/GeneradorEtiquetasEstantesPDF.js'
+import { obtenerEtiquetasEstantes, guardarEtiquetasEstantes, eliminarEtiquetasEstantes } from '../components/Logica/Etiquetas/AlmacenamientoEtiquetasEstantes.js'
 import { configuracionEtiqueta10x15 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta10x15.js'
 import { configuracionEtiqueta5x10 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta5x10.js'
 import { configuracionEtiqueta2_5x6_7 } from '../components/Logica/Etiquetas/ConfiguracionesDeEtiquetas/ConfiguracionEtiqueta2.5x6.7.js'
@@ -133,7 +178,9 @@ const router = useRouter()
 const SEPARACION_ENCABEZADO = 6
 
 const tamanoSeleccionado = ref(TAMANO_ETIQUETA_GRANDE)
+const modoEtiquetas = ref('articulos')
 const listaEtiquetas = ref([])
+const listaEtiquetasEstantes = ref([])
 const memoriasPorTamano = ref({ [TAMANO_ETIQUETA_GRANDE]: {}, [TAMANO_ETIQUETA_CHICA]: {}, [TAMANO_ETIQUETA_5X2P5]: {} })
 const pestanas = {}
 const referenciaInicioPestanas = ref(null)
@@ -143,6 +190,8 @@ const formularioEtiquetaRef = ref(null)
 const tablaEtiquetasRef = ref(null)
 const mostrarModalEliminar = ref(false)
 const mostrarModalLimpiarTodo = ref(false)
+const mostrarModalLimpiarEstantes = ref(false)
+const codigoEstanteAEliminar = ref('')
 const etiquetaAEliminar = ref(null)
 const indiceAEliminar = ref(null)
 const generandoDocumento = ref(false)
@@ -165,6 +214,7 @@ function obtenerConfiguracionPorTamano(tamano) {
 }
 
 const configuracionActiva = computed(() => obtenerConfiguracionPorTamano(tamanoSeleccionado.value))
+const cantidadEtiquetasActivas = computed(() => modoEtiquetas.value === 'estantes' ? listaEtiquetasEstantes.value.length : listaEtiquetas.value.length)
 const etiquetasVisibles = computed(() => listaEtiquetas.value.map((etiqueta) => {
   const codigo = String(etiqueta.codigo || '').trim().toUpperCase()
   const alterno = tamanoSeleccionado.value === TAMANO_ETIQUETA_GRANDE ? TAMANO_ETIQUETA_CHICA : TAMANO_ETIQUETA_GRANDE
@@ -230,6 +280,78 @@ async function cargarEtiquetasGuardadas() {
     }
   } catch (error) {
     console.error('[PaginaEtiquetas] Error cargando etiquetas:', error)
+  }
+}
+
+async function cargarEtiquetasEstantes() {
+  try {
+    listaEtiquetasEstantes.value = await obtenerEtiquetasEstantes()
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error cargando estantes:', error)
+    Notify.create({ type: 'negative', message: 'No se pudieron cargar las etiquetas de estantes.', position: 'top' })
+  }
+}
+
+function alternarModoEtiquetas() {
+  modoEtiquetas.value = modoEtiquetas.value === 'articulos' ? 'estantes' : 'articulos'
+}
+
+function ordenarCodigosEstantes(primero, segundo) {
+  const partesPrimero = /^([A-Z]+)(\d+)$/.exec(primero)
+  const partesSegundo = /^([A-Z]+)(\d+)$/.exec(segundo)
+  if (!partesPrimero || !partesSegundo) return primero.localeCompare(segundo, 'es', { numeric: true })
+  const comparacionColumna = partesPrimero[1].localeCompare(partesSegundo[1])
+  return comparacionColumna || Number(partesPrimero[2]) - Number(partesSegundo[2])
+}
+
+async function agregarEstantes(codigos) {
+  const anteriores = listaEtiquetasEstantes.value
+  const existentes = new Set(anteriores)
+  const nuevos = codigos.filter((codigo) => !existentes.has(codigo))
+  if (!nuevos.length) {
+    Notify.create({ type: 'info', message: 'Esas etiquetas de estantes ya están preparadas.', position: 'top' })
+    return
+  }
+  listaEtiquetasEstantes.value = [...anteriores, ...nuevos].sort(ordenarCodigosEstantes)
+  try {
+    await guardarEtiquetasEstantes(listaEtiquetasEstantes.value)
+    Notify.create({ type: 'positive', message: `Se agregaron ${nuevos.length} etiquetas de estantes.`, position: 'top' })
+  } catch (error) {
+    listaEtiquetasEstantes.value = anteriores
+    console.error('[PaginaEtiquetas] Error guardando estantes:', error)
+    Notify.create({ type: 'negative', message: 'No se pudieron guardar las etiquetas de estantes.', position: 'top' })
+  }
+}
+
+function eliminarEstante(codigo) {
+  codigoEstanteAEliminar.value = codigo
+}
+
+async function confirmarEliminarEstante() {
+  const anteriores = listaEtiquetasEstantes.value
+  listaEtiquetasEstantes.value = anteriores.filter((codigo) => codigo !== codigoEstanteAEliminar.value)
+  try {
+    await guardarEtiquetasEstantes(listaEtiquetasEstantes.value)
+    codigoEstanteAEliminar.value = ''
+  } catch (error) {
+    listaEtiquetasEstantes.value = anteriores
+    console.error('[PaginaEtiquetas] Error eliminando estante:', error)
+    Notify.create({ type: 'negative', message: 'No se pudo eliminar la etiqueta de estante.', position: 'top' })
+  }
+}
+
+function limpiarEstantes() {
+  if (listaEtiquetasEstantes.value.length) mostrarModalLimpiarEstantes.value = true
+}
+
+async function confirmarLimpiarEstantes() {
+  try {
+    await eliminarEtiquetasEstantes()
+    listaEtiquetasEstantes.value = []
+    mostrarModalLimpiarEstantes.value = false
+  } catch (error) {
+    console.error('[PaginaEtiquetas] Error limpiando estantes:', error)
+    Notify.create({ type: 'negative', message: 'No se pudieron limpiar las etiquetas de estantes.', position: 'top' })
   }
 }
 
@@ -439,7 +561,7 @@ async function procesarArchivoCompartidoPendiente() {
 }
 
 async function generarPDF(destino = 'descargar') {
-  if (listaEtiquetas.value.length === 0 || generandoDocumento.value) return
+  if (cantidadEtiquetasActivas.value === 0 || generandoDocumento.value) return
   if (destino === 'imprimir' && !esNavegadorDeEscritorio()) return
 
   try {
@@ -450,16 +572,21 @@ async function generarPDF(destino = 'descargar') {
     })
 
     const configuracion = configuracionActiva.value
-    const etiquetasParaPDF =
-      tablaEtiquetasRef.value?.obtenerEtiquetasOrdenadas?.() || [...etiquetasVisibles.value]
-    for (const etiqueta of etiquetasParaPDF) {
-      if (tamanoSeleccionado.value === TAMANO_ETIQUETA_GRANDE || etiqueta.memoriaActiva) {
-        await guardarMemoriaDesdeEtiqueta(etiqueta)
+    let resultado
+    if (modoEtiquetas.value === 'estantes') {
+      resultado = await generarDocumentoEtiquetasEstantes(listaEtiquetasEstantes.value, configuracion, destino)
+    } else {
+      const etiquetasParaPDF =
+        tablaEtiquetasRef.value?.obtenerEtiquetasOrdenadas?.() || [...etiquetasVisibles.value]
+      for (const etiqueta of etiquetasParaPDF) {
+        if (tamanoSeleccionado.value === TAMANO_ETIQUETA_GRANDE || etiqueta.memoriaActiva) {
+          await guardarMemoriaDesdeEtiqueta(etiqueta)
+        }
       }
+      resultado = tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5 || tamanoSeleccionado.value === TAMANO_ETIQUETA_CHICA
+        ? await generarDocumentoEtiquetasChicas(etiquetasParaPDF, configuracion, destino)
+        : await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
     }
-    const resultado = tamanoSeleccionado.value === TAMANO_ETIQUETA_5X2P5 || tamanoSeleccionado.value === TAMANO_ETIQUETA_CHICA
-      ? await generarDocumentoEtiquetasChicas(etiquetasParaPDF, configuracion, destino)
-      : await generarDocumentoEtiquetas(etiquetasParaPDF, configuracion, destino)
 
     Loading.hide()
     if (!resultado.exito) {
@@ -507,20 +634,20 @@ const configuracionBarra = computed(() => ({
   mostrarAtras: true,
   mostrarInicio: true,
   mostrarAgregar: false,
-  mostrarIrAlFinal: listaEtiquetas.value.length > UMBRAL_IR_AL_FINAL,
+  mostrarIrAlFinal: cantidadEtiquetasActivas.value > UMBRAL_IR_AL_FINAL,
   tituloIrAlFinal: 'Ir al final de las etiquetas',
-  mostrarEnviar: !esPlataformaWeb() && listaEtiquetas.value.length > 0,
-  puedeEnviar: listaEtiquetas.value.length > 0,
+  mostrarEnviar: !esPlataformaWeb() && cantidadEtiquetasActivas.value > 0,
+  puedeEnviar: cantidadEtiquetasActivas.value > 0,
   botonesPersonalizados: esPlataformaWeb()
     ? [
         {
           accion: 'descargar-pdf-etiquetas',
           icono: IconDownload,
           titulo: 'Descargar PDF',
-          desactivado: listaEtiquetas.value.length === 0 || generandoDocumento.value,
+          desactivado: cantidadEtiquetasActivas.value === 0 || generandoDocumento.value,
           claseCSS: '',
         },
-        ...(listaEtiquetas.value.length > 0 && esNavegadorDeEscritorio() ? [{
+        ...(cantidadEtiquetasActivas.value > 0 && esNavegadorDeEscritorio() ? [{
           accion: 'imprimir-etiquetas',
           icono: IconPrinter,
           titulo: 'Imprimir etiquetas',
@@ -573,6 +700,16 @@ function cerrarPasoAtrasNativo() {
     modalActivo.value = false
     return true
   }
+  if (codigoEstanteAEliminar.value) {
+    codigoEstanteAEliminar.value = ''
+    modalActivo.value = false
+    return true
+  }
+  if (mostrarModalLimpiarEstantes.value) {
+    mostrarModalLimpiarEstantes.value = false
+    modalActivo.value = false
+    return true
+  }
   return false
 }
 
@@ -588,6 +725,7 @@ onMounted(async () => {
 
   await inicializarBaseDatos()
   await cargarEtiquetasGuardadas()
+  await cargarEtiquetasEstantes()
   await cargarMemoriasPorTamano()
   await procesarArchivoCompartidoPendiente()
 
@@ -622,7 +760,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => [listaEtiquetas.value.length, generandoDocumento.value, tamanoSeleccionado.value],
+  () => [cantidadEtiquetasActivas.value, generandoDocumento.value, tamanoSeleccionado.value, modoEtiquetas.value],
   () => {
     emit('configurar-barra', configuracionBarra.value, metodosParaBarra)
   },
@@ -752,6 +890,49 @@ watch(
 }
 .boton-abrir-memorias:hover {
   filter: brightness(1.1);
+}
+.interruptor-modo-etiquetas {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100px;
+  height: 34px;
+  padding: 0 9px 0 30px;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-fondo);
+  color: var(--color-texto-principal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.interruptor-modo-etiquetas.modo-estantes {
+  justify-content: flex-start;
+  padding: 0 30px 0 9px;
+  border-color: var(--color-primario);
+  background: var(--color-primario);
+}
+.circulo-interruptor {
+  position: absolute;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-texto-principal);
+  transition: left 0.2s ease;
+}
+.modo-estantes .circulo-interruptor {
+  left: calc(100% - 28px);
+}
+.interruptor-modo-etiquetas:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+.interruptor-modo-etiquetas:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 @media (max-width: 600px) {
   .contenedor-tabla {

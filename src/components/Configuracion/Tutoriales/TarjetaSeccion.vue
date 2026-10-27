@@ -17,11 +17,16 @@
           </p>
         </div>
       </div>
-      <IconChevronDown
-        :stroke="2"
-        class="icono-chevron"
-        :class="{ 'chevron-rotado': estaExpandida }"
-      />
+      <div class="acciones-header">
+        <div v-if="$slots.accionEncabezado" class="accion-encabezado" @click.stop @keydown.stop>
+          <slot name="accionEncabezado"></slot>
+        </div>
+        <IconChevronDown
+          :stroke="2"
+          class="icono-chevron"
+          :class="{ 'chevron-rotado': estaExpandida }"
+        />
+      </div>
     </div>
 
     <transition name="expandir">
@@ -127,11 +132,23 @@ watch(
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  min-width: 0;
+}
+.acciones-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.accion-encabezado {
+  display: flex;
+  align-items: center;
 }
 .bloque-titulos {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 0;
 }
 .icono-seccion {
   color: var(--color-primario);
