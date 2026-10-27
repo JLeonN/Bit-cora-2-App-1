@@ -52,6 +52,15 @@ Uso: `npm run cel`
 - Si ya existe una convención para nombres o estructura, adaptarse a ella antes de proponer una nueva.
 - Si el proyecto ya usa acentos, eñes o un estilo de redacción particular, conservarlo en vez de simplificarlo a ASCII.
 
+## Revisión y aprobación antes de implementar
+
+- Antes de modificar código, revisá el proyecto y los archivos relacionados.
+- Explicame brevemente qué entendiste, qué encontraste y cómo pensás resolverlo.
+- Esperá mi aprobación explícita antes de implementar.
+- Cuando apruebe la implementación, hacé los cambios y contame qué quedó hecho.
+- No ejecutes la aplicación, pruebas, compilaciones ni linters, salvo que yo te lo pida explícitamente. Yo voy a probar el resultado.
+- Si encontrás un riesgo o una decisión importante durante el trabajo, explicámelo de forma breve y proponé una solución práctica.
+
 ## Convención de Nomenclatura
 
 **Regla de oro:** nunca usar guiones bajos (`_`) ni guiones medios (`-`) en nombres de archivos o carpetas.
