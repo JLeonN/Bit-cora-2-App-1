@@ -83,6 +83,14 @@ const alternarExpansion = () => {
   emit('cambio-expansion', estaExpandida.value)
 }
 
+const abrirExpansion = () => {
+  if (estaExpandida.value) return
+  estaExpandida.value = true
+  emit('cambio-expansion', true)
+}
+
+defineExpose({ abrirExpansion })
+
 // Watch por si se cambia desde fuera
 watch(
   () => props.expandidaPorDefecto,

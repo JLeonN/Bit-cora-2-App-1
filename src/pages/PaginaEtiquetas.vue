@@ -34,6 +34,7 @@
     </div>
 
     <TarjetaSeccion
+      ref="tarjetaAgregarRef"
       :titulo="modoEtiquetas === 'articulos' ? 'Agregar etiquetas' : 'Agregar estantes'"
       :expandida-por-defecto="false"
       :descripcion-resumen="modoEtiquetas === 'articulos' ? 'Ingresá código, descripción, ubicación y cantidad para crear etiquetas.' : 'Generá ubicaciones ordenadas por columna y nivel.'"
@@ -187,6 +188,7 @@ const referenciaInicioPestanas = ref(null)
 const alturaEncabezado = ref(72)
 const pestanasFijas = ref(false)
 const formularioEtiquetaRef = ref(null)
+const tarjetaAgregarRef = ref(null)
 const tablaEtiquetasRef = ref(null)
 const mostrarModalEliminar = ref(false)
 const mostrarModalLimpiarTodo = ref(false)
@@ -294,6 +296,7 @@ async function cargarEtiquetasEstantes() {
 
 function alternarModoEtiquetas() {
   modoEtiquetas.value = modoEtiquetas.value === 'articulos' ? 'estantes' : 'articulos'
+  tarjetaAgregarRef.value?.abrirExpansion()
 }
 
 function ordenarCodigosEstantes(primero, segundo) {
