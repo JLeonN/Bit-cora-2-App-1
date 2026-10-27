@@ -6,9 +6,18 @@
     </div>
     <div v-if="etiquetas.length" class="grilla-etiquetas-estantes">
       <article v-for="codigo in etiquetas" :key="codigo" class="tarjeta-estante">
-        <div class="vista-etiqueta-estante" :class="{ 'vista-etiqueta-estante-chica': configuracion.pagina.alto <= 25 }" :style="{ aspectRatio: `${configuracion.pagina.ancho} / ${configuracion.pagina.alto}` }">
-          <span>{{ codigo }}</span>
-        </div>
+        <svg class="vista-etiqueta-estante" :viewBox="`0 0 ${configuracion.pagina.ancho} ${configuracion.pagina.alto}`" role="img" :aria-label="`Vista previa de la etiqueta ${codigo}`">
+          <text
+            class="texto-etiqueta-estante"
+            :x="layoutsPorCodigo[codigo].posicionX"
+            :y="layoutsPorCodigo[codigo].posicionY"
+            :font-size="layoutsPorCodigo[codigo].tamanoFuentePt * MM_POR_PT"
+            font-family="Helvetica, Arial, sans-serif"
+            font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle"
+          >{{ codigo }}</text>
+        </svg>
         <button type="button" class="boton-eliminar-estante" :aria-label="`Eliminar etiqueta ${codigo}`" @click="emit('eliminar-estante', codigo)">Eliminar</button>
       </article>
     </div>
@@ -17,11 +26,20 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { jsPDF } from 'jspdf'
+import { calcularLayoutEtiquetaEstante, MM_POR_PT } from './CalcularLayoutEtiquetaEstante.js'
+
+const props = defineProps({
   etiquetas: { type: Array, required: true },
   configuracion: { type: Object, required: true },
 })
 const emit = defineEmits(['eliminar-estante', 'limpiar-estantes'])
+const medidor = new jsPDF({ unit: 'mm' })
+const layoutsPorCodigo = computed(() => Object.fromEntries(props.etiquetas.map((codigo) => [
+  codigo,
+  calcularLayoutEtiquetaEstante(medidor, codigo, props.configuracion.pagina),
+])))
 </script>
 
 <style scoped>
@@ -67,24 +85,15 @@ const emit = defineEmits(['eliminar-estante', 'limpiar-estantes'])
   background: var(--color-superficie);
 }
 .vista-etiqueta-estante {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 100%;
+  height: auto;
   border-radius: 4px;
-  background: var(--color-texto-principal);
-  color: var(--color-fondo);
+  background: var(--color-papel-etiqueta);
   overflow: hidden;
 }
-.vista-etiqueta-estante span {
-  max-width: 90%;
-  font-size: clamp(2.4rem, 8vw, 5rem);
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-.vista-etiqueta-estante-chica span {
-  font-size: clamp(2rem, 5vw, 3.3rem);
+.texto-etiqueta-estante {
+  fill: var(--color-tinta-etiqueta);
 }
 .boton-eliminar-estante {
   width: 100%;

@@ -2,25 +2,18 @@ import { jsPDF } from 'jspdf'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { obtenerNombreUsuario } from '../../BaseDeDatos/usoAlmacenamientoConfiguracion.js'
 import { imprimirPDFEnNavegador } from '../Compartidos/ImprimirPDFEnNavegador.js'
-
-const MM_POR_PT = 0.352777778
+import { calcularLayoutEtiquetaEstante } from './CalcularLayoutEtiquetaEstante.js'
 
 function esPlataformaWeb() {
   return !window.Capacitor || window.Capacitor.getPlatform() === 'web'
 }
 
 function dibujarEtiquetaEstante(pdf, codigo, pagina) {
-  const anchoDisponible = pagina.ancho * 0.88
-  const tamanoMaximo = Math.floor((pagina.alto * 0.76) / MM_POR_PT)
+  const layout = calcularLayoutEtiquetaEstante(pdf, codigo, pagina)
   pdf.setFont('helvetica', 'bold')
   pdf.setTextColor(0, 0, 0)
-  let tamanoFuente = tamanoMaximo
-  pdf.setFontSize(tamanoFuente)
-  while (tamanoFuente > 8 && pdf.getTextWidth(codigo) > anchoDisponible) {
-    tamanoFuente -= 1
-    pdf.setFontSize(tamanoFuente)
-  }
-  pdf.text(codigo, pagina.ancho / 2, pagina.alto / 2, { align: 'center', baseline: 'middle' })
+  pdf.setFontSize(layout.tamanoFuentePt)
+  pdf.text(codigo, layout.posicionX, layout.posicionY, { align: 'center', baseline: 'middle' })
 }
 
 function descargarPDF(pdf, nombreArchivo) {
