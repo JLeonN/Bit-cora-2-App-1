@@ -41,6 +41,24 @@
       :ocultar-resumen-al-expandir="true"
     >
       <template #accionEncabezado>
+        <div class="selector-modo-etiquetas" role="group" aria-label="Tipo de etiquetas">
+          <button
+            type="button"
+            class="opcion-modo-etiquetas"
+            :class="{ 'opcion-activa': modoEtiquetas === 'articulos' }"
+            :aria-pressed="modoEtiquetas === 'articulos'"
+            :disabled="generandoDocumento"
+            @click="seleccionarModoEtiquetas('articulos')"
+          >Artículos</button>
+          <button
+            type="button"
+            class="opcion-modo-etiquetas"
+            :class="{ 'opcion-activa': modoEtiquetas === 'estantes' }"
+            :aria-pressed="modoEtiquetas === 'estantes'"
+            :disabled="generandoDocumento"
+            @click="seleccionarModoEtiquetas('estantes')"
+          >Estantes</button>
+        </div>
         <button
           type="button"
           class="interruptor-modo-etiquetas"
@@ -295,9 +313,14 @@ async function cargarEtiquetasEstantes() {
   }
 }
 
-function alternarModoEtiquetas() {
-  modoEtiquetas.value = modoEtiquetas.value === 'articulos' ? 'estantes' : 'articulos'
+function seleccionarModoEtiquetas(modo) {
+  if (modoEtiquetas.value === modo) return
+  modoEtiquetas.value = modo
   tarjetaAgregarRef.value?.abrirExpansion()
+}
+
+function alternarModoEtiquetas() {
+  seleccionarModoEtiquetas(modoEtiquetas.value === 'articulos' ? 'estantes' : 'articulos')
 }
 
 function ordenarCodigosEstantes(primeraEtiqueta, segundaEtiqueta) {
@@ -912,6 +935,38 @@ watch(
 .boton-abrir-memorias:hover {
   filter: brightness(1.1);
 }
+.selector-modo-etiquetas {
+  display: none;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-fondo);
+}
+.opcion-modo-etiquetas {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.22s ease, color 0.22s ease;
+}
+.opcion-modo-etiquetas.opcion-activa {
+  background: var(--color-primario);
+  color: var(--color-texto-principal);
+}
+.opcion-modo-etiquetas:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+}
+.opcion-modo-etiquetas:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .interruptor-modo-etiquetas {
   position: relative;
   display: flex;
@@ -955,6 +1010,14 @@ watch(
   opacity: 0.6;
   cursor: not-allowed;
 }
+@media (min-width: 600px) {
+  .selector-modo-etiquetas {
+    display: flex;
+  }
+  .interruptor-modo-etiquetas {
+    display: none;
+  }
+}
 @media (max-width: 600px) {
   .contenedor-tabla {
     padding: 0.75rem;
@@ -983,7 +1046,8 @@ watch(
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .contenedor-pestanas-etiquetas {
+  .contenedor-pestanas-etiquetas,
+  .opcion-modo-etiquetas {
     transition: none;
   }
 }
