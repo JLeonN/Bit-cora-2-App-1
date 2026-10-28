@@ -1,6 +1,18 @@
 <template>
   <form class="formulario-estantes" @submit.prevent="generarEtiquetas">
     <div class="campo-estantes">
+      <label for="cantidad-estanterias">Cantidad de estanterías</label>
+      <div class="contenedor-items-botones">
+        <button type="button" class="boton-items" aria-label="Quitar una estantería" :disabled="cantidadEstanterias <= 1" @click="ajustarCantidadEstanterias(-1)">
+          <IconMinus :stroke="2" />
+        </button>
+        <input id="cantidad-estanterias" :value="cantidadEstanterias" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required @input="actualizarCantidadEstanterias" @focus="seleccionarContenido" @click="seleccionarContenido" />
+        <button type="button" class="boton-items" aria-label="Agregar una estantería" :disabled="cantidadEstanterias >= 99" @click="ajustarCantidadEstanterias(1)">
+          <IconPlus :stroke="2" />
+        </button>
+      </div>
+    </div>
+    <div class="campo-estantes">
       <label for="cantidad-columnas-estantes">Cantidad de columnas</label>
       <div class="contenedor-items-botones">
         <button type="button" class="boton-items" aria-label="Quitar una columna" :disabled="cantidadColumnas <= 1" @click="ajustarCantidadColumnas(-1)">
@@ -19,7 +31,7 @@
         <input :id="`niveles-columna-${columna.letra}`" :value="nivelesPorColumna[indice]" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required @input="actualizarNiveles($event, indice)" @focus="seleccionarContenido" @click="seleccionarContenido" />
       </label>
     </div>
-    <p class="resumen-estantes">Se preparará{{ totalEtiquetas === 1 ? '' : 'n' }} {{ totalEtiquetas }} etiqueta{{ totalEtiquetas === 1 ? '' : 's' }}: {{ ejemploEtiquetas }}.</p>
+    <p class="resumen-estantes">Se preparará{{ totalEtiquetas === 1 ? '' : 'n' }} {{ totalEtiquetas }} código{{ totalEtiquetas === 1 ? '' : 's' }}: {{ ejemploEtiquetas }}. {{ cantidadEstanterias }} copia{{ cantidadEstanterias === 1 ? '' : 's' }} de cada uno ({{ totalCopias }} etiquetas en total).</p>
     <button class="boton-generar-estantes" type="submit">Agregar etiquetas de estantes</button>
   </form>
 </template>
@@ -32,8 +44,10 @@ import { IconMinus, IconPlus } from '@tabler/icons-vue'
 const emit = defineEmits(['agregar-estantes'])
 const cantidadColumnas = ref(1)
 const nivelesPorColumna = ref([1])
+const cantidadEstanterias = ref(1)
 const columnas = computed(() => Array.from({ length: Number.isInteger(cantidadColumnas.value) && cantidadColumnas.value > 0 && cantidadColumnas.value <= 26 ? cantidadColumnas.value : 0 }, (_, indice) => ({ letra: String.fromCharCode(65 + indice) })))
 const totalEtiquetas = computed(() => columnas.value.reduce((total, _, indice) => total + (Number(nivelesPorColumna.value[indice]) || 0), 0))
+const totalCopias = computed(() => totalEtiquetas.value * cantidadEstanterias.value)
 const ejemploEtiquetas = computed(() => {
   const primera = columnas.value[0]
   const ultima = columnas.value.at(-1)
@@ -67,17 +81,25 @@ function ajustarCantidadColumnas(cambio) {
   cantidadColumnas.value = Math.min(26, Math.max(1, cantidadColumnas.value + cambio))
 }
 
+function actualizarCantidadEstanterias(evento) {
+  cantidadEstanterias.value = normalizarCantidad(evento, 99)
+}
+
+function ajustarCantidadEstanterias(cambio) {
+  cantidadEstanterias.value = Math.min(99, Math.max(1, cantidadEstanterias.value + cambio))
+}
+
 function actualizarNiveles(evento, indice) {
   nivelesPorColumna.value[indice] = normalizarCantidad(evento, 99)
 }
 
 function generarEtiquetas() {
-  if (!columnas.value.length || nivelesPorColumna.value.some((cantidad) => !Number.isInteger(cantidad) || cantidad < 1 || cantidad > 99)) {
-    Notify.create({ type: 'negative', message: 'Ingresá entre 1 y 99 niveles por columna.', position: 'top' })
+  if (!columnas.value.length || nivelesPorColumna.value.some((cantidad) => !Number.isInteger(cantidad) || cantidad < 1 || cantidad > 99) || !Number.isInteger(cantidadEstanterias.value) || cantidadEstanterias.value < 1 || cantidadEstanterias.value > 99) {
+    Notify.create({ type: 'negative', message: 'Ingresá entre 1 y 99 niveles y estanterías.', position: 'top' })
     return
   }
-  const codigos = columnas.value.flatMap(({ letra }, indice) => Array.from({ length: nivelesPorColumna.value[indice] }, (_, nivel) => `${letra}${nivel + 1}`))
-  emit('agregar-estantes', codigos)
+  const etiquetas = columnas.value.flatMap(({ letra }, indice) => Array.from({ length: nivelesPorColumna.value[indice] }, (_, nivel) => ({ codigo: `${letra}${nivel + 1}`, cantidad: cantidadEstanterias.value })))
+  emit('agregar-estantes', etiquetas)
 }
 </script>
 

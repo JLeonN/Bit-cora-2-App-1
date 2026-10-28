@@ -25,15 +25,19 @@ function descargarPDF(pdf, nombreArchivo) {
   URL.revokeObjectURL(url)
 }
 
-export async function generarDocumentoEtiquetasEstantes(codigos, configuracion, destino = 'descargar') {
-  if (!codigos.length) throw new Error('No hay etiquetas de estantes para generar.')
+export async function generarDocumentoEtiquetasEstantes(etiquetas, configuracion, destino = 'descargar') {
+  if (!etiquetas.length) throw new Error('No hay etiquetas de estantes para generar.')
   const { pagina } = configuracion
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [pagina.alto, pagina.ancho], compress: true })
   pdf.setProperties({ title: `Etiquetas de estantes ${configuracion.nombre}`, subject: 'Ubicaciones de estantes' })
-  for (const [indice, codigo] of codigos.entries()) {
-    if (indice > 0) pdf.addPage([pagina.alto, pagina.ancho])
-    dibujarEtiquetaEstante(pdf, codigo, pagina)
-    if ((indice + 1) % 8 === 0) await new Promise((resolver) => setTimeout(resolver, 0))
+  let paginasGeneradas = 0
+  for (const etiqueta of etiquetas) {
+    for (let copia = 0; copia < etiqueta.cantidad; copia += 1) {
+      if (paginasGeneradas > 0) pdf.addPage([pagina.alto, pagina.ancho])
+      dibujarEtiquetaEstante(pdf, etiqueta.codigo, pagina)
+      paginasGeneradas += 1
+      if (paginasGeneradas % 8 === 0) await new Promise((resolver) => setTimeout(resolver, 0))
+    }
   }
   const nombreUsuario = await obtenerNombreUsuario()
   const ahora = new Date()

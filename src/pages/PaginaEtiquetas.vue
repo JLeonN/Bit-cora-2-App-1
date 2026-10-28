@@ -85,6 +85,7 @@
       v-else
       :etiquetas="listaEtiquetasEstantes"
       :configuracion="configuracionActiva"
+      @actualizar-copias="actualizarCopiasEstante"
       @eliminar-estante="eliminarEstante"
       @limpiar-estantes="limpiarEstantes"
     />
@@ -299,7 +300,9 @@ function alternarModoEtiquetas() {
   tarjetaAgregarRef.value?.abrirExpansion()
 }
 
-function ordenarCodigosEstantes(primero, segundo) {
+function ordenarCodigosEstantes(primeraEtiqueta, segundaEtiqueta) {
+  const primero = primeraEtiqueta.codigo
+  const segundo = segundaEtiqueta.codigo
   const partesPrimero = /^([A-Z]+)(\d+)$/.exec(primero)
   const partesSegundo = /^([A-Z]+)(\d+)$/.exec(segundo)
   if (!partesPrimero || !partesSegundo) return primero.localeCompare(segundo, 'es', { numeric: true })
@@ -307,10 +310,10 @@ function ordenarCodigosEstantes(primero, segundo) {
   return comparacionColumna || Number(partesPrimero[2]) - Number(partesSegundo[2])
 }
 
-async function agregarEstantes(codigos) {
+async function agregarEstantes(etiquetas) {
   const anteriores = listaEtiquetasEstantes.value
-  const existentes = new Set(anteriores)
-  const nuevos = codigos.filter((codigo) => !existentes.has(codigo))
+  const existentes = new Set(anteriores.map((etiqueta) => etiqueta.codigo))
+  const nuevos = etiquetas.filter((etiqueta) => !existentes.has(etiqueta.codigo))
   if (!nuevos.length) {
     Notify.create({ type: 'info', message: 'Esas etiquetas de estantes ya están preparadas.', position: 'top' })
     return
@@ -326,13 +329,28 @@ async function agregarEstantes(codigos) {
   }
 }
 
+async function actualizarCopiasEstante({ codigo, cantidad }) {
+  if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 99) return
+  const anteriores = listaEtiquetasEstantes.value
+  const actual = anteriores.find((etiqueta) => etiqueta.codigo === codigo)
+  if (!actual || actual.cantidad === cantidad) return
+  listaEtiquetasEstantes.value = anteriores.map((etiqueta) => etiqueta.codigo === codigo ? { ...etiqueta, cantidad } : etiqueta)
+  try {
+    await guardarEtiquetasEstantes(listaEtiquetasEstantes.value)
+  } catch (error) {
+    listaEtiquetasEstantes.value = anteriores
+    console.error('[PaginaEtiquetas] Error actualizando copias de estante:', error)
+    Notify.create({ type: 'negative', message: 'No se pudo actualizar la cantidad de copias.', position: 'top' })
+  }
+}
+
 function eliminarEstante(codigo) {
   codigoEstanteAEliminar.value = codigo
 }
 
 async function confirmarEliminarEstante() {
   const anteriores = listaEtiquetasEstantes.value
-  listaEtiquetasEstantes.value = anteriores.filter((codigo) => codigo !== codigoEstanteAEliminar.value)
+  listaEtiquetasEstantes.value = anteriores.filter((etiqueta) => etiqueta.codigo !== codigoEstanteAEliminar.value)
   try {
     await guardarEtiquetasEstantes(listaEtiquetasEstantes.value)
     codigoEstanteAEliminar.value = ''
