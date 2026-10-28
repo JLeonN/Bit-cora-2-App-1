@@ -1,27 +1,14 @@
 {
-  "versionDisponible": "4.2.48",
+  "versionDisponible": "4.2.49",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
     "es-AR": [
       {
-        "apartado": "Etiquetas",
+        "apartado": "Etiquetas de estantes",
         "novedades": [
-          "Ahora podés generar etiquetas de estantes por columnas y niveles, desde A1, en los tres tamaños disponibles.",
-          "Las etiquetas de estantes muestran solo el código, ajustado al espacio en la vista previa y el PDF.",
-          "Al cambiar entre artículos y estantes, se abre el formulario correspondiente."
-        ]
-      },
-      {
-        "apartado": "Uso del teclado",
-        "novedades": [
-          "Los campos de Ubicaciones, Consulta de ubicación, Listados, Stock y Etiquetas se acomodan junto a la barra superior al abrir el teclado."
-        ]
-      },
-      {
-        "apartado": "Compatibilidad",
-        "novedades": [
-          "Esta versión requiere Android 7 o posterior."
+          "Ahora podés elegir cuántas estanterías querés etiquetar y obtener varias copias de cada código.",
+          "Podés ajustar la cantidad de copias en cada etiqueta antes de generar el documento."
         ]
       }
     ]
