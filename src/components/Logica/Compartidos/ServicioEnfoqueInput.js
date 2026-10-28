@@ -31,8 +31,10 @@ let manejadorCambioVentana = null
 let manejadorCambioRuta = null
 let temporizadoresPendientes = []
 let temporizadorAjusteFinal = null
+let temporizadorFinAjuste = null
 let espaciadorTemporal = null
 let campoEnfocado = null
+let ajusteInicialActivo = false
 let headerAjustado = null
 let desplazamientoHeader = 0
 let traslacionHeaderOriginal = ''
@@ -56,6 +58,7 @@ function esCampoEditable(elemento) {
     !(elemento instanceof HTMLElement) ||
     elemento.hasAttribute('disabled') ||
     elemento.hasAttribute('readonly') ||
+    elemento.hasAttribute('data-sin-ajuste-enfoque') ||
     (elemento.classList.contains('sin-enfoque-automatico') && !esRutaConAjuste()) ||
     elemento.closest(SELECTOR_DIALOGO)
   ) {
@@ -72,10 +75,20 @@ function obtenerLimiteSuperiorPagina() {
   const margen = esRutaConAjuste() ? MARGEN_HEADER_AJUSTADO : MARGEN_HEADER
   if (!header) return margen
   if (esRutaConAjuste()) {
-    return (window.visualViewport?.offsetTop || 0) + header.getBoundingClientRect().height + margen
+    const limiteHeader = (window.visualViewport?.offsetTop || 0) + header.getBoundingClientRect().height + margen
+    const barraMedidas = esRutaEtiquetas()
+      ? document.querySelector('.contenedor-pestanas-etiquetas')
+      : null
+    return barraMedidas
+      ? limiteHeader + barraMedidas.getBoundingClientRect().height + margen
+      : limiteHeader
   }
   const rect = header.getBoundingClientRect()
   return Math.max(0, rect.bottom) + margen
+}
+
+function esRutaEtiquetas() {
+  return window.location.hash.slice(1).split('?')[0] === '/etiquetas'
 }
 
 function mantenerHeaderVisible() {
@@ -137,11 +150,14 @@ function cancelarAjustesPendientes() {
   temporizadoresPendientes = []
   window.clearTimeout(temporizadorAjusteFinal)
   temporizadorAjusteFinal = null
+  window.clearTimeout(temporizadorFinAjuste)
+  temporizadorFinAjuste = null
 }
 
 function programarDesplazamiento(campo) {
   cancelarAjustesPendientes()
   campoEnfocado = campo
+  ajusteInicialActivo = esRutaConAjuste()
   if (esRutaConAjuste()) {
     alturaVentanaAnterior = window.visualViewport?.height || window.innerHeight
     desplazamientoVentanaAnterior = window.visualViewport?.offsetTop || 0
@@ -150,6 +166,9 @@ function programarDesplazamiento(campo) {
       window.setTimeout(() => desplazarCampo(campo, 'instant'), 1000),
     ]
     temporizadorAjusteFinal = window.setTimeout(() => desplazarCampo(campo, 'instant'), 500)
+    temporizadorFinAjuste = window.setTimeout(() => {
+      ajusteInicialActivo = false
+    }, 1200)
     return
   }
   temporizadoresPendientes = DEMORAS_AJUSTE.map((demora) =>
@@ -160,6 +179,7 @@ function programarDesplazamiento(campo) {
 function ajustarPorCambioVentana() {
   if (!campoEnfocado || document.activeElement !== campoEnfocado || !esRutaConAjuste()) return
   mantenerHeaderVisible()
+  if (!ajusteInicialActivo) return
   const alturaActual = window.visualViewport?.height || window.innerHeight
   const desplazamientoActual = window.visualViewport?.offsetTop || 0
   if (
@@ -177,8 +197,15 @@ function ajustarPorCambioVentana() {
   )
 }
 
+function detenerAjustePorInteraccionManual() {
+  if (!campoEnfocado || !esRutaConAjuste()) return
+  ajusteInicialActivo = false
+  cancelarAjustesPendientes()
+}
+
 function limpiarEnfoqueActivo() {
   cancelarAjustesPendientes()
+  ajusteInicialActivo = false
   campoEnfocado = null
   eliminarEspaciadorTemporal()
   restaurarHeader()
@@ -191,6 +218,7 @@ export function activarEnfoqueGlobalInputs() {
   manejadorEnfoqueActivo = (evento) => {
     cancelarAjustesPendientes()
     if (esCampoEditable(evento.target)) programarDesplazamiento(evento.target)
+    else limpiarEnfoqueActivo()
   }
   manejadorDesenfoqueActivo = () => {
     window.setTimeout(() => {
@@ -205,6 +233,8 @@ export function activarEnfoqueGlobalInputs() {
   }
   document.addEventListener('focusin', manejadorEnfoqueActivo)
   document.addEventListener('focusout', manejadorDesenfoqueActivo)
+  document.addEventListener('touchstart', detenerAjustePorInteraccionManual, { passive: true })
+  document.addEventListener('wheel', detenerAjustePorInteraccionManual, { passive: true })
   window.addEventListener('scroll', manejadorCambioVentana, { passive: true })
   window.addEventListener('hashchange', manejadorCambioRuta)
   window.visualViewport?.addEventListener('scroll', manejadorCambioVentana, { passive: true })
@@ -217,6 +247,8 @@ export function desactivarEnfoqueGlobalInputs() {
   if (!manejadorEnfoqueActivo || typeof document === 'undefined') return
   document.removeEventListener('focusin', manejadorEnfoqueActivo)
   document.removeEventListener('focusout', manejadorDesenfoqueActivo)
+  document.removeEventListener('touchstart', detenerAjustePorInteraccionManual)
+  document.removeEventListener('wheel', detenerAjustePorInteraccionManual)
   window.removeEventListener('scroll', manejadorCambioVentana)
   window.removeEventListener('hashchange', manejadorCambioRuta)
   window.visualViewport?.removeEventListener('scroll', manejadorCambioVentana)

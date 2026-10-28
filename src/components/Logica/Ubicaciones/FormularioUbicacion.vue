@@ -111,7 +111,7 @@
           ref="inputUbicacion"
           v-model="nuevaUbicacion"
           type="text"
-          class="sin-enfoque-automatico"
+          data-sin-ajuste-enfoque
           :placeholder="placeholderUbicacion"
           :class="{ 'input-error': errorUbicacion, 'animar-error': animarErrorUbicacion }"
           @animationend="animarErrorUbicacion = false"
