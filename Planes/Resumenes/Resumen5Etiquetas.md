@@ -1,10 +1,10 @@
 ### **Módulo de Etiquetas - Bitácora II**
 
-Sistema completo para generar etiquetas con códigos de barras Code 39 en documentos PDF personalizados.
+Sistema para generar etiquetas de artículos con códigos de barras Code 39 y etiquetas de estantes con el código centrado en documentos PDF personalizados.
 
 ---
 
-### Estado funcional actual (v4.2.47)
+### Estado funcional actual (v4.2.48)
 
 - En web se muestra botón específico de descarga PDF y se oculta el botón enviar.
 - En móvil se mantiene compartir nativo del PDF generado.
@@ -16,6 +16,8 @@ Sistema completo para generar etiquetas con códigos de barras Code 39 en docume
 - Los tamaños visibles son 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm; sus pestañas permanecen a la vista durante el desplazamiento.
 - Las etiquetas chicas usan PDF vectorial y los tres tamaños conservan sus descripciones y ajustes de letra por separado.
 - En navegadores de escritorio se puede imprimir directamente; en móvil se comparte el PDF.
+- El interruptor de Artículos y Estantes abre el formulario elegido, sin mezclar sus listas.
+- Estantes genera códigos consecutivos desde A1 por columna y nivel, con vista previa y PDF ajustados a los tres tamaños disponibles.
 
 ---
 

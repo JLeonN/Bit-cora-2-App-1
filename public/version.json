@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.47",
+  "versionDisponible": "4.2.48",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,34 +7,21 @@
       {
         "apartado": "Etiquetas",
         "novedades": [
-          "Ahora podés elegir etiquetas de 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm, con memorias separadas para cada tamaño.",
-          "Las pestañas de tamaños quedan visibles al desplazarte y el acceso a Memorias está junto al título.",
-          "Podés ajustar la letra de la descripción desde la vista previa; en los tamaños chicos también se adapta al espacio disponible.",
-          "Se mejoraron los documentos de las etiquetas chicas y podés imprimirlas directamente desde un navegador de escritorio."
+          "Ahora podés generar etiquetas de estantes por columnas y niveles, desde A1, en los tres tamaños disponibles.",
+          "Las etiquetas de estantes muestran solo el código, ajustado al espacio en la vista previa y el PDF.",
+          "Al cambiar entre artículos y estantes, se abre el formulario correspondiente."
         ]
       },
       {
-        "apartado": "Ubicaciones",
+        "apartado": "Uso del teclado",
         "novedades": [
-          "En pantallas pequeñas, las acciones para enviar o eliminar todas las ubicaciones quedan ocultas hasta que las despliegues."
+          "Los campos de Ubicaciones, Consulta de ubicación, Listados, Stock y Etiquetas se acomodan junto a la barra superior al abrir el teclado."
         ]
       },
       {
-        "apartado": "Búsqueda de artículos",
+        "apartado": "Compatibilidad",
         "novedades": [
-          "La búsqueda encuentra nombres exactos y códigos completos o por sus primeros caracteres aunque el contexto seleccionado sea distinto."
-        ]
-      },
-      {
-        "apartado": "Configuración",
-        "novedades": [
-          "La base de artículos se carga desde Configuración y las secciones que la necesitan muestran un aviso para acceder a ella."
-        ]
-      },
-      {
-        "apartado": "Listados",
-        "novedades": [
-          "Al agregar un artículo a un listado, aparece una confirmación visual con su nombre y código."
+          "Esta versión requiere Android 7 o posterior."
         ]
       }
     ]

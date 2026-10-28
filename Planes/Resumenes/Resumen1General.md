@@ -12,11 +12,13 @@ La aplicación se divide en 8 módulos principales:
 - **Consulta De Ubicación**: Búsqueda, actualización de ubicación y envío de artículos a Stock, Listados o Etiquetas (ver `Resumen6ConsultaDeUbicacion.md`)
 - **Listados**: Listas persistentes con búsqueda masiva, edición, ordenamiento, exportación e integración con otros módulos
 - **Stock**: Conteo de artículos, comparación con Excel e integración con Ubicaciones y Etiquetas (ver `Resumen7Stock.md`)
-- **Etiquetas**: Generación de etiquetas en PDF de 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm, con pestañas visibles al desplazarse (ver `Resumen5Etiquetas.md`)
+- **Etiquetas**: Generación de etiquetas para artículos y estantes en PDF de 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm, con pestañas visibles al desplazarse (ver `Resumen5Etiquetas.md`)
 - **Configuración**: Sistema de configuración de usuario (ver `Resumen2Configuracion.md`)
 - **Inicio**: Pantalla principal de navegación
 
 El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incluye acceso directo a Tutoriales y configuración personal.
+
+En móvil, los campos de Ubicaciones, Consulta, Listados, Stock y Etiquetas se acomodan junto al encabezado al abrir el teclado; Preparadores conserva su enfoque propio.
 
 ---
 
@@ -147,7 +149,7 @@ El Inicio usa tarjetas reutilizables y adaptables para celular y navegador. Incl
 **Formatos de exportación**:
 - **Pedidos**: Excel (.xlsx)
 - **Ubicaciones**: Excel (.xlsx)
-- **Etiquetas**: PDF (.pdf) con códigos de barras Code 39
+- **Etiquetas**: PDF (.pdf) con códigos de barras Code 39 para artículos o códigos centrados para estantes
 
 ---
 
