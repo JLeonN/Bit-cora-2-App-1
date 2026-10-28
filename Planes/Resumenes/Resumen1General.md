@@ -449,3 +449,10 @@ src/
 - El envío a Etiquetas permite ajustar la cantidad de copias con botones de menos y más, además de escribirla.
 - El contador de pasos comprueba los permisos de actividad y notificaciones antes de iniciar.
 - Release vigente actualizada: 4.2.46.
+
+### Actualización de release 4.2.50
+
+- Etiquetas muestra una estantería continua con códigos por nivel y controles para ajustar columnas y copias.
+- El selector de Artículos y Estantes presenta botones en pantallas amplias y conserva el control compacto en celulares.
+- El ajuste de campos al abrir el teclado respeta el desplazamiento manual posterior.
+- Release vigente actualizada: 4.2.50.

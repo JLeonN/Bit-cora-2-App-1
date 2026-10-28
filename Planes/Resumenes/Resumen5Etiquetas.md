@@ -4,7 +4,7 @@ Sistema para generar etiquetas de artículos con códigos de barras Code 39 y et
 
 ---
 
-### Estado funcional actual (v4.2.49)
+### Estado funcional actual (v4.2.50)
 
 - En web se muestra botón específico de descarga PDF y se oculta el botón enviar.
 - En móvil se mantiene compartir nativo del PDF generado.
@@ -16,8 +16,9 @@ Sistema para generar etiquetas de artículos con códigos de barras Code 39 y et
 - Los tamaños visibles son 10 × 15, 2,5 × 6,7 y 5 × 2,5 cm; sus pestañas permanecen a la vista durante el desplazamiento.
 - Las etiquetas chicas usan PDF vectorial y los tres tamaños conservan sus descripciones y ajustes de letra por separado.
 - En navegadores de escritorio se puede imprimir directamente; en móvil se comparte el PDF.
-- El interruptor de Artículos y Estantes abre el formulario elegido, sin mezclar sus listas.
-- Estantes genera códigos consecutivos desde A1 por columna y nivel, con vista previa y PDF ajustados a los tres tamaños disponibles. La cantidad de estanterías define las copias por código; cada tarjeta permite ajustarlas entre 1 y 99 y las etiquetas guardadas antes conservan una copia.
+- El selector de Artículos y Estantes muestra botones en pantallas amplias y un interruptor compacto en celulares; abre el formulario elegido sin mezclar sus listas.
+- Estantes genera códigos consecutivos desde A1 por columna y nivel, con una vista previa continua que muestra postes compartidos y permite recorrer las columnas horizontalmente. La columna A define inicialmente los niveles de todas; luego cada columna admite ajustes propios y las nuevas heredan el valor actual de A.
+- La cantidad de estanterías define las copias por código; el resumen distingue etiquetas distintas y copias totales. Cada tarjeta permite ajustar las copias entre 1 y 99 y las etiquetas guardadas antes conservan una copia. El PDF se adapta a los tres tamaños disponibles.
 
 ---
 

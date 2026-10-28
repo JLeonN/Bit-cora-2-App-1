@@ -1,5 +1,5 @@
 {
-  "versionDisponible": "4.2.49",
+  "versionDisponible": "4.2.50",
   "urlPlayStore": "https://play.google.com/store/apps/details?id=bitacora.v2",
   "mostrarActualizacion": true,
   "cambios": {
@@ -7,8 +7,16 @@
       {
         "apartado": "Etiquetas de estantes",
         "novedades": [
-          "Ahora podés elegir cuántas estanterías querés etiquetar y obtener varias copias de cada código.",
-          "Podés ajustar la cantidad de copias en cada etiqueta antes de generar el documento."
+          "Ahora podés ver la estantería completa y los códigos de cada nivel antes de preparar las etiquetas.",
+          "Al cambiar los niveles de la columna A, se actualizan las demás; luego podés ajustar cada columna por separado.",
+          "El resumen muestra con más claridad cuántas etiquetas distintas y copias vas a preparar."
+        ]
+      },
+      {
+        "apartado": "Uso de la app",
+        "novedades": [
+          "En pantallas amplias, podés elegir Artículos o Estantes con botones más visibles.",
+          "Al desplazarte manualmente después de enfocar un campo, la pantalla respeta tu movimiento."
         ]
       }
     ]
