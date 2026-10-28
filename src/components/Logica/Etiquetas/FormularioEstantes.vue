@@ -31,7 +31,10 @@
         <input :id="`niveles-columna-${columna.letra}`" :value="nivelesPorColumna[indice]" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required @input="actualizarNiveles($event, indice)" @focus="seleccionarContenido" @click="seleccionarContenido" />
       </label>
     </div>
-    <p class="resumen-estantes">Se preparará{{ totalEtiquetas === 1 ? '' : 'n' }} {{ totalEtiquetas }} código{{ totalEtiquetas === 1 ? '' : 's' }}: {{ ejemploEtiquetas }}. {{ cantidadEstanterias }} copia{{ cantidadEstanterias === 1 ? '' : 's' }} de cada uno ({{ totalCopias }} etiquetas en total).</p>
+    <p class="resumen-estantes">
+      <span>{{ totalEtiquetas }} etiqueta{{ totalEtiquetas === 1 ? '' : 's' }} distinta{{ totalEtiquetas === 1 ? '' : 's' }}: {{ ejemploEtiquetas }}.</span>
+      <span>{{ cantidadEstanterias }} copia{{ cantidadEstanterias === 1 ? '' : 's' }} por etiqueta ({{ totalCopias }} en total).</span>
+    </p>
     <button class="boton-generar-estantes" type="submit">Agregar etiquetas de estantes</button>
   </form>
 </template>
@@ -134,6 +137,9 @@ function generarEtiquetas() {
   margin: 0;
   color: var(--color-texto-secundario);
   font-size: 0.9rem;
+}
+.resumen-estantes span {
+  display: block;
 }
 .grilla-columnas-estantes {
   display: grid;

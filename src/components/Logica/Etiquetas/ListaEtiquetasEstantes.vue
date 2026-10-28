@@ -1,7 +1,6 @@
 <template>
   <section class="seccion-etiquetas-estantes" aria-label="Etiquetas de estantes preparadas">
     <div v-if="etiquetas.length" class="encabezado-lista-estantes">
-      <p>{{ etiquetas.length }} códigos preparados · {{ totalCopias }} etiquetas en total</p>
       <button type="button" class="boton-limpiar-estantes" @click="emit('limpiar-estantes')">Limpiar todo</button>
     </div>
     <div v-if="etiquetas.length" class="grilla-etiquetas-estantes">
@@ -40,7 +39,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['actualizar-copias', 'eliminar-estante', 'limpiar-estantes'])
 const medidor = new jsPDF({ unit: 'mm' })
-const totalCopias = computed(() => props.etiquetas.reduce((total, etiqueta) => total + etiqueta.cantidad, 0))
 const layoutsPorCodigo = computed(() => Object.fromEntries(props.etiquetas.map((etiqueta) => [
   etiqueta.codigo,
   calcularLayoutEtiquetaEstante(medidor, etiqueta.codigo, props.configuracion.pagina),
@@ -79,10 +77,9 @@ function actualizarCopias(evento, etiqueta) {
 .encabezado-lista-estantes {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.75rem;
 }
-.encabezado-lista-estantes p,
 .sin-etiquetas-estantes {
   margin: 0;
   color: var(--color-texto-secundario);
