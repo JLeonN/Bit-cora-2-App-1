@@ -6,7 +6,7 @@
         <span v-else class="titulo-sin-base-mejorado"><IconDatabaseX :size="16" /> Base de datos no cargada</span>
       </div>
       <div v-if="resultadosBusqueda.length && baseDatosCargada" class="lista-resultados-mejorada">
-        <div v-for="(resultado, indice) in resultadosBusqueda" :key="indice" class="item-resultado-mejorado" @click="seleccionarArticulo(resultado.articulo)">
+        <div v-for="(resultado, indice) in resultadosBusqueda" :key="indice" class="item-resultado-mejorado" @mousedown.prevent @click="seleccionarArticulo(resultado.articulo)">
           <div class="nombre-resultado-mejorado">
             <span v-for="(parte, indiceParte) in obtenerPartesTextoResaltado(resultado.articulo.nombre, busqueda)" :key="indiceParte" :class="{ 'texto-resaltado-mejorado': parte.resaltado }">{{ parte.texto }}</span>
           </div>
@@ -64,8 +64,12 @@ function actualizarArticulos() {
   articulosDisponibles.value = estado.cargado ? obtenerArticulosCargados() : []
 }
 function seleccionarArticulo(articulo) {
+  const campoEnfocado = document.activeElement
   console.log('[BuscadorArticulos] Artículo seleccionado:', articulo)
   emit('articulo-seleccionado', articulo)
+  if (campoEnfocado instanceof HTMLInputElement && document.activeElement === campoEnfocado) {
+    campoEnfocado.blur()
+  }
 }
 function obtenerPartesTextoResaltado(texto, termino) {
   if (!termino || !texto) return [{ texto: texto || '', resaltado: false }]
