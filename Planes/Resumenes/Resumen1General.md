@@ -456,3 +456,8 @@ src/
 - El selector de Artículos y Estantes presenta botones en pantallas amplias y conserva el control compacto en celulares.
 - El ajuste de campos al abrir el teclado respeta el desplazamiento manual posterior.
 - Release vigente actualizada: 4.2.50.
+
+### Actualización de release 4.2.51
+
+- El buscador compartido conserva la selección de sugerencias en Android cuando el teclado está abierto y libera el foco tras elegir el artículo.
+- Release vigente actualizada: 4.2.51.
