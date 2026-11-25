@@ -86,7 +86,6 @@
 
 <script setup>
 import { nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
-import { Capacitor } from '@capacitor/core'
 import {
   BarcodeFormat,
   BrowserMultiFormatReader,
@@ -99,16 +98,7 @@ const emit = defineEmits(['cancelar', 'codigo-detectado', 'modal-abierto', 'moda
 
 const codigoDetectado = ref('')
 const ultimaCaptura = ref(null)
-// Datos temporales para revisar el diseño en la versión web de desarrollo.
-const pedidosEscaneados = ref(
-  import.meta.env.DEV && !Capacitor.isNativePlatform()
-    ? Array.from({ length: 6 }, (_, indice) => ({
-        codigo: `PEDIDO-${String(indice + 1).padStart(6, '0')}`,
-        items: indice + 1,
-        esDePrueba: true,
-      }))
-    : [],
-)
+const pedidosEscaneados = ref([])
 const mensajeTemporal = ref('')
 const contenedorPedidos = ref(null)
 const alturaLista = ref(0)
@@ -242,7 +232,7 @@ const iniciarCamara = async () => {
 // Emitir lista completa al finalizar (solo los códigos con sus items)
 const emitirFinalizar = () => {
   const pedidosReales = pedidosEscaneados.value.filter(
-    (pedido) => !pedido.esDePrueba && !pedidosEliminandose.value.has(pedido.codigo),
+    (pedido) => !pedidosEliminandose.value.has(pedido.codigo),
   )
   if (pedidosReales.length > 0) {
     // Emitir array de objetos con { codigo, items }
