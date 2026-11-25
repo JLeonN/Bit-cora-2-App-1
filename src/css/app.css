@@ -675,13 +675,26 @@ button {
 .modal-fondo.fondo-camara-pedidos {
   padding-bottom: 1rem;
 }
+.fondo-camara-pedidos .modal-camara {
+  position: relative;
+}
+.mensaje-camara-pedidos {
+  position: absolute;
+  top: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
+  z-index: 5;
+  margin: 0;
+  animation: none;
+}
 .contenedor-lista-pedidos {
   background: var(--color-superficie);
-  border-top: 1px solid var(--color-borde);
   box-sizing: border-box;
   flex-shrink: 0;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0.75rem;
   margin-bottom: 1rem;
   border-radius: 8px;
@@ -690,9 +703,9 @@ button {
 .contenedor-lista-pedidos.lista-pedidos-vacia {
   padding: 0;
   margin-bottom: 0;
-  border-top-width: 0;
 }
 .lista-pedidos-escaneados {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -707,6 +720,19 @@ button {
   border-radius: 8px;
   padding: 0.65rem 0.75rem;
   animation: slideIn 0.3s ease;
+}
+.item-pedido-escaneado.pedido-eliminandose {
+  pointer-events: none;
+  animation: eliminar-pedido 0.3s ease forwards;
+}
+.movimiento-pedido-move {
+  transition: transform 0.3s ease;
+}
+@keyframes eliminar-pedido {
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
 }
 .encabezado-pedido-escaneado {
   display: flex;

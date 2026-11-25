@@ -17,7 +17,7 @@
       </div>
 
       <!-- Mensaje temporal -->
-      <div v-if="mensajeTemporal" class="mensaje-temporal">
+      <div v-if="mensajeTemporal" class="mensaje-temporal mensaje-camara-pedidos">
         {{ mensajeTemporal }}
       </div>
 
@@ -27,15 +27,17 @@
         :class="{ 'lista-pedidos-vacia': pedidosEscaneados.length === 0 }"
         :style="{ height: `${alturaLista}px` }"
       >
-        <div ref="listaPedidos" class="lista-pedidos-escaneados">
+        <div ref="contenedorPedidos">
+          <TransitionGroup name="movimiento-pedido" tag="div" class="lista-pedidos-escaneados">
           <div
             v-for="pedido in pedidosEscaneados"
             :key="pedido.codigo"
             class="item-pedido-escaneado"
+            :class="{ 'pedido-eliminandose': pedidosEliminandose.has(pedido.codigo) }"
           >
             <div class="encabezado-pedido-escaneado">
               <span class="numero-pedido-escaneado">{{ pedido.codigo }}</span>
-              <button type="button" class="boton-eliminar-escaneado" @click="eliminarPedidoEscaneado(pedido.codigo)" :aria-label="`Eliminar pedido ${pedido.codigo}`">
+              <button type="button" class="boton-eliminar-escaneado" :disabled="pedidosEliminandose.has(pedido.codigo)" @click="eliminarPedidoEscaneado(pedido.codigo)" :aria-label="`Eliminar pedido ${pedido.codigo}`">
                 <IconX :size="18" :stroke="2" />
               </button>
             </div>
@@ -60,6 +62,7 @@
               </div>
             </div>
           </div>
+          </TransitionGroup>
         </div>
       </div>
 
@@ -107,25 +110,28 @@ const pedidosEscaneados = ref(
     : [],
 )
 const mensajeTemporal = ref('')
-const listaPedidos = ref(null)
+const contenedorPedidos = ref(null)
 const alturaLista = ref(0)
+const pedidosEliminandose = ref(new Set())
 
 let lector = null
 let observadorLista = null
+const temporizadoresEliminacion = new Set()
 
 const actualizarAlturaLista = () => {
-  const lista = listaPedidos.value
+  const lista = contenedorPedidos.value?.firstElementChild
   if (!lista || pedidosEscaneados.value.length === 0) {
     alturaLista.value = 0
     return
   }
-  const tercerEncabezado = lista.children[2]?.querySelector('.encabezado-pedido-escaneado')
+  const tercerPedido = lista.children[2]
+  const tercerEncabezado = tercerPedido?.querySelector('.encabezado-pedido-escaneado')
   const alturaContenido = tercerEncabezado
-    ? tercerEncabezado.getBoundingClientRect().bottom - lista.getBoundingClientRect().top
+    ? tercerPedido.offsetTop + tercerPedido.clientTop + parseFloat(window.getComputedStyle(tercerPedido).paddingTop) + tercerEncabezado.offsetHeight
     : lista.scrollHeight
   const tamanioRem = parseFloat(window.getComputedStyle(document.documentElement).fontSize)
   const espacioInterior = window.matchMedia('(max-width: 600px)').matches ? 1 : 1.5
-  alturaLista.value = Math.ceil(alturaContenido + tamanioRem * espacioInterior + 1)
+  alturaLista.value = Math.ceil(alturaContenido + tamanioRem * espacioInterior)
 }
 
 watch(() => pedidosEscaneados.value.length, async () => {
@@ -159,9 +165,15 @@ const procesarCodigoDetectado = (codigo) => {
 
 // Eliminar pedido escaneado de la lista
 const eliminarPedidoEscaneado = (codigo) => {
-  const pedidoEliminado = pedidosEscaneados.value.find((pedido) => pedido.codigo === codigo)
-  pedidosEscaneados.value = pedidosEscaneados.value.filter((pedido) => pedido.codigo !== codigo)
-  mostrarMensaje(`Eliminado: ${pedidoEliminado?.codigo || codigo}`)
+  if (pedidosEliminandose.value.has(codigo)) return
+  pedidosEliminandose.value.add(codigo)
+  mostrarMensaje(`Eliminado: ${codigo}`)
+  const temporizador = setTimeout(() => {
+    pedidosEscaneados.value = pedidosEscaneados.value.filter((pedido) => pedido.codigo !== codigo)
+    pedidosEliminandose.value.delete(codigo)
+    temporizadoresEliminacion.delete(temporizador)
+  }, 300)
+  temporizadoresEliminacion.add(temporizador)
 }
 
 const normalizarItems = (items) => {
@@ -229,7 +241,9 @@ const iniciarCamara = async () => {
 
 // Emitir lista completa al finalizar (solo los códigos con sus items)
 const emitirFinalizar = () => {
-  const pedidosReales = pedidosEscaneados.value.filter((pedido) => !pedido.esDePrueba)
+  const pedidosReales = pedidosEscaneados.value.filter(
+    (pedido) => !pedido.esDePrueba && !pedidosEliminandose.value.has(pedido.codigo),
+  )
   if (pedidosReales.length > 0) {
     // Emitir array de objetos con { codigo, items }
     emit(
@@ -246,7 +260,7 @@ const emitirFinalizar = () => {
 
 onMounted(() => {
   observadorLista = new ResizeObserver(actualizarAlturaLista)
-  observadorLista.observe(listaPedidos.value)
+  observadorLista.observe(contenedorPedidos.value.firstElementChild)
   actualizarAlturaLista()
   iniciarCamara()
   emit('modal-abierto')
@@ -254,6 +268,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   observadorLista?.disconnect()
+  temporizadoresEliminacion.forEach((temporizador) => clearTimeout(temporizador))
   if (lector) {
     lector.reset()
   }
