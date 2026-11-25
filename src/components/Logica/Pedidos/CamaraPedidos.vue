@@ -22,14 +22,23 @@
       </div>
 
       <!-- Lista de pedidos escaneados -->
-      <div v-if="pedidosEscaneados.length > 0" class="contenedor-lista-pedidos">
-        <div class="lista-pedidos-escaneados">
+      <div
+        class="contenedor-lista-pedidos"
+        :class="{ 'lista-pedidos-vacia': pedidosEscaneados.length === 0 }"
+        :style="{ height: `${alturaLista}px` }"
+      >
+        <div ref="listaPedidos" class="lista-pedidos-escaneados">
           <div
             v-for="pedido in pedidosEscaneados"
             :key="pedido.codigo"
             class="item-pedido-escaneado"
           >
-            <span class="numero-pedido-escaneado">{{ pedido.codigo }}</span>
+            <div class="encabezado-pedido-escaneado">
+              <span class="numero-pedido-escaneado">{{ pedido.codigo }}</span>
+              <button type="button" class="boton-eliminar-escaneado" @click="eliminarPedidoEscaneado(pedido.codigo)" :aria-label="`Eliminar pedido ${pedido.codigo}`">
+                <IconX :size="18" :stroke="2" />
+              </button>
+            </div>
             <div class="acciones-pedido-escaneado">
               <div class="control-cantidad-escaneada">
                 <button
@@ -49,9 +58,6 @@
                   <IconPlus :size="16" :stroke="2" />
                 </button>
               </div>
-              <button class="boton-eliminar-escaneado" @click="eliminarPedidoEscaneado(pedido.codigo)">
-                <IconX :size="18" :stroke="2" />
-              </button>
             </div>
           </div>
         </div>
@@ -76,7 +82,8 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import {
   BarcodeFormat,
   BrowserMultiFormatReader,
@@ -89,10 +96,42 @@ const emit = defineEmits(['cancelar', 'codigo-detectado', 'modal-abierto', 'moda
 
 const codigoDetectado = ref('')
 const ultimaCaptura = ref(null)
-const pedidosEscaneados = ref([])
+// Datos temporales para revisar el diseño en la versión web de desarrollo.
+const pedidosEscaneados = ref(
+  import.meta.env.DEV && !Capacitor.isNativePlatform()
+    ? Array.from({ length: 6 }, (_, indice) => ({
+        codigo: `PEDIDO-${String(indice + 1).padStart(6, '0')}`,
+        items: indice + 1,
+        esDePrueba: true,
+      }))
+    : [],
+)
 const mensajeTemporal = ref('')
+const listaPedidos = ref(null)
+const alturaLista = ref(0)
 
 let lector = null
+let observadorLista = null
+
+const actualizarAlturaLista = () => {
+  const lista = listaPedidos.value
+  if (!lista || pedidosEscaneados.value.length === 0) {
+    alturaLista.value = 0
+    return
+  }
+  const tercerEncabezado = lista.children[2]?.querySelector('.encabezado-pedido-escaneado')
+  const alturaContenido = tercerEncabezado
+    ? tercerEncabezado.getBoundingClientRect().bottom - lista.getBoundingClientRect().top
+    : lista.scrollHeight
+  const tamanioRem = parseFloat(window.getComputedStyle(document.documentElement).fontSize)
+  const espacioInterior = window.matchMedia('(max-width: 600px)').matches ? 1 : 1.5
+  alturaLista.value = Math.ceil(alturaContenido + tamanioRem * espacioInterior + 1)
+}
+
+watch(() => pedidosEscaneados.value.length, async () => {
+  await nextTick()
+  actualizarAlturaLista()
+})
 
 // Función para mostrar mensaje temporal
 const mostrarMensaje = (texto) => {
@@ -190,11 +229,12 @@ const iniciarCamara = async () => {
 
 // Emitir lista completa al finalizar (solo los códigos con sus items)
 const emitirFinalizar = () => {
-  if (pedidosEscaneados.value.length > 0) {
+  const pedidosReales = pedidosEscaneados.value.filter((pedido) => !pedido.esDePrueba)
+  if (pedidosReales.length > 0) {
     // Emitir array de objetos con { codigo, items }
     emit(
       'codigo-detectado',
-      pedidosEscaneados.value.map((p) => ({
+      pedidosReales.map((p) => ({
         numero: p.codigo,
         items: normalizarItems(p.items),
       })),
@@ -205,11 +245,15 @@ const emitirFinalizar = () => {
 }
 
 onMounted(() => {
+  observadorLista = new ResizeObserver(actualizarAlturaLista)
+  observadorLista.observe(listaPedidos.value)
+  actualizarAlturaLista()
   iniciarCamara()
   emit('modal-abierto')
 })
 
 onBeforeUnmount(() => {
+  observadorLista?.disconnect()
   if (lector) {
     lector.reset()
   }
