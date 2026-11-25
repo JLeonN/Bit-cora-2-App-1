@@ -1,6 +1,6 @@
 <template>
   <!-- Modal de la cámara -->
-  <div class="modal-fondo" @click.self="$emit('cancelar')">
+  <div class="modal-fondo fondo-camara-pedidos" @click.self="$emit('cancelar')">
     <div class="modal-camara">
       <!-- Caja de la cámara -->
       <div id="vista-camara" class="caja-camara">
