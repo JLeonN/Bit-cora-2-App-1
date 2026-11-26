@@ -891,7 +891,17 @@ function procesarEscaneo(codigos) {
   cerrarCamara()
   if (!Array.isArray(codigos) || !codigos[0]) return
   busquedaArticulo.value = codigos[0]
-  buscarArticuloExacto()
+  const articulo = obtenerArticuloExacto({
+    articulos: obtenerArticulosCargados(),
+    busqueda: codigos[0],
+    contextoBusqueda: contextoBusqueda.value,
+  })
+  seleccionarArticulo(articulo || {
+    codigo: codigos[0],
+    nombre: 'ARTÍCULO INEXISTENTE',
+    stock: 0,
+    ubicacionAntigua: '',
+  })
 }
 
 function cerrarPasoAtrasNativo() {

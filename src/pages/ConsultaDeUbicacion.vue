@@ -84,7 +84,7 @@
           <p class="valor-stock-excel">Stock del Excel: {{ articuloConsultado.stock || 'Sin stock' }}</p>
         </div>
 
-        <button type="button" class="boton-actualizar-ubicacion" @click="alternarEditorUbicacion">
+        <button v-if="!articuloConsultado.inexistente" type="button" class="boton-actualizar-ubicacion" @click="alternarEditorUbicacion">
           {{ mostrarEditorUbicacion ? 'Cancelar actualización' : 'Actualizar ubicación' }}
         </button>
 
@@ -670,15 +670,12 @@ const procesarCodigosEscaneados = (codigos) => {
   const codigoPrincipal = codigos[0]
   busquedaArticulo.value = codigoPrincipal
   seleccionRecienteDesdeBuscador.value = false
-  const articulo = buscarEnBase(codigoPrincipal)
-  if (!articulo) {
-    Notify.create({
-      type: 'warning',
-      message: `El código ${codigoPrincipal} no existe en la base cargada`,
-      position: 'top',
-      timeout: 2200,
-    })
-    return
+  const articulo = buscarEnBase(codigoPrincipal) || {
+    codigo: codigoPrincipal,
+    nombre: 'Artículo inexistente',
+    ubicacionAntigua: '',
+    stock: 0,
+    inexistente: true,
   }
 
   const historial = obtenerHistorialUbicaciones(articulo.codigo)

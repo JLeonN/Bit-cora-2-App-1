@@ -379,7 +379,7 @@ function procesarEscaneo(codigos) {
   const articulos = codigos.map((codigo) => obtenerArticuloExacto({
     articulos: obtenerArticulosCargados(),
     busqueda: codigo,
-  })).filter(Boolean)
+  }) || { codigo, nombre: 'Artículo inexistente' })
   if (!articulos.length) return
   emit('agregar-coincidencias', {
     articulos,

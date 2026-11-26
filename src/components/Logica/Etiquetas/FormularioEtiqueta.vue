@@ -338,12 +338,8 @@ function procesarCodigosEscaneados(codigos) {
     // Buscar artículo en base de datos
     const articuloEncontrado = buscarArticuloPorCodigo(codigoEscaneado)
 
-    if (articuloEncontrado) {
-      descripcionIngresada.value = articuloEncontrado.nombre
-      if (articuloEncontrado.ubicacionAntigua) {
-        ubicacionIngresada.value = articuloEncontrado.ubicacionAntigua
-      }
-    }
+    descripcionIngresada.value = articuloEncontrado?.nombre || ''
+    ubicacionIngresada.value = articuloEncontrado?.ubicacionAntigua || ''
   }
 
   cerrarCamara()

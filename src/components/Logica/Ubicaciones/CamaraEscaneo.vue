@@ -82,16 +82,13 @@ function procesarCodigo(valor) {
     return
   }
   const encontrado = obtenerArticuloExacto({ articulos: obtenerArticulosCargados(), busqueda: codigo })
-  if (!encontrado && !props.modoUbicaciones) {
-    mostrarMensaje(`El código ${codigo} no existe en la base cargada`)
-    return
-  }
   const codigoArticulo = String(encontrado?.codigo || codigo).trim().toUpperCase()
   if (articulos.value.some((articulo) => articulo.codigo === codigoArticulo)) {
     mostrarMensaje(`El código ${codigoArticulo} ya está en la lista`)
     return
   }
-  articulos.value.unshift({ codigo: codigoArticulo, nombre: encontrado?.nombre || 'Artículo sin descripción', ubicacion: ubicacionActual })
+  const nombre = encontrado?.nombre || (props.modoUbicaciones ? 'Artículo sin descripción' : 'Artículo inexistente')
+  articulos.value.unshift({ codigo: codigoArticulo, nombre, ubicacion: ubicacionActual })
   if (props.modoUbicaciones) {
     ubicacion.value = ubicacionActual
     void guardarUltimaUbicacion(ubicacionActual)
