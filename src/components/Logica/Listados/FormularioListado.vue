@@ -182,7 +182,6 @@
     </div>
     <CamaraEscaneo
       v-if="mostrarCamara"
-      :escaneo-unico="true"
       @finalizar="procesarEscaneo"
       @cancelar="cerrarCamara"
       @modal-abierto="emit('modal-abierto')"
@@ -376,8 +375,18 @@ function seleccionarArticulo(articulo) {
 
 function procesarEscaneo(codigos) {
   cerrarCamara()
-  const codigo = codigos?.[0]
-  if (codigo) resolverBusqueda(codigo)
+  if (!Array.isArray(codigos)) return
+  const articulos = codigos.map((codigo) => obtenerArticuloExacto({
+    articulos: obtenerArticulosCargados(),
+    busqueda: codigo,
+  })).filter(Boolean)
+  if (!articulos.length) return
+  emit('agregar-coincidencias', {
+    articulos,
+    totalCoincidencias: articulos.length,
+    identificadorDestino: props.identificadorDestino,
+    desdeCamara: true,
+  })
 }
 
 function abrirCamara() {

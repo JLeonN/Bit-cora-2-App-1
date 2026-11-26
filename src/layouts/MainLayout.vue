@@ -345,6 +345,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  document.documentElement.style.removeProperty('--altura-banner-camaras')
   desactivarEnfoqueGlobalInputs()
   limpiarEstadoBotonAtrasNativo()
   if (desuscribirPasos) {
@@ -368,6 +369,11 @@ const valorPasosHeader = computed(() =>
   sesionActivaHeader.value ? pasosSesionHeader.value : pasosDiaHeader.value,
 )
 const alturaBannerActiva = computed(() => (hayBannerVisible.value ? alturaBannerReportada.value : 0))
+watch(alturaBannerActiva, (altura) => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--altura-banner-camaras', `${altura}px`)
+  }
+}, { immediate: true })
 const espacioInferiorOcupado = computed(() => {
   if (!hayBannerVisible.value) {
     return ESPACIO_BASE_BARRA

@@ -673,6 +673,7 @@ button {
 }
 /* Contenedor de lista de pedidos escaneados (CamaraPedidos) */
 .modal-fondo.fondo-camara-pedidos {
+  bottom: var(--altura-banner-camaras, 0px);
   padding-bottom: 1rem;
 }
 .fondo-camara-pedidos .modal-camara {

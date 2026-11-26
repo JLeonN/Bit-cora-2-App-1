@@ -431,7 +431,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--altura-banner-camaras, 0px);
   background: #000;
   display: flex;
   align-items: center;

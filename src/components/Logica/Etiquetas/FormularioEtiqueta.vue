@@ -115,6 +115,7 @@
     <!-- Modal Cámara -->
     <CamaraEscaneo
       v-if="mostrarCamara"
+      :escaneo-unico="true"
       @cancelar="cerrarCamara"
       @finalizar="procesarCodigosEscaneados"
       @modal-abierto="manejarModalAbierto"

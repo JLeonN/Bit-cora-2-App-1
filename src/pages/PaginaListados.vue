@@ -833,7 +833,7 @@ async function agregarArticulo(articulo, { desdeCapitanaBita = false } = {}) {
   }
 }
 
-async function agregarArticulosCoincidentes({ articulos, totalCoincidencias, identificadorDestino }) {
+async function agregarArticulosCoincidentes({ articulos, totalCoincidencias, identificadorDestino, desdeCamara = false }) {
   if (ocupado.value || !listadoActivo.value || listadoActivo.value.id !== identificadorDestino) return
   if (!baseDatosCargada.value || !Array.isArray(articulos) || !articulos.length) return
   agregandoCoincidencias.value = true
@@ -863,10 +863,12 @@ async function agregarArticulosCoincidentes({ articulos, totalCoincidencias, ide
       return
     }
     listadoActivo.value.articulos.push(...filasNuevas)
-    listadoActivo.value.configuracion.mostrarStock = true
-    listadoActivo.value.configuracion.mostrarUbicacion = true
-    if (!listadoActivo.value.ordenElegidoPorUsuario) {
-      listadoActivo.value.orden = { criterio: 'alfabetico', direccion: 'ascendente' }
+    if (!desdeCamara) {
+      listadoActivo.value.configuracion.mostrarStock = true
+      listadoActivo.value.configuracion.mostrarUbicacion = true
+      if (!listadoActivo.value.ordenElegidoPorUsuario) {
+        listadoActivo.value.orden = { criterio: 'alfabetico', direccion: 'ascendente' }
+      }
     }
     await persistirActivo()
     const omitidos = totalCoincidencias - filasNuevas.length
