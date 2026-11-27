@@ -105,6 +105,7 @@
           Ubicación actual: <strong>{{ ultimaUbicacionSeleccionada }}</strong>
         </p>
         <p class="dato-articulo-stock">
+          <IconFileSpreadsheet :size="16" class="icono-origen-excel" aria-hidden="true" />
           Ubicación del Excel:
           <strong :class="{ 'texto-sl-neon': articuloSeleccionado.ubicacionAntigua === 'SL' }">
             {{ articuloSeleccionado.ubicacionAntigua || 'Sin ubicación' }}
@@ -248,6 +249,7 @@ import {
   IconCopy,
   IconDatabaseImport,
   IconDownload,
+  IconFileSpreadsheet,
   IconTrash,
 } from '@tabler/icons-vue'
 import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'

@@ -75,6 +75,7 @@
         <p class="nombre-articulo-seleccionado">{{ articuloSeleccionadoInfo.nombre }}</p>
         <p class="codigo-articulo-seleccionado">{{ articuloSeleccionadoInfo.codigo }}</p>
         <p class="linea-info-articulo linea-origen-excel">
+          <IconFileSpreadsheet :size="16" class="icono-origen-excel" aria-hidden="true" />
           <span class="etiqueta-info-articulo">Original Excel:</span>
           <span
             class="valor-origen-excel"
@@ -152,7 +153,7 @@
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
 import TresBotones from '../../Botones/TresBotones.vue'
-import { IconCamera, IconTrash, IconCopy } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy, IconFileSpreadsheet } from '@tabler/icons-vue'
 import CamaraUbicaciones from './CamaraUbicaciones.vue'
 import BuscadorArticulos from '../Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../Compartidos/CampoContextoArticulo.vue'

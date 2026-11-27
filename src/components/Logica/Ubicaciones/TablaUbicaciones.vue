@@ -72,7 +72,6 @@
                 'texto-duplicado': codigosDuplicados.has(normalizarCodigo(fila.ubicacion.codigo)),
                 'texto-articulo-inexistente': esArticuloInexistente(fila.ubicacion.codigo),
               }"
-              :title="`${obtenerNombreArticulo(fila.ubicacion.codigo)} - ${fila.ubicacion.codigo || 'Sin código'}`"
             >
               <div class="contenedor-nombre-codigo">
                 <div class="nombre-articulo">
@@ -80,6 +79,11 @@
                 </div>
                 <div class="codigo-articulo">
                   {{ mostrarCodigoCompleto(fila.ubicacion.codigo) }}
+                  <span class="ubicacion-original-tabla" tabindex="0" aria-label="Ubicación original del Excel">
+                    <span aria-hidden="true">· </span><IconFileSpreadsheet :size="14" aria-hidden="true" />
+                    {{ obtenerUbicacionOriginal(fila.ubicacion.codigo) }}
+                    <q-tooltip class="ayuda-ubicacion-original">Ubicación original del Excel</q-tooltip>
+                  </span>
                 </div>
               </div>
             </span>
@@ -126,8 +130,8 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { IconPencil, IconTrash, IconTag, IconChevronsLeft, IconChevronsRight } from '@tabler/icons-vue'
-import { obtenerArticulosCargados } from '../../BaseDeDatos/LectorExcel.js'
+import { IconPencil, IconTrash, IconTag, IconChevronsLeft, IconChevronsRight, IconFileSpreadsheet } from '@tabler/icons-vue'
+import { obtenerArticulosCargados, obtenerEstadoCarga } from '../../BaseDeDatos/LectorExcel.js'
 
 const props = defineProps({
   ubicaciones: {
@@ -199,6 +203,16 @@ function mostrarCodigoCompleto(codigo) {
   }
 
   return codigo
+}
+
+function obtenerUbicacionOriginal(codigo) {
+  if (!obtenerEstadoCarga().cargado) return 'No disponible'
+  const codigoNormalizado = normalizarCodigo(codigo)
+  const articulo = obtenerArticulosCargados().find(
+    (item) => normalizarCodigo(item?.codigo) === codigoNormalizado,
+  )
+  if (!articulo) return 'No disponible'
+  return articulo.ubicacionAntigua || ''
 }
 
 // --- Función para obtener el nombre del artículo ---
@@ -333,3 +347,17 @@ const emit = defineEmits([
   'enviar-todas-a-etiquetas',
 ])
 </script>
+
+<style scoped>
+.ubicacion-original-tabla {
+  display: inline-block;
+  max-width: 100%;
+  margin-left: 4px;
+  overflow-wrap: anywhere;
+  cursor: help;
+}
+.ubicacion-original-tabla svg {
+  color: var(--color-texto-principal);
+  vertical-align: -2px;
+}
+</style>

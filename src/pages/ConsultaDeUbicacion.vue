@@ -74,6 +74,7 @@
             </p>
           </div>
           <p class="ubicacion-original">
+            <IconFileSpreadsheet :size="16" class="icono-origen-excel" aria-hidden="true" />
             Original Excel:
             <strong :class="{ 'texto-sl-neon': esUbicacionOriginalSL }">{{
               articuloConsultado.ubicacionAntigua || 'SIN UBICACIÓN'
@@ -218,7 +219,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
-import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp, IconMinus, IconPlus } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp, IconMinus, IconPlus, IconFileSpreadsheet } from '@tabler/icons-vue'
 import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'

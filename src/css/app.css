@@ -1271,6 +1271,13 @@ button {
 .valor-origen-excel {
   color: var(--color-acento);
 }
+.icono-origen-excel {
+  vertical-align: -3px;
+}
+.ayuda-ubicacion-original {
+  background-color: var(--color-texto-principal);
+  color: var(--color-fondo);
+}
 .valor-origen-excel {
   font-weight: 800;
 }
@@ -1767,7 +1774,7 @@ button {
   display: block;
   width: 100%;
 }
-.globito-ubicacion:hover::after {
+.globito-ubicacion[title]:not([title=""]):hover::after {
   content: attr(title);
   position: absolute;
   top: 120%;
