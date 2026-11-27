@@ -5,7 +5,7 @@
       <BotonBaseDatosFaltante />
     </div>
 
-    <div class="bloque-buscador" :class="{ 'bloque-buscador-con-resultado': articuloConsultado }">
+    <div ref="bloqueBuscadorRef" class="bloque-buscador" :class="{ 'bloque-buscador-con-resultado': articuloConsultado }">
       <CampoContextoArticulo
         id-campo="contexto-consulta-ubicacion"
         :model-value="contextoBusqueda"
@@ -99,6 +99,7 @@
                 ref="inputNuevaUbicacionRef"
                 v-model="nuevaUbicacion"
                 type="text"
+                enterkeyhint="done"
                 placeholder="Nueva ubicación"
                 class="input-ubicacion"
                 @blur="formatearNuevaUbicacion"
@@ -113,7 +114,7 @@
                 <IconTrash :size="16" />
               </button>
             </div>
-            <button type="submit" class="boton-guardar-ubicacion">Guardar ubicación</button>
+            <button type="submit" class="boton-guardar-ubicacion" @pointerdown.prevent>Guardar ubicación</button>
           </form>
         </transition>
 
@@ -263,6 +264,7 @@ const modalActivo = ref(false)
 const baseDatosCargada = ref(false)
 const inputBusquedaRef = ref(null)
 const inputNuevaUbicacionRef = ref(null)
+const bloqueBuscadorRef = ref(null)
 const ultimoEspacioTiempo = ref(0)
 const seleccionRecienteDesdeBuscador = ref(false)
 const textoCopiadoBusqueda = ref('')
@@ -747,12 +749,19 @@ const guardarNuevaUbicacion = async () => {
   if (textoCopiadoBusqueda.value) {
     busquedaArticulo.value = textoCopiadoBusqueda.value
   }
+  inputNuevaUbicacionRef.value?.blur()
   mostrarEditorUbicacion.value = false
   nuevaUbicacion.value = ''
   await nextTick()
-  inputBusquedaRef.value?.focus()
-  const largoTextoBusqueda = busquedaArticulo.value.length
-  inputBusquedaRef.value?.setSelectionRange(largoTextoBusqueda, largoTextoBusqueda)
+  const bloqueBuscador = bloqueBuscadorRef.value
+  if (bloqueBuscador) {
+    const alturaEncabezado = document.querySelector('.q-header')?.getBoundingClientRect().height || 0
+    const limiteSuperior = (window.visualViewport?.offsetTop || 0) + alturaEncabezado + 6
+    window.scrollTo({
+      top: Math.max(0, window.scrollY + bloqueBuscador.getBoundingClientRect().top - limiteSuperior),
+      behavior: 'smooth',
+    })
+  }
 
   Notify.create({
     type: 'positive',
