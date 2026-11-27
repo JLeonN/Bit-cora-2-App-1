@@ -73,12 +73,14 @@
             </span>
           </td>
           <td>{{ pedido.tipo === 'falta' ? '-' : pedido.items || '-' }}</td>
-          <td class="acciones">
-            <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
-            <IconTrash
-              class="icono-accion icono-borrar"
-              @click="pedido.tipo === 'falta' ? eliminarFalta(indice) : abrirModalEliminar(indice)"
-            />
+          <td>
+            <div class="acciones">
+              <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
+              <IconTrash
+                class="icono-accion icono-borrar"
+                @click="pedido.tipo === 'falta' ? eliminarFalta(indice) : abrirModalEliminar(indice)"
+              />
+            </div>
           </td>
         </tr>
       </tbody>

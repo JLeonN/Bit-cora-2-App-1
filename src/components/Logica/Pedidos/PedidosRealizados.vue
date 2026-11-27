@@ -63,9 +63,11 @@
             </span>
           </td>
           <td>{{ pedido.items || '-' }}</td>
-          <td class="acciones">
-            <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
-            <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(indice)" />
+          <td>
+            <div class="acciones">
+              <IconPencil class="icono-accion icono-editar" @click="abrirModalEditar(indice)" />
+              <IconTrash class="icono-accion icono-borrar" @click="abrirModalEliminar(indice)" />
+            </div>
           </td>
         </tr>
       </tbody>
