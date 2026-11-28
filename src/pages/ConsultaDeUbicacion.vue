@@ -12,7 +12,7 @@
     <section v-if="modoConsulta === 'ubicacion'" class="consulta-estante">
       <form class="formulario-estante" @submit.prevent="consultarEstante">
         <label for="ubicacion-consultada">Ubicación</label>
-        <input id="ubicacion-consultada" v-model="ubicacionBuscada" placeholder="Ejemplo: 3-B7" />
+        <input id="ubicacion-consultada" v-model="ubicacionBuscada" placeholder="Ejemplo: 3B7" @focus="$event.target.select()" @input="sugerenciasPisos = []" />
         <button type="submit">Buscar</button>
       </form>
       <p v-if="mensajeConsultaEstante" role="status">{{ mensajeConsultaEstante }}</p>
@@ -20,6 +20,14 @@
         <h3>{{ ubicacionConsultada }} · {{ resultadosEstante.length }} {{ resultadosEstante.length === 1 ? 'artículo' : 'artículos' }}</h3>
         <small v-if="variantesUbicacion.length" class="aclaracion-ubicacion">También registrado como: {{ variantesUbicacion.join(', ') }}</small>
         <p v-if="!resultadosEstante.length">No se encontraron artículos registrados en esta ubicación.</p>
+        <div v-if="sugerenciasPisos.length" class="sugerencias-pisos">
+          <p>¿Quiziste buscar en otro piso?</p>
+          <div class="opciones-pisos">
+            <button v-for="sugerencia in sugerenciasPisos" :key="sugerencia.ubicacion" type="button" @click="elegirSugerenciaPiso(sugerencia.ubicacion)">
+              {{ sugerencia.ubicacion }} · {{ sugerencia.cantidad }} {{ sugerencia.cantidad === 1 ? 'artículo' : 'artículos' }}
+            </button>
+          </div>
+        </div>
         <ul class="resultados-estante">
           <li v-for="articulo in resultadosEstante" :key="articulo.codigo">
             <strong>{{ articulo.nombre }}</strong>
@@ -289,18 +297,22 @@ const modoConsulta = ref('articulo')
 const ubicacionBuscada = ref('')
 const ubicacionConsultada = ref('')
 const resultadosEstante = ref([])
+const sugerenciasPisos = ref([])
 const variantesUbicacion = computed(() => [...new Set(
   resultadosEstante.value.map((articulo) => articulo.ubicacion).filter((ubicacion) => ubicacion && ubicacion !== ubicacionConsultada.value && ubicacion.replace(/-/g, '') === ubicacionConsultada.value.replace(/-/g, '')),
 )])
 const mensajeConsultaEstante = ref('')
 
 function cambiarModoConsulta(modo) {
+  if (modo === modoConsulta.value) return
   modoConsulta.value = modo
+  ubicacionBuscada.value = ''
   articuloConsultado.value = null
   mostrarEditorUbicacion.value = false
   mostrarBuscador.value = false
   ubicacionConsultada.value = ''
   resultadosEstante.value = []
+  sugerenciasPisos.value = []
   mensajeConsultaEstante.value = ''
 }
 
@@ -308,6 +320,7 @@ async function consultarEstante() {
   const ubicacion = ubicacionBuscada.value.trim().toUpperCase()
   ubicacionConsultada.value = ''
   resultadosEstante.value = []
+  sugerenciasPisos.value = []
   mensajeConsultaEstante.value = ''
   if (!ubicacion) {
     mensajeConsultaEstante.value = 'Ingresá una ubicación para buscar.'
@@ -320,19 +333,31 @@ async function consultarEstante() {
   try {
     const [cambios, ubicacionesLegadas] = await Promise.all([obtenerCambiosUbicacion(), obtenerUbicaciones()])
     const informacion = obtenerInformacionArchivo()
-    resultadosEstante.value = buscarArticulosPorUbicacion({
+    const datosBusqueda = {
       articulos: informacion?.fechaCargaExcel ? obtenerArticulosBaseOriginal() : obtenerArticulosCargados(),
       cambios: cambios.slice(informacion?.indiceCambiosExcel ?? 0),
       fechaCargaExcel: informacion?.fechaCargaExcel,
       usarOrdenRegistro: Number.isInteger(informacion?.indiceCambiosExcel),
       ubicacionesLegadas,
-      ubicacion,
-    })
+    }
+    resultadosEstante.value = buscarArticulosPorUbicacion({ ...datosBusqueda, ubicacion })
+    if (!resultadosEstante.value.length && /^\d+-*[A-Z]\d+$/.test(ubicacion)) {
+      sugerenciasPisos.value = [1, 2, 3].map((piso) => {
+        const ubicacionSugerida = `P${piso}-${ubicacion}`
+        const cantidad = buscarArticulosPorUbicacion({ ...datosBusqueda, ubicacion: ubicacionSugerida }).length
+        return { ubicacion: ubicacionSugerida, cantidad }
+      }).filter((sugerencia) => sugerencia.cantidad > 0)
+    }
     ubicacionConsultada.value = ubicacion
   } catch (error) {
     console.error('Error al consultar la ubicación:', error)
     mensajeConsultaEstante.value = 'No se pudo consultar la ubicación. Intentá nuevamente.'
   }
+}
+
+function elegirSugerenciaPiso(ubicacion) {
+  ubicacionBuscada.value = ubicacion
+  consultarEstante()
 }
 
 const busquedaArticulo = ref('')
@@ -928,12 +953,17 @@ onUnmounted(() => {
 .selector-modo-consulta button[aria-pressed="true"] { color: var(--color-primario-claro); border-color: var(--color-primario-claro); }
 .formulario-estante { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .formulario-estante label { width: 100%; }
-.formulario-estante input { flex: 3; min-width: 0; padding: 0.7rem; border: 1px solid var(--color-borde); border-radius: 8px; color: var(--color-texto-principal); background: var(--color-superficie); }
+.formulario-estante input { flex: 3; min-width: 0; padding: 14px 12px; border: 1px solid var(--color-borde); border-radius: 8px; color: var(--color-texto-principal); caret-color: var(--color-texto-principal); background: var(--color-fondo); font-size: 1rem; outline: none; transition: border-color 0.2s ease; }
+.formulario-estante input:focus { border-color: var(--color-primario); }
+.formulario-estante input:-webkit-autofill { -webkit-text-fill-color: var(--color-texto-principal); box-shadow: 0 0 0 1000px var(--color-fondo) inset; }
 .consulta-estante h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
 .resultados-estante { display: grid; gap: 0.5rem; list-style: none; padding: 0; }
 .resultados-estante li { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.75rem; border: 1px solid var(--color-borde); border-radius: 8px; background: var(--color-fondo); overflow-wrap: anywhere; }
 .datos-articulo-estante { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; color: var(--color-texto-secundario); }
 .aclaracion-ubicacion { display: block; color: var(--color-texto-secundario); font-size: 0.8rem; }
+.sugerencias-pisos p { margin: 0 0 0.5rem; color: var(--color-texto-secundario); }
+.opciones-pisos { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.opciones-pisos button { padding: 0.6rem 0.75rem; border: 1px solid var(--color-primario); border-radius: 8px; background: var(--color-fondo); color: var(--color-primario-claro); cursor: pointer; }
 
 .contenedor-consulta {
   background-color: var(--color-superficie);
