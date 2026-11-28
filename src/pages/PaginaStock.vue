@@ -378,7 +378,7 @@ const registrosVisuales = computed(() => {
       Number.isInteger(Number(articulo?.stock)) &&
       Number(articulo?.stock) < 0
     const ubicacionOriginalExcel =
-      articulo?.ubicacionAntigua || registro.ubicacionOriginalExcel || ''
+      articulo ? (articulo.ubicacionAntigua || '') : (registro.ubicacionOriginalExcel || '')
     const ubicacionRegistrada = obtenerUltimaUbicacionRegistrada(
       registro.codigo,
       ubicaciones.value,
@@ -391,7 +391,7 @@ const registrosVisuales = computed(() => {
       stockExcelAjustado: recuperarNegativoAnterior ? false : registro.stockExcelAjustado,
       ubicacionActual: ubicacionRegistrada || ubicacionOriginalExcel,
       ubicacionOrigen:
-        registro.ubicacionOrigen === 'usuario' ||
+        (!informacionArchivo.value?.fechaCargaExcel && registro.ubicacionOrigen === 'usuario') ||
         (ubicacionRegistrada &&
           formatearUbicacion(ubicacionRegistrada) !== formatearUbicacion(ubicacionOriginalExcel))
           ? 'usuario'
@@ -616,8 +616,7 @@ async function seleccionarArticulo(articulo) {
   )
   ubicacionSeleccionada.value = ubicacionActual || ubicacionExcel
   ubicacionOrigenSeleccionada.value =
-    registro?.ubicacionOrigen === 'usuario' ||
-    tieneUbicacionEnMemoria ||
+    (!informacionArchivo.value?.fechaCargaExcel && (registro?.ubicacionOrigen === 'usuario' || tieneUbicacionEnMemoria)) ||
     (ubicacionActual && formatearUbicacion(ubicacionActual) !== ubicacionExcel)
       ? 'usuario'
       : 'excel'

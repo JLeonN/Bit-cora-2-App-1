@@ -1,11 +1,16 @@
 import {
   actualizarUbicacionArticulo,
   obtenerHistorialUbicaciones,
+  obtenerInformacionArchivo,
+  obtenerArticuloBasePorCodigo,
+  obtenerArticuloPorCodigo,
 } from '../../BaseDeDatos/LectorExcel.js'
 import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../../BaseDeDatos/usoAlmacenamientoUbicaciones.js'
+import { obtenerCambiosUbicacion, obtenerCambiosUbicacionEnMemoria, restaurarCambiosUbicacion } from '../../BaseDeDatos/UsoHistorialUbicaciones.js'
+import { resolverUbicacionVigente } from './ServicioUbicacionVigente.js'
 
 function normalizarTexto(valor) {
   return String(valor || '')
@@ -14,15 +19,16 @@ function normalizarTexto(valor) {
 }
 
 export function obtenerUltimaUbicacionRegistrada(codigo, ubicaciones, articulo, respaldo = '') {
-  const codigoNormalizado = normalizarTexto(codigo)
-  const movimiento = Array.isArray(ubicaciones)
-    ? ubicaciones.find((item) => normalizarTexto(item?.codigo) === codigoNormalizado)
-    : null
-  if (movimiento?.ubicacion) return normalizarTexto(movimiento.ubicacion)
-  const historial = Array.isArray(articulo?.historialUbicaciones)
-    ? articulo.historialUbicaciones
-    : []
-  return normalizarTexto(historial.at(-1) || respaldo)
+  const info = obtenerInformacionArchivo()
+  const base = obtenerArticuloBasePorCodigo(codigo)
+  const vigente = resolverUbicacionVigente({
+    articulo: info?.fechaCargaExcel ? base || articulo : articulo,
+    cambios: obtenerCambiosUbicacionEnMemoria().slice(info?.indiceCambiosExcel ?? 0),
+    fechaCargaExcel: info?.fechaCargaExcel,
+    usarOrdenRegistro: Number.isInteger(info?.indiceCambiosExcel),
+    ubicacionesLegadas: ubicaciones,
+  }).ubicacion
+  return info?.fechaCargaExcel && base ? vigente : vigente || normalizarTexto(respaldo)
 }
 
 export async function registrarUbicacionArticulo(codigo, ubicacion) {
@@ -32,18 +38,26 @@ export async function registrarUbicacionArticulo(codigo, ubicacion) {
     return { exito: false, mensaje: 'Código o ubicación inválidos' }
   }
 
+  const cambiosAnteriores = await obtenerCambiosUbicacion()
   const ubicacionesActuales = await obtenerUbicaciones()
   const listaAnterior = Array.isArray(ubicacionesActuales) ? ubicacionesActuales : []
   const listaNueva = [{ codigo: codigoNormalizado, ubicacion: ubicacionNormalizada }, ...listaAnterior]
-  const guardado = await guardarUbicaciones(listaNueva)
+  const articulo = obtenerArticuloPorCodigo(codigoNormalizado)
+  const ubicacionActual = obtenerUltimaUbicacionRegistrada(codigoNormalizado, listaAnterior, articulo, articulo?.ubicacionAntigua)
+  const codigosForzados = ubicacionActual !== ubicacionNormalizada ? [codigoNormalizado] : []
+  const guardado = await guardarUbicaciones(listaNueva, { codigosForzados })
   if (!guardado) {
     return { exito: false, mensaje: 'No se pudo guardar la ubicación en Ubicaciones' }
   }
 
-  const resultadoHistorial = await actualizarUbicacionArticulo(codigoNormalizado, ubicacionNormalizada)
-  if (!resultadoHistorial.exito) {
-    await guardarUbicaciones(listaAnterior)
-    return resultadoHistorial
+  let resultadoHistorial
+  try {
+    resultadoHistorial = await actualizarUbicacionArticulo(codigoNormalizado, ubicacionNormalizada)
+    if (!resultadoHistorial.exito) throw new Error(resultadoHistorial.mensaje)
+  } catch (error) {
+    await guardarUbicaciones(listaAnterior, { registrarCambios: false })
+    await restaurarCambiosUbicacion(cambiosAnteriores)
+    return { exito: false, mensaje: error.message }
   }
 
   return {

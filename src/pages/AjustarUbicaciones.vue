@@ -90,6 +90,7 @@ import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones'
+import { obtenerCambiosUbicacion, restaurarCambiosUbicacion } from '../components/BaseDeDatos/UsoHistorialUbicaciones.js'
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import {
   obtenerArticuloPorCodigo,
@@ -331,9 +332,23 @@ async function sincronizarBaseConListaActual() {
   return { exito: true }
 }
 
+async function guardarEstadoAnteriorUbicaciones() {
+  return { lista: (await obtenerUbicaciones()).map((item) => ({ ...item })), cambios: await obtenerCambiosUbicacion() }
+}
+
+async function restaurarEstadoAnteriorUbicaciones(estado) {
+  if (!estado) return
+  const guardado = await guardarUbicaciones(estado.lista, { registrarCambios: false })
+  await restaurarCambiosUbicacion(estado.cambios)
+  ubicaciones.value = estado.lista
+  if (!guardado) throw new Error('No se pudo restaurar la lista anterior')
+}
+
 // --- FUNCIÓN AGREGAR UBICACIÓN
 async function agregarUbicacion(datosNuevos) {
+  let estadoAnterior
   try {
+    estadoAnterior = await guardarEstadoAnteriorUbicaciones()
     if (!Array.isArray(ubicaciones.value)) {
       console.warn('[agregarUbicacion] Reinicializando ubicaciones como array')
       ubicaciones.value = []
@@ -352,7 +367,7 @@ async function agregarUbicacion(datosNuevos) {
     }
 
     ubicaciones.value.unshift(nuevaUbicacion)
-    await guardarUbicaciones(ubicaciones.value)
+    if (!(await guardarUbicaciones(ubicaciones.value))) throw new Error('No se pudo guardar la ubicación')
     const resultadoSincronizacion = await sincronizarBaseConListaActual()
     if (!resultadoSincronizacion.exito) {
       mensajeError.value = resultadoSincronizacion.mensaje
@@ -363,6 +378,7 @@ async function agregarUbicacion(datosNuevos) {
 
     console.log('[agregarUbicacion] Ubicación agregada:', nuevaUbicacion)
   } catch (error) {
+    try { await restaurarEstadoAnteriorUbicaciones(estadoAnterior) } catch (errorRestauracion) { console.error('Error al restaurar ubicaciones:', errorRestauracion) }
     console.error('[agregarUbicacion] Error:', error)
     mensajeError.value = 'Error al agregar ubicación: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3000)
@@ -452,7 +468,9 @@ function abrirModalEditar(indice) {
 
 // Guardar edición
 async function guardarEdicion(datos) {
+  let estadoAnterior
   try {
+    estadoAnterior = await guardarEstadoAnteriorUbicaciones()
     if (indiceEditar === null || !Array.isArray(ubicaciones.value)) {
       console.error('[guardarEdicion] Estado inválido')
       return
@@ -472,7 +490,7 @@ async function guardarEdicion(datos) {
         .toUpperCase(),
     }
     ubicaciones.value[indiceEditar] = ubicacionEditada
-    await guardarUbicaciones(ubicaciones.value)
+    if (!(await guardarUbicaciones(ubicaciones.value))) throw new Error('No se pudo guardar la ubicación')
     const resultadoSincronizacion = await sincronizarBaseConListaActual()
     if (!resultadoSincronizacion.exito) {
       mensajeError.value = resultadoSincronizacion.mensaje
@@ -486,6 +504,7 @@ async function guardarEdicion(datos) {
 
     console.log('[guardarEdicion] Ubicación editada exitosamente')
   } catch (error) {
+    try { await restaurarEstadoAnteriorUbicaciones(estadoAnterior) } catch (errorRestauracion) { console.error('Error al restaurar ubicaciones:', errorRestauracion) }
     console.error('[guardarEdicion] Error:', error)
     mensajeError.value = 'Error al guardar cambios: ' + error.message
     setTimeout(() => (mensajeError.value = ''), 3000)
@@ -519,7 +538,9 @@ function abrirModalEliminar(indice) {
 
 // Confirmar eliminación
 async function confirmarEliminacion() {
+  let estadoAnterior
   try {
+    estadoAnterior = await guardarEstadoAnteriorUbicaciones()
     if (!Array.isArray(ubicaciones.value) || !ubicacionEliminar.value) {
       console.error('[confirmarEliminacion] Estado inválido')
       return
@@ -528,7 +549,7 @@ async function confirmarEliminacion() {
     const indice = ubicaciones.value.indexOf(ubicacionEliminar.value)
     if (indice !== -1) {
       ubicaciones.value.splice(indice, 1)
-      await guardarUbicaciones(ubicaciones.value)
+      if (!(await guardarUbicaciones(ubicaciones.value, { registrarCambios: false }))) throw new Error('No se pudo eliminar la ubicación')
       const resultadoSincronizacion = await sincronizarBaseConListaActual()
       if (!resultadoSincronizacion.exito) {
         mensajeError.value = resultadoSincronizacion.mensaje
@@ -540,6 +561,7 @@ async function confirmarEliminacion() {
 
     mostrarModalEliminar.value = false
   } catch (error) {
+    try { await restaurarEstadoAnteriorUbicaciones(estadoAnterior) } catch (errorRestauracion) { console.error('Error al restaurar ubicaciones:', errorRestauracion) }
     console.error('[confirmarEliminacion] Error:', error)
     mensajeError.value = 'Error al eliminar ubicación'
     setTimeout(() => (mensajeError.value = ''), 3000)
@@ -558,9 +580,11 @@ function abrirModalEliminarTodas() {
 
 // Confirmar eliminación de todas
 async function confirmarEliminacionTodas() {
+  let estadoAnterior
   try {
+    estadoAnterior = await guardarEstadoAnteriorUbicaciones()
     ubicaciones.value = []
-    await guardarUbicaciones(ubicaciones.value)
+    if (!(await guardarUbicaciones(ubicaciones.value, { registrarCambios: false }))) throw new Error('No se pudieron eliminar las ubicaciones')
     const resultadoSincronizacion = await sincronizarBaseConListaActual()
     if (!resultadoSincronizacion.exito) {
       mensajeError.value = resultadoSincronizacion.mensaje
@@ -573,6 +597,7 @@ async function confirmarEliminacionTodas() {
     mensajeExito.value = 'Todas las ubicaciones eliminadas'
     setTimeout(() => (mensajeExito.value = ''), 3000)
   } catch (error) {
+    try { await restaurarEstadoAnteriorUbicaciones(estadoAnterior) } catch (errorRestauracion) { console.error('Error al restaurar ubicaciones:', errorRestauracion) }
     console.error('[confirmarEliminacionTodas] Error:', error)
     mensajeError.value = 'Error al eliminar ubicaciones'
     setTimeout(() => (mensajeError.value = ''), 3000)

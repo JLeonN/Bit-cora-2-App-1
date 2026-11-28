@@ -31,6 +31,7 @@
           <p class="estadisticas-archivo">
             {{ cantidadArticulos }} artículos • {{ tamanoArchivo }} KB
           </p>
+          <p class="estadisticas-archivo">{{ fechaCargaFormateada }}</p>
           <p class="estado-archivo">Base de datos lista para búsqueda</p>
         </div>
         <div class="acciones-archivo">
@@ -223,6 +224,12 @@ const textoBoton = computed(() => {
     default:
       return 'Seleccionar archivo Excel'
   }
+})
+
+const fechaCargaFormateada = computed(() => {
+  const fecha = informacionArchivo.value?.fechaCargaExcel
+  if (!fecha || Number.isNaN(new Date(fecha).getTime())) return 'Fecha de carga no disponible'
+  return `Cargado: ${new Intl.DateTimeFormat('es-UY', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(fecha))}`
 })
 
 const tamanoArchivo = computed(() => {

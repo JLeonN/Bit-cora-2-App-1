@@ -1,8 +1,11 @@
 import * as XLSX from 'xlsx'
 import { Preferences } from '@capacitor/preferences'
+import { obtenerCambiosUbicacion } from './UsoHistorialUbicaciones.js'
 
 let articulosDelExcel = []
 let articulosBaseOriginal = []
+let referenciaBaseIndexada = null
+let indiceBaseOriginal = new Map()
 let estadoCarga = 'no-cargado'
 let informacionArchivo = null
 
@@ -75,6 +78,7 @@ async function guardarBaseDatosEnPreferences() {
     })
   } catch (error) {
     console.error('[LectorExcel] Error al persistir base de datos:', error)
+    throw error
   }
 }
 
@@ -105,7 +109,9 @@ async function cargarBaseDatosDesdePreferences() {
 
     articulosDelExcel = articulosMigrados
     articulosBaseOriginal = baseOriginalMigrada
-    informacionArchivo = datosGuardados.informacionArchivo || null
+    informacionArchivo = datosGuardados.informacionArchivo
+      ? { ...datosGuardados.informacionArchivo, fechaCargaExcel: datosGuardados.informacionArchivo.fechaCargaExcel ?? null }
+      : null
     estadoCarga = articulosDelExcel.length > 0 ? 'cargado' : 'no-cargado'
     return true
   } catch (error) {
@@ -198,6 +204,8 @@ export async function cargarArticulosDesdeExcel() {
   }
 
   const informacionArchivoAnterior = informacionArchivo
+  const articulosAnteriores = articulosDelExcel
+  const baseOriginalAnterior = articulosBaseOriginal
   estadoCarga = 'cargando'
 
   try {
@@ -240,6 +248,8 @@ export async function cargarArticulosDesdeExcel() {
 
     articulosBaseOriginal = articulosProcesados.map((articulo) => ({ ...articulo }))
     articulosDelExcel = articulosProcesados.map((articulo) => ({ ...articulo }))
+    const cambiosPrevios = await obtenerCambiosUbicacion()
+    informacionArchivo = { ...informacionArchivo, fechaCargaExcel: Date.now(), indiceCambiosExcel: cambiosPrevios.length }
     estadoCarga = 'cargado'
     await guardarBaseDatosEnPreferences()
 
@@ -250,6 +260,8 @@ export async function cargarArticulosDesdeExcel() {
       archivo: informacionArchivo,
     }
   } catch (error) {
+    articulosDelExcel = articulosAnteriores
+    articulosBaseOriginal = baseOriginalAnterior
     restaurarEstadoTrasError(informacionArchivoAnterior)
     let mensajeError = 'Error desconocido al procesar el archivo.'
     if (error.message?.includes('No se seleccionó')) {
@@ -274,6 +286,8 @@ export async function cargarArticulosDesdeExcelCompartido({ nombre, tipo, base64
     return { exito: false, mensaje: 'Ya está cargando...' }
   }
   const informacionArchivoAnterior = informacionArchivo
+  const articulosAnteriores = articulosDelExcel
+  const baseOriginalAnterior = articulosBaseOriginal
   if (!base64) {
     restaurarEstadoTrasError(informacionArchivoAnterior)
     return { exito: false, mensaje: 'No se pudo leer el Excel compartido.' }
@@ -309,6 +323,8 @@ export async function cargarArticulosDesdeExcelCompartido({ nombre, tipo, base64
 
     articulosBaseOriginal = articulosProcesados.map((articulo) => ({ ...articulo }))
     articulosDelExcel = articulosProcesados.map((articulo) => ({ ...articulo }))
+    const cambiosPrevios = await obtenerCambiosUbicacion()
+    informacionArchivo = { ...informacionArchivo, fechaCargaExcel: Date.now(), indiceCambiosExcel: cambiosPrevios.length }
     estadoCarga = 'cargado'
     await guardarBaseDatosEnPreferences()
     return {
@@ -318,17 +334,32 @@ export async function cargarArticulosDesdeExcelCompartido({ nombre, tipo, base64
       archivo: informacionArchivo,
     }
   } catch (error) {
+    articulosDelExcel = articulosAnteriores
+    articulosBaseOriginal = baseOriginalAnterior
     restaurarEstadoTrasError(informacionArchivoAnterior)
     return { exito: false, mensaje: `Error al procesar el Excel compartido: ${error.message}` }
   }
 }
 
 export async function inicializarBaseDatos() {
+  await obtenerCambiosUbicacion()
   if (estadoCarga !== 'no-cargado') return
   const cargaExitosa = await cargarBaseDatosDesdePreferences()
   if (!cargaExitosa) {
     estadoCarga = 'no-cargado'
   }
+}
+
+export function obtenerArticuloBasePorCodigo(codigo) {
+  if (referenciaBaseIndexada !== articulosBaseOriginal) {
+    indiceBaseOriginal = new Map(articulosBaseOriginal.map((articulo) => [normalizarTexto(articulo.codigo), articulo]))
+    referenciaBaseIndexada = articulosBaseOriginal
+  }
+  return indiceBaseOriginal.get(normalizarTexto(codigo)) || null
+}
+
+export function obtenerArticulosBaseOriginal() {
+  return articulosBaseOriginal
 }
 
 export function obtenerArticulosCargados() {
@@ -415,16 +446,22 @@ export async function actualizarUbicacionArticulo(codigo, nuevaUbicacion) {
     : []
   const ultimaUbicacion = historialActual.at(-1)
   if (ultimaUbicacion === ubicacionNormalizada) {
-    return { exito: false, mensaje: 'La ubicación nueva es igual a la última del historial' }
+    return { exito: true, articulo: articulosDelExcel[indiceArticulo] }
   }
 
   historialActual.push(ubicacionNormalizada)
+  const articuloAnterior = articulosDelExcel[indiceArticulo]
   articulosDelExcel[indiceArticulo] = {
     ...articulosDelExcel[indiceArticulo],
     historialUbicaciones: historialActual,
   }
 
-  await guardarBaseDatosEnPreferences()
+  try {
+    await guardarBaseDatosEnPreferences()
+  } catch (error) {
+    articulosDelExcel[indiceArticulo] = articuloAnterior
+    throw error
+  }
   return {
     exito: true,
     mensaje: 'Historial de ubicaciones actualizado correctamente',
@@ -468,6 +505,8 @@ export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
     mapaUbicacionActual.set(codigo, ubicacion)
   }
 
+  const cambios = await obtenerCambiosUbicacion()
+  const cambiosVigentes = new Map(cambios.slice(informacionArchivo?.indiceCambiosExcel ?? 0).map((item) => [item.codigo, item.ubicacion]))
   const mapaHistorialActual = new Map(
     articulosDelExcel.map((articulo) => [
       normalizarTexto(articulo?.codigo),
@@ -475,10 +514,13 @@ export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
     ]),
   )
 
+  const articulosAnteriores = articulosDelExcel
   articulosDelExcel = articulosBaseOriginal.map((articulo) => {
     const codigoArticulo = normalizarTexto(articulo?.codigo)
     const historial = mapaHistorialActual.get(codigoArticulo) || []
-    const ubicacionDesdeLista = mapaUbicacionActual.get(codigoArticulo) || ''
+    const ubicacionEnLista = mapaUbicacionActual.get(codigoArticulo) || ''
+    const ubicacionDesdeLista = !informacionArchivo?.fechaCargaExcel || cambiosVigentes.get(codigoArticulo) === ubicacionEnLista
+      ? ubicacionEnLista : ''
     const historialResultado = [...historial]
 
     if (ubicacionDesdeLista && historialResultado.at(-1) !== ubicacionDesdeLista) {
@@ -491,7 +533,12 @@ export async function reconstruirUbicacionesDesdeLista(listaUbicaciones) {
     }
   })
 
-  await guardarBaseDatosEnPreferences()
+  try {
+    await guardarBaseDatosEnPreferences()
+  } catch (error) {
+    articulosDelExcel = articulosAnteriores
+    throw error
+  }
   return {
     exito: true,
     mensaje: 'Base reconstruida correctamente desde la lista de ubicaciones',

@@ -5,7 +5,30 @@
       <BotonBaseDatosFaltante />
     </div>
 
-    <div ref="bloqueBuscadorRef" class="bloque-buscador" :class="{ 'bloque-buscador-con-resultado': articuloConsultado }">
+    <div class="selector-modo-consulta" role="group" aria-label="Tipo de consulta">
+      <button type="button" :aria-pressed="modoConsulta === 'articulo'" @click="cambiarModoConsulta('articulo')">Buscar artículo</button>
+      <button type="button" :aria-pressed="modoConsulta === 'ubicacion'" @click="cambiarModoConsulta('ubicacion')">Buscar ubicación</button>
+    </div>
+    <section v-if="modoConsulta === 'ubicacion'" class="consulta-estante">
+      <form class="formulario-estante" @submit.prevent="consultarEstante">
+        <label for="ubicacion-consultada">Ubicación</label>
+        <input id="ubicacion-consultada" v-model="ubicacionBuscada" placeholder="Ejemplo: 3-B7" />
+        <button type="submit">Buscar</button>
+      </form>
+      <p v-if="mensajeConsultaEstante" role="status">{{ mensajeConsultaEstante }}</p>
+      <div v-if="ubicacionConsultada">
+        <h3>{{ ubicacionConsultada }} · {{ resultadosEstante.length }} {{ resultadosEstante.length === 1 ? 'artículo' : 'artículos' }}</h3>
+        <p v-if="!resultadosEstante.length">No se encontraron artículos en los datos cargados.</p>
+        <ul class="resultados-estante">
+          <li v-for="articulo in resultadosEstante" :key="articulo.codigo">
+            <strong>{{ articulo.nombre }}</strong>
+            <span>{{ articulo.codigo }} · {{ articulo.origen === 'excel' ? 'Excel' : 'Actualización' }}</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <div v-show="modoConsulta === 'articulo'" ref="bloqueBuscadorRef" class="bloque-buscador" :class="{ 'bloque-buscador-con-resultado': articuloConsultado }">
       <CampoContextoArticulo
         id-campo="contexto-consulta-ubicacion"
         :model-value="contextoBusqueda"
@@ -49,7 +72,7 @@
     </div>
 
     <transition name="mostrar-resultado">
-      <div v-if="articuloConsultado" class="resultado-consulta">
+      <div v-if="articuloConsultado && modoConsulta === 'articulo'" class="resultado-consulta">
         <div class="tarjeta-resultado" :class="{ 'tarjeta-sl-neon': esUbicacionOriginalSL }">
           <div class="encabezado-resultado">
             <p class="etiqueta-resultado">Historial de ubicaciones</p>
@@ -63,6 +86,7 @@
               <IconBrandWhatsapp :size="23" :stroke="2" aria-hidden="true" />
             </button>
           </div>
+          <p v-if="ubicacionActualVisual" class="ubicacion-original">Ubicación vigente: <strong>{{ ubicacionActualVisual }}</strong></p>
           <div class="lista-historial-ubicaciones">
             <p
               v-for="(ubicacion, indice) in historialVisual"
@@ -228,12 +252,15 @@ import GestorListados from '../components/Logica/Listados/GestorListados.vue'
 import {
   obtenerInformacionArchivo,
   obtenerArticulosCargados,
+  obtenerArticulosBaseOriginal,
   obtenerEstadoCarga,
   obtenerHistorialUbicaciones,
 } from '../components/BaseDeDatos/LectorExcel.js'
 import { registrarUbicacionArticulo } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { obtenerUltimaUbicacionRegistrada } from '../components/Logica/Ubicaciones/ServicioRegistroUbicacion.js'
 import { obtenerUbicaciones } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones.js'
+import { obtenerCambiosUbicacion } from '../components/BaseDeDatos/UsoHistorialUbicaciones.js'
+import { buscarArticulosPorUbicacion } from '../components/Logica/Ubicaciones/ServicioUbicacionVigente.js'
 import { guardarRegistroStock, normalizarCantidadStock, obtenerSesionStock } from '../components/BaseDeDatos/UsoAlmacenamientoStock.js'
 import { guardarListado, obtenerListado, obtenerListados } from '../components/BaseDeDatos/UsoAlmacenamientoListados.js'
 import { cargarDatosLocalesArticulos, resolverDatosArticulo } from '../components/Logica/Compartidos/ServicioDatosLocalesArticulo.js'
@@ -253,9 +280,65 @@ import {
 const emit = defineEmits(['configurar-barra'])
 const CLAVE_ULTIMO_LISTADO_CONSULTA = 'ultimo_listado_consulta_ubicacion'
 
+const modoConsulta = ref('articulo')
+const ubicacionBuscada = ref('')
+const ubicacionConsultada = ref('')
+const resultadosEstante = ref([])
+const mensajeConsultaEstante = ref('')
+
+function cambiarModoConsulta(modo) {
+  modoConsulta.value = modo
+  articuloConsultado.value = null
+  mostrarEditorUbicacion.value = false
+  mostrarBuscador.value = false
+  ubicacionConsultada.value = ''
+  resultadosEstante.value = []
+  mensajeConsultaEstante.value = ''
+}
+
+async function consultarEstante() {
+  const ubicacion = ubicacionBuscada.value.trim().toUpperCase()
+  ubicacionConsultada.value = ''
+  resultadosEstante.value = []
+  mensajeConsultaEstante.value = ''
+  if (!ubicacion) {
+    mensajeConsultaEstante.value = 'Ingresá una ubicación para buscar.'
+    return
+  }
+  if (!obtenerEstadoCarga().cargado) {
+    mensajeConsultaEstante.value = 'Cargá el Excel para consultar ubicaciones.'
+    return
+  }
+  try {
+    const [cambios, ubicacionesLegadas] = await Promise.all([obtenerCambiosUbicacion(), obtenerUbicaciones()])
+    const informacion = obtenerInformacionArchivo()
+    resultadosEstante.value = buscarArticulosPorUbicacion({
+      articulos: informacion?.fechaCargaExcel ? obtenerArticulosBaseOriginal() : obtenerArticulosCargados(),
+      cambios: cambios.slice(informacion?.indiceCambiosExcel ?? 0),
+      fechaCargaExcel: informacion?.fechaCargaExcel,
+      usarOrdenRegistro: Number.isInteger(informacion?.indiceCambiosExcel),
+      ubicacionesLegadas,
+      ubicacion,
+    })
+    ubicacionConsultada.value = ubicacion
+  } catch (error) {
+    console.error('Error al consultar la ubicación:', error)
+    mensajeConsultaEstante.value = 'No se pudo consultar la ubicación. Intentá nuevamente.'
+  }
+}
+
 const busquedaArticulo = ref('')
 const contextoBusqueda = ref('')
 const articuloConsultado = ref(null)
+const ubicacionActualVisual = ref('')
+watch(articuloConsultado, async (articulo, anterior, onCleanup) => {
+  let vigente = true
+  onCleanup(() => { vigente = false })
+  ubicacionActualVisual.value = ''
+  if (!articulo?.codigo) return
+  const ubicaciones = await obtenerUbicaciones()
+  if (vigente) ubicacionActualVisual.value = obtenerUltimaUbicacionRegistrada(articulo.codigo, ubicaciones, articulo, articulo.ubicacionAntigua)
+})
 const mostrarBuscador = ref(false)
 const inputEnfocado = ref(false)
 const mostrarCamara = ref(false)
@@ -710,13 +793,7 @@ const guardarNuevaUbicacion = async () => {
     return
   }
 
-  const historialActual = Array.isArray(articuloConsultado.value.historialUbicaciones)
-    ? articuloConsultado.value.historialUbicaciones
-    : []
-  const ubicacionReferencia =
-    historialActual.length > 0
-      ? historialActual[historialActual.length - 1]
-      : articuloConsultado.value.ubicacionAntigua
+  const ubicacionReferencia = await obtenerUbicacionActualConsulta(articuloConsultado.value)
   const ubicacionNueva = nuevaUbicacion.value.trim().toUpperCase()
   if ((ubicacionReferencia || '').trim().toUpperCase() === ubicacionNueva) {
     Notify.create({
@@ -838,6 +915,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.selector-modo-consulta { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.selector-modo-consulta button, .formulario-estante button { flex: 1; padding: 0.7rem; border: 1px solid var(--color-borde); border-radius: 8px; color: var(--color-texto-principal); background: var(--color-superficie); cursor: pointer; }
+.selector-modo-consulta button[aria-pressed="true"] { color: var(--color-primario-claro); border-color: var(--color-primario-claro); }
+.formulario-estante { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.formulario-estante label { width: 100%; }
+.formulario-estante input { flex: 3; min-width: 0; padding: 0.7rem; border: 1px solid var(--color-borde); border-radius: 8px; color: var(--color-texto-principal); background: var(--color-superficie); }
+.consulta-estante h3 { font-size: 1.1rem; }
+.resultados-estante { list-style: none; padding: 0; }
+.resultados-estante li { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.75rem 0; border-bottom: 1px solid var(--color-borde); overflow-wrap: anywhere; }
+.resultados-estante span { color: var(--color-texto-secundario); }
+
 .contenedor-consulta {
   background-color: var(--color-superficie);
   padding: 1rem;

@@ -11,6 +11,7 @@ import {
   guardarUbicaciones,
   obtenerUbicaciones,
 } from '../../BaseDeDatos/usoAlmacenamientoUbicaciones.js'
+import { obtenerUltimaUbicacionRegistrada } from '../Ubicaciones/ServicioRegistroUbicacion.js'
 import { agregarEtiquetasDesdeArticulos } from '../Etiquetas/ServicioEnvioEtiquetas.js'
 
 function normalizarTexto(valor) {
@@ -90,10 +91,14 @@ export async function enviarTodosAUbicaciones(listado) {
     const ubicacionesConservadas = (Array.isArray(ubicaciones) ? ubicaciones : []).filter(
       (item) => !codigosEnviados.has(normalizarTexto(item?.codigo)),
     )
+    const codigosForzados = movimientos.filter((movimiento) => {
+      const articulo = obtenerArticuloPorCodigo(movimiento.codigo)
+      return articulo && obtenerUltimaUbicacionRegistrada(movimiento.codigo, ubicaciones, articulo, articulo.ubicacionAntigua) !== movimiento.ubicacion
+    }).map((movimiento) => movimiento.codigo)
     const guardado = await guardarUbicaciones([
       ...movimientos,
       ...ubicacionesConservadas,
-    ])
+    ], { codigosForzados })
     if (!guardado) throw new Error('No se pudieron guardar los artículos en Ubicaciones')
   }
   return { enviados, invalidos }
