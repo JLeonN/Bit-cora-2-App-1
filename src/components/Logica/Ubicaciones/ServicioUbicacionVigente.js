@@ -21,7 +21,7 @@ export function buscarArticulosPorUbicacion({ articulos = [], cambios = [], fech
     const codigo = normalizar(legado.codigo)
     if (!legadosPorCodigo.has(codigo)) legadosPorCodigo.set(codigo, legado)
   }
-  const buscada = normalizar(ubicacion)
+  const buscada = normalizar(ubicacion).replace(/-/g, '')
   if (!buscada) return []
   const vistos = new Set()
   return articulos.flatMap((articulo) => {
@@ -31,6 +31,6 @@ export function buscarArticulosPorUbicacion({ articulos = [], cambios = [], fech
     const cambio = cambiosPorCodigo.get(codigo)
     const legado = legadosPorCodigo.get(codigo)
     const vigente = resolverUbicacionVigente({ articulo, cambios: cambio ? [cambio] : [], fechaCargaExcel, ubicacionesLegadas: legado ? [legado] : [], usarOrdenRegistro })
-    return vigente.ubicacion === buscada ? [{ ...articulo, ...vigente }] : []
+    return vigente.ubicacion.replace(/-/g, '') === buscada ? [{ ...articulo, ...vigente }] : []
   })
 }

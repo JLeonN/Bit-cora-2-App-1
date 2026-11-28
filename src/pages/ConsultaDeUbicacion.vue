@@ -18,6 +18,7 @@
       <p v-if="mensajeConsultaEstante" role="status">{{ mensajeConsultaEstante }}</p>
       <div v-if="ubicacionConsultada">
         <h3>{{ ubicacionConsultada }} · {{ resultadosEstante.length }} {{ resultadosEstante.length === 1 ? 'artículo' : 'artículos' }}</h3>
+        <small v-if="variantesUbicacion.length" class="aclaracion-ubicacion">También registrado como: {{ variantesUbicacion.join(', ') }}</small>
         <p v-if="!resultadosEstante.length">No se encontraron artículos en los datos cargados.</p>
         <ul class="resultados-estante">
           <li v-for="articulo in resultadosEstante" :key="articulo.codigo">
@@ -284,6 +285,9 @@ const modoConsulta = ref('articulo')
 const ubicacionBuscada = ref('')
 const ubicacionConsultada = ref('')
 const resultadosEstante = ref([])
+const variantesUbicacion = computed(() => [...new Set(
+  resultadosEstante.value.map((articulo) => articulo.ubicacion).filter((ubicacion) => ubicacion && ubicacion !== ubicacionConsultada.value),
+)])
 const mensajeConsultaEstante = ref('')
 
 function cambiarModoConsulta(modo) {
@@ -921,10 +925,11 @@ onUnmounted(() => {
 .formulario-estante { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .formulario-estante label { width: 100%; }
 .formulario-estante input { flex: 3; min-width: 0; padding: 0.7rem; border: 1px solid var(--color-borde); border-radius: 8px; color: var(--color-texto-principal); background: var(--color-superficie); }
-.consulta-estante h3 { font-size: 1.1rem; }
+.consulta-estante h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
 .resultados-estante { list-style: none; padding: 0; }
 .resultados-estante li { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.75rem 0; border-bottom: 1px solid var(--color-borde); overflow-wrap: anywhere; }
 .resultados-estante span { color: var(--color-texto-secundario); }
+.aclaracion-ubicacion { display: block; color: var(--color-texto-secundario); font-size: 0.8rem; }
 
 .contenedor-consulta {
   background-color: var(--color-superficie);
