@@ -38,6 +38,25 @@
             <small v-if="articulo.ubicacion !== ubicacionConsultada" class="aclaracion-ubicacion">Ubicación registrada: {{ articulo.ubicacion }}</small>
           </li>
         </ul>
+        <div v-if="resultadosEstante.length" class="acciones-envio-consulta">
+          <div class="botones-envio-estante">
+            <button type="button" class="boton-accion-general" :disabled="enviandoStockEstante" @click="enviarEstanteAStock">
+              <IconPackages class="icono-stock-estante" :size="20" :stroke="2" />
+              <span>{{ enviandoStockEstante ? 'Enviando…' : 'Enviar todos a Stock' }}</span>
+            </button>
+            <button type="button" class="boton-accion-general boton-enviar-etiquetas" :aria-expanded="mostrarEnvioEtiquetasEstante" @click="mostrarEnvioEtiquetasEstante = !mostrarEnvioEtiquetasEstante">
+              <IconTag :size="20" />
+              <span>{{ mostrarEnvioEtiquetasEstante ? 'Cerrar envío a Etiquetas' : 'Enviar todos a Etiquetas' }}</span>
+            </button>
+          </div>
+          <form v-if="mostrarEnvioEtiquetasEstante" class="panel-envio-consulta" @submit.prevent="enviarEstanteAEtiquetas">
+            <label for="copias-estante">Copias por artículo</label>
+            <input id="copias-estante" v-model.number="copiasEstante" type="number" min="1" step="1" inputmode="numeric" class="input-copias-consulta" :disabled="enviandoEtiquetasEstante" required />
+            <button type="submit" class="boton-confirmar-envio" :disabled="enviandoEtiquetasEstante">
+              {{ enviandoEtiquetasEstante ? 'Enviando…' : 'Enviar a Etiquetas' }}
+            </button>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -256,7 +275,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
-import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp, IconMinus, IconPlus, IconFileSpreadsheet } from '@tabler/icons-vue'
+import { IconCamera, IconTrash, IconCopy, IconBrandWhatsapp, IconMinus, IconPlus, IconFileSpreadsheet, IconPackages, IconTag } from '@tabler/icons-vue'
 import BotonBaseDatosFaltante from '../components/Logica/Compartidos/BotonBaseDatosFaltante.vue'
 import BuscadorArticulos from '../components/Logica/Compartidos/BuscadorArticulos.vue'
 import CampoContextoArticulo from '../components/Logica/Compartidos/CampoContextoArticulo.vue'
@@ -274,12 +293,13 @@ import { obtenerUltimaUbicacionRegistrada } from '../components/Logica/Ubicacion
 import { obtenerUbicaciones } from '../components/BaseDeDatos/usoAlmacenamientoUbicaciones.js'
 import { obtenerCambiosUbicacion } from '../components/BaseDeDatos/UsoHistorialUbicaciones.js'
 import { buscarArticulosPorUbicacion } from '../components/Logica/Ubicaciones/ServicioUbicacionVigente.js'
-import { guardarRegistroStock, normalizarCantidadStock, obtenerSesionStock } from '../components/BaseDeDatos/UsoAlmacenamientoStock.js'
+import { guardarRegistroStock, guardarRegistrosStock, normalizarCantidadStock, obtenerSesionStock } from '../components/BaseDeDatos/UsoAlmacenamientoStock.js'
 import { guardarListado, obtenerListado, obtenerListados } from '../components/BaseDeDatos/UsoAlmacenamientoListados.js'
 import { cargarDatosLocalesArticulos, resolverDatosArticulo } from '../components/Logica/Compartidos/ServicioDatosLocalesArticulo.js'
 import { agregarEtiquetasDesdeArticulos } from '../components/Logica/Etiquetas/ServicioEnvioEtiquetas.js'
 import { normalizarInputPreservandoCursor } from '../components/Logica/Compartidos/NormalizarInputCursor.js'
 import { obtenerArticuloExacto } from '../components/Logica/Compartidos/ServicioBusquedaArticulos.js'
+import { desplazarAlFinalDePagina } from '../components/Botones/ConfiguracionBarraInferior.js'
 import {
   abrirWhatsAppConMensaje,
   abrirWhatsAppEnAndroid,
@@ -298,6 +318,10 @@ const ubicacionBuscada = ref('')
 const ubicacionConsultada = ref('')
 const resultadosEstante = ref([])
 const sugerenciasPisos = ref([])
+const mostrarEnvioEtiquetasEstante = ref(false)
+const copiasEstante = ref(1)
+const enviandoStockEstante = ref(false)
+const enviandoEtiquetasEstante = ref(false)
 const variantesUbicacion = computed(() => [...new Set(
   resultadosEstante.value.map((articulo) => articulo.ubicacion).filter((ubicacion) => ubicacion && ubicacion !== ubicacionConsultada.value && ubicacion.replace(/-/g, '') === ubicacionConsultada.value.replace(/-/g, '')),
 )])
@@ -313,6 +337,8 @@ function cambiarModoConsulta(modo) {
   ubicacionConsultada.value = ''
   resultadosEstante.value = []
   sugerenciasPisos.value = []
+  mostrarEnvioEtiquetasEstante.value = false
+  copiasEstante.value = 1
   mensajeConsultaEstante.value = ''
 }
 
@@ -321,6 +347,8 @@ async function consultarEstante() {
   ubicacionConsultada.value = ''
   resultadosEstante.value = []
   sugerenciasPisos.value = []
+  mostrarEnvioEtiquetasEstante.value = false
+  copiasEstante.value = 1
   mensajeConsultaEstante.value = ''
   if (!ubicacion) {
     mensajeConsultaEstante.value = 'Ingresá una ubicación para buscar.'
@@ -358,6 +386,58 @@ async function consultarEstante() {
 function elegirSugerenciaPiso(ubicacion) {
   ubicacionBuscada.value = ubicacion
   consultarEstante()
+}
+
+async function enviarEstanteAStock() {
+  if (!resultadosEstante.value.length || enviandoStockEstante.value) return
+  const resultados = [...resultadosEstante.value]
+  enviandoStockEstante.value = true
+  try {
+    const fuenteExcel = obtenerInformacionArchivo()
+    if (!fuenteExcel) throw new Error('Cargá el Excel maestro antes de enviar a Stock')
+    const sesion = await obtenerSesionStock()
+    const existentes = new Set(sesion.registros.map((registro) => registro.codigo))
+    const articulos = resultados.filter((articulo) => !existentes.has(articulo.codigo))
+    const registros = articulos.map((articulo) => {
+      const stock = normalizarCantidadStock(articulo.stock, { permitirDecimal: true })
+      return {
+        codigo: articulo.codigo,
+        nombre: articulo.nombre,
+        stockExcel: stock.valor ?? 0,
+        stockContado: stock.valor ?? 0,
+        stockExcelAjustado: stock.ajustado,
+        ubicacionActual: articulo.ubicacion,
+        ubicacionOriginalExcel: articulo.ubicacionAntigua,
+        ubicacionOrigen: articulo.origen === 'excel' ? 'excel' : 'usuario',
+        confirmado: false,
+      }
+    })
+    if (registros.length) await guardarRegistrosStock(registros, fuenteExcel)
+    const omitidos = resultados.length - registros.length
+    Notify.create({ type: registros.length ? 'positive' : 'info', message: `${registros.length} enviados a Stock${omitidos ? `, ${omitidos} ya estaban registrados` : ''}`, position: 'top' })
+  } catch (error) {
+    Notify.create({ type: 'negative', message: error.message || 'No se pudieron enviar los artículos a Stock', position: 'top' })
+  } finally {
+    enviandoStockEstante.value = false
+  }
+}
+
+async function enviarEstanteAEtiquetas() {
+  if (!resultadosEstante.value.length || enviandoEtiquetasEstante.value) return
+  if (!Number.isSafeInteger(copiasEstante.value) || copiasEstante.value < 1) {
+    Notify.create({ type: 'warning', message: 'Ingresá una cantidad válida de copias', position: 'top' })
+    return
+  }
+  enviandoEtiquetasEstante.value = true
+  try {
+    const resultado = await agregarEtiquetasDesdeArticulos(resultadosEstante.value, copiasEstante.value)
+    mostrarEnvioEtiquetasEstante.value = false
+    Notify.create({ type: 'positive', message: `${resultado.cantidad} artículos enviados a Etiquetas`, position: 'top' })
+  } catch (error) {
+    Notify.create({ type: 'negative', message: error.message || 'No se pudieron enviar los artículos a Etiquetas', position: 'top' })
+  } finally {
+    enviandoEtiquetasEstante.value = false
+  }
 }
 
 const busquedaArticulo = ref('')
@@ -590,6 +670,8 @@ const compartirArticuloWhatsApp = async () => {
 
 const configuracionBarra = computed(() => ({
   mostrarAgregar: false,
+  mostrarIrAlFinal: modoConsulta.value === 'ubicacion' && resultadosEstante.value.length >= 7,
+  tituloIrAlFinal: 'Ir al final de los resultados',
   mostrarEnviar: false,
   puedeEnviar: false,
   botonesPersonalizados: [],
@@ -598,6 +680,7 @@ const configuracionBarra = computed(() => ({
 
 const metodosParaBarra = {
   onAgregar: () => {},
+  onIrAlFinal: () => desplazarAlFinalDePagina(),
   onEnviar: () => {},
   onAccionPersonalizada: () => {},
   onAtrasNativo: () => cerrarPasoAtrasNativo(),
@@ -912,12 +995,7 @@ function cerrarPasoAtrasNativo() {
   return false
 }
 
-watch(
-  () => modalActivo.value,
-  () => {
-    actualizarConfiguracionBarra()
-  },
-)
+watch(configuracionBarra, actualizarConfiguracionBarra, { deep: true })
 
 onMounted(async () => {
   contextoBusqueda.value = await obtenerContextoArticulo(AMBITOS_CONTEXTO_ARTICULO.CONSULTA_UBICACION)
@@ -964,6 +1042,10 @@ onUnmounted(() => {
 .sugerencias-pisos p { margin: 0 0 0.5rem; color: var(--color-texto-secundario); }
 .opciones-pisos { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .opciones-pisos button { padding: 0.6rem 0.75rem; border: 1px solid var(--color-primario); border-radius: 8px; background: var(--color-fondo); color: var(--color-primario-claro); cursor: pointer; }
+.botones-envio-estante { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.botones-envio-estante .boton-accion-general { flex: 1 1 190px; width: auto; height: auto; min-height: 44px; justify-content: center; }
+.botones-envio-estante .boton-accion-general:disabled { opacity: 0.55; cursor: not-allowed; }
+.icono-stock-estante { color: var(--color-primario); }
 
 .contenedor-consulta {
   background-color: var(--color-superficie);
