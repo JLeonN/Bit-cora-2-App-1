@@ -45,7 +45,7 @@ function normalizarArticulo(articulo) {
     codigo: normalizarTexto(articulo?.codigo),
     nombre: normalizarTexto(articulo?.nombre),
     ubicacionAntigua: normalizarTexto(articulo?.ubicacionAntigua),
-    stock: articulo?.stock || '',
+    stock: articulo?.stock ?? '',
     historialUbicaciones: normalizarHistorial(articulo?.historialUbicaciones),
   }
 }

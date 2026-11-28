@@ -39,3 +39,31 @@ test('las ubicaciones antiguas solo prevalecen cuando la carga no tiene fecha', 
   assert.equal(resolverUbicacionVigente({ articulo, ubicacionesLegadas, fechaCargaExcel: 10 }).ubicacion, 'A1')
   assert.deepEqual(buscarArticulosPorUbicacion({ articulos: [articulo], ubicacionesLegadas, fechaCargaExcel: 10, ubicacion: 'B1' }), [])
 })
+
+test('busca posiciones compuestas sin mezclar pisos ni coincidencias parciales', () => {
+  const articulos = [
+    { codigo: '1', ubicacionAntigua: '13C6/A4' },
+    { codigo: '2', ubicacionAntigua: '13-C6-A4' },
+    { codigo: '3', ubicacionAntigua: '13--C6' },
+    { codigo: '4', ubicacionAntigua: 'P1-13C6' },
+    { codigo: '5', ubicacionAntigua: 'Piso1-13C6' },
+    { codigo: '6', ubicacionAntigua: '13C60' },
+    { codigo: '7', ubicacionAntigua: '13-C6(Piso)' },
+    { codigo: '8', ubicacionAntigua: '13C6/28-A2' },
+  ]
+  const buscar = (ubicacion) => buscarArticulosPorUbicacion({ articulos, ubicacion }).map((item) => item.codigo)
+  assert.deepEqual(buscar('13C6'), ['1', '2', '3', '7', '8'])
+  assert.deepEqual(buscar('13A4'), ['1', '2'])
+  assert.deepEqual(buscar('P1-13C6'), ['4', '5'])
+  assert.deepEqual(buscar('Piso1-13C6'), ['4', '5'])
+  assert.deepEqual(buscar('28-A2'), ['8'])
+  assert.deepEqual(buscar('13C60'), ['6'])
+})
+
+test('reconoce niveles abreviados sin inventar posiciones no indicadas', () => {
+  const articulos = [{ codigo: '1', ubicacionAntigua: '25-B4/6/7' }]
+  for (const ubicacion of ['25B4', '25B6', '25B7']) {
+    assert.equal(buscarArticulosPorUbicacion({ articulos, ubicacion }).length, 1)
+  }
+  assert.equal(buscarArticulosPorUbicacion({ articulos, ubicacion: '25B5' }).length, 0)
+})

@@ -19,11 +19,15 @@
       <div v-if="ubicacionConsultada">
         <h3>{{ ubicacionConsultada }} · {{ resultadosEstante.length }} {{ resultadosEstante.length === 1 ? 'artículo' : 'artículos' }}</h3>
         <small v-if="variantesUbicacion.length" class="aclaracion-ubicacion">También registrado como: {{ variantesUbicacion.join(', ') }}</small>
-        <p v-if="!resultadosEstante.length">No se encontraron artículos en los datos cargados.</p>
+        <p v-if="!resultadosEstante.length">No se encontraron artículos registrados en esta ubicación.</p>
         <ul class="resultados-estante">
           <li v-for="articulo in resultadosEstante" :key="articulo.codigo">
             <strong>{{ articulo.nombre }}</strong>
-            <span>{{ articulo.codigo }} · {{ articulo.origen === 'excel' ? 'Excel' : 'Actualización' }}</span>
+            <div class="datos-articulo-estante">
+              <span>Código: {{ articulo.codigo }}</span>
+              <span>Stock Excel: {{ articulo.stock === '' || articulo.stock == null ? 'No disponible' : articulo.stock }}</span>
+            </div>
+            <small v-if="articulo.ubicacion !== ubicacionConsultada" class="aclaracion-ubicacion">Ubicación registrada: {{ articulo.ubicacion }}</small>
           </li>
         </ul>
       </div>
@@ -286,7 +290,7 @@ const ubicacionBuscada = ref('')
 const ubicacionConsultada = ref('')
 const resultadosEstante = ref([])
 const variantesUbicacion = computed(() => [...new Set(
-  resultadosEstante.value.map((articulo) => articulo.ubicacion).filter((ubicacion) => ubicacion && ubicacion !== ubicacionConsultada.value),
+  resultadosEstante.value.map((articulo) => articulo.ubicacion).filter((ubicacion) => ubicacion && ubicacion !== ubicacionConsultada.value && ubicacion.replace(/-/g, '') === ubicacionConsultada.value.replace(/-/g, '')),
 )])
 const mensajeConsultaEstante = ref('')
 
@@ -926,9 +930,9 @@ onUnmounted(() => {
 .formulario-estante label { width: 100%; }
 .formulario-estante input { flex: 3; min-width: 0; padding: 0.7rem; border: 1px solid var(--color-borde); border-radius: 8px; color: var(--color-texto-principal); background: var(--color-superficie); }
 .consulta-estante h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
-.resultados-estante { list-style: none; padding: 0; }
-.resultados-estante li { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.75rem 0; border-bottom: 1px solid var(--color-borde); overflow-wrap: anywhere; }
-.resultados-estante span { color: var(--color-texto-secundario); }
+.resultados-estante { display: grid; gap: 0.5rem; list-style: none; padding: 0; }
+.resultados-estante li { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.75rem; border: 1px solid var(--color-borde); border-radius: 8px; background: var(--color-fondo); overflow-wrap: anywhere; }
+.datos-articulo-estante { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; color: var(--color-texto-secundario); }
 .aclaracion-ubicacion { display: block; color: var(--color-texto-secundario); font-size: 0.8rem; }
 
 .contenedor-consulta {
